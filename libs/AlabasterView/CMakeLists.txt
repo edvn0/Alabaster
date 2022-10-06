@@ -1,30 +1,32 @@
+cmake_minimum_required(VERSION 3.21)
+
 project(AlabasterView)
 
 find_package(Vulkan REQUIRED)
+find_package(Boost REQUIRED COMPONENTS program_options)
 
-file(GLOB_RECURSE sources ab_pch.hpp include/**.hpp src/**.cpp)
+file(GLOB_RECURSE sources av_pch.hpp include/**.hpp src/**.cpp)
 
 find_program(CLANG_FORMAT "clang-format")
 
 if(CLANG_FORMAT)
     set(formattable_files ${sources})
 
-    list(FILTER formattable_files)
     add_custom_target(clang-format COMMAND ${CLANG_FORMAT} -i -style=file
         ${formattable_files})
 endif()
 
-add_library(${PROJECT_NAME})
-
+add_library(${PROJECT_NAME} ${sources})
 add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_include_directories(
     ${PROJECT_NAME}
-    PUBLIC $<INSTALL_INTERFACE:include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+    PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include /usr/local/include)
 
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_11)
+target_link_libraries(${PROJECT_NAME} INTERFACE Boost::program_options glfw)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
+target_precompile_headers(${PROJECT_NAME} PUBLIC include/av_pch.hpp)
 
 if(BUILD_TESTING)
     add_subdirectory(tests)

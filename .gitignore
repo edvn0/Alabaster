@@ -1,6 +1,8 @@
 # Prerequisites
 *.d
 
+compile-commands.json
+
 # Compiled Object files
 *.slo
 *.lo

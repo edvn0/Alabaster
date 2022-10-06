@@ -1,0 +1,6 @@
+[submodule "third_party/glfw"]
+	path = third_party/glfw
+	url = https://github.com/edvn0/glfw
+[submodule "third_party/imgui"]
+	path = third_party/imgui
+	url = https://github.com/edvn0/imgui

@@ -1,5 +1,7 @@
 #!/bin/bash
 
-cmake -B build -GNinja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER="$(which clang++)" -DCMAKE_C_COMPILER="$(which clang)" -DCMAKE_CXX_STANDARD=20 -S . 
+cmake -B build -GNinja -DBUILD_TESTING=OFF -S .
 cmake --build build
-exec ./build/app/app
+rm compile_commands.json
+ln -s build/compile_commands.json .
+exec ./build/app/AlabasterApp
