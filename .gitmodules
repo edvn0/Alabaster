@@ -1,6 +1,12 @@
 [submodule "third_party/glfw"]
-	path = third_party/glfw
-	url = https://github.com/edvn0/glfw
+path = third_party/glfw
+url = https://github.com/edvn0/glfw
 [submodule "third_party/imgui"]
-	path = third_party/imgui
-	url = https://github.com/edvn0/imgui
+path = third_party/imgui
+url = https://github.com/edvn0/imgui
+[submodule "third_party/spdlog"]
+	path = third_party/spdlog
+	url = https://github.com/edvn0/spdlog
+[submodule "third_party/magic_enum"]
+	path = third_party/magic_enum
+	url = https://github.com/edvn0/magic_enum.git

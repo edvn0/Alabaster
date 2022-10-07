@@ -14,6 +14,7 @@
             "suppressLineUncommittedWarning": false,
             "suppressNoRepositoryWarning": false
         },
+        "editor.formatOnType": false,
         "files.associations": {
             "*.module": "php",
             "*.sass": "css",
@@ -135,7 +136,11 @@
             "xlocnum": "cpp",
             "xloctime": "cpp",
             "xstddef": "cpp",
-            "xtr1common": "cpp"
+            "xtr1common": "cpp",
+            "numbers": "cpp",
+            "semaphore": "cpp",
+            "cinttypes": "cpp",
+            "__availability": "cpp"
         },
         "C_Cpp.files.exclude": {
             "**/*.tmp": true,
@@ -184,6 +189,7 @@
             "cpci",
             "drawbuffer",
             "framebuffer",
+            "Glfw",
             "imageview",
             "renderable",
             "renderables",
@@ -193,6 +199,7 @@
             "subresource",
             "swapchain",
             "Swapchains",
+            "timestep",
             "Vulkan"
         ],
     }

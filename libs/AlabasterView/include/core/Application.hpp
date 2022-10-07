@@ -1,5 +1,8 @@
 #pragma once
 
+#include "core/Layer.hpp"
+
+#include <map>
 #include <memory>
 
 namespace Alabaster {
@@ -12,33 +15,52 @@ namespace Alabaster {
 		const char* name;
 	};
 
-	struct Layer {
-		virtual bool initialise() { return true; };
-		virtual void update(float ts) {};
-		virtual void destroy() {};
-	};
-
 	class Application {
-		using rev_it = std::vector<Layer*>::reverse_iterator;
+		using rev_it = std::map<std::string, Layer*>::reverse_iterator;
+		using it = std::map<std::string, Layer*>::iterator;
+		using LayerFunction = std::function<void(Layer*)>;
+
+	public:
+		void run();
+		void stop();
 
 	public:
 		Application(const ApplicationArguments& args);
 		Application(const Application&) = delete;
 		Application(Application&&) = delete;
+		void operator=(const Application&) = delete;
+
+		~Application();
 
 		inline void push_layer(Layer* layer)
 		{
 			layer->initialise();
-			layers.emplace_back(std::move(layer));
+			layers.emplace(layer->name(), std::move(layer));
 		}
-
-		void run();
-		void stop();
 
 		static Application& the();
 
+		inline const std::unique_ptr<Window>& get_window() { return window; };
+		inline const std::unique_ptr<Window>& get_window() const { return window; }
+
+		inline void layer_forward(LayerFunction&& func)
+		{
+			for (it layer = layers.begin(); layer != layers.end(); ++layer) {
+				auto&& [k, l] = *layer;
+				func(l);
+			}
+		}
+
+		inline void layer_backward(LayerFunction&& func)
+		{
+			for (rev_it layer = layers.rbegin(); layer != layers.rend(); ++layer) {
+				auto&& [k, l] = *layer;
+				func(l);
+			}
+		}
+
 	private:
-		std::vector<Layer*> layers;
+		std::map<std::string, Layer*> layers;
 		std::unique_ptr<Window> window;
 	};
 

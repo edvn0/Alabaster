@@ -1,7 +1,9 @@
 #include "av_pch.hpp"
 
 #include "core/Application.hpp"
+#include "core/Logger.hpp"
 #include "core/Window.hpp"
+#include "graphics/Swapchain.hpp"
 
 #include <GLFW/glfw3.h>
 
@@ -9,37 +11,44 @@ namespace Alabaster {
 
 	void error_callback(int error, const char* description) { fprintf(stderr, "Error: %s\n", description); }
 
+	Window::~Window()
+	{
+		glfwDestroyWindow(handle);
+		glfwTerminate();
+	}
+
 	Window::Window(const ApplicationArguments& arguments)
 		: width(arguments.width)
 		, height(arguments.height)
 	{
-		UserData user_data;
 		int success = glfwInit();
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		// glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
+		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
 
 		if (!success) {
 			throw std::runtime_error("Initialization of GLFW does not work");
 		}
 
-		handle = glfwCreateWindow((int)arguments.width, (int)arguments.height, arguments.name, nullptr, nullptr);
+		Log::info("GLFW Initialised! Code: {}", success);
+
+		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name, nullptr, nullptr);
 
 		float pixel_size_x, pixel_size_y;
 		glfwGetWindowContentScale(handle, &pixel_size_x, &pixel_size_y);
 		glfwSetWindowSize(handle, arguments.width / pixel_size_x, arguments.height / pixel_size_y);
 
-		glfwGetWindowContentScale(handle, &pixel_size_x, &pixel_size_y);
-		glfwSetWindowSize(handle, arguments.width / pixel_size_x, arguments.height / pixel_size_y);
-
 		glfwSetWindowUserPointer(handle, &user_data);
 
-		int width, height;
-		glfwGetWindowSize(handle, &width, &height);
-		user_data.width = width;
-		user_data.height = height;
+		int w, h;
+		glfwGetWindowSize(handle, &w, &h);
+		user_data.width = w;
+		user_data.height = h;
 
 		setup_events();
+
+		swapchain = std::make_unique<Swapchain>();
+		swapchain->construct(handle, width, height);
 	};
 
 	void Window::setup_events() { }

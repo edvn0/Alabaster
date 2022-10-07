@@ -1,7 +1,13 @@
 # Prerequisites
 *.d
 
-compile-commands.json
+.idea
+cmake-*
+
+XCode
+Xcode
+xcode
+compile_commands.json
 
 # Compiled Object files
 *.slo
