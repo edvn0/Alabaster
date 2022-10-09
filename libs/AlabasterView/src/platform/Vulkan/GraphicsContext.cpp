@@ -3,6 +3,7 @@
 #include "graphics/GraphicsContext.hpp"
 
 #include "core/Common.hpp"
+#include "core/Logger.hpp"
 
 #include <GLFW/glfw3.h>
 #include <magic_enum.hpp>
@@ -170,31 +171,18 @@ namespace Alabaster {
 
 	void GraphicsContext::create_device()
 	{
-		VkDeviceQueueCreateInfo graphics_info {};
-		graphics_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		graphics_info.queueFamilyIndex = graphics_queue_family();
-		graphics_info.queueCount = 1;
-		float graphics_queue_prio = 1.0f;
-		graphics_info.pQueuePriorities = &graphics_queue_prio;
+		std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
+		std::set<uint32_t> unique_queues = { queues[QueueType::Graphics].family, queues[QueueType::Present].family };
 
-		VkDeviceQueueCreateInfo compute_info {};
-		compute_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		compute_info.queueFamilyIndex = compute_queue_family();
-		compute_info.queueCount = 1;
-		float compute_queue_prio = 0.9f;
-		compute_info.pQueuePriorities = &compute_queue_prio;
-
-		VkDeviceQueueCreateInfo transfer_info {};
-		transfer_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		transfer_info.queueFamilyIndex = transfer_queue_family();
-		transfer_info.queueCount = 1;
-		float transfer_queue_prio = 0.1f;
-		transfer_info.pQueuePriorities = &transfer_queue_prio;
-
-		std::array<VkDeviceQueueCreateInfo, 3> queue_array;
-		queue_array[0] = graphics_info;
-		queue_array[1] = compute_info;
-		queue_array[2] = transfer_info;
+		float queue_prio = 1.0f;
+		for (uint32_t family : unique_queues) {
+			VkDeviceQueueCreateInfo queue_create_info {};
+			queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+			queue_create_info.queueFamilyIndex = family;
+			queue_create_info.queueCount = 1;
+			queue_create_info.pQueuePriorities = &queue_prio;
+			queue_create_infos.push_back(queue_create_info);
+		}
 
 		std::vector<const char*> device_exts;
 		device_exts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
@@ -202,8 +190,8 @@ namespace Alabaster {
 
 		VkDeviceCreateInfo device_create_info {};
 		device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		device_create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_array.size());
-		device_create_info.pQueueCreateInfos = queue_array.data();
+		device_create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
+		device_create_info.pQueueCreateInfos = queue_create_infos.data();
 		VkPhysicalDeviceFeatures device_features {};
 		device_create_info.pEnabledFeatures = &device_features;
 
@@ -219,9 +207,8 @@ namespace Alabaster {
 		}
 		vk_check(vkCreateDevice(vk_physical_device, &device_create_info, nullptr, &vk_device));
 
-		vkGetDeviceQueue(vk_device, queues.graphics_queue_family, 0, &queues.graphics_queue);
-		vkGetDeviceQueue(vk_device, queues.compute_queue_family, 0, &queues.compute_queue);
-		vkGetDeviceQueue(vk_device, queues.transfer_queue_family, 0, &queues.transfer_queue);
+		vkGetDeviceQueue(vk_device, queues[QueueType::Graphics].family, 0, &queues[QueueType::Graphics].queue);
+		vkGetDeviceQueue(vk_device, queues[QueueType::Present].family, 0, &queues[QueueType::Present].queue);
 	}
 
 	void GraphicsContext::create_physical_device()
@@ -254,12 +241,17 @@ namespace Alabaster {
 		Log::info("Physical device chosen.");
 
 		find_queue_families();
-		Log::info("Queues: Graphics: [{}], Compute: [{}], Transfer: [{}]", queues.graphics_queue_family, queues.compute_queue_family,
-			queues.transfer_queue_family);
+		Log::info("Queues: Graphics: [{}], Present: [{}]", queues[QueueType::Graphics].family, queues[QueueType::Present].family);
 	}
 
 	void GraphicsContext::find_queue_families()
 	{
+		static constexpr auto is_complete = [](const auto& qs) {
+			return qs.compute_queue_family != 0 && qs.transfer_queue_family != 0 && qs.graphics_queue_family != 0 && qs.present_queue_family != 0;
+		};
+
+		QueueIndices indices;
+
 		uint32_t nr_families = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(vk_physical_device, &nr_families, nullptr);
 
@@ -267,36 +259,22 @@ namespace Alabaster {
 		vkGetPhysicalDeviceQueueFamilyProperties(vk_physical_device, &nr_families, queue_families.data());
 
 		int family_index = 0;
-		bool found_graphics = false;
-		bool found_compute = false;
-		bool found_transfer = false;
 
-		for (size_t i = 0; i < queue_families.size(); i++) {
-			auto& family = queue_families[i];
-
-			bool has_graphic_bit = (family.queueFlags & VK_QUEUE_GRAPHICS_BIT);
-			if (has_graphic_bit && !found_graphics) {
-				queues.graphics_queue_family = family_index;
-				found_graphics = true;
-				family_index++;
-				continue;
+		for (const auto& queue_family : queue_families) {
+			if (queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+				indices.graphics = family_index;
+				queues[QueueType::Graphics].family = *indices.graphics;
 			}
 
-			bool has_compute_bit = (family.queueFlags & VK_QUEUE_COMPUTE_BIT);
-			if (has_compute_bit && !found_compute) {
-				queues.compute_queue_family = family_index;
-				found_compute = true;
-				family_index++;
-				continue;
+			// The implicit assumption here is that this queue can present...
+			indices.present = family_index;
+			queues[QueueType::Present].family = *indices.graphics;
+
+			if (indices.is_complete()) {
+				break;
 			}
 
-			bool has_transfer_bit = (family.queueFlags & VK_QUEUE_TRANSFER_BIT);
-			if (has_transfer_bit && !found_transfer) {
-				queues.transfer_queue_family = family_index;
-				found_transfer = true;
-				family_index++;
-				continue;
-			}
+			family_index++;
 		}
 	}
 

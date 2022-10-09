@@ -7,6 +7,7 @@
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
 #include "graphics/GraphicsContext.hpp"
+#include "graphics/Shader.hpp"
 
 namespace Alabaster {
 
@@ -17,9 +18,11 @@ namespace Alabaster {
 	Application::Application(const ApplicationArguments& args)
 	{
 		assert(global_app == nullptr);
-		global_app = this;
 		Logger::init();
+
+		global_app = this;
 		window = std::make_unique<Window>(args);
+		auto shader = Shader(std::filesystem::path { "app/resouces/shaders/First" });
 		push_layer(new GUILayer());
 	}
 

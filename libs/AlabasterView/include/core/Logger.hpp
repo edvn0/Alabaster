@@ -1,11 +1,14 @@
 #pragma once
 
+#include <debug_break.h>
 #include <filesystem>
 
+// clang-format off
 #define YAML_CPP_STATIC_DEFINE
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
+// clang-format on
 
 namespace Alabaster {
 
@@ -45,6 +48,7 @@ namespace Alabaster {
 		template <typename... Args> static constexpr auto error(auto&& fmt, Args&&... args)
 		{
 			::Alabaster::Logger::get_core_logger()->error(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+			debug_break();
 		}
 
 		template <typename... Args> static constexpr auto trace(auto&& fmt, Args&&... args)

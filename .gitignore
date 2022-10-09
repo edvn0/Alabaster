@@ -4,6 +4,10 @@
 .idea
 cmake-*
 
+*.spv
+*.vert*
+*.frag*
+
 XCode
 Xcode
 xcode

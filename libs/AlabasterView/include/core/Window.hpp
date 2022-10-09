@@ -22,6 +22,8 @@ namespace Alabaster {
 		const std::unique_ptr<Swapchain>& get_swapchain() { return swapchain; }
 		const std::unique_ptr<Swapchain>& get_swapchain() const { return swapchain; }
 
+		const std::pair<int, int> framebuffer_extent() const;
+
 	private:
 		void setup_events();
 

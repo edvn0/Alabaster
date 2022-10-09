@@ -22,7 +22,7 @@ add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_include_directories(
     ${PROJECT_NAME}
     PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include /usr/local/include ../../third_party/imgui ../../third_party/imgui/backends ${Vulkan_INCLUDE_DIRS} ../../third_party/magic_enum/include)
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include /usr/local/include ../../third_party/imgui ../../third_party/imgui/backends ../../third_party/debugbreak ${Vulkan_INCLUDE_DIRS} ../../third_party/magic_enum/include)
 
 target_link_libraries(${PROJECT_NAME} INTERFACE Boost::program_options PRIVATE glfw imgui Vulkan::Vulkan spdlog magic_enum)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

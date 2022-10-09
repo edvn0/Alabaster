@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+#include <unordered_map>
 #include <vulkan/vulkan.h>
 
 namespace Alabaster {
@@ -25,12 +27,10 @@ namespace Alabaster {
 		inline VkPhysicalDevice physical_device() { return vk_physical_device; };
 		inline VkDevice device() { return vk_device; };
 
-		inline uint32_t graphics_queue_family() { return queues.graphics_queue_family; }
-		inline VkQueue graphics_queue() { return queues.graphics_queue; }
-		inline uint32_t compute_queue_family() { return queues.compute_queue_family; }
-		inline VkQueue compute_queue() { return queues.compute_queue; }
-		inline uint32_t transfer_queue_family() { return queues.transfer_queue_family; }
-		inline VkQueue transfer_queue() { return queues.transfer_queue; }
+		inline uint32_t graphics_queue_family() { return queues[QueueType::Graphics].family; }
+		inline VkQueue graphics_queue() { return queues[QueueType::Graphics].queue; }
+		inline uint32_t present_queue_family() { return queues[QueueType::Present].family; }
+		inline VkQueue present_queue() { return queues[QueueType::Present].queue; }
 
 	private:
 		void create_instance();
@@ -44,16 +44,21 @@ namespace Alabaster {
 		VkDevice vk_device { nullptr };
 		VkDebugUtilsMessengerEXT debug_messenger;
 
-		struct {
-			VkQueue graphics_queue;
-			uint32_t graphics_queue_family;
+		struct QueueIndices {
+			std::optional<uint32_t> graphics;
+			std::optional<uint32_t> present;
 
-			VkQueue transfer_queue;
-			uint32_t transfer_queue_family;
+			bool is_complete() { return graphics && present; }
+		};
 
-			VkQueue compute_queue;
-			uint32_t compute_queue_family;
-		} queues;
+		enum class QueueType { Graphics = 0, Present };
+
+		struct QueueAndFamily {
+			VkQueue queue;
+			uint32_t family;
+		};
+
+		std::unordered_map<QueueType, QueueAndFamily> queues;
 	};
 
 } // namespace Alabaster

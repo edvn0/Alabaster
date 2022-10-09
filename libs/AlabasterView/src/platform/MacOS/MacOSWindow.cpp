@@ -51,6 +51,13 @@ namespace Alabaster {
 		swapchain->construct(handle, width, height);
 	};
 
+	const std::pair<int, int> Window::framebuffer_extent() const
+	{
+		int width, height;
+		glfwGetFramebufferSize(handle, &width, &height);
+		return { width, height };
+	}
+
 	void Window::setup_events() { }
 
 	void Window::update() { glfwPollEvents(); }
