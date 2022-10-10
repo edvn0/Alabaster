@@ -15,6 +15,7 @@ namespace Alabaster {
 		void destroy();
 
 		bool should_close();
+		void close();
 
 		void update();
 

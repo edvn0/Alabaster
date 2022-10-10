@@ -19,4 +19,6 @@ namespace Alabaster::IO {
 		return out;
 	}
 
+	bool exists(const std::filesystem::path& path) { return std::filesystem::exists(path); }
+
 } // namespace Alabaster::IO

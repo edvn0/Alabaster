@@ -2,9 +2,23 @@
 // Created by Edwin Carlsson on 2022-10-10.
 //
 
+#include "Alabaster.hpp"
 #include "AlabasterLayer.hpp"
 
 #include <imgui.h>
+
+bool AlabasterLayer::initialise()
+{
+	Alabaster::PipelineSpecification spec { .debug_name = "Test",
+		.backface_culling = true,
+		.depth_test = true,
+		.depth_write = true,
+		.shader = std::move(Alabaster::Shader("app/resources/shaders/main")),
+		.wireframe = false,
+		.vertex_layout = {} };
+
+	graphics_pipeline = new Alabaster::Pipeline { spec };
+}
 
 void AlabasterLayer::update(float ts) { Layer::update(ts); }
 
@@ -66,7 +80,7 @@ void AlabasterLayer::ui(float ts)
 				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) { }
 
 				if (ImGui::MenuItem("Exit")) {
-					Alabaster::Application::the().stop();
+					Alabaster::Application::the().get_window()->close();
 				}
 				ImGui::EndMenu();
 			}
@@ -95,20 +109,17 @@ void AlabasterLayer::ui(float ts)
 				viewport_focused = ImGui::IsWindowFocused();
 				viewport_hovered = ImGui::IsWindowHovered();
 
-
 				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 				viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
-				//const auto& image = geometry_pipeline->get_specification().render_pass->get_specification().target_framebuffer->get_image(0);
-				//UI::image(image, vp_size, { 0, 1 }, { 1, 0 });
+				// UI::image(image, vp_size, { 0, 1 }, { 1, 0 });
 
 				ImGui::End();
 			}
 		}
 		ImGui::PopStyleVar();
-
 	}
 	ImGui::End();
 }

@@ -8,6 +8,7 @@
 namespace Alabaster {
 
 	class Window;
+	class GUILayer;
 
 	struct ApplicationArguments {
 		uint32_t width;
@@ -32,18 +33,21 @@ namespace Alabaster {
 
 		virtual ~Application();
 
-		virtual void on_init() {};
+		virtual void on_init()
+		{
+			layer_forward([](Layer* layer) {
+				if (layer->name() != "ImGuiLayer")
+					layer->initialise();
+			});
+		};
+
+		void resize(int w, int h);
 
 		inline void push_layer(Layer* layer)
 		{
 			layer->initialise();
 			layers.emplace(layer->name(), std::move(layer));
 		}
-
-		static Application& the();
-
-		inline const std::unique_ptr<Window>& get_window() { return window; };
-		inline const std::unique_ptr<Window>& get_window() const { return window; }
 
 		inline void layer_forward(LayerFunction&& func)
 		{
@@ -60,6 +64,12 @@ namespace Alabaster {
 				func(l);
 			}
 		}
+
+		static Application& the();
+		inline const std::unique_ptr<Window>& get_window() { return window; };
+		inline const std::unique_ptr<Window>& get_window() const { return window; }
+		inline const GUILayer& gui_layer();
+		inline const GUILayer& gui_layer() const;
 
 	private:
 		std::map<std::string, Layer*> layers;

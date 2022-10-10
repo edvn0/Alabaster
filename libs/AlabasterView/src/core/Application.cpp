@@ -37,14 +37,15 @@ namespace Alabaster {
 		GraphicsContext::the().destroy();
 	}
 
+	void Application::resize(int w, int h) { window->get_swapchain()->on_resize(w, h); }
+
+	const GUILayer& Application::gui_layer() const { return *static_cast<GUILayer*>(layers.at("ImGuiLayer")); };
+
+	const GUILayer& Application::gui_layer() { return *static_cast<GUILayer*>(layers.at("ImGuiLayer")); };
+
 	void Application::run()
 	{
 		on_init();
-
-		layer_forward([](Layer* layer) {
-			if (layer->name() != "ImGuiLayer")
-				layer->initialise();
-		});
 
 		double time = Clock::get_ms<double>();
 		static size_t frame_count = 1;

@@ -4,6 +4,8 @@
 
 namespace Alabaster {
 
+	static constexpr std::string_view GUI_LAYER_NAME = "ImGuiLayer";
+
 	class GUILayer : public Layer {
 	public:
 		GUILayer() = default;
@@ -18,7 +20,7 @@ namespace Alabaster {
 		static void end();
 
 	private:
-		std::string_view name() override { return "ImGuiLayer"; }
+		std::string_view name() override { return GUI_LAYER_NAME; }
 	};
 
 } // namespace Alabaster

@@ -16,6 +16,15 @@ namespace Alabaster {
 
 	void Swapchain::construct(GLFWwindow* handle, uint32_t width, uint32_t height)
 	{
+		int tw = 0, th = 0;
+		glfwGetFramebufferSize(handle, &tw, &th);
+		while (tw == 0 || th == 0) {
+			glfwGetFramebufferSize(handle, &tw, &th);
+			glfwWaitEvents();
+		}
+
+		vkDeviceWaitIdle(GraphicsContext::the().device());
+
 		sc_handle = handle;
 		sc_width = width;
 		sc_height = height;
@@ -252,7 +261,6 @@ namespace Alabaster {
 
 	void Swapchain::choose_extent(const Capabilities& in)
 	{
-		// discard a, b
 		const auto& capabilities = in.capabilities;
 
 		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {

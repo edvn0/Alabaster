@@ -35,6 +35,7 @@ namespace Alabaster {
 		Log::info("GLFW Initialised! Code: {}", success);
 
 		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name, nullptr, nullptr);
+		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int w, int h) { Application::the().resize(w, h); });
 
 		float pixel_size_x, pixel_size_y;
 		glfwGetWindowContentScale(handle, &pixel_size_x, &pixel_size_y);
@@ -67,5 +68,7 @@ namespace Alabaster {
 	void Window::update() { glfwPollEvents(); }
 
 	bool Window::should_close() { return glfwWindowShouldClose(handle); }
+
+	void Window::close() { glfwSetWindowShouldClose(handle, 1); }
 
 } // namespace Alabaster

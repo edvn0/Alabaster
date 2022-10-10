@@ -191,6 +191,7 @@
             "framebuffer",
             "Glfw",
             "imageview",
+            "Multisample",
             "renderable",
             "renderables",
             "renderpass",

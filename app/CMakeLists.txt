@@ -4,8 +4,7 @@ project(AlabasterApp)
 
 find_program(CLANG_FORMAT "clang-format")
 
-
 add_executable(${PROJECT_NAME} main.cpp AlabasterLayer.cpp)
 
-target_include_directories(${PROJECT_NAME} PRIVATE ../third_party/spdlog/include ../third_party/imgui)
+target_include_directories(${PROJECT_NAME} PRIVATE ../third_party/spdlog/include ../third_party/imgui ../third_party/debugbreak ../third_party/magic_enum/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE Alabaster::AlabasterView spdlog imgui)
