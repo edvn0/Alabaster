@@ -17,20 +17,20 @@ namespace Alabaster {
 #endif
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
-		VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* pUserData)
+		VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* p_user_data)
 	{
 		std::string type = message_type == 1 ? "General" : "1";
 		if (message_severity & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) {
-			Log::info("Validation Layer: [Message Type: {}, Message: {}]", type, callback_data->pMessage, callback_data->queueLabelCount);
+			Log::info("Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
-			Log::info("Validation Layer: [Message Type: {}, Message: {}]", type, callback_data->pMessage, callback_data->queueLabelCount);
+			Log::info("Info: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-			Log::warn("Validation Layer: [Message Type: {}, Message: {}]", type, callback_data->pMessage, callback_data->queueLabelCount);
+			Log::warn("Warning: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
-			Log::error("Validation Layer: [Message Type: {}, Message: {}]", type, callback_data->pMessage, callback_data->queueLabelCount);
+			Log::error("Error: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else {
 			Log::error("Message Severity: {}", message_severity);
@@ -209,6 +209,15 @@ namespace Alabaster {
 
 		vkGetDeviceQueue(vk_device, queues[QueueType::Graphics].family, 0, &queues[QueueType::Graphics].queue);
 		vkGetDeviceQueue(vk_device, queues[QueueType::Present].family, 0, &queues[QueueType::Present].queue);
+
+		VkCommandPoolCreateInfo cmd_pool_info = {};
+		cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		cmd_pool_info.queueFamilyIndex = graphics_queue_family();
+		cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		vk_check(vkCreateCommandPool(vk_device, &cmd_pool_info, nullptr, &command_pool));
+
+		cmd_pool_info.queueFamilyIndex = compute_queue_family();
+		vk_check(vkCreateCommandPool(vk_device, &cmd_pool_info, nullptr, &compute_command_pool));
 	}
 
 	void GraphicsContext::create_physical_device()
@@ -246,10 +255,6 @@ namespace Alabaster {
 
 	void GraphicsContext::find_queue_families()
 	{
-		static constexpr auto is_complete = [](const auto& qs) {
-			return qs.compute_queue_family != 0 && qs.transfer_queue_family != 0 && qs.graphics_queue_family != 0 && qs.present_queue_family != 0;
-		};
-
 		QueueIndices indices;
 
 		uint32_t nr_families = 0;
@@ -266,9 +271,14 @@ namespace Alabaster {
 				queues[QueueType::Graphics].family = *indices.graphics;
 			}
 
+			if (queue_family.queueFlags & VK_QUEUE_COMPUTE_BIT) {
+				indices.compute = family_index;
+				queues[QueueType::Compute].family = *indices.compute;
+			}
+
 			// The implicit assumption here is that this queue can present...
 			indices.present = family_index;
-			queues[QueueType::Present].family = *indices.graphics;
+			queues[QueueType::Present].family = *indices.present;
 
 			if (indices.is_complete()) {
 				break;
@@ -276,6 +286,54 @@ namespace Alabaster {
 
 			family_index++;
 		}
+	}
+
+	VkCommandBuffer GraphicsContext::get_command_buffer(bool begin, bool compute)
+	{
+		VkCommandBuffer cmd_buffer;
+
+		VkCommandBufferAllocateInfo cbai = {};
+		cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		cbai.commandPool = compute ? compute_command_pool : command_pool;
+		cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		cbai.commandBufferCount = 1;
+
+		vk_check(vkAllocateCommandBuffers(device(), &cbai, &cmd_buffer));
+
+		if (begin) {
+			VkCommandBufferBeginInfo cmd_buffer_begin_info {};
+			cmd_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			vk_check(vkBeginCommandBuffer(cmd_buffer, &cmd_buffer_begin_info));
+		}
+
+		return cmd_buffer;
+	}
+
+	void GraphicsContext::flush_command_buffer(VkCommandBuffer command_buffer, VkQueue queue)
+	{
+		static constexpr uint64_t default_fence_timeout = 100000000000;
+
+		vk_check(vkEndCommandBuffer(command_buffer));
+
+		VkSubmitInfo qsi = {};
+		qsi.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		qsi.commandBufferCount = 1;
+		qsi.pCommandBuffers = &command_buffer;
+
+		// Create fence to ensure that the command buffer has finished executing
+		VkFenceCreateInfo fci = {};
+		fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fci.flags = 0;
+		VkFence fence;
+		vk_check(vkCreateFence(device(), &fci, nullptr, &fence));
+
+		// Submit to the queue
+		vk_check(vkQueueSubmit(queue, 1, &qsi, fence));
+		// Wait for the fence to signal that command buffer has finished executing
+		vk_check(vkWaitForFences(device(), 1, &fence, VK_TRUE, default_fence_timeout));
+
+		vkDestroyFence(device(), fence, nullptr);
+		vkFreeCommandBuffers(device(), command_pool, 1, &command_buffer);
 	}
 
 } // namespace Alabaster

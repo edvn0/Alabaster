@@ -10,6 +10,11 @@
 
 namespace Alabaster {
 
+	std::pair<std::filesystem::path, std::filesystem::path> to_path(const auto& path)
+	{
+		return { path.string() + ".vert.spv", path.string() + ".frag.spv" };
+	}
+
 	static VkShaderModule create(std::string code)
 	{
 		VkShaderModuleCreateInfo shader_create_info {};
@@ -25,16 +30,14 @@ namespace Alabaster {
 
 	Shader::Shader(const std::filesystem::path& path)
 	{
-		auto vertex_path = path / ".vert.spv";
-		auto fragment_path = path / ".frag.spv";
+		auto [vert, frag] = to_path(path);
+		verify(std::filesystem::exists(vert), "Could not find vertex shader.");
+		verify(std::filesystem::exists(frag), "Could not find fragment shader.");
 
-		verify(std::filesystem::exists(vertex_path));
-		verify(std::filesystem::exists(fragment_path));
-
-		vertex_shader_module = create(std::move(IO::read_file(vertex_path)));
-		Log::info("Vertex shader read at: {}, and compiled!", vertex_path);
-		fragment_shader_module = create(std::move(IO::read_file(fragment_path)));
-		Log::info("Fragment shader read at: {}, and compiled!", fragment_path);
+		vertex_shader_module = create(std::move(IO::read_file(vert)));
+		Log::info("Vertex shader read at: {}, and compiled!", vert);
+		fragment_shader_module = create(std::move(IO::read_file(frag)));
+		Log::info("Fragment shader read at: {}, and compiled!", frag);
 	}
 
 } // namespace Alabaster

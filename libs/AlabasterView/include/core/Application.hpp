@@ -30,7 +30,7 @@ namespace Alabaster {
 		Application(Application&&) = delete;
 		void operator=(const Application&) = delete;
 
-		~Application();
+		virtual ~Application();
 
 		inline void push_layer(Layer* layer)
 		{
@@ -63,5 +63,7 @@ namespace Alabaster {
 		std::map<std::string, Layer*> layers;
 		std::unique_ptr<Window> window;
 	};
+
+	Application* create(const ApplicationArguments&);
 
 } // namespace Alabaster

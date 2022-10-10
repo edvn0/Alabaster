@@ -24,6 +24,8 @@ namespace Alabaster {
 
 		const std::pair<int, int> framebuffer_extent() const;
 
+		void swap_buffers();
+
 	private:
 		void setup_events();
 

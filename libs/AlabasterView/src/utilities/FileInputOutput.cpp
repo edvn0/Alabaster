@@ -17,6 +17,6 @@ namespace Alabaster::IO {
 		}
 		out.append(buf, 0, stream.gcount());
 		return out;
-	} // namespace Alabaster::IO
+	}
 
 } // namespace Alabaster::IO

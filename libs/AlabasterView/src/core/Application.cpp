@@ -4,10 +4,11 @@
 
 #include "core/Clock.hpp"
 #include "core/GUILayer.hpp"
+#include "core/Input.hpp"
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
-#include "graphics/GraphicsContext.hpp"
 #include "graphics/Shader.hpp"
+#include "graphics/Swapchain.hpp"
 
 namespace Alabaster {
 
@@ -18,11 +19,10 @@ namespace Alabaster {
 	Application::Application(const ApplicationArguments& args)
 	{
 		assert(global_app == nullptr);
-		Logger::init();
 
 		global_app = this;
 		window = std::make_unique<Window>(args);
-		auto shader = Shader(std::filesystem::path { "app/resouces/shaders/First" });
+		auto shader = Shader(std::filesystem::path { "app/resources/shaders/main" });
 		push_layer(new GUILayer());
 	}
 
@@ -32,7 +32,10 @@ namespace Alabaster {
 
 	void Application::run()
 	{
-		layer_forward([](Layer* layer) { layer->initialise(); });
+		layer_forward([](Layer* layer) {
+			if (layer->name() != "ImGuiLayer")
+				layer->initialise();
+		});
 
 		double time = Clock::get_ms<double>();
 		static size_t frame_count = 1;
@@ -43,8 +46,20 @@ namespace Alabaster {
 			auto ts = current_time - time;
 			layer_backward([&ts](Layer* layer) { layer->update(ts); });
 
+			GUILayer::begin();
+			layer_backward([&ts](Layer* layer) { layer->ui(ts); });
+			GUILayer::end();
+
+			window->get_swapchain()->begin_frame();
+			window->swap_buffers();
 			time = current_time;
 			frame_count++;
+
+			if (Input::key(Key::Escape)) {
+				Log::info("Exiting");
+				break;
+			}
 		}
 	}
+
 } // namespace Alabaster

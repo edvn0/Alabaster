@@ -53,10 +53,12 @@ namespace Alabaster {
 
 	const std::pair<int, int> Window::framebuffer_extent() const
 	{
-		int width, height;
-		glfwGetFramebufferSize(handle, &width, &height);
-		return { width, height };
+		int tw, th;
+		glfwGetFramebufferSize(handle, &tw, &th);
+		return { tw, th };
 	}
+
+	void Window::swap_buffers() { swapchain->present(); }
 
 	void Window::setup_events() { }
 

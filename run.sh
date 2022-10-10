@@ -15,4 +15,4 @@ cmake -B build -GNinja \
 cmake --build build
 rm "$current_dir/compile_commands.json"
 ln -s build/compile_commands.json "$current_dir"
-exec ./build/app/AlabasterApp
+exec ./build/app/AlabasterApp "$@"

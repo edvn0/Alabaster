@@ -7,8 +7,9 @@ namespace Alabaster {
 
 	class Shader {
 	public:
-		/// @brief Create a shader.This looks for <path_and_filename>.vert.spv and <path_and_filename>.frag.spv or <path_and_filename>-vert.spv and
-		/// <path_and_filename>-frag.spv
+		/// @brief Create a shader.
+		///     This looks for <path_and_filename>.vert.spv and <path_and_filename>.frag.spv
+		///     or <path_and_filename>-vert.spv and <path_and_filename>-frag.spv
 		/// @param path_and_filename
 		Shader(const std::filesystem::path& path_and_filename);
 

@@ -2,6 +2,7 @@
 
 #include "core/Logger.hpp"
 
+#include <debug_break.h>
 #include <magic_enum.hpp>
 
 namespace Alabaster {
@@ -17,8 +18,17 @@ namespace Alabaster {
 
 	template <typename PositiveCondition> auto verify(PositiveCondition&& happy) -> void
 	{
-		if (!static_cast<bool>(happy)) {
+		auto result = static_cast<bool>(happy);
+		if (!result) {
 			Log::error("Verification failed.");
+		}
+	}
+
+	template <typename PositiveCondition> auto verify(PositiveCondition&& happy, std::string_view message) -> void
+	{
+		auto result = static_cast<bool>(happy);
+		if (!result) {
+			Log::error("Verification failed. Message: {}", message);
 		}
 	}
 
