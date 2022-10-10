@@ -14,7 +14,7 @@ namespace Alabaster {
 
 	private:
 		GraphicsContext();
-		~GraphicsContext();
+		~GraphicsContext() = default;
 
 	public:
 		static inline GraphicsContext& the()
@@ -22,6 +22,8 @@ namespace Alabaster {
 			static GraphicsContext context;
 			return context;
 		}
+
+		void destroy();
 
 		inline VkInstance instance() { return vk_instance; };
 		inline VkPhysicalDevice physical_device() { return vk_physical_device; };

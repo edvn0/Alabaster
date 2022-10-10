@@ -12,6 +12,8 @@ namespace Alabaster {
 		Window(const ApplicationArguments&);
 		~Window();
 
+		void destroy();
+
 		bool should_close();
 
 		void update();

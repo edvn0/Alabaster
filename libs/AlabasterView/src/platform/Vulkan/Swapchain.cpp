@@ -111,24 +111,21 @@ namespace Alabaster {
 
 		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &vk_render_pass));
 
-		// Create framebuffers for every swapchain image
-		{
-			for (auto& framebuffer : frame_buffers)
-				vkDestroyFramebuffer(GraphicsContext::the().device(), framebuffer, nullptr);
+		for (auto& framebuffer : frame_buffers)
+			vkDestroyFramebuffer(GraphicsContext::the().device(), framebuffer, nullptr);
 
-			VkFramebufferCreateInfo framebuffer_create_info = {};
-			framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			framebuffer_create_info.renderPass = vk_render_pass;
-			framebuffer_create_info.attachmentCount = 1;
-			framebuffer_create_info.width = width;
-			framebuffer_create_info.height = height;
-			framebuffer_create_info.layers = 1;
+		VkFramebufferCreateInfo framebuffer_create_info = {};
+		framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebuffer_create_info.renderPass = vk_render_pass;
+		framebuffer_create_info.attachmentCount = 1;
+		framebuffer_create_info.width = width;
+		framebuffer_create_info.height = height;
+		framebuffer_create_info.layers = 1;
 
-			frame_buffers.resize(image_count);
-			for (uint32_t i = 0; i < frame_buffers.size(); i++) {
-				framebuffer_create_info.pAttachments = &images.views[i];
-				vk_check(vkCreateFramebuffer(GraphicsContext::the().device(), &framebuffer_create_info, nullptr, &frame_buffers[i]));
-			}
+		frame_buffers.resize(image_count);
+		for (uint32_t i = 0; i < frame_buffers.size(); i++) {
+			framebuffer_create_info.pAttachments = &images.views[i];
+			vk_check(vkCreateFramebuffer(GraphicsContext::the().device(), &framebuffer_create_info, nullptr, &frame_buffers[i]));
 		}
 
 		Log::info("Successfully created the swapchain and retrieved its {} images.", image_count);
@@ -144,8 +141,6 @@ namespace Alabaster {
 
 	void Swapchain::present()
 	{
-		Log::info("Previous: {}, Current: {}", current_frame, current_image_index);
-
 		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkSubmitInfo present_submit_info = {};
@@ -184,9 +179,7 @@ namespace Alabaster {
 			}
 		}
 
-		{
-			current_frame = (current_frame + 1) % image_count;
-		}
+		current_frame = (current_frame + 1) % image_count;
 	}
 
 	void Swapchain::on_resize(uint32_t w, uint32_t h)
@@ -370,26 +363,42 @@ namespace Alabaster {
 		}
 	}
 
-	Swapchain::~Swapchain()
+	Swapchain::~Swapchain() = default;
+
+	void Swapchain::destroy()
 	{
-		const auto& device = GraphicsContext::the().device();
+		auto vk_device = GraphicsContext::the().device();
+		vkDeviceWaitIdle(vk_device);
 
-		for (size_t i = 0; i < image_count; i++) {
-			vkDestroySemaphore(device, sync_objects[i].image_available, nullptr);
-			vkDestroySemaphore(device, sync_objects[i].render_finished, nullptr);
-			vkDestroyFence(device, sync_objects[i].in_flight_fence, nullptr);
-		}
+		if (vk_swapchain)
+			vkDestroySwapchainKHR(vk_device, vk_swapchain, nullptr);
 
-		for (auto framebuffer : frame_buffers) {
-			vkDestroyFramebuffer(device, framebuffer, nullptr);
-		}
+		for (auto& view : images.views)
+			vkDestroyImageView(vk_device, view, nullptr);
 
-		for (auto view : images.views) {
-			vkDestroyImageView(device, view, nullptr);
-		}
+		for (auto& cmd_buffer : command_buffers)
+			vkDestroyCommandPool(vk_device, cmd_buffer.command_pool, nullptr);
+
+		if (vk_render_pass)
+			vkDestroyRenderPass(vk_device, vk_render_pass, nullptr);
+
+		for (auto framebuffer : frame_buffers)
+			vkDestroyFramebuffer(vk_device, framebuffer, nullptr);
+
+		for (auto i = 0; i < sync_objects.size(); i++)
+			if (sync_objects[i].image_available)
+				vkDestroySemaphore(vk_device, sync_objects[i].image_available, nullptr);
+
+		for (auto i = 0; i < sync_objects.size(); i++)
+			if (sync_objects[i].render_finished)
+				vkDestroySemaphore(vk_device, sync_objects[i].render_finished, nullptr);
+
+		for (auto i = 0; i < sync_objects.size(); i++)
+			vkDestroyFence(vk_device, sync_objects[i].in_flight_fence, nullptr);
 
 		vkDestroySurfaceKHR(GraphicsContext::the().instance(), vk_surface, nullptr);
-		vkDestroySwapchainKHR(device, vk_swapchain, nullptr);
+
+		vkDeviceWaitIdle(vk_device);
 	}
 
 } // namespace Alabaster

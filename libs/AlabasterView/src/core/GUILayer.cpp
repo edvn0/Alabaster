@@ -151,7 +151,8 @@ namespace Alabaster {
 		cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
 		cbi.pInheritanceInfo = &inheritance_info;
 
-		vk_check(vkBeginCommandBuffer(imgui_command_buffers[command_buffer_index], &cbi));
+		const auto& imgui_buffer = imgui_command_buffers[command_buffer_index];
+		vk_check(vkBeginCommandBuffer(imgui_buffer, &cbi));
 
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
@@ -160,21 +161,21 @@ namespace Alabaster {
 		viewport.height = -(float)height;
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(imgui_command_buffers[command_buffer_index], 0, 1, &viewport);
+		vkCmdSetViewport(imgui_buffer, 0, 1, &viewport);
 
 		VkRect2D scissor = {};
 		scissor.extent.width = width;
 		scissor.extent.height = height;
 		scissor.offset.x = 0;
 		scissor.offset.y = 0;
-		vkCmdSetScissor(imgui_command_buffers[command_buffer_index], 0, 1, &scissor);
+		vkCmdSetScissor(imgui_buffer, 0, 1, &scissor);
 
 		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_command_buffers[command_buffer_index]);
+		ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_buffer);
 
-		vk_check(vkEndCommandBuffer(imgui_command_buffers[command_buffer_index]));
+		vk_check(vkEndCommandBuffer(imgui_buffer));
 
-		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_command_buffers[command_buffer_index]);
+		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
 
 		vkCmdEndRenderPass(draw_command_buffer);
 
@@ -197,5 +198,15 @@ namespace Alabaster {
 
 		Layer::ui(timestep);
 	}
+
+	GUILayer::~GUILayer() = default;
+
+	void GUILayer::destroy()
+	{
+		vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
+		ImGui_ImplVulkan_Shutdown();
+		ImGui_ImplGlfw_Shutdown();
+		ImGui::DestroyContext();
+	};
 
 } // namespace Alabaster

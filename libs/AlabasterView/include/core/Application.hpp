@@ -32,6 +32,8 @@ namespace Alabaster {
 
 		virtual ~Application();
 
+		virtual void on_init() {};
+
 		inline void push_layer(Layer* layer)
 		{
 			layer->initialise();

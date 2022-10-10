@@ -12,6 +12,8 @@ namespace Alabaster {
 		Swapchain() = default;
 		~Swapchain();
 
+		void destroy();
+
 		void construct(GLFWwindow*, uint32_t width, uint32_t height);
 		void on_resize(uint32_t w, uint32_t h);
 

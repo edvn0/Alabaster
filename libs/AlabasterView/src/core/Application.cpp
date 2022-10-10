@@ -7,6 +7,7 @@
 #include "core/Input.hpp"
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
+#include "graphics/GraphicsContext.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/Swapchain.hpp"
 
@@ -28,10 +29,18 @@ namespace Alabaster {
 
 	Application::~Application() { stop(); }
 
-	void Application::stop() { Logger::shutdown(); }
+	void Application::stop()
+	{
+		layer_forward([](auto* l) { l->destroy(); });
+
+		window->destroy();
+		GraphicsContext::the().destroy();
+	}
 
 	void Application::run()
 	{
+		on_init();
+
 		layer_forward([](Layer* layer) {
 			if (layer->name() != "ImGuiLayer")
 				layer->initialise();
@@ -46,12 +55,11 @@ namespace Alabaster {
 			auto ts = current_time - time;
 			layer_backward([&ts](Layer* layer) { layer->update(ts); });
 
+			window->get_swapchain()->begin_frame();
 			GUILayer::begin();
 			layer_backward([&ts](Layer* layer) { layer->ui(ts); });
 			GUILayer::end();
 
-			window->get_swapchain()->begin_frame();
-			window->swap_buffers();
 			time = current_time;
 			frame_count++;
 
@@ -59,6 +67,7 @@ namespace Alabaster {
 				Log::info("Exiting");
 				break;
 			}
+			window->swap_buffers();
 		}
 	}
 

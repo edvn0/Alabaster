@@ -102,10 +102,16 @@ namespace Alabaster {
 		create_device();
 	}
 
-	GraphicsContext::~GraphicsContext()
+	void GraphicsContext::destroy()
 	{
+		vkDeviceWaitIdle(device());
+
+		vkDestroyCommandPool(device(), command_pool, nullptr);
+		vkDestroyCommandPool(device(), compute_command_pool, nullptr);
+
 		destroy_debug_messenger(vk_instance, debug_messenger, nullptr);
 		vkDestroyDevice(vk_device, nullptr);
+		vkDestroyInstance(vk_instance, nullptr);
 	}
 
 	void GraphicsContext::setup_debug_messenger()

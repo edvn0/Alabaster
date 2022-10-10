@@ -9,10 +9,12 @@
 
 namespace Alabaster {
 
-	void error_callback(int error, const char* description) { fprintf(stderr, "Error: %s\n", description); }
+	Window::~Window() = default;
 
-	Window::~Window()
+	void Window::destroy()
 	{
+		swapchain->destroy();
+
 		glfwDestroyWindow(handle);
 		glfwTerminate();
 	}

@@ -7,11 +7,12 @@ namespace Alabaster {
 	class GUILayer : public Layer {
 	public:
 		GUILayer() = default;
+		~GUILayer();
 
 		bool initialise() override;
 		void update(float timestep) override {};
 		void ui(float timestep) override;
-		void destroy() override {};
+		void destroy() override;
 
 		static void begin();
 		static void end();
