@@ -15,6 +15,9 @@ struct AlabasterLayer : public Alabaster::Layer {
 	void destroy() override;
 
 private:
+	void create_vertex_buffer();
+
+private:
 	std::string_view name() override { return "AlabasterLayer"; }
 
 	std::unique_ptr<Alabaster::Pipeline> graphics_pipeline;
@@ -22,4 +25,11 @@ private:
 	glm::vec2 viewport_bounds[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
 	bool viewport_focused = false, viewport_hovered = false;
 	bool is_dockspace_open { true };
+
+	VkBuffer vertex_buffers[1]{nullptr};
+
+	VkBuffer vb;
+	VkDeviceMemory vb_mem;
+
+	Alabaster::VertexBuffer vertex_buffer;
 };

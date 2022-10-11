@@ -30,6 +30,9 @@ namespace Alabaster {
 
 		uint32_t frame() const { return current_frame; }
 
+		auto image() const { return images.views[frame()]; }
+		auto swapchain_extent() const { return extent; }
+
 		VkCommandBuffer get_current_drawbuffer() const { return command_buffers[frame()].buffer; }
 		VkFramebuffer get_current_framebuffer() const { return frame_buffers[frame()]; };
 
@@ -91,6 +94,7 @@ namespace Alabaster {
 		void create_swapchain(const Capabilities&);
 		void create_synchronisation_objects();
 		void retrieve_images();
+		void cleanup_swapchain();
 	};
 
 } // namespace Alabaster

@@ -16,6 +16,7 @@ namespace Alabaster {
 
 	void Swapchain::construct(GLFWwindow* handle, uint32_t width, uint32_t height)
 	{
+		Log::info("[Swapchain] Creating swapchain.");
 		int tw = 0, th = 0;
 		glfwGetFramebufferSize(handle, &tw, &th);
 		while (tw == 0 || th == 0) {
@@ -44,27 +45,25 @@ namespace Alabaster {
 		create_swapchain(capabilities);
 		retrieve_images();
 
-		{
-			for (auto& cmd_buffer : command_buffers)
-				vkDestroyCommandPool(GraphicsContext::the().device(), cmd_buffer.command_pool, nullptr);
+		for (auto& cmd_buffer : command_buffers)
+			vkDestroyCommandPool(GraphicsContext::the().device(), cmd_buffer.command_pool, nullptr);
 
-			VkCommandPoolCreateInfo pci = {};
-			pci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-			pci.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
-			pci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		VkCommandPoolCreateInfo pci = {};
+		pci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		pci.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
+		pci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-			VkCommandBufferAllocateInfo command_buffer_allocate_info {};
-			command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-			command_buffer_allocate_info.commandBufferCount = 1;
+		VkCommandBufferAllocateInfo command_buffer_allocate_info {};
+		command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		command_buffer_allocate_info.commandBufferCount = 1;
 
-			command_buffers.resize(image_count);
-			for (auto& cmd_buffer : command_buffers) {
-				vk_check(vkCreateCommandPool(GraphicsContext::the().device(), &pci, nullptr, &cmd_buffer.command_pool));
+		command_buffers.resize(image_count);
+		for (auto& cmd_buffer : command_buffers) {
+			vk_check(vkCreateCommandPool(GraphicsContext::the().device(), &pci, nullptr, &cmd_buffer.command_pool));
 
-				command_buffer_allocate_info.commandPool = cmd_buffer.command_pool;
-				vk_check(vkAllocateCommandBuffers(GraphicsContext::the().device(), &command_buffer_allocate_info, &cmd_buffer.buffer));
-			}
+			command_buffer_allocate_info.commandPool = cmd_buffer.command_pool;
+			vk_check(vkAllocateCommandBuffers(GraphicsContext::the().device(), &command_buffer_allocate_info, &cmd_buffer.buffer));
 		}
 
 		create_synchronisation_objects();
@@ -137,9 +136,7 @@ namespace Alabaster {
 			vk_check(vkCreateFramebuffer(GraphicsContext::the().device(), &framebuffer_create_info, nullptr, &frame_buffers[i]));
 		}
 
-		Log::info("Successfully created the swapchain and retrieved its {} images.", image_count);
-		Log::info("SC Info: [Format: {}. Present Mode: {}. Extent: {} by {}]", enum_name(format.format), enum_name(present_format), extent.width,
-			extent.height);
+		Log::info("[Swapchain] Successfully created the swapchain and retrieved its {} images.", image_count);
 	}
 
 	void Swapchain::begin_frame()
@@ -194,8 +191,23 @@ namespace Alabaster {
 	void Swapchain::on_resize(uint32_t w, uint32_t h)
 	{
 		vkDeviceWaitIdle(GraphicsContext::the().device());
+		cleanup_swapchain();
+
 		construct(sc_handle, w, h);
 		vkDeviceWaitIdle(GraphicsContext::the().device());
+	}
+
+	void Swapchain::cleanup_swapchain()
+	{
+		for (size_t i = 0; i < frame_buffers.size(); i++) {
+			vkDestroyFramebuffer(GraphicsContext::the().device(), frame_buffers[i], nullptr);
+		}
+
+		for (size_t i = 0; i < images.views.size(); i++) {
+			vkDestroyImageView(GraphicsContext::the().device(), images.views[i], nullptr);
+		}
+
+		vkDestroySwapchainKHR(GraphicsContext::the().device(), vk_swapchain, nullptr);
 	}
 
 	uint32_t Swapchain::get_next_image()
@@ -286,6 +298,8 @@ namespace Alabaster {
 			image_count = capabilities.maxImageCount;
 		}
 
+		auto old_sc = vk_swapchain;
+
 		VkSwapchainCreateInfoKHR swapchain_create_info {};
 		swapchain_create_info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
 		swapchain_create_info.surface = vk_surface;
@@ -312,12 +326,6 @@ namespace Alabaster {
 		swapchain_create_info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
 		swapchain_create_info.presentMode = present_format;
 		swapchain_create_info.clipped = VK_TRUE;
-
-		swapchain_create_info.oldSwapchain = VK_NULL_HANDLE;
-
-		if (vk_swapchain) {
-			swapchain_create_info.oldSwapchain = vk_swapchain;
-		}
 
 		vk_check(vkCreateSwapchainKHR(GraphicsContext::the().device(), &swapchain_create_info, nullptr, &vk_swapchain));
 	}

@@ -10,7 +10,7 @@
 
 namespace Alabaster {
 
-	static VkFormat shader_datatype_to_vulkan(ShaderDataType type)
+	static VkFormat datatype_to_vulkan(ShaderDataType type)
 	{
 		switch (type) {
 		case ShaderDataType::Float:
@@ -40,7 +40,6 @@ namespace Alabaster {
 
 	void Pipeline::invalidate()
 	{
-		Log::info("[VulkanPipeline] Creating pipeline {}", spec.debug_name);
 
 		VkDevice device = GraphicsContext::the().device();
 		auto shader = spec.shader;
@@ -48,10 +47,10 @@ namespace Alabaster {
 		VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
 		pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipeline_layout_create_info.pNext = nullptr;
-		// pipeline_layout_create_info.setLayoutCount = (uint32_t)descriptorSetLayouts.size();
+		// pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
 		// pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts.data();
-		// pipeline_layout_create_info.pushConstantRangeCount = (uint32_t)vulkanPushConstantRanges.size();
-		// pipeline_layout_create_info.pPushConstantRanges = vulkanPushConstantRanges.data();
+		//  pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t>(vulkanPushConstantRanges.size());
+		//  pipeline_layout_create_info.pPushConstantRanges = vulkanPushConstantRanges.data();
 
 		vk_check(vkCreatePipelineLayout(device, &pipeline_layout_create_info, nullptr, &pipeline_layout));
 
@@ -69,12 +68,13 @@ namespace Alabaster {
 		rasterisation_state.polygonMode = spec.wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
 		rasterisation_state.cullMode = spec.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
 		rasterisation_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
-		rasterisation_state.depthClampEnable = VK_TRUE;
+		rasterisation_state.depthClampEnable = VK_FALSE;
 		rasterisation_state.rasterizerDiscardEnable = VK_TRUE;
 		rasterisation_state.depthBiasEnable = VK_FALSE;
 		rasterisation_state.depthBiasConstantFactor = 0.0f; // Optional
 		rasterisation_state.depthBiasClamp = 0.0f; // Optional
 		rasterisation_state.depthBiasSlopeFactor = 0.0f; // Optional;
+		rasterisation_state.lineWidth = 1.0f;
 
 		VkPipelineColorBlendAttachmentState color_blend_attachment {};
 		color_blend_attachment.colorWriteMask
@@ -158,10 +158,11 @@ namespace Alabaster {
 		uint32_t location = 0;
 		for (const auto& layout : { vertex_layout, instance_layout }) {
 			for (const auto& element : layout) {
-				vertex_input_attributes[location].binding = binding;
-				vertex_input_attributes[location].location = location;
-				vertex_input_attributes[location].format = shader_datatype_to_vulkan(element.shader_data_type);
-				vertex_input_attributes[location].offset = element.offset;
+				auto& attribute = vertex_input_attributes[location];
+				attribute.binding = binding;
+				attribute.location = location;
+				attribute.format = datatype_to_vulkan(element.shader_data_type);
+				attribute.offset = element.offset;
 				location++;
 			}
 			binding++;
@@ -170,9 +171,9 @@ namespace Alabaster {
 		// Vertex input state used for pipeline creation
 		VkPipelineVertexInputStateCreateInfo vertex_input_state = {};
 		vertex_input_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertex_input_state.vertexBindingDescriptionCount = (uint32_t)vertex_input_binding_descriptor.size();
+		vertex_input_state.vertexBindingDescriptionCount = static_cast<uint32_t>(vertex_input_binding_descriptor.size());
 		vertex_input_state.pVertexBindingDescriptions = vertex_input_binding_descriptor.data();
-		vertex_input_state.vertexAttributeDescriptionCount = (uint32_t)vertex_input_attributes.size();
+		vertex_input_state.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertex_input_attributes.size());
 		vertex_input_state.pVertexAttributeDescriptions = vertex_input_attributes.data();
 
 		const auto& stages = shader.stages();
@@ -200,13 +201,16 @@ namespace Alabaster {
 		// Create rendering pipeline using the specified states
 		vk_check(vkCreateGraphicsPipelines(device, pipeline_cache, 1, &pipeline_create_info, nullptr, &pipeline));
 
-		// Shader modules are no longer needed once the graphics pipeline has been created
-		// vkDestroyShaderModule(device, shaderStages[0].module, nullptr);
-		// vkDestroyShaderModule(device, shaderStages[1].module, nullptr);
-
-		// descriptor_sets = vulkanShader->allocate_descriptor_set(0);
+		Log::info("[Pipeline] Created pipeline {}.", spec.debug_name);
 	}
 
-	void Pipeline::destroy() { spec.shader.destroy(); }
+	void Pipeline::destroy()
+	{
+		spec.shader.destroy();
+		vkDestroyPipelineCache(GraphicsContext::the().device(), pipeline_cache, nullptr);
+		vkDestroyPipelineLayout(GraphicsContext::the().device(), pipeline_layout, nullptr);
+		vkDestroyPipeline(GraphicsContext::the().device(), pipeline, nullptr);
+		Log::info("[Pipeline] Destroyed pipeline {} and its dependents.", spec.debug_name);
+	}
 
 } // namespace Alabaster

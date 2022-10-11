@@ -7,6 +7,7 @@
 #include "core/Input.hpp"
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
+#include "graphics/Allocator.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/Swapchain.hpp"
@@ -37,6 +38,7 @@ namespace Alabaster {
 
 		window->destroy();
 		GraphicsContext::the().destroy();
+		Allocator::shutdown();
 	}
 
 	void Application::resize(int w, int h) { window->get_swapchain()->on_resize(w, h); }
@@ -59,9 +61,9 @@ namespace Alabaster {
 			auto ts = current_time - time;
 			frametime_counter += ts;
 
+			window->get_swapchain()->begin_frame();
 			layer_backward([&ts](Layer* layer) { layer->update(ts); });
 
-			window->get_swapchain()->begin_frame();
 			GUILayer::begin();
 			layer_backward([&ts](Layer* layer) { layer->ui(ts); });
 			GUILayer::end();
@@ -70,13 +72,10 @@ namespace Alabaster {
 			frame_count++;
 
 			if (frame_count % 50 == 0) {
-				app_ts = frametime_counter / frame_count;
+				app_ts = frametime_counter / 50;
+				frametime_counter = 0;
 			}
 
-			if (Input::key(Key::Escape)) {
-				Log::info("Exiting");
-				break;
-			}
 			window->swap_buffers();
 		}
 	}

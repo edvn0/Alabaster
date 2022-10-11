@@ -33,9 +33,7 @@ namespace Alabaster {
 		verify(IO::exists(frag), "Could not find fragment shader.");
 
 		auto vertex_shader_module = create(std::move(IO::read_file(vert)));
-		Log::info("Vertex shader read at: {}, and compiled!", vert);
 		auto fragment_shader_module = create(std::move(IO::read_file(frag)));
-		Log::info("Fragment shader read at: {}, and compiled!", frag);
 
 		VkPipelineShaderStageCreateInfo vertex_stage {};
 		vertex_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -50,6 +48,8 @@ namespace Alabaster {
 		fragment_stage.pName = "main";
 
 		shader_stages = { vertex_stage, fragment_stage };
+
+		Log::info("[Shader] Shader stages created.");
 	}
 
 	void Shader::destroy()
@@ -58,6 +58,7 @@ namespace Alabaster {
 			vkDestroyShaderModule(GraphicsContext::the().device(), stage.module, nullptr);
 			stage = {};
 		}
+		Log::info("[Shader] Shader stages deleted.");
 	}
 
 } // namespace Alabaster

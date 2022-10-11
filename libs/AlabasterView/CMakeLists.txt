@@ -23,9 +23,9 @@ target_include_directories(
     ${PROJECT_NAME}
     PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     INTERFACE ${Vulkan_INCLUDE_DIRS}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include /usr/local/include ../../third_party/imgui ../../third_party/imgui/backends ../../third_party/debugbreak ../../third_party/magic_enum/include)
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include /usr/local/include ../../third_party/imgui ../../third_party/imgui/backends ../../third_party/debugbreak ../../third_party/magic_enum/include ../../third_party/VulkanMemoryAllocator/include)
 
-target_link_libraries(${PROJECT_NAME} INTERFACE Boost::program_options PRIVATE glfw imgui Vulkan::Vulkan spdlog magic_enum)
+target_link_libraries(${PROJECT_NAME} INTERFACE Boost::program_options PRIVATE glfw imgui Vulkan::Vulkan spdlog magic_enum VulkanMemoryAllocator)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/av_pch.hpp)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-volatile)

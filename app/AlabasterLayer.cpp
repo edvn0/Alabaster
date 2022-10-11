@@ -2,34 +2,114 @@
 // Created by Edwin Carlsson on 2022-10-10.
 //
 
-#include "Alabaster.hpp"
 #include "AlabasterLayer.hpp"
 
+#include "Alabaster.hpp"
+
+#include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
+
+using namespace Alabaster;
+
+uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
+	VkPhysicalDeviceMemoryProperties memProperties;
+	vkGetPhysicalDeviceMemoryProperties(GraphicsContext::the().physical_device(), &memProperties);
+
+	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+			return i;
+		}
+	}
+
+	throw std::runtime_error("failed to find suitable memory type!");
+}
+
+
+struct Vertex {
+	glm::vec4 data;
+};
+
+const std::vector<Vertex> vertices = {
+	{ { 0.0, 0.0, 0.0, 0.0 } },
+	{ { 0.0, 0.0, 0.0, 0.0 } },
+	{ { 0.0, 0.0, 0.0, 0.0 } },
+	{ { 0.0, 0.0, 0.0, 0.0 } },
+};
 
 bool AlabasterLayer::initialise()
 {
-	Alabaster::PipelineSpecification spec {
-		.shader = Alabaster::Shader("app/resources/shaders/main"),
+	PipelineSpecification spec {
+		.shader = Shader("app/resources/shaders/main"),
 		.debug_name = "Test",
+		.render_pass = Application::the().get_window()->get_swapchain()->get_render_pass(),
 		.wireframe = false,
 		.backface_culling = true,
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 		.depth_test = true,
 		.depth_write = true,
-		.vertex_layout = {},
+		.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "test") },
 		.instance_layout = {},
 	};
 
-	graphics_pipeline = std::make_unique<Alabaster::Pipeline>(spec);
+	// vertex_buffer = VertexBuffer(vertices.data(), vertices.size() * sizeof(Vertex));
+	create_vertex_buffer();
+	vertex_buffers[0] = vb;
+
+	graphics_pipeline = std::make_unique<Pipeline>(spec);
+	graphics_pipeline->invalidate();
 	return true;
 }
 
-void AlabasterLayer::update(float ts) { Layer::update(ts); }
+void AlabasterLayer::update(float ts)
+{
+	auto buffer = GraphicsContext::the().get_command_buffer(true);
+
+	auto extent = Application::the().get_window()->get_swapchain()->swapchain_extent();
+
+	VkRenderPassBeginInfo render_pass_info {};
+	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	render_pass_info.renderPass = Application::the().get_window()->get_swapchain()->get_render_pass();
+	render_pass_info.framebuffer = Application::the().get_window()->get_swapchain()->get_current_framebuffer();
+	render_pass_info.renderArea.offset = { 0, 0 };
+	render_pass_info.renderArea.extent = extent;
+
+	VkClearValue clear = { { { 0.0f, 0.0f, 0.0f, 1.0f } } };
+	render_pass_info.clearValueCount = 1;
+	render_pass_info.pClearValues = &clear;
+
+	vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->get_vulkan_pipeline());
+
+	VkViewport viewport {};
+	viewport.x = 0.0f;
+	viewport.y = 0.0f;
+	viewport.width = (float)extent.width;
+	viewport.height = (float)extent.height;
+	viewport.minDepth = 0.0f;
+	viewport.maxDepth = 1.0f;
+	vkCmdSetViewport(buffer, 0, 1, &viewport);
+
+	VkRect2D scissor {};
+	scissor.offset = { 0, 0 };
+	scissor.extent = extent;
+	vkCmdSetScissor(buffer, 0, 1, &scissor);
+
+	VkDeviceSize offsets { 0 };
+	vkCmdBindVertexBuffers(buffer, 0, 1, vertex_buffers, &offsets);
+
+	vkCmdDraw(buffer, vertices.size(), 1, 0, 0);
+
+	vkCmdEndRenderPass(buffer);
+
+	GraphicsContext::the().flush_command_buffer(buffer);
+
+	Layer::update(ts);
+}
 
 void AlabasterLayer::ui(float ts)
 {
-	static bool opt_fullscreen_persistant = true;
+	/*static bool opt_fullscreen_persistant = true;
 	bool opt_fullscreen = opt_fullscreen_persistant;
 	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
@@ -79,13 +159,10 @@ void AlabasterLayer::ui(float ts)
 		if (ImGui::BeginMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
 				if (ImGui::MenuItem("New", "Ctrl+N")) { }
-
 				if (ImGui::MenuItem("Open...", "Ctrl+O")) { }
-
 				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) { }
-
 				if (ImGui::MenuItem("Exit")) {
-					Alabaster::Application::the().get_window()->close();
+					Application::the().get_window()->close();
 				}
 				ImGui::EndMenu();
 			}
@@ -98,8 +175,8 @@ void AlabasterLayer::ui(float ts)
 			ImGui::Text("Renderer Stats:");
 			std::string name = "None";
 			ImGui::Text("Hovered Entity: %s", name.c_str());
-			auto d = Alabaster::Application::the().frametime();
-			ImGui::Text("Frametime: %s", std::to_string(d).c_str());
+			auto frametime = Application::the().frametime();
+			ImGui::Text("Frametime: %s", std::to_string(frametime).c_str());
 		}
 		ImGui::End();
 
@@ -121,18 +198,50 @@ void AlabasterLayer::ui(float ts)
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
-				// UI::image(image, vp_size, { 0, 1 }, { 1, 0 });
-
 				ImGui::End();
 			}
 		}
 		ImGui::PopStyleVar();
 	}
-	ImGui::End();
+	ImGui::End();*/
 }
 
-void AlabasterLayer::destroy() {
+void AlabasterLayer::destroy()
+{
 	graphics_pipeline->destroy();
-	Alabaster::Log::info("Called destroy on the pipeline from Demo Layer");
 	Layer::destroy();
 }
+
+void AlabasterLayer::create_vertex_buffer()
+{
+	VkBufferCreateInfo buffer_info {};
+	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	buffer_info.size = sizeof(vertices[0]) * vertices.size();
+	buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if (vkCreateBuffer(GraphicsContext::the().device(), &buffer_info, nullptr, &vb) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create vertex buffer!");
+	}
+
+	VkMemoryRequirements memRequirements;
+	vkGetBufferMemoryRequirements(GraphicsContext::the().device(), vb, &memRequirements);
+
+	VkMemoryAllocateInfo allocInfo {};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRequirements.size;
+	allocInfo.memoryTypeIndex
+		= findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+	if (vkAllocateMemory(GraphicsContext::the().device(), &allocInfo, nullptr, &vb_mem) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate vertex buffer memory!");
+	}
+
+	vkBindBufferMemory(GraphicsContext::the().device(), vb, vb_mem, 0);
+
+	void* data;
+	vkMapMemory(GraphicsContext::the().device(), vb_mem, 0, buffer_info.size, 0, &data);
+	memcpy(data, vertices.data(), (size_t)buffer_info.size);
+	vkUnmapMemory(GraphicsContext::the().device(), vb_mem);
+}
+
