@@ -23,8 +23,11 @@ namespace Alabaster {
 
 	class Pipeline {
 	public:
-		explicit Pipeline(const PipelineSpecification& spec);
-		virtual ~Pipeline();
+		explicit Pipeline(PipelineSpecification spec)
+			: spec(std::move(spec)) {};
+		virtual ~Pipeline() = default;
+
+		void destroy();
 
 		void invalidate();
 

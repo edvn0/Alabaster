@@ -23,8 +23,10 @@ namespace Alabaster {
 
 		global_app = this;
 		window = std::make_unique<Window>(args);
-		auto shader = Shader(std::filesystem::path { "app/resources/shaders/main" });
 		push_layer(new GUILayer());
+
+		auto shader = Shader(std::filesystem::path { "app/resources/shaders/main" });
+		shader.destroy();
 	}
 
 	Application::~Application() { stop(); }
@@ -47,13 +49,16 @@ namespace Alabaster {
 	{
 		on_init();
 
-		double time = Clock::get_ms<double>();
+		auto time = Clock::get_ms<double>();
 		static size_t frame_count = 1;
+		static double frametime_counter { 0.0 };
 		while (!window->should_close()) {
 			window->update();
 			double current_time = Clock::get_ms<double>();
 
 			auto ts = current_time - time;
+			frametime_counter += ts;
+
 			layer_backward([&ts](Layer* layer) { layer->update(ts); });
 
 			window->get_swapchain()->begin_frame();
@@ -64,6 +69,10 @@ namespace Alabaster {
 			time = current_time;
 			frame_count++;
 
+			if (frame_count % 50 == 0) {
+				app_ts = frametime_counter / frame_count;
+			}
+
 			if (Input::key(Key::Escape)) {
 				Log::info("Exiting");
 				break;
@@ -71,5 +80,7 @@ namespace Alabaster {
 			window->swap_buffers();
 		}
 	}
+
+	double Application::frametime() { return app_ts; }
 
 } // namespace Alabaster

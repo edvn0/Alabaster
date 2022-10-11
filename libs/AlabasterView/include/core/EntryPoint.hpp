@@ -90,7 +90,5 @@ int main(int argc, char** argv)
 		Alabaster::Log::error("{}", e.what());
 	}
 
-	Alabaster::Logger::shutdown();
-
 	delete app;
 }

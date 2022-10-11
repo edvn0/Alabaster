@@ -34,12 +34,9 @@ namespace Alabaster {
 			debug_break();
 		}
 		}
+
+		return VK_FORMAT_R32G32B32A32_SFLOAT;
 	}
-
-	Pipeline::Pipeline(const PipelineSpecification& spec)
-		: spec(spec) {
-
-		};
 
 	void Pipeline::invalidate()
 	{
@@ -196,9 +193,9 @@ namespace Alabaster {
 		pipeline_create_info.pDynamicState = &dynamic_state;
 
 		// What is this pipeline cache?
-		VkPipelineCacheCreateInfo pipelineCacheCreateInfo = {};
-		pipelineCacheCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-		vk_check(vkCreatePipelineCache(device, &pipelineCacheCreateInfo, nullptr, &pipeline_cache));
+		VkPipelineCacheCreateInfo pipeline_cache_info = {};
+		pipeline_cache_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
+		vk_check(vkCreatePipelineCache(device, &pipeline_cache_info, nullptr, &pipeline_cache));
 
 		// Create rendering pipeline using the specified states
 		vk_check(vkCreateGraphicsPipelines(device, pipeline_cache, 1, &pipeline_create_info, nullptr, &pipeline));
@@ -209,5 +206,7 @@ namespace Alabaster {
 
 		// descriptor_sets = vulkanShader->allocate_descriptor_set(0);
 	}
+
+	void Pipeline::destroy() { spec.shader.destroy(); }
 
 } // namespace Alabaster

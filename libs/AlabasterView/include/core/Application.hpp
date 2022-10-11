@@ -25,6 +25,8 @@ namespace Alabaster {
 		void run();
 		void stop();
 
+		double frametime();
+
 	public:
 		Application(const ApplicationArguments& args);
 		Application(const Application&) = delete;
@@ -33,12 +35,8 @@ namespace Alabaster {
 
 		virtual ~Application();
 
-		virtual void on_init()
-		{
-			layer_forward([](Layer* layer) {
-				if (layer->name() != "ImGuiLayer")
-					layer->initialise();
-			});
+		virtual void on_init() {
+
 		};
 
 		void resize(int w, int h);
@@ -74,6 +72,8 @@ namespace Alabaster {
 	private:
 		std::map<std::string, Layer*> layers;
 		std::unique_ptr<Window> window;
+
+		double app_ts { 7.5 };
 	};
 
 	Application* create(const ApplicationArguments&);

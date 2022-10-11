@@ -16,6 +16,8 @@ namespace Alabaster {
 
 		inline std::array<VkPipelineShaderStageCreateInfo, 2> stages() { return shader_stages; };
 
+		void destroy();
+
 	private:
 		std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages {};
 	};

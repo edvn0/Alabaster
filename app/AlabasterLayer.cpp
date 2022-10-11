@@ -9,15 +9,20 @@
 
 bool AlabasterLayer::initialise()
 {
-	Alabaster::PipelineSpecification spec { .debug_name = "Test",
+	Alabaster::PipelineSpecification spec {
+		.shader = Alabaster::Shader("app/resources/shaders/main"),
+		.debug_name = "Test",
+		.wireframe = false,
 		.backface_culling = true,
+		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 		.depth_test = true,
 		.depth_write = true,
-		.shader = std::move(Alabaster::Shader("app/resources/shaders/main")),
-		.wireframe = false,
-		.vertex_layout = {} };
+		.vertex_layout = {},
+		.instance_layout = {},
+	};
 
-	graphics_pipeline = new Alabaster::Pipeline { spec };
+	graphics_pipeline = std::make_unique<Alabaster::Pipeline>(spec);
+	return true;
 }
 
 void AlabasterLayer::update(float ts) { Layer::update(ts); }
@@ -93,6 +98,8 @@ void AlabasterLayer::ui(float ts)
 			ImGui::Text("Renderer Stats:");
 			std::string name = "None";
 			ImGui::Text("Hovered Entity: %s", name.c_str());
+			auto d = Alabaster::Application::the().frametime();
+			ImGui::Text("Frametime: %s", std::to_string(d).c_str());
 		}
 		ImGui::End();
 
@@ -122,4 +129,10 @@ void AlabasterLayer::ui(float ts)
 		ImGui::PopStyleVar();
 	}
 	ImGui::End();
+}
+
+void AlabasterLayer::destroy() {
+	graphics_pipeline->destroy();
+	Alabaster::Log::info("Called destroy on the pipeline from Demo Layer");
+	Layer::destroy();
 }

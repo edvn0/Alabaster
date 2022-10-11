@@ -2,9 +2,11 @@
 
 #include "core/Application.hpp"
 
+typedef struct VkDescriptorPool_T* VkDescriptorPool;
+
 namespace Alabaster {
 
-	static constexpr std::string_view GUI_LAYER_NAME = "ImGuiLayer";
+	static constexpr std::string_view gui_layer_name = "ImGuiLayer";
 
 	class GUILayer : public Layer {
 	public:
@@ -20,7 +22,8 @@ namespace Alabaster {
 		static void end();
 
 	private:
-		std::string_view name() override { return GUI_LAYER_NAME; }
+		std::string_view name() override { return gui_layer_name; }
+		VkDescriptorPool imgui_descriptor_pool;
 	};
 
 } // namespace Alabaster

@@ -38,8 +38,6 @@ namespace Alabaster {
 		auto& vulkan_context = GraphicsContext::the();
 		auto device = vulkan_context.device();
 
-		VkDescriptorPool imgui_descriptor_pool;
-
 		// Create Descriptor Pool
 		VkDescriptorPoolSize pool_sizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 }, { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
 			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 }, { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 }, { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
@@ -207,6 +205,8 @@ namespace Alabaster {
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
+
+		vkDestroyDescriptorPool(GraphicsContext::the().device(), imgui_descriptor_pool, nullptr);
 	};
 
 } // namespace Alabaster
