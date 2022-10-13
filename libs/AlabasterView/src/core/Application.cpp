@@ -76,6 +76,9 @@ namespace Alabaster {
 				frametime_counter = 0;
 			}
 
+			if (Input::key(Key::Escape) || Input::key(Key::Q)) {
+				window->close();
+			}
 			window->swap_buffers();
 		}
 	}

@@ -154,9 +154,9 @@ namespace Alabaster {
 
 		VkViewport viewport = {};
 		viewport.x = 0.0f;
-		viewport.y = (float)height;
-		viewport.width = (float)width;
-		viewport.height = -(float)height;
+		viewport.y = static_cast<float>(height);
+		viewport.width = static_cast<float>(width);
+		viewport.height = static_cast<float>(height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(imgui_buffer, 0, 1, &viewport);

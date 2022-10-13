@@ -329,7 +329,7 @@ namespace Alabaster {
 		// Create fence to ensure that the command buffer has finished executing
 		VkFenceCreateInfo fci = {};
 		fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fci.flags = 0;
+
 		VkFence fence;
 		vk_check(vkCreateFence(device(), &fci, nullptr, &fence));
 

@@ -29,27 +29,27 @@ namespace Alabaster {
 
 	namespace Log {
 
-		template <typename... Args> static constexpr auto info(auto&& fmt, Args&&... args)
+		template <typename... Args> inline static constexpr auto info(auto&& fmt, Args&&... args)
 		{
 			::Alabaster::Logger::get_core_logger()->info(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
 		}
 
-		template <typename... Args> static constexpr auto debug(auto&& fmt, Args&&... args)
+		template <typename... Args> inline static constexpr auto debug(auto&& fmt, Args&&... args)
 		{
 			::Alabaster::Logger::get_core_logger()->info(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
 		}
 
-		template <typename... Args> static constexpr auto warn(auto&& fmt, Args&&... args)
+		template <typename... Args> inline static constexpr auto warn(auto&& fmt, Args&&... args)
 		{
 			::Alabaster::Logger::get_core_logger()->warn(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
 		}
 
-		template <typename... Args> static constexpr auto error(auto&& fmt, Args&&... args)
+		template <typename... Args> inline static constexpr auto error(auto&& fmt, Args&&... args)
 		{
 			::Alabaster::Logger::get_core_logger()->error(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
 		}
 
-		template <typename... Args> static constexpr auto trace(auto&& fmt, Args&&... args)
+		template <typename... Args> inline static constexpr auto trace(auto&& fmt, Args&&... args)
 		{
 			::Alabaster::Logger::get_core_logger()->trace(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
 		}

@@ -13,14 +13,15 @@ namespace Alabaster {
 
 	class VertexBuffer {
 	public:
-		VertexBuffer()
-			: VertexBuffer(1)
-		{
-		}
-
 		explicit VertexBuffer(uint32_t size);
+
 		VertexBuffer(const void* data, uint32_t size);
-		~VertexBuffer() { destroy(); }
+
+		~VertexBuffer()
+		{
+			if (!destroyed)
+				destroy();
+		}
 
 		void destroy();
 
@@ -31,6 +32,8 @@ namespace Alabaster {
 		uint32_t buffer_size;
 		VmaAllocation memory_allocation;
 		VkBuffer vulkan_buffer { nullptr };
+
+		bool destroyed { false };
 	};
 
 } // namespace Alabaster

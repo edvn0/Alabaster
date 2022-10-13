@@ -2,21 +2,22 @@
 // Created by Edwin Carlsson on 2022-10-10.
 //
 
-#include "AlabasterLayer.hpp"
-
 #include "Alabaster.hpp"
+#include "AlabasterLayer.hpp"
+#include "vulkan/vulkan_core.h"
 
-#include <backends/imgui_impl_vulkan.h>
 #include <imgui.h>
 
 using namespace Alabaster;
 
-uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
-	VkPhysicalDeviceMemoryProperties memProperties;
-	vkGetPhysicalDeviceMemoryProperties(GraphicsContext::the().physical_device(), &memProperties);
+uint32_t find_memory_type(uint32_t type_filter, VkMemoryPropertyFlags properties)
+{
+	VkPhysicalDeviceMemoryProperties memory_properties;
+	vkGetPhysicalDeviceMemoryProperties(GraphicsContext::the().physical_device(), &memory_properties);
 
-	for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
-		if ((typeFilter & (1 << i)) && (memProperties.memoryTypes[i].propertyFlags & properties) == properties) {
+	for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {
+		const auto filter = (type_filter & (1 << i));
+		if (filter && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties) {
 			return i;
 		}
 	}
@@ -24,16 +25,16 @@ uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties) {
 	throw std::runtime_error("failed to find suitable memory type!");
 }
 
-
 struct Vertex {
-	glm::vec4 data;
+	glm::vec4 position;
+	glm::vec4 colour;
 };
 
 const std::vector<Vertex> vertices = {
-	{ { 0.0, 0.0, 0.0, 0.0 } },
-	{ { 0.0, 0.0, 0.0, 0.0 } },
-	{ { 0.0, 0.0, 0.0, 0.0 } },
-	{ { 0.0, 0.0, 0.0, 0.0 } },
+	{ { -0.5, -0.5, 1, 0 }, { 1, 0, 0, 1 } },
+	{ { -0.5, 0.5, 1, 0 }, { 0, 1, 0, 1 } },
+	{ { 0.5, 0.5, 1, 0 }, { 0, 0, 1, 1 } },
+	{ { 0.5, -0.5, 1, 0 }, { 0, 0, 0, 1 } },
 };
 
 bool AlabasterLayer::initialise()
@@ -47,13 +48,13 @@ bool AlabasterLayer::initialise()
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 		.depth_test = true,
 		.depth_write = true,
-		.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "test") },
+		.vertex_layout
+		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
 		.instance_layout = {},
 	};
 
-	// vertex_buffer = VertexBuffer(vertices.data(), vertices.size() * sizeof(Vertex));
+	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(Vertex));
 	create_vertex_buffer();
-	vertex_buffers[0] = vb;
 
 	graphics_pipeline = std::make_unique<Pipeline>(spec);
 	graphics_pipeline->invalidate();
@@ -62,18 +63,27 @@ bool AlabasterLayer::initialise()
 
 void AlabasterLayer::update(float ts)
 {
-	auto buffer = GraphicsContext::the().get_command_buffer(true);
+	Log::info("[AlabasterLayer] updated with ts: {}", ts);
 
-	auto extent = Application::the().get_window()->get_swapchain()->swapchain_extent();
+	const auto& swapchain = Application::the().get_window()->get_swapchain();
+	VkCommandBufferBeginInfo cmd_bbi = {};
+	cmd_bbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	cmd_bbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+	cmd_bbi.pNext = nullptr;
+
+	auto buffer = swapchain->get_current_drawbuffer();
+	vk_check(vkBeginCommandBuffer(buffer, &cmd_bbi));
+
+	auto extent = swapchain->swapchain_extent();
 
 	VkRenderPassBeginInfo render_pass_info {};
 	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	render_pass_info.renderPass = Application::the().get_window()->get_swapchain()->get_render_pass();
-	render_pass_info.framebuffer = Application::the().get_window()->get_swapchain()->get_current_framebuffer();
+	render_pass_info.renderPass = swapchain->get_render_pass();
+	render_pass_info.framebuffer = swapchain->get_current_framebuffer();
 	render_pass_info.renderArea.offset = { 0, 0 };
 	render_pass_info.renderArea.extent = extent;
 
-	VkClearValue clear = { { { 0.0f, 0.0f, 0.0f, 1.0f } } };
+	VkClearValue clear = { { { 0.0f, 0.0f, 1.0f, 1.0f } } };
 	render_pass_info.clearValueCount = 1;
 	render_pass_info.pClearValues = &clear;
 
@@ -96,20 +106,20 @@ void AlabasterLayer::update(float ts)
 	vkCmdSetScissor(buffer, 0, 1, &scissor);
 
 	VkDeviceSize offsets { 0 };
-	vkCmdBindVertexBuffers(buffer, 0, 1, vertex_buffers, &offsets);
+	vkCmdBindVertexBuffers(buffer, 0, 1, &vb, &offsets);
 
 	vkCmdDraw(buffer, vertices.size(), 1, 0, 0);
 
 	vkCmdEndRenderPass(buffer);
 
-	GraphicsContext::the().flush_command_buffer(buffer);
+	vkEndCommandBuffer(buffer);
 
 	Layer::update(ts);
 }
 
 void AlabasterLayer::ui(float ts)
 {
-	/*static bool opt_fullscreen_persistant = true;
+	static bool opt_fullscreen_persistant = true;
 	bool opt_fullscreen = opt_fullscreen_persistant;
 	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
@@ -203,11 +213,13 @@ void AlabasterLayer::ui(float ts)
 		}
 		ImGui::PopStyleVar();
 	}
-	ImGui::End();*/
+	ImGui::End();
 }
 
 void AlabasterLayer::destroy()
 {
+	vertex_buffer->destroy();
+	delete vertex_buffer;
 	graphics_pipeline->destroy();
 	Layer::destroy();
 }
@@ -224,18 +236,16 @@ void AlabasterLayer::create_vertex_buffer()
 		throw std::runtime_error("failed to create vertex buffer!");
 	}
 
-	VkMemoryRequirements memRequirements;
-	vkGetBufferMemoryRequirements(GraphicsContext::the().device(), vb, &memRequirements);
+	VkMemoryRequirements mem_requirements;
+	vkGetBufferMemoryRequirements(GraphicsContext::the().device(), vb, &mem_requirements);
 
-	VkMemoryAllocateInfo allocInfo {};
-	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocInfo.allocationSize = memRequirements.size;
-	allocInfo.memoryTypeIndex
-		= findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	VkMemoryAllocateInfo allocation_info {};
+	allocation_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocation_info.allocationSize = mem_requirements.size;
+	allocation_info.memoryTypeIndex
+		= find_memory_type(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
-	if (vkAllocateMemory(GraphicsContext::the().device(), &allocInfo, nullptr, &vb_mem) != VK_SUCCESS) {
-		throw std::runtime_error("failed to allocate vertex buffer memory!");
-	}
+	vk_check(vkAllocateMemory(GraphicsContext::the().device(), &allocation_info, nullptr, &vb_mem));
 
 	vkBindBufferMemory(GraphicsContext::the().device(), vb, vb_mem, 0);
 
@@ -244,4 +254,3 @@ void AlabasterLayer::create_vertex_buffer()
 	memcpy(data, vertices.data(), (size_t)buffer_info.size);
 	vkUnmapMemory(GraphicsContext::the().device(), vb_mem);
 }
-

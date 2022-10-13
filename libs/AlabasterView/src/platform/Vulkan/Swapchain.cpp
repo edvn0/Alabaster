@@ -210,6 +210,8 @@ namespace Alabaster {
 		vkDestroySwapchainKHR(GraphicsContext::the().device(), vk_swapchain, nullptr);
 	}
 
+	VkCommandBuffer Swapchain::get_current_drawbuffer() const { return command_buffers[frame()].buffer; }
+
 	uint32_t Swapchain::get_next_image()
 	{
 		vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[current_frame].in_flight_fence, VK_TRUE, UINT64_MAX);

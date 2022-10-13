@@ -12,7 +12,7 @@ find_program(CLANG_FORMAT "clang-format")
 if(CLANG_FORMAT)
     set(formattable_files ${sources})
 
-    add_custom_target(clang-format COMMAND ${CLANG_FORMAT} -i -style=file
+    add_custom_target(clang-format-lib COMMAND ${CLANG_FORMAT} -i -style=file
         ${formattable_files})
 endif()
 
@@ -21,9 +21,18 @@ add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_include_directories(
     ${PROJECT_NAME}
-    PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    PUBLIC
+        $<INSTALL_INTERFACE:include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
     INTERFACE ${Vulkan_INCLUDE_DIRS}
-    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include /usr/local/include ../../third_party/imgui ../../third_party/imgui/backends ../../third_party/debugbreak ../../third_party/magic_enum/include ../../third_party/VulkanMemoryAllocator/include)
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include
+        /usr/local/include
+        ../../third_party/imgui
+        ../../third_party/imgui/backends
+        ../../third_party/debugbreak
+        ../../third_party/magic_enum/include
+        ../../third_party/VulkanMemoryAllocator/include)
 
 target_link_libraries(${PROJECT_NAME} INTERFACE Boost::program_options PRIVATE glfw imgui Vulkan::Vulkan spdlog magic_enum VulkanMemoryAllocator)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
@@ -38,4 +47,4 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
-add_dependencies(${PROJECT_NAME} clang-format)
+add_dependencies(${PROJECT_NAME} clang-format-lib)

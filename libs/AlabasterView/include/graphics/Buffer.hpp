@@ -30,7 +30,7 @@ namespace Alabaster {
 
 		void allocate(uint32_t in_size)
 		{
-			delete[](byte*) this->data;
+			delete[] static_cast<byte*>(this->data);
 			this->data = nullptr;
 
 			if (in_size == 0)
@@ -42,7 +42,7 @@ namespace Alabaster {
 
 		void release()
 		{
-			delete[](byte*) this->data;
+			delete[] static_cast<byte*>(this->data);
 			this->data = nullptr;
 			this->size = 0;
 		}
@@ -53,26 +53,26 @@ namespace Alabaster {
 				memset(this->data, 0, this->size);
 		}
 
-		template <typename T> T& read(uint32_t offset = 0) { return *(T*)((byte*)this->data + offset); }
+		template <typename T> T& read(uint32_t offset = 0) { return *(T*)(static_cast<byte*>(this->data) + offset); }
 
 		byte* read_bytes(uint32_t in_size, uint32_t offset) const
 		{
 			// core_assert_bool(offset + in_size <= this->size);
 			byte* buffer = new byte[in_size];
-			std::memcpy(buffer, (byte*)this->data + offset, in_size);
+			std::memcpy(buffer, static_cast<byte*>(this->data) + offset, in_size);
 			return buffer;
 		}
 
 		void write(const void* in_data, uint32_t in_size, uint32_t offset = 0) const
 		{
 			// core_assert_bool(offset + in_size <= this->size);
-			std::memcpy((byte*)this->data + offset, in_data, in_size);
+			std::memcpy(static_cast<byte*>(this->data) + offset, in_data, in_size);
 		}
 
 		operator bool() const { return this->data; }
 
-		byte& operator[](int index) { return ((byte*)this->data)[index]; }
-		byte operator[](int index) const { return ((byte*)this->data)[index]; }
+		byte& operator[](int index) { return static_cast<byte*>(this->data)[index]; }
+		byte operator[](int index) const { return static_cast<byte*>(this->data)[index]; }
 
 		template <typename T> T* as() const { return (T*)this->data; }
 

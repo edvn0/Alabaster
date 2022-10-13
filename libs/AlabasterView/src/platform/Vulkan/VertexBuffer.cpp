@@ -2,6 +2,7 @@
 
 #include "graphics/VertexBuffer.hpp"
 
+#include "core/Logger.hpp"
 #include "graphics/Allocator.hpp"
 #include "graphics/GraphicsContext.hpp"
 
@@ -14,12 +15,12 @@ namespace Alabaster {
 
 		Allocator allocator("VertexBuffer");
 
-		VkBufferCreateInfo vbci = {};
-		vbci.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		vbci.size = buffer_size;
-		vbci.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+		VkBufferCreateInfo buffer_create_info = {};
+		buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		buffer_create_info.size = buffer_size;
+		buffer_create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 
-		memory_allocation = allocator.allocate_buffer(vbci, VMA_MEMORY_USAGE_CPU_TO_GPU, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, vulkan_buffer);
 	}
 
 	VertexBuffer::VertexBuffer(const void* data, uint32_t size)
@@ -60,13 +61,12 @@ namespace Alabaster {
 
 	void VertexBuffer::destroy()
 	{
-		VkBuffer buffer = vulkan_buffer;
-		VmaAllocation allocation = memory_allocation;
-
 		Allocator allocator("VertexBuffer");
-		allocator.destroy_buffer(buffer, allocation);
+		allocator.destroy_buffer(vulkan_buffer, memory_allocation);
 
 		vertex_data.release();
+		Log::info("[VertexBuffer] Destroying vertex buffer via VMA.");
+		destroyed = true;
 	};
 
 } // namespace Alabaster

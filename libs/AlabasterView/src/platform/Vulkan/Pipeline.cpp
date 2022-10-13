@@ -143,7 +143,7 @@ namespace Alabaster {
 		vertex_input_binding.stride = vertex_layout.get_stride();
 		vertex_input_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-		if (!instance_layout.get_elements().empty()) {
+		if (non_empty(instance_layout.get_elements())) {
 			VkVertexInputBindingDescription& instance_input_binding = vertex_input_binding_descriptor.emplace_back();
 			instance_input_binding.binding = 1;
 			instance_input_binding.stride = instance_layout.get_stride();
@@ -201,7 +201,7 @@ namespace Alabaster {
 		// Create rendering pipeline using the specified states
 		vk_check(vkCreateGraphicsPipelines(device, pipeline_cache, 1, &pipeline_create_info, nullptr, &pipeline));
 
-		Log::info("[Pipeline] Created pipeline {}.", spec.debug_name);
+		Log::info("[Pipeline] Created pipeline with name {}.", spec.debug_name);
 	}
 
 	void Pipeline::destroy()

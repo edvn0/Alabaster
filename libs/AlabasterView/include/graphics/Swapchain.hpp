@@ -33,7 +33,7 @@ namespace Alabaster {
 		auto image() const { return images.views[frame()]; }
 		auto swapchain_extent() const { return extent; }
 
-		VkCommandBuffer get_current_drawbuffer() const { return command_buffers[frame()].buffer; }
+		VkCommandBuffer get_current_drawbuffer() const;
 		VkFramebuffer get_current_framebuffer() const { return frame_buffers[frame()]; };
 
 	private:

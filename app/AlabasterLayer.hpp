@@ -26,10 +26,8 @@ private:
 	bool viewport_focused = false, viewport_hovered = false;
 	bool is_dockspace_open { true };
 
-	VkBuffer vertex_buffers[1]{nullptr};
+	Alabaster::VertexBuffer* vertex_buffer;
 
 	VkBuffer vb;
 	VkDeviceMemory vb_mem;
-
-	Alabaster::VertexBuffer vertex_buffer;
 };

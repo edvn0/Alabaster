@@ -39,7 +39,7 @@ namespace Alabaster {
 		inline VkCommandPool pool() { return command_pool; };
 		inline VkCommandPool compute_pool() { return compute_command_pool; };
 
-		VkCommandBuffer get_command_buffer() { return get_command_buffer(true, false); };
+		VkCommandBuffer get_command_buffer() { return get_command_buffer(true); };
 		VkCommandBuffer get_command_buffer(bool begin) { return get_command_buffer(begin, false); };
 		VkCommandBuffer get_command_buffer(bool begin, bool compute);
 
