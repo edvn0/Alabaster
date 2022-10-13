@@ -115,6 +115,13 @@ namespace Alabaster {
 		[[nodiscard]] std::vector<VertexBufferElement>::const_iterator begin() const { return elements.begin(); }
 		[[nodiscard]] std::vector<VertexBufferElement>::const_iterator end() const { return elements.end(); }
 
+		inline void log()
+		{
+			for (const auto& element : elements) {
+				Log::info("Type: {}, Name: {}", enum_name(element.shader_data_type), element.name);
+			}
+		}
+
 	private:
 		void calculate_offsets_and_strides()
 		{

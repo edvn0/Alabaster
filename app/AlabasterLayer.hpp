@@ -27,6 +27,7 @@ private:
 	bool is_dockspace_open { true };
 
 	Alabaster::VertexBuffer* vertex_buffer;
+	Alabaster::IndexBuffer* index_buffer;
 
 	VkBuffer vb;
 	VkDeviceMemory vb_mem;

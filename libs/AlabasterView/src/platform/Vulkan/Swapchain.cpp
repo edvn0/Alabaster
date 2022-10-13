@@ -418,5 +418,4 @@ namespace Alabaster {
 
 		vkDeviceWaitIdle(vk_device);
 	}
-
 } // namespace Alabaster

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/Common.hpp"
 #include "core/Layer.hpp"
 
 #include <map>
@@ -20,6 +21,7 @@ namespace Alabaster {
 		using rev_it = std::map<std::string, Layer*>::reverse_iterator;
 		using it = std::map<std::string, Layer*>::iterator;
 		using LayerFunction = std::function<void(Layer*)>;
+		using LayerTimestepFunction = void(Layer*, float);
 
 	public:
 		void run();
@@ -47,6 +49,17 @@ namespace Alabaster {
 			layers.emplace(layer->name(), std::move(layer));
 		}
 
+		inline void pop_layer(std::string name)
+		{
+			verify(layers.contains(name), "Layer map did not contain name " + name + ".");
+
+			auto found_it = layers.find(name);
+			verify(found_it != layers.end());
+
+			(*found_it).second->destroy();
+			layers.erase(found_it);
+		}
+
 		inline void layer_forward(LayerFunction&& func)
 		{
 			for (it layer = layers.begin(); layer != layers.end(); ++layer) {
@@ -60,6 +73,22 @@ namespace Alabaster {
 			for (rev_it layer = layers.rbegin(); layer != layers.rend(); ++layer) {
 				auto&& [k, l] = *layer;
 				func(l);
+			}
+		}
+
+		inline void layer_forward(float ts, LayerTimestepFunction&& func)
+		{
+			for (it layer = layers.begin(); layer != layers.end(); ++layer) {
+				auto&& [k, l] = *layer;
+				func(l, ts);
+			}
+		}
+
+		inline void layer_backward(float ts, LayerTimestepFunction&& func)
+		{
+			for (rev_it layer = layers.rbegin(); layer != layers.rend(); ++layer) {
+				auto&& [k, l] = *layer;
+				func(l, ts);
 			}
 		}
 

@@ -1,6 +1,8 @@
 #pragma once
 
 #include "Application.hpp"
+#include "graphics/Allocator.hpp"
+#include "graphics/GraphicsContext.hpp"
 #include "Logger.hpp"
 
 extern Alabaster::Application* Alabaster::create(const Alabaster::ApplicationArguments& props);
@@ -91,4 +93,6 @@ int main(int argc, char** argv)
 	}
 
 	delete app;
+	Alabaster::GraphicsContext::the().destroy();
+	Alabaster::Allocator::shutdown();
 }

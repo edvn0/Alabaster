@@ -36,9 +36,9 @@ namespace Alabaster {
 	{
 		layer_forward([](auto* l) { l->destroy(); });
 
+		Log::info("[Application] Calling the destructor of the Application.");
+
 		window->destroy();
-		GraphicsContext::the().destroy();
-		Allocator::shutdown();
 	}
 
 	void Application::resize(int w, int h) { window->get_swapchain()->on_resize(w, h); }
@@ -55,6 +55,11 @@ namespace Alabaster {
 		static size_t frame_count = 1;
 		static double frametime_counter { 0.0 };
 		while (!window->should_close()) {
+			if (Input::key(Key::Escape) || Input::key(Key::Q)) {
+				window->close();
+				continue;
+			}
+
 			window->update();
 			double current_time = Clock::get_ms<double>();
 
@@ -62,11 +67,12 @@ namespace Alabaster {
 			frametime_counter += ts;
 
 			window->get_swapchain()->begin_frame();
-			layer_backward([&ts](Layer* layer) { layer->update(ts); });
 
 			GUILayer::begin();
-			layer_backward([&ts](Layer* layer) { layer->ui(ts); });
+			layer_backward([ts](Layer* layer) { layer->ui(ts); });
 			GUILayer::end();
+
+			layer_backward([ts](Layer* layer) { layer->update(ts); });
 
 			time = current_time;
 			frame_count++;
@@ -76,11 +82,10 @@ namespace Alabaster {
 				frametime_counter = 0;
 			}
 
-			if (Input::key(Key::Escape) || Input::key(Key::Q)) {
-				window->close();
-			}
 			window->swap_buffers();
 		}
+
+		vkDeviceWaitIdle(GraphicsContext::the().device());
 	}
 
 	double Application::frametime() { return app_ts; }

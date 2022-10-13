@@ -40,7 +40,6 @@ namespace Alabaster {
 
 	void Pipeline::invalidate()
 	{
-
 		VkDevice device = GraphicsContext::the().device();
 		auto shader = spec.shader;
 
@@ -135,6 +134,8 @@ namespace Alabaster {
 		// Vertex input descriptor
 		VertexBufferLayout& vertex_layout = spec.vertex_layout;
 		VertexBufferLayout& instance_layout = spec.instance_layout;
+
+		vertex_layout.log();
 
 		std::vector<VkVertexInputBindingDescription> vertex_input_binding_descriptor {};
 

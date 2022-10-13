@@ -1,7 +1,3 @@
-//
-// Created by Edwin Carlsson on 2022-10-10.
-//
-
 #include "Alabaster.hpp"
 #include "AlabasterLayer.hpp"
 #include "vulkan/vulkan_core.h"
@@ -37,6 +33,8 @@ const std::vector<Vertex> vertices = {
 	{ { 0.5, -0.5, 1, 0 }, { 0, 0, 0, 1 } },
 };
 
+const std::vector<uint32_t> indices = { 0, 1, 2, 2, 3, 0 };
+
 bool AlabasterLayer::initialise()
 {
 	PipelineSpecification spec {
@@ -54,6 +52,7 @@ bool AlabasterLayer::initialise()
 	};
 
 	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(Vertex));
+	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(uint32_t));
 	create_vertex_buffer();
 
 	graphics_pipeline = std::make_unique<Pipeline>(spec);
@@ -63,7 +62,15 @@ bool AlabasterLayer::initialise()
 
 void AlabasterLayer::update(float ts)
 {
-	Log::info("[AlabasterLayer] updated with ts: {}", ts);
+	static size_t frame_number { 0 };
+
+	static constexpr auto frame_to_rgb = [](size_t frame) {
+		float r = sin((frame % 255) / 255.0);
+		float g = cos((frame % 255) / 255.0);
+		float b = (frame % 255) / 255.0;
+		VkClearValue clear = { { { r, g, b, 1.0f } } };
+		return clear;
+	};
 
 	const auto& swapchain = Application::the().get_window()->get_swapchain();
 	VkCommandBufferBeginInfo cmd_bbi = {};
@@ -83,7 +90,7 @@ void AlabasterLayer::update(float ts)
 	render_pass_info.renderArea.offset = { 0, 0 };
 	render_pass_info.renderArea.extent = extent;
 
-	VkClearValue clear = { { { 0.0f, 0.0f, 1.0f, 1.0f } } };
+	VkClearValue clear = frame_to_rgb(frame_number);
 	render_pass_info.clearValueCount = 1;
 	render_pass_info.pClearValues = &clear;
 
@@ -95,7 +102,7 @@ void AlabasterLayer::update(float ts)
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
 	viewport.width = (float)extent.width;
-	viewport.height = (float)extent.height;
+	viewport.height = -(float)extent.height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	vkCmdSetViewport(buffer, 0, 1, &viewport);
@@ -105,16 +112,22 @@ void AlabasterLayer::update(float ts)
 	scissor.extent = extent;
 	vkCmdSetScissor(buffer, 0, 1, &scissor);
 
+	std::array<VkBuffer, 1> vbs;
+	vbs[0] = vertex_buffer->get_vulkan_buffer();
 	VkDeviceSize offsets { 0 };
 	vkCmdBindVertexBuffers(buffer, 0, 1, &vb, &offsets);
 
-	vkCmdDraw(buffer, vertices.size(), 1, 0, 0);
+	vkCmdBindIndexBuffer(buffer, index_buffer->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+
+	vkCmdDrawIndexed(buffer, indices.size(), 1, 0, 0, 0);
 
 	vkCmdEndRenderPass(buffer);
 
 	vkEndCommandBuffer(buffer);
 
 	Layer::update(ts);
+
+	frame_number++;
 }
 
 void AlabasterLayer::ui(float ts)
@@ -220,7 +233,13 @@ void AlabasterLayer::destroy()
 {
 	vertex_buffer->destroy();
 	delete vertex_buffer;
+	index_buffer->destroy();
+	delete index_buffer;
 	graphics_pipeline->destroy();
+
+	vkDestroyBuffer(GraphicsContext::the().device(), vb, nullptr);
+	vkFreeMemory(GraphicsContext::the().device(), vb_mem, nullptr);
+
 	Layer::destroy();
 }
 
