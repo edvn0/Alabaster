@@ -71,7 +71,6 @@ namespace Alabaster {
 
 			layer_backward([ts](Layer* layer) { layer->update(ts); });
 
-			time = current_time;
 			frame_count++;
 
 			if (frame_count % 50 == 0) {
@@ -80,6 +79,7 @@ namespace Alabaster {
 			}
 
 			window->swap_buffers();
+			time = current_time;
 		}
 
 		vkDeviceWaitIdle(GraphicsContext::the().device());

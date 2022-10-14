@@ -19,7 +19,7 @@ namespace Alabaster {
 		VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* p_user_data)
 	{
 		std::string type = message_type == 1 ? "General" : "1";
-		if (message_severity & VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT) {
+		if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
 			Log::info("Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {

@@ -13,6 +13,8 @@ namespace Alabaster {
 		virtual auto destroy() -> void {};
 		virtual void ui(float ts) {};
 
+		std::string_view get_name() { return name(); }
+
 	private:
 		virtual std::string_view name() = 0;
 		friend Application;

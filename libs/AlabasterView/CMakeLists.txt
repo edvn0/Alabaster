@@ -49,7 +49,11 @@ if(APPLE)
     target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-volatile)
 endif()
 
-if(${ALABASTER_VALIDATION} STREQUAL "ON")
+if(ALABASTER_VALIDATION STREQUAL "ON")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_VALIDATION)
+endif()
+
+if(ALABASTER_DEBUG STREQUAL "ON")
     target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_VALIDATION)
 endif()
 

@@ -24,7 +24,7 @@ namespace Alabaster {
 			allocator_info.device = GraphicsContext::the().device();
 			allocator_info.instance = GraphicsContext::the().instance();
 
-			vmaCreateAllocator(&allocator_info, &data_impl->allocator);
+			vk_check(vmaCreateAllocator(&allocator_info, &data_impl->allocator));
 		}
 
 		return *data_impl;
@@ -43,7 +43,7 @@ namespace Alabaster {
 		allocation_create_info.usage = usage;
 
 		VmaAllocation allocation;
-		vmaCreateBuffer(vma_data().allocator, &buffer_create_info, &allocation_create_info, &out_buffer, &allocation, nullptr);
+		vk_check(vmaCreateBuffer(vma_data().allocator, &buffer_create_info, &allocation_create_info, &out_buffer, &allocation, nullptr));
 
 		VmaAllocationInfo allocation_info {};
 		vmaGetAllocationInfo(vma_data().allocator, allocation, &allocation_info);
@@ -58,7 +58,7 @@ namespace Alabaster {
 		allocation_create_info.usage = usage;
 
 		VmaAllocation allocation;
-		vmaCreateImage(vma_data().allocator, &image_create_info, &allocation_create_info, &out_image, &allocation, nullptr);
+		vk_check(vmaCreateImage(vma_data().allocator, &image_create_info, &allocation_create_info, &out_image, &allocation, nullptr));
 
 		VmaAllocationInfo allocation_info;
 		vmaGetAllocationInfo(vma_data().allocator, allocation, &allocation_info);

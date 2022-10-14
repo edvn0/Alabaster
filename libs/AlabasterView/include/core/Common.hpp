@@ -7,6 +7,8 @@
 
 namespace Alabaster {
 
+#ifdef ALABASTER_DEBUG
+
 	template <typename VkResult> static constexpr auto vk_check(VkResult result) -> void
 	{
 		VkResult err = result;
@@ -22,7 +24,7 @@ namespace Alabaster {
 		if (!result) {
 			Log::error("Verification failed.");
 		}
-	}
+	};
 
 	template <typename PositiveCondition> auto verify(PositiveCondition&& happy, std::string_view message) -> void
 	{
@@ -30,7 +32,17 @@ namespace Alabaster {
 		if (!result) {
 			Log::error("Verification failed. Message: {}", message);
 		}
-	}
+	};
+
+#else
+
+	template <typename VkResult> static constexpr auto vk_check(VkResult result) -> void {};
+
+	template <typename PositiveCondition> auto verify(PositiveCondition&& happy) -> void {};
+
+	template <typename PositiveCondition> auto verify(PositiveCondition&& happy, std::string_view message) -> void {};
+
+#endif
 
 	static constexpr auto enum_name = [](auto&& in) { return magic_enum::enum_name(in); };
 	static constexpr auto non_empty = [](const auto& in) { return not in.empty(); };

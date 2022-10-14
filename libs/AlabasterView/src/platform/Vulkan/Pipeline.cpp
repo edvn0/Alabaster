@@ -115,15 +115,15 @@ namespace Alabaster {
 
 		VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {};
 		depth_stencil_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-		depth_stencil_state.depthTestEnable = spec.depth_test ? VK_TRUE : VK_FALSE;
+		/*depth_stencil_state.depthTestEnable = spec.depth_test ? VK_TRUE : VK_FALSE;
 		depth_stencil_state.depthWriteEnable = spec.depth_write ? VK_TRUE : VK_FALSE;
 		depth_stencil_state.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		depth_stencil_state.front = depth_stencil_state.back;
 		depth_stencil_state.depthBoundsTestEnable = VK_FALSE;
+		depth_stencil_state.back.compareOp = VK_COMPARE_OP_ALWAYS;
 		depth_stencil_state.back.failOp = VK_STENCIL_OP_KEEP;
 		depth_stencil_state.back.passOp = VK_STENCIL_OP_KEEP;
-		depth_stencil_state.back.compareOp = VK_COMPARE_OP_ALWAYS;
-		depth_stencil_state.stencilTestEnable = VK_FALSE;
-		depth_stencil_state.front = depth_stencil_state.back;
+		depth_stencil_state.stencilTestEnable = VK_FALSE;*/
 
 		// Multi sampling state
 		VkPipelineMultisampleStateCreateInfo multisample_state = {};

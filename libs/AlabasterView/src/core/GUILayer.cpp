@@ -139,39 +139,40 @@ namespace Alabaster {
 
 		vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-		VkCommandBufferInheritanceInfo inheritance_info = {};
-		inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-		inheritance_info.renderPass = swapchain->get_render_pass();
-		inheritance_info.framebuffer = swapchain->get_current_framebuffer();
-
-		VkCommandBufferBeginInfo cbi = {};
-		cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-		cbi.pInheritanceInfo = &inheritance_info;
-
 		const auto& imgui_buffer = imgui_command_buffers[command_buffer_index];
-		vk_check(vkBeginCommandBuffer(imgui_buffer, &cbi));
+		{
+			VkCommandBufferInheritanceInfo inheritance_info = {};
+			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+			inheritance_info.renderPass = swapchain->get_render_pass();
+			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
 
-		VkViewport viewport = {};
-		viewport.x = 0.0f;
-		viewport.y = static_cast<float>(height);
-		viewport.width = static_cast<float>(width);
-		viewport.height = static_cast<float>(height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(imgui_buffer, 0, 1, &viewport);
+			VkCommandBufferBeginInfo cbi = {};
+			cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+			cbi.pInheritanceInfo = &inheritance_info;
+			vk_check(vkBeginCommandBuffer(imgui_buffer, &cbi));
 
-		VkRect2D scissor = {};
-		scissor.extent.width = width;
-		scissor.extent.height = height;
-		scissor.offset.x = 0;
-		scissor.offset.y = 0;
-		vkCmdSetScissor(imgui_buffer, 0, 1, &scissor);
+			VkViewport viewport = {};
+			viewport.x = 0.0f;
+			viewport.y = static_cast<float>(height);
+			viewport.width = static_cast<float>(width);
+			viewport.height = static_cast<float>(height);
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			vkCmdSetViewport(imgui_buffer, 0, 1, &viewport);
 
-		ImDrawData* main_draw_data = ImGui::GetDrawData();
-		ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_buffer);
+			VkRect2D scissor = {};
+			scissor.extent.width = width;
+			scissor.extent.height = height;
+			scissor.offset.x = 0;
+			scissor.offset.y = 0;
+			vkCmdSetScissor(imgui_buffer, 0, 1, &scissor);
 
-		vk_check(vkEndCommandBuffer(imgui_buffer));
+			ImDrawData* main_draw_data = ImGui::GetDrawData();
+			ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_buffer);
+
+			vk_check(vkEndCommandBuffer(imgui_buffer));
+		}
 
 		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
 
