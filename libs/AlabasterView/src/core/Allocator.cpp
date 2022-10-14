@@ -2,6 +2,7 @@
 
 #include "graphics/Allocator.hpp"
 
+#include "core/Common.hpp"
 #include "graphics/GraphicsContext.hpp"
 
 namespace Alabaster {
@@ -69,15 +70,15 @@ namespace Alabaster {
 
 	void Allocator::destroy_image(VkImage image, VmaAllocation allocation)
 	{
-		// core_assert_bool(image);
-		// core_assert_bool(allocation);
+		verify(image);
+		verify(allocation);
 		vmaDestroyImage(vma_data().allocator, image, allocation);
 	}
 
 	void Allocator::destroy_buffer(VkBuffer buffer, VmaAllocation allocation)
 	{
-		// core_assert_bool(buffer);
-		// core_assert_bool(allocation);
+		verify(buffer);
+		verify(allocation);
 		vmaDestroyBuffer(vma_data().allocator, buffer, allocation);
 	}
 

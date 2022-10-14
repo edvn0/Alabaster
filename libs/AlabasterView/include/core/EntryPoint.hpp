@@ -93,6 +93,6 @@ int main(int argc, char** argv)
 	}
 
 	delete app;
-	Alabaster::GraphicsContext::the().destroy();
 	Alabaster::Allocator::shutdown();
+	Alabaster::GraphicsContext::the().destroy();
 }

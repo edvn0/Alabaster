@@ -1,9 +1,8 @@
 #include "av_pch.hpp"
 
-#include "graphics/GraphicsContext.hpp"
-
 #include "core/Common.hpp"
 #include "core/Logger.hpp"
+#include "graphics/GraphicsContext.hpp"
 
 #include <GLFW/glfw3.h>
 #include <magic_enum.hpp>
@@ -153,7 +152,7 @@ namespace Alabaster {
 		if (enable_layers) {
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
-		extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+		// extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 		instance_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 		instance_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 		instance_info.ppEnabledExtensionNames = extensions.data();
@@ -192,7 +191,7 @@ namespace Alabaster {
 
 		std::vector<const char*> device_exts;
 		device_exts.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-		device_exts.push_back("VK_KHR_portability_subset");
+		// device_exts.push_back("VK_KHR_portability_subset");
 
 		VkDeviceCreateInfo device_create_info {};
 		device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -235,7 +234,7 @@ namespace Alabaster {
 			VkPhysicalDeviceFeatures features;
 			vkGetPhysicalDeviceFeatures(device, &features);
 
-			return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU;
+			return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU or props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 		};
 
 		uint32_t device_count { 0 };

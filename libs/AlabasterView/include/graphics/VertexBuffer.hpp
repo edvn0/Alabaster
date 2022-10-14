@@ -16,6 +16,7 @@ namespace Alabaster {
 		explicit VertexBuffer(uint32_t size);
 
 		VertexBuffer(const void* data, uint32_t size);
+		VertexBuffer(const void* data, size_t size);
 
 		~VertexBuffer()
 		{

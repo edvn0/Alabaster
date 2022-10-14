@@ -25,9 +25,6 @@ namespace Alabaster {
 		global_app = this;
 		window = std::make_unique<Window>(args);
 		push_layer(new GUILayer());
-
-		auto shader = Shader(std::filesystem::path { "app/resources/shaders/main" });
-		shader.destroy();
 	}
 
 	Application::~Application() { stop(); }
@@ -36,7 +33,7 @@ namespace Alabaster {
 	{
 		layer_forward([](auto* l) { l->destroy(); });
 
-		Log::info("[Application] Calling the destructor of the Application.");
+		Log::info("[Application] Stopping.");
 
 		window->destroy();
 	}

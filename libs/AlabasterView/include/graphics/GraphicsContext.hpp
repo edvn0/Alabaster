@@ -36,8 +36,8 @@ namespace Alabaster {
 		inline uint32_t compute_queue_family() { return queues[QueueType::Compute].family; }
 		inline VkQueue compute_queue() { return queues[QueueType::Compute].queue; }
 
-		inline VkCommandPool pool() { return command_pool; };
-		inline VkCommandPool compute_pool() { return compute_command_pool; };
+		inline VkCommandPool pool() const { return command_pool; };
+		inline VkCommandPool compute_pool() const { return compute_command_pool; };
 
 		VkCommandBuffer get_command_buffer() { return get_command_buffer(true); };
 		VkCommandBuffer get_command_buffer(bool begin) { return get_command_buffer(begin, false); };

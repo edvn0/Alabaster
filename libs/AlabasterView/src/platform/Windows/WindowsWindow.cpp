@@ -1,8 +1,9 @@
 #include "av_pch.hpp"
 
+#include "core/Window.hpp"
+
 #include "core/Application.hpp"
 #include "core/Logger.hpp"
-#include "core/Window.hpp"
 #include "GLFW/glfw3.h"
 #include "graphics/Swapchain.hpp"
 

@@ -9,7 +9,7 @@ namespace Alabaster {
 
 	class Window {
 	public:
-		Window(const ApplicationArguments&);
+		explicit Window(const ApplicationArguments&);
 		~Window();
 
 		void destroy();

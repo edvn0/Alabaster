@@ -26,9 +26,11 @@ namespace Alabaster {
 		return shader_module;
 	}
 
-	Shader::Shader(const std::filesystem::path& path)
+	Shader::Shader(const std::filesystem::path& p)
+		: shader_path(p)
 	{
-		auto [vert, frag] = to_path(path);
+		auto [vert, frag] = to_path(shader_path);
+		Log::info("{}, {}", vert.string(), frag.string());
 		verify(IO::exists(vert), "Could not find vertex shader.");
 		verify(IO::exists(frag), "Could not find fragment shader.");
 

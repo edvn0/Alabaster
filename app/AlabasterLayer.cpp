@@ -44,16 +44,15 @@ bool AlabasterLayer::initialise()
 		.wireframe = false,
 		.backface_culling = true,
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		.depth_test = true,
-		.depth_write = true,
+		.depth_test = false,
+		.depth_write = false,
 		.vertex_layout
 		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
 		.instance_layout = {},
 	};
 
-	vertex_buffer = new VertexBuffer(vertices.data(), vertices.size() * sizeof(Vertex));
-	index_buffer = new IndexBuffer(indices.data(), indices.size() * sizeof(uint32_t));
-	create_vertex_buffer();
+	vertex_buffer = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+	index_buffer = std::make_unique<IndexBuffer>(indices.data(), indices.size() * sizeof(uint32_t));
 
 	graphics_pipeline = std::make_unique<Pipeline>(spec);
 	graphics_pipeline->invalidate();
@@ -112,10 +111,10 @@ void AlabasterLayer::update(float ts)
 	scissor.extent = extent;
 	vkCmdSetScissor(buffer, 0, 1, &scissor);
 
-	std::array<VkBuffer, 1> vbs;
+	std::array<VkBuffer, 1> vbs {};
 	vbs[0] = vertex_buffer->get_vulkan_buffer();
 	VkDeviceSize offsets { 0 };
-	vkCmdBindVertexBuffers(buffer, 0, 1, &vb, &offsets);
+	vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
 
 	vkCmdBindIndexBuffer(buffer, index_buffer->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
@@ -232,44 +231,10 @@ void AlabasterLayer::ui(float ts)
 void AlabasterLayer::destroy()
 {
 	vertex_buffer->destroy();
-	delete vertex_buffer;
 	index_buffer->destroy();
-	delete index_buffer;
 	graphics_pipeline->destroy();
-
-	vkDestroyBuffer(GraphicsContext::the().device(), vb, nullptr);
-	vkFreeMemory(GraphicsContext::the().device(), vb_mem, nullptr);
 
 	Layer::destroy();
 }
 
-void AlabasterLayer::create_vertex_buffer()
-{
-	VkBufferCreateInfo buffer_info {};
-	buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	buffer_info.size = sizeof(vertices[0]) * vertices.size();
-	buffer_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	if (vkCreateBuffer(GraphicsContext::the().device(), &buffer_info, nullptr, &vb) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create vertex buffer!");
-	}
-
-	VkMemoryRequirements mem_requirements;
-	vkGetBufferMemoryRequirements(GraphicsContext::the().device(), vb, &mem_requirements);
-
-	VkMemoryAllocateInfo allocation_info {};
-	allocation_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	allocation_info.allocationSize = mem_requirements.size;
-	allocation_info.memoryTypeIndex
-		= find_memory_type(mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-	vk_check(vkAllocateMemory(GraphicsContext::the().device(), &allocation_info, nullptr, &vb_mem));
-
-	vkBindBufferMemory(GraphicsContext::the().device(), vb, vb_mem, 0);
-
-	void* data;
-	vkMapMemory(GraphicsContext::the().device(), vb_mem, 0, buffer_info.size, 0, &data);
-	memcpy(data, vertices.data(), (size_t)buffer_info.size);
-	vkUnmapMemory(GraphicsContext::the().device(), vb_mem);
-}

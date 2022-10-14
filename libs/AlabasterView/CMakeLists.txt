@@ -7,6 +7,12 @@ find_package(Boost REQUIRED COMPONENTS program_options)
 
 file(GLOB_RECURSE sources av_pch.hpp Alabaster.hpp include/**.hpp src/**.cpp)
 
+if(ALABASTER_OS STREQUAL "MacOS")
+    list(FILTER sources EXCLUDE REGEX Windows*)
+else()
+    list(FILTER sources EXCLUDE REGEX MacOS*)
+endif()
+
 find_program(CLANG_FORMAT "clang-format")
 
 if(CLANG_FORMAT)
@@ -22,22 +28,26 @@ add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_include_directories(
     ${PROJECT_NAME}
     PUBLIC
-        $<INSTALL_INTERFACE:include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+    ../../third_party/glm
     INTERFACE ${Vulkan_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include
-        /usr/local/include
-        ../../third_party/imgui
-        ../../third_party/imgui/backends
-        ../../third_party/debugbreak
-        ../../third_party/magic_enum/include
-        ../../third_party/VulkanMemoryAllocator/include)
+    /usr/local/include
+    ../../third_party/imgui
+    ../../third_party/imgui/backends
+    ../../third_party/debugbreak
+    ../../third_party/magic_enum/include
+    ../../third_party/VulkanMemoryAllocator/include)
 
 target_link_libraries(${PROJECT_NAME} INTERFACE Boost::program_options PRIVATE glfw imgui Vulkan::Vulkan spdlog magic_enum VulkanMemoryAllocator)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/av_pch.hpp)
-target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-volatile)
+
+if(APPLE)
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-volatile)
+endif()
 
 if(${ALABASTER_VALIDATION} STREQUAL "ON")
     target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_VALIDATION)

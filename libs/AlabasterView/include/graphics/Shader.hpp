@@ -14,12 +14,13 @@ namespace Alabaster {
 		/// @param path_and_filename
 		explicit Shader(const std::filesystem::path& path_and_filename);
 
-		inline std::array<VkPipelineShaderStageCreateInfo, 2> stages() { return shader_stages; };
+		inline std::array<VkPipelineShaderStageCreateInfo, 2> stages() const { return shader_stages; };
 
 		void destroy();
 
 	private:
 		std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages {};
+		std::filesystem::path shader_path;
 	};
 
 } // namespace Alabaster

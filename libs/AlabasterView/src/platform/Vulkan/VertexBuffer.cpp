@@ -23,6 +23,11 @@ namespace Alabaster {
 		memory_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, vulkan_buffer);
 	}
 
+	VertexBuffer::VertexBuffer(const void* data, size_t size)
+		: VertexBuffer(data, static_cast<uint32_t>(size))
+	{
+	}
+
 	VertexBuffer::VertexBuffer(const void* data, uint32_t size)
 		: buffer_size(size)
 	{

@@ -1,9 +1,29 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(
-  Alabaster
-  VERSION 0.0.1
-  LANGUAGES CXX)
+    Alabaster
+    VERSION 0.0.1
+    LANGUAGES CXX)
+
+if(WIN32)
+    list(APPEND CMAKE_MODULE_PATH "C:/Development")
+    list(APPEND CMAKE_MODULE_PATH "D:/Development")
+
+    set(BOOST_DIR "D:/Development/boost/boost_1_79_0")
+    set(BOOST_ROOT "D:/Development/boost/boost_1_79_0")
+    set(BOOST_LIBRARYDIR "D:/Development/boost/boost_1_79_0/stage/lib")
+    set(Boost_USE_STATIC_LIBS ON)
+    set(Boost_USE_MULTITHREADED ON)
+    set(Boost_USE_STATIC_RUNTIME ON)
+    list(APPEND CMAKE_MODULE_PATH ${BOOST_LIBRARYDIR})
+    list(APPEND CMAKE_MODULE_PATH ${BOOST_DIR})
+    list(APPEND CMAKE_MODULE_PATH ${BOOST_ROOT})
+
+    set(FT_DISABLE_HARFBUZZ ON)
+    set(ALABASTER_OS "Windows")
+else()
+    set(ALABASTER_OS "MacOS")
+endif()
 
 set(CMAKE_SUPPRESS_REGENERATION true)
 set(CMAKE_CXX_STANDARD 20)

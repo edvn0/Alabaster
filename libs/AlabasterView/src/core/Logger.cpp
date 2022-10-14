@@ -22,10 +22,12 @@ namespace Alabaster {
 
 	void Logger::init(const std::filesystem::path& log_dir)
 	{
+		std::string logger_dir_engine = (log_dir / "engine.log").string();
+		std::string logger_dir_app = (log_dir / "app.log").string();
 		spdlog::set_pattern("%^[%T] %n: %v%$");
-		core_logger = spdlog::basic_logger_mt("Engine", log_dir / "engine.log");
+		core_logger = spdlog::basic_logger_mt("Engine", logger_dir_engine);
 		core_logger->set_level(spdlog::level::trace);
-		client_logger = spdlog::basic_logger_mt("App", log_dir / "app.log");
+		client_logger = spdlog::basic_logger_mt("App", logger_dir_app);
 		client_logger->set_level(spdlog::level::trace);
 	}
 

@@ -8,14 +8,12 @@
 
 #include <glm/glm.hpp>
 
-struct AlabasterLayer : public Alabaster::Layer {
-	void update(float ts) override;
-	void ui(float ts) override;
-	bool initialise() override;
-	void destroy() override;
-
-private:
-	void create_vertex_buffer();
+struct AlabasterLayer final : public Alabaster::Layer {
+	~AlabasterLayer() override = default;
+	void update(float ts) final;
+	void ui(float ts) final;
+	bool initialise() final;
+	void destroy() final;
 
 private:
 	std::string_view name() override { return "AlabasterLayer"; }
@@ -26,9 +24,6 @@ private:
 	bool viewport_focused = false, viewport_hovered = false;
 	bool is_dockspace_open { true };
 
-	Alabaster::VertexBuffer* vertex_buffer;
-	Alabaster::IndexBuffer* index_buffer;
-
-	VkBuffer vb;
-	VkDeviceMemory vb_mem;
+	std::unique_ptr<Alabaster::VertexBuffer> vertex_buffer;
+	std::unique_ptr<Alabaster::IndexBuffer> index_buffer;
 };
