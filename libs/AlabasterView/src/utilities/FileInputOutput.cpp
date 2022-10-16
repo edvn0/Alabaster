@@ -42,8 +42,6 @@ namespace Alabaster::IO {
 		for (auto&& subpath : vector) {
 			result /= subpath;
 		}
-
-		Log::info("Output path: {}", result.string());
 		return result;
 	}
 

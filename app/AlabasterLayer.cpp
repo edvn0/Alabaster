@@ -101,7 +101,7 @@ void AlabasterLayer::update(float ts)
 	viewport.x = 0.0f;
 	viewport.y = 0.0f;
 	viewport.width = (float)extent.width;
-	viewport.height = -(float)extent.height;
+	viewport.height = (float)extent.height;
 	viewport.minDepth = 0.0f;
 	viewport.maxDepth = 1.0f;
 	vkCmdSetViewport(buffer, 0, 1, &viewport);
@@ -117,6 +117,8 @@ void AlabasterLayer::update(float ts)
 	vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
 
 	vkCmdBindIndexBuffer(buffer, index_buffer->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+
+	Log::info("Frame index: {}", frame_number);
 
 	vkCmdDrawIndexed(buffer, indices.size(), 1, 0, 0, 0);
 

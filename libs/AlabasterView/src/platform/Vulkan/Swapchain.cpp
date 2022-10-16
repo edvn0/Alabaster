@@ -69,8 +69,8 @@ namespace Alabaster {
 		create_synchronisation_objects();
 
 		VkPipelineStageFlags pipeline_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		VkSemaphore wait_semaphores[] = { sync_objects[current_frame].image_available };
-		VkSemaphore signal_semaphores[] = { sync_objects[current_frame].render_finished };
+		VkSemaphore wait_semaphores[] = { sync_objects[frame()].image_available };
+		VkSemaphore signal_semaphores[] = { sync_objects[frame()].render_finished };
 
 		submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -142,7 +142,7 @@ namespace Alabaster {
 	void Swapchain::begin_frame()
 	{
 		current_image_index = get_next_image();
-		vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[current_frame].command_pool, 0));
+		vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[frame()].command_pool, 0));
 	}
 
 	void Swapchain::present()
@@ -152,15 +152,15 @@ namespace Alabaster {
 		VkSubmitInfo present_submit_info = {};
 		present_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		present_submit_info.pWaitDstStageMask = &wait_stage_mask;
-		present_submit_info.pWaitSemaphores = &sync_objects[current_frame].image_available;
+		present_submit_info.pWaitSemaphores = &sync_objects[frame()].image_available;
 		present_submit_info.waitSemaphoreCount = 1;
-		present_submit_info.pSignalSemaphores = &sync_objects[current_frame].render_finished;
+		present_submit_info.pSignalSemaphores = &sync_objects[frame()].render_finished;
 		present_submit_info.signalSemaphoreCount = 1;
-		present_submit_info.pCommandBuffers = &command_buffers[current_frame].buffer;
+		present_submit_info.pCommandBuffers = &command_buffers[frame()].buffer;
 		present_submit_info.commandBufferCount = 1;
 
-		vk_check(vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[current_frame].in_flight_fence));
-		vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &present_submit_info, sync_objects[current_frame].in_flight_fence));
+		vk_check(vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence));
+		vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &present_submit_info, sync_objects[frame()].in_flight_fence));
 
 		VkResult result;
 		{
@@ -168,7 +168,7 @@ namespace Alabaster {
 			present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
 			present_info.waitSemaphoreCount = 1;
-			present_info.pWaitSemaphores = &sync_objects[current_frame].render_finished;
+			present_info.pWaitSemaphores = &sync_objects[frame()].render_finished;
 
 			present_info.pSwapchains = &vk_swapchain;
 			present_info.swapchainCount = 1;
@@ -185,7 +185,7 @@ namespace Alabaster {
 			}
 		}
 
-		current_frame = (current_frame + 1) % image_count;
+		current_frame = (frame() + 1) % image_count;
 	}
 
 	void Swapchain::on_resize(uint32_t w, uint32_t h)
@@ -214,12 +214,12 @@ namespace Alabaster {
 
 	uint32_t Swapchain::get_next_image()
 	{
-		vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[current_frame].in_flight_fence, VK_TRUE, UINT64_MAX);
-		vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[current_frame].in_flight_fence);
+		vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence, VK_TRUE, UINT64_MAX);
+		vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence);
 
 		uint32_t image_index;
-		vk_check(vkAcquireNextImageKHR(GraphicsContext::the().device(), vk_swapchain, default_fence_timeout,
-			sync_objects[current_frame].image_available, (VkFence) nullptr, &image_index));
+		vk_check(vkAcquireNextImageKHR(GraphicsContext::the().device(), vk_swapchain, default_fence_timeout, sync_objects[frame()].image_available,
+			(VkFence) nullptr, &image_index));
 
 		return image_index;
 	}
