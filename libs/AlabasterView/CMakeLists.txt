@@ -7,13 +7,12 @@ find_package(Boost REQUIRED COMPONENTS program_options)
 
 file(GLOB_RECURSE sources av_pch.hpp Alabaster.hpp include/**.hpp src/**.cpp)
 
-message(STATUS "AlabasterView OS: ${ALABASTER_OS}")
+message(STATUS "Alabaster chosen OS: ${ALABASTER_OS}")
 
 if(ALABASTER_OS STREQUAL "MacOS")
   list(FILTER sources EXCLUDE REGEX Windows*)
-
-  message(STATUS ${sources})
-
+  list(APPEND sources
+       ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MacOS/MacOSWindow.cpp)
 else()
   list(FILTER sources EXCLUDE REGEX MacOS*)
 endif()
@@ -58,12 +57,9 @@ if(APPLE)
   target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-volatile)
 endif()
 
-if(ALABASTER_VALIDATION STREQUAL "ON")
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_VALIDATION)
-endif()
-
-if(ALABASTER_DEBUG STREQUAL "ON")
-  target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_VALIDATION)
+  target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_DEBUG)
 endif()
 
 if(BUILD_TESTING)

@@ -6,7 +6,7 @@ namespace Alabaster {
 
 	RenderQueue& Renderer::render_queue()
 	{
-		RenderQueue render_queue;
+		static RenderQueue render_queue;
 		return render_queue;
 	}
 

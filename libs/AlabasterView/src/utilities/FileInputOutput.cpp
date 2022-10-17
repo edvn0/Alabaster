@@ -2,15 +2,23 @@
 
 #include "utilities/FileInputOutput.hpp"
 
+#include <sstream>
+
 namespace Alabaster::IO {
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{
+		Log::info("OpenMode: {}, std: {}", static_cast<unsigned int>(mode), std::ios::ate | std::ios::binary | std::ios::in);
 
-		std::ifstream stream(filename, static_cast<int>(mode));
+		std::ifstream stream(filename, static_cast<unsigned int>(mode));
 		verify(stream);
 
 		auto size = stream.tellg();
+
+		verify(size > 0, "Size of file must be greater than zero.");
+
+		Log::info("Buffer size: {}", size);
+
 		std::vector<char> buffer;
 		buffer.resize(size);
 
@@ -21,11 +29,13 @@ namespace Alabaster::IO {
 		return std::string(buffer.begin(), buffer.end());
 	}
 
-	bool exists(const std::filesystem::path& path) { return std::filesystem::exists(path); }
+	bool exists(const std::filesystem::path& path)
+	{
+		return std::filesystem::exists(path) || std::filesystem::exists(std::filesystem::current_path() / path);
+	}
 
 	std::filesystem::path independent_path(const std::string& path)
 	{
-		std::ios::ate;
 		verify(path.find("/") != std::string::npos);
 
 		auto vector = [&path]() {

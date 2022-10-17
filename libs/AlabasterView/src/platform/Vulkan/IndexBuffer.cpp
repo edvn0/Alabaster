@@ -69,7 +69,7 @@ namespace Alabaster {
 		allocator.destroy_buffer(vulkan_buffer, memory_allocation);
 
 		index_data.release();
-		Log::info("[IndexBuffer] Destroying vertex buffer via VMA.");
+		Log::info("[IndexBuffer] Destroying via VMA.");
 		destroyed = true;
 	};
 
