@@ -1,6 +1,7 @@
 #include "AlabasterLayer.hpp"
 
 #include "Alabaster.hpp"
+#include "graphics/Renderer.hpp"
 #include "vulkan/vulkan_core.h"
 
 #include <imgui.h>
@@ -63,8 +64,8 @@ bool AlabasterLayer::initialise()
 void AlabasterLayer::update(float ts)
 {
 	static size_t frame_number { 0 };
-
-	static constexpr auto frame_to_rgb = [](size_t frame) {
+	Renderer::submit([this, &frame = frame_number]{
+		static constexpr auto frame_to_rgb = [](size_t frame) {
 		float r = sin((frame % 255) / 255.0);
 		float g = cos((frame % 255) / 255.0);
 		float b = (frame % 255) / 255.0;
@@ -124,6 +125,9 @@ void AlabasterLayer::update(float ts)
 	vkCmdEndRenderPass(buffer);
 
 	vkEndCommandBuffer(buffer);
+
+	});
+
 
 	Layer::update(ts);
 

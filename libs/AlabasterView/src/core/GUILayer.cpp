@@ -154,7 +154,7 @@ namespace Alabaster {
 
 			VkViewport viewport = {};
 			viewport.x = 0.0f;
-			viewport.y = static_cast<float>(height);
+			viewport.y = 0.0f;
 			viewport.width = static_cast<float>(width);
 			viewport.height = static_cast<float>(height);
 			viewport.minDepth = 0.0f;

@@ -11,6 +11,10 @@ namespace Alabaster {
 
 	class Renderer {
 	public:
+		static void begin();
+		static void end();
+
+	public:
 		template <TriviallyDestructible CommandBufferFunction> static void submit(CommandBufferFunction&& func)
 		{
 
@@ -22,6 +26,8 @@ namespace Alabaster {
 			auto storage_buffer = Renderer::render_queue().allocate(render_command, sizeof(func));
 			new (storage_buffer) CommandBufferFunction(std::forward<CommandBufferFunction>(func));
 		}
+
+		static void execute();
 
 	private:
 		static RenderQueue& render_queue();

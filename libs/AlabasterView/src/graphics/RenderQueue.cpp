@@ -2,6 +2,7 @@
 
 #include "graphics/RenderQueue.hpp"
 
+#include "core/Logger.hpp"
 #include "graphics/GraphicsContext.hpp"
 
 namespace Alabaster {
@@ -20,12 +21,11 @@ namespace Alabaster {
 
 	void* RenderQueue::allocate(RenderFunction&& func, BufferCount size)
 	{
-		auto* buffer_func = reinterpret_cast<RenderFunction*>(command_buffer_ptr);
-		*buffer_func = func;
+		*(RenderFunction*)command_buffer_ptr = func;
 		command_buffer_ptr += sizeof(RenderFunction);
 
-		auto* size_ptr = reinterpret_cast<BufferCount*>(command_buffer_ptr);
-		*size_ptr += sizeof(BufferCount);
+		*(uint32_t*)command_buffer_ptr = size;
+		command_buffer_ptr += sizeof(uint32_t);
 
 		void* memory = command_buffer_ptr;
 		command_buffer_ptr += size;
@@ -36,6 +36,8 @@ namespace Alabaster {
 
 	void RenderQueue::execute()
 	{
+		Log::info("[RenderQueue] -- [{0} command(s): {1} bytes]", command_count, (command_buffer_ptr - command_buffer));
+
 		byte* buffer = command_buffer;
 
 		for (uint32_t i = 0; i < command_count; i++) {

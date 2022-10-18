@@ -103,6 +103,9 @@ namespace Alabaster {
 		std::unique_ptr<Window> window;
 
 		double app_ts { 7.5 };
+		float cpu_time;
+		float frame_time;
+		float last_frametime;
 	};
 
 	Application* create(const ApplicationArguments&);

@@ -6,9 +6,11 @@
 #include "core/GUILayer.hpp"
 #include "core/Input.hpp"
 #include "core/Logger.hpp"
+#include "core/Timer.hpp"
 #include "core/Window.hpp"
 #include "graphics/Allocator.hpp"
 #include "graphics/GraphicsContext.hpp"
+#include "graphics/Renderer.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/Swapchain.hpp"
 
@@ -48,41 +50,36 @@ namespace Alabaster {
 	{
 		on_init();
 
-		auto time = Clock::get_ms<double>();
 		static size_t frame_count = 1;
 		static double frametime_counter { 0.0 };
 		while (!window->should_close()) {
+			window->update();
 			if (Input::key(Key::Escape) || Input::key(Key::Q)) {
 				window->close();
 				continue;
 			}
 
-			window->update();
-			double current_time = Clock::get_ms<double>();
+			Timer<float> on_cpu;
 
-			auto ts = current_time - time;
-			frametime_counter += ts;
+			Renderer::begin();
+			{
+				Renderer::submit(&GUILayer::begin);
+				Renderer::submit([this, &ts = app_ts] { layer_backward([&ts](Layer* layer) { layer->ui(ts); }); });
+				Renderer::submit(&GUILayer::end);
+				layer_backward([ts = app_ts](Layer* layer) { layer->update(ts); });
+			}
+			Renderer::end();
 
 			window->get_swapchain()->begin_frame();
-
-			GUILayer::begin();
-			layer_backward([ts](Layer* layer) { layer->ui(ts); });
-			GUILayer::end();
-
-			layer_backward([ts](Layer* layer) { layer->update(ts); });
-
-			frame_count++;
-
-			if (frame_count % 50 == 0) {
-				app_ts = frametime_counter / 50;
-				frametime_counter = 0;
-			}
-
+			Renderer::execute();
 			window->swap_buffers();
-			time = current_time;
-		}
 
-		// vkDeviceWaitIdle(GraphicsContext::the().device());
+			cpu_time = on_cpu.elapsed();
+			float time = Clock::get_ms<float>();
+			frame_time = time - last_frametime;
+			app_ts = glm::min<float>(frame_time, 0.0333f);
+			last_frametime = time;
+		}
 	}
 
 	double Application::frametime() { return app_ts; }

@@ -10,4 +10,10 @@ namespace Alabaster {
 		return render_queue;
 	}
 
+	void Renderer::execute() { render_queue().execute(); }
+
+	void Renderer::begin() { }
+
+	void Renderer::end() { }
+
 } // namespace Alabaster
