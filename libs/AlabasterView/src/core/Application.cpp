@@ -82,7 +82,7 @@ namespace Alabaster {
 			time = current_time;
 		}
 
-		vkDeviceWaitIdle(GraphicsContext::the().device());
+		// vkDeviceWaitIdle(GraphicsContext::the().device());
 	}
 
 	double Application::frametime() { return app_ts; }

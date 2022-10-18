@@ -90,6 +90,12 @@ namespace Alabaster {
 
 	bool Window::should_close() { return glfwWindowShouldClose(handle); }
 
-	void Window::close() { glfwSetWindowShouldClose(handle, 1); }
+	void Window::close()
+	{
+
+		const auto& sc = this->swapchain;
+		sc->wait();
+		glfwSetWindowShouldClose(handle, 1);
+	}
 
 } // namespace Alabaster

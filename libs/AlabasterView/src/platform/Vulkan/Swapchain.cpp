@@ -7,12 +7,23 @@
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
 #include "graphics/GraphicsContext.hpp"
+#include "vulkan/vulkan_core.h"
 
 #include <GLFW/glfw3.h>
 
 namespace Alabaster {
 
 	static constexpr auto default_fence_timeout = std::numeric_limits<uint32_t>::max();
+
+	void Swapchain::wait()
+	{
+		std::vector<VkFence> fences;
+		for (const auto& frame : sync_objects) {
+			fences.push_back(frame.in_flight_fence);
+		}
+
+		vkWaitForFences(GraphicsContext::the().device(), fences.size(), fences.data(), VK_TRUE, default_fence_timeout);
+	}
 
 	void Swapchain::construct(GLFWwindow* handle, uint32_t width, uint32_t height)
 	{

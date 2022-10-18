@@ -21,20 +21,18 @@ namespace Alabaster {
 
 		void begin_frame();
 
-		uint32_t get_width() const { return sc_width; }
-		uint32_t get_height() const { return sc_height; }
-
-		uint32_t get_image_count() { return image_count; }
-
-		VkRenderPass get_render_pass() { return vk_render_pass; };
+		void wait();
 
 		uint32_t frame() const { return current_frame; }
-
 		auto image() const { return images.views[frame()]; }
 		auto swapchain_extent() const { return extent; }
 
 		VkCommandBuffer get_current_drawbuffer() const;
 		VkFramebuffer get_current_framebuffer() const { return frame_buffers[frame()]; };
+		uint32_t get_width() const { return sc_width; }
+		uint32_t get_height() const { return sc_height; }
+		uint32_t get_image_count() { return image_count; }
+		VkRenderPass get_render_pass() { return vk_render_pass; };
 
 	private:
 		GLFWwindow* sc_handle;
