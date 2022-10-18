@@ -18,9 +18,7 @@ rm "$current_dir/compile_commands.json"
 ln -s build/compile_commands.json "$current_dir"
 
 run_tests() {
-  pushd build || exit
-  ctest
-  popd || exit
+  ctest -j10 --test-dir "build"
 }
 
 run_app() {
