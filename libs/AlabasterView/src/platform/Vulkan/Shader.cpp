@@ -30,7 +30,6 @@ namespace Alabaster {
 		: shader_path(p)
 	{
 		auto [vert, frag] = to_path(shader_path);
-		Log::info("{}, {}", vert.string(), frag.string());
 		verify(IO::exists(vert), "Could not find vertex shader.");
 		verify(IO::exists(frag), "Could not find fragment shader.");
 

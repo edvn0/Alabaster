@@ -1,6 +1,7 @@
 #include "av_pch.hpp"
 
 #include "core/Common.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
 #include "graphics/GraphicsContext.hpp"
 
@@ -20,16 +21,16 @@ namespace Alabaster {
 	{
 		std::string type = message_type == 1 ? "General" : "1";
 		if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
-			Log::info("Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
+			Log::info("[Validation] Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
-			Log::info("Info: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
+			Log::info("[Validation] Info: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-			Log::warn("Warning: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
+			Log::warn("[Validation] Warning: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
-			Log::error("Error: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
+			Log::error("[Validation] Error: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else {
 			Log::error("Message Severity: {}", message_severity);
@@ -39,10 +40,12 @@ namespace Alabaster {
 
 	void destroy_debug_messenger(VkInstance instance, VkDebugUtilsMessengerEXT debug_messenger, const VkAllocationCallbacks* allocator)
 	{
+#ifdef ALABASTER_VALIDATION
 		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 		if (func != nullptr) {
 			func(instance, debug_messenger, allocator);
 		}
+#endif
 	}
 
 	void populate_debug_messenger(VkDebugUtilsMessengerCreateInfoEXT& create_info)
@@ -115,12 +118,14 @@ namespace Alabaster {
 
 	void GraphicsContext::setup_debug_messenger()
 	{
+#ifdef ALABASTER_VALIDATION
 		VkDebugUtilsMessengerCreateInfoEXT create_info {};
 		populate_debug_messenger(create_info);
 
 		if (create_debug_messenger(vk_instance, &create_info, nullptr, &debug_messenger) != VK_SUCCESS) {
 			throw std::runtime_error("failed to set up debug messenger!");
 		}
+#endif
 	}
 
 	void GraphicsContext::create_instance()
@@ -241,7 +246,7 @@ namespace Alabaster {
 		vkEnumeratePhysicalDevices(vk_instance, &device_count, nullptr);
 
 		if (device_count == 0) {
-			throw std::runtime_error("Could not find any GPUs.");
+			throw AlabasterException("Could not find any GPUs.");
 		}
 
 		std::vector<VkPhysicalDevice> devices(device_count);
@@ -252,10 +257,8 @@ namespace Alabaster {
 				break;
 			}
 		}
-		Log::info("Physical device chosen.");
 
 		find_queue_families();
-		Log::info("Queues: Graphics: [{}], Present: [{}]", queues[QueueType::Graphics].family, queues[QueueType::Present].family);
 	}
 
 	void GraphicsContext::find_queue_families()

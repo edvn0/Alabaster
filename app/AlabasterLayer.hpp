@@ -14,6 +14,7 @@ struct AlabasterLayer final : public Alabaster::Layer {
 	void ui(float ts) final;
 	bool initialise() final;
 	void destroy() final;
+	bool on_event(Alabaster::Event& event) final { return true; };
 
 private:
 	std::string_view name() override { return "AlabasterLayer"; }

@@ -3,15 +3,14 @@
 #include "core/Application.hpp"
 
 #include "core/Clock.hpp"
+#include "core/events/ApplicationEvent.hpp"
+#include "core/events/Event.hpp"
 #include "core/GUILayer.hpp"
 #include "core/Input.hpp"
 #include "core/Logger.hpp"
 #include "core/Timer.hpp"
 #include "core/Window.hpp"
-#include "graphics/Allocator.hpp"
-#include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
-#include "graphics/Shader.hpp"
 #include "graphics/Swapchain.hpp"
 
 namespace Alabaster {
@@ -27,17 +26,26 @@ namespace Alabaster {
 		global_app = this;
 		window = std::make_unique<Window>(args);
 		push_layer(new GUILayer());
+
+		window->set_event_callback([this](Event& e) { on_event(e); });
+
+		Renderer::init();
 	}
 
 	Application::~Application() { stop(); }
 
 	void Application::stop()
 	{
-		layer_forward([](auto* l) { l->destroy(); });
+		layer_forward([](auto* l) {
+			l->destroy();
+			return true;
+		});
 
 		Log::info("[Application] Stopping.");
 
 		window->destroy();
+
+		Renderer::shutdown();
 	}
 
 	void Application::resize(int w, int h) { window->get_swapchain()->on_resize(w, h); }
@@ -50,23 +58,22 @@ namespace Alabaster {
 	{
 		on_init();
 
-		static size_t frame_count = 1;
-		static double frametime_counter { 0.0 };
 		while (!window->should_close()) {
 			window->update();
-			if (Input::key(Key::Escape) || Input::key(Key::Q)) {
-				window->close();
-				continue;
-			}
 
 			Timer<float> on_cpu;
 
 			Renderer::begin();
 			{
-				Renderer::submit(&GUILayer::begin);
-				Renderer::submit([this, &ts = app_ts] { layer_backward([&ts](Layer* layer) { layer->ui(ts); }); });
-				Renderer::submit(&GUILayer::end);
-				layer_backward([ts = app_ts](Layer* layer) { layer->update(ts); });
+				Renderer::submit([this, &ts = app_ts] {
+					GUILayer::begin();
+					layer_forward([&ts](Layer* layer) {
+						layer->ui(ts);
+						layer->update(ts);
+						return true;
+					});
+					GUILayer::end();
+				});
 			}
 			Renderer::end();
 
@@ -80,8 +87,50 @@ namespace Alabaster {
 			app_ts = glm::min<float>(frame_time, 0.0333f);
 			last_frametime = time;
 		}
+
+		on_shutdown();
 	}
 
 	double Application::frametime() { return app_ts; }
+
+	void Application::on_shutdown() { window->close(); }
+
+	void Application::on_event(Event& event)
+	{
+		EventDispatcher dispatcher(event);
+		dispatcher.dispatch<WindowResizeEvent>([this](WindowResizeEvent& e) { return on_window_change(e); });
+		dispatcher.dispatch<WindowMinimizeEvent>([this](WindowMinimizeEvent& e) { return on_window_change(e); });
+		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return on_window_change(e); });
+
+		layer_backward([&event](Layer* layer) {
+			layer->on_event(event);
+			if (event.handled)
+				return true;
+			return false;
+		});
+
+		if (event.handled)
+			return;
+	}
+
+	bool Application::on_window_change(WindowResizeEvent& e)
+	{
+		const uint32_t width = e.width(), height = e.height();
+		if (width == 0 || height == 0) {
+			return false;
+		}
+
+		window->get_swapchain()->on_resize(width, height);
+
+		return false;
+	}
+
+	bool Application::on_window_change(WindowMinimizeEvent& event)
+	{
+		// minimized = e.is_minimized();
+		return false;
+	}
+
+	bool Application::on_window_change(WindowCloseEvent& e) { return false; }
 
 } // namespace Alabaster

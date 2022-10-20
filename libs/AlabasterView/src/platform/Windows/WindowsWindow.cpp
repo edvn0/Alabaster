@@ -84,7 +84,6 @@ namespace Alabaster {
 	void Window::setup_events()
 	{
 		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int w, int h) { Application::the().resize(w, h); });
-		glfwSetKeyCallback(handle, [](GLFWwindow* window, auto a, auto b, auto c, auto d) { Log::info("{},{},{},{}", a, b, c, d); });
 	}
 
 	void Window::update() { glfwPollEvents(); }

@@ -41,6 +41,12 @@ namespace Alabaster {
 		sc_width = width;
 		sc_height = height;
 
+		// Check that pixel screen size can contain SC images...
+		int window_width, window_height;
+		glfwGetWindowSize(handle, &window_width, &window_height);
+
+		if (window_width < sc_width || window_height < sc_height) { }
+
 		auto& context = GraphicsContext::the();
 		auto instance = context.instance();
 

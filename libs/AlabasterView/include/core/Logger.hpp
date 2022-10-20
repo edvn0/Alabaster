@@ -11,6 +11,8 @@
 
 namespace Alabaster {
 
+	enum class LoggerLevel : uint8_t { Debug, Error, Info, Trace, Warn };
+
 	class Logger {
 		using LoggerWrapper = std::shared_ptr<spdlog::logger>;
 
@@ -21,6 +23,9 @@ namespace Alabaster {
 
 		static LoggerWrapper get_core_logger() { return core_logger; };
 		static LoggerWrapper get_client_logger() { return client_logger; };
+
+		static void set_level(LoggerLevel level);
+		static void cycle_levels();
 
 	private:
 		static LoggerWrapper core_logger;
@@ -36,7 +41,7 @@ namespace Alabaster {
 
 		template <typename... Args> inline static constexpr auto debug(auto&& fmt, Args&&... args)
 		{
-			::Alabaster::Logger::get_core_logger()->info(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+			::Alabaster::Logger::get_core_logger()->debug(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
 		}
 
 		template <typename... Args> inline static constexpr auto warn(auto&& fmt, Args&&... args)
@@ -47,6 +52,11 @@ namespace Alabaster {
 		template <typename... Args> inline static constexpr auto error(auto&& fmt, Args&&... args)
 		{
 			::Alabaster::Logger::get_core_logger()->error(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+		}
+
+		template <typename... Args> inline static constexpr auto critical(auto&& fmt, Args&&... args)
+		{
+			::Alabaster::Logger::get_core_logger()->critical(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
 		}
 
 		template <typename... Args> inline static constexpr auto trace(auto&& fmt, Args&&... args)

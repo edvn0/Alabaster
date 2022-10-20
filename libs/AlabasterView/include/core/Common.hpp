@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
 
 #include <debug_break.h>
@@ -18,7 +19,7 @@ namespace Alabaster {
 		}
 	};
 
-	template <typename PositiveCondition> auto verify(PositiveCondition&& happy) -> void
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&& happy) -> void
 	{
 		auto result = static_cast<bool>(happy);
 		if (!result) {
@@ -26,7 +27,7 @@ namespace Alabaster {
 		}
 	};
 
-	template <typename PositiveCondition> auto verify(PositiveCondition&& happy, std::string_view message) -> void
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&& happy, std::string_view message) -> void
 	{
 		auto result = static_cast<bool>(happy);
 		if (!result) {
@@ -38,9 +39,9 @@ namespace Alabaster {
 
 	template <typename VkResult> static constexpr auto vk_check(VkResult result) -> void {};
 
-	template <typename PositiveCondition> auto verify(PositiveCondition&& happy) -> void {};
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&& happy) -> void {};
 
-	template <typename PositiveCondition> auto verify(PositiveCondition&& happy, std::string_view message) -> void {};
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&& happy, std::string_view message) -> void {};
 
 #endif
 

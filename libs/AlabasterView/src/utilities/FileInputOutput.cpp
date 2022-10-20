@@ -8,16 +8,11 @@ namespace Alabaster::IO {
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{
-		Log::info("OpenMode: {}, std: {}", static_cast<unsigned int>(mode), std::ios::ate | std::ios::binary | std::ios::in);
-
 		std::ifstream stream(filename, static_cast<unsigned int>(mode));
 		verify(stream);
 
 		auto size = stream.tellg();
-
 		verify(size > 0, "Size of file must be greater than zero.");
-
-		Log::info("Buffer size: {}", size);
 
 		std::vector<char> buffer;
 		buffer.resize(size);
@@ -38,7 +33,7 @@ namespace Alabaster::IO {
 	{
 		verify(path.find("/") != std::string::npos);
 
-		auto vector = [&path]() {
+		auto vector = [&path] {
 			std::stringstream stream(path);
 			std::string item;
 			std::vector<std::string> split_strings;

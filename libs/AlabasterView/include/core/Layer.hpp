@@ -5,6 +5,7 @@
 namespace Alabaster {
 
 	class Application;
+	class Event;
 
 	struct Layer {
 		virtual ~Layer() = default;
@@ -12,6 +13,7 @@ namespace Alabaster {
 		virtual auto update(float ts) -> void {};
 		virtual auto destroy() -> void {};
 		virtual void ui(float ts) {};
+		virtual bool on_event(Event& event) { return true; };
 
 		std::string_view get_name() { return name(); }
 

@@ -1,6 +1,7 @@
 #include "av_pch.hpp"
 
 #include "core/Common.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
 #include "graphics/GraphicsContext.hpp"
 
@@ -241,7 +242,7 @@ namespace Alabaster {
 		vkEnumeratePhysicalDevices(vk_instance, &device_count, nullptr);
 
 		if (device_count == 0) {
-			throw std::runtime_error("Could not find any GPUs.");
+			throw AlabasterException("Could not find any GPUs.");
 		}
 
 		std::vector<VkPhysicalDevice> devices(device_count);
@@ -252,10 +253,8 @@ namespace Alabaster {
 				break;
 			}
 		}
-		Log::info("Physical device chosen.");
 
 		find_queue_families();
-		Log::info("Queues: Graphics: [{}], Present: [{}]", queues[QueueType::Graphics].family, queues[QueueType::Present].family);
 	}
 
 	void GraphicsContext::find_queue_families()

@@ -87,8 +87,6 @@ namespace Alabaster {
 
 			vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
 
-			Log::info("Created and uploaded fonts.");
-
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
 

@@ -1,7 +1,9 @@
 #pragma once
 
 #include "core/Common.hpp"
+#include "core/events/ApplicationEvent.hpp"
 #include "core/Layer.hpp"
+#include "graphics/GraphicsContext.hpp"
 
 #include <map>
 #include <memory>
@@ -20,7 +22,7 @@ namespace Alabaster {
 	class Application {
 		using rev_it = std::map<std::string, Layer*>::reverse_iterator;
 		using it = std::map<std::string, Layer*>::iterator;
-		using LayerFunction = std::function<void(Layer*)>;
+		using LayerFunction = std::function<bool(Layer*)>;
 		using LayerTimestepFunction = void(Layer*, float);
 
 	public:
@@ -37,19 +39,23 @@ namespace Alabaster {
 
 		virtual ~Application();
 
-		virtual void on_init() {
+		virtual void on_init() { GraphicsContext::the(); }
+		virtual void on_event(Event&);
+		virtual void on_shutdown();
 
-		};
+		bool on_window_change(WindowResizeEvent& event);
+		bool on_window_change(WindowMinimizeEvent& event);
+		bool on_window_change(WindowCloseEvent& event);
 
 		void resize(int w, int h);
 
-		inline void push_layer(Layer* layer)
+		void push_layer(Layer* layer)
 		{
 			layer->initialise();
 			layers.emplace(layer->name(), std::move(layer));
 		}
 
-		inline void pop_layer(std::string name)
+		void pop_layer(std::string name)
 		{
 			verify(layers.contains(name), "Layer map did not contain name " + name + ".");
 
@@ -60,11 +66,19 @@ namespace Alabaster {
 			layers.erase(found_it);
 		}
 
+		static Application& the();
+		inline const std::unique_ptr<Window>& get_window() { return window; };
+		inline const std::unique_ptr<Window>& get_window() const { return window; }
+		inline const GUILayer& gui_layer();
+		inline const GUILayer& gui_layer() const;
+
+	private:
 		inline void layer_forward(LayerFunction&& func)
 		{
 			for (it layer = layers.begin(); layer != layers.end(); ++layer) {
 				auto&& [k, l] = *layer;
-				func(l);
+				if (func(l))
+					break;
 			}
 		}
 
@@ -72,7 +86,8 @@ namespace Alabaster {
 		{
 			for (rev_it layer = layers.rbegin(); layer != layers.rend(); ++layer) {
 				auto&& [k, l] = *layer;
-				func(l);
+				if (func(l))
+					break;
 			}
 		}
 
@@ -91,12 +106,6 @@ namespace Alabaster {
 				func(l, ts);
 			}
 		}
-
-		static Application& the();
-		inline const std::unique_ptr<Window>& get_window() { return window; };
-		inline const std::unique_ptr<Window>& get_window() const { return window; }
-		inline const GUILayer& gui_layer();
-		inline const GUILayer& gui_layer() const;
 
 	private:
 		std::map<std::string, Layer*> layers;

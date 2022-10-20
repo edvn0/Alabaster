@@ -3,7 +3,6 @@
 #include "graphics/RenderQueue.hpp"
 
 #include "core/Logger.hpp"
-#include "graphics/GraphicsContext.hpp"
 
 namespace Alabaster {
 
@@ -36,7 +35,7 @@ namespace Alabaster {
 
 	void RenderQueue::execute()
 	{
-		Log::info("[RenderQueue] -- [{0} command(s): {1} bytes]", command_count, (command_buffer_ptr - command_buffer));
+		// Log::debug("[RenderQueue] -- [{0} command(s): {1} bytes]", command_count, (command_buffer_ptr - command_buffer));
 
 		byte* buffer = command_buffer;
 
