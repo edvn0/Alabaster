@@ -140,7 +140,8 @@
             "numbers": "cpp",
             "semaphore": "cpp",
             "cinttypes": "cpp",
-            "__availability": "cpp"
+            "__availability": "cpp",
+            "__std_stream": "cpp"
         },
         "C_Cpp.files.exclude": {
             "**/*.tmp": true,

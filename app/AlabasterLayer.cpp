@@ -1,6 +1,5 @@
-#include "AlabasterLayer.hpp"
-
 #include "Alabaster.hpp"
+#include "AlabasterLayer.hpp"
 #include "graphics/Renderer.hpp"
 #include "vulkan/vulkan_core.h"
 
@@ -44,7 +43,7 @@ bool AlabasterLayer::initialise()
 		.debug_name = "Test",
 		.render_pass = Application::the().get_window()->get_swapchain()->get_render_pass(),
 		.wireframe = false,
-		.backface_culling = true,
+		.backface_culling = false,
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 		.depth_test = false,
 		.depth_write = false,
@@ -61,73 +60,85 @@ bool AlabasterLayer::initialise()
 	return true;
 }
 
+bool AlabasterLayer::on_event(Event& e)
+{
+	EventDispatcher dispatch(e);
+	dispatch.dispatch<KeyPressedEvent>([](KeyPressedEvent& key_event) {
+		const auto key_code = key_event.get_key_code();
+		if (key_code == Key::Escape) {
+			Application::the().exit();
+			return true;
+		}
+
+		return false;
+	});
+}
+
 void AlabasterLayer::update(float ts)
 {
 	static size_t frame_number { 0 };
-	Renderer::submit([this, &frame = frame_number]{
+	Renderer::submit([this, &frame = frame_number] {
 		static constexpr auto frame_to_rgb = [](size_t frame) {
-		float r = sin((frame % 255) / 255.0);
-		float g = cos((frame % 255) / 255.0);
-		float b = (frame % 255) / 255.0;
-		VkClearValue clear = { { { r, g, b, 1.0f } } };
-		return clear;
-	};
+			float r = sin((frame % 255) / 255.0);
+			float g = cos((frame % 255) / 255.0);
+			float b = (frame % 255) / 255.0;
+			VkClearValue clear = { { { r, g, b, 1.0f } } };
+			return clear;
+		};
 
-	const auto& swapchain = Application::the().get_window()->get_swapchain();
-	VkCommandBufferBeginInfo cmd_bbi = {};
-	cmd_bbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	cmd_bbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-	cmd_bbi.pNext = nullptr;
+		const auto& swapchain = Application::the().get_window()->get_swapchain();
+		VkCommandBufferBeginInfo command_buffer_begin_info = {};
+		command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		command_buffer_begin_info.pNext = nullptr;
 
-	auto buffer = swapchain->get_current_drawbuffer();
-	vk_check(vkBeginCommandBuffer(buffer, &cmd_bbi));
+		auto buffer = swapchain->get_current_drawbuffer();
+		vk_check(vkBeginCommandBuffer(buffer, &command_buffer_begin_info));
 
-	auto extent = swapchain->swapchain_extent();
+		auto extent = swapchain->swapchain_extent();
 
-	VkRenderPassBeginInfo render_pass_info {};
-	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	render_pass_info.renderPass = swapchain->get_render_pass();
-	render_pass_info.framebuffer = swapchain->get_current_framebuffer();
-	render_pass_info.renderArea.offset = { 0, 0 };
-	render_pass_info.renderArea.extent = extent;
+		VkRenderPassBeginInfo render_pass_info {};
+		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		render_pass_info.renderPass = swapchain->get_render_pass();
+		render_pass_info.framebuffer = swapchain->get_current_framebuffer();
+		render_pass_info.renderArea.offset = { 0, 0 };
+		render_pass_info.renderArea.extent = extent;
 
-	VkClearValue clear = frame_to_rgb(frame_number);
-	render_pass_info.clearValueCount = 1;
-	render_pass_info.pClearValues = &clear;
+		VkClearValue clear = frame_to_rgb(frame_number);
+		render_pass_info.clearValueCount = 1;
+		render_pass_info.pClearValues = &clear;
 
-	vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+		vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-	vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->get_vulkan_pipeline());
+		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->get_vulkan_pipeline());
 
-	VkViewport viewport {};
-	viewport.x = 0.0f;
-	viewport.y = 0.0f;
-	viewport.width = (float)extent.width;
-	viewport.height = (float)extent.height;
-	viewport.minDepth = 0.0f;
-	viewport.maxDepth = 1.0f;
-	vkCmdSetViewport(buffer, 0, 1, &viewport);
+		VkViewport viewport {};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = (float)extent.width;
+		viewport.height = (float)extent.height;
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(buffer, 0, 1, &viewport);
 
-	VkRect2D scissor {};
-	scissor.offset = { 0, 0 };
-	scissor.extent = extent;
-	vkCmdSetScissor(buffer, 0, 1, &scissor);
+		VkRect2D scissor {};
+		scissor.offset = { 0, 0 };
+		scissor.extent = extent;
+		vkCmdSetScissor(buffer, 0, 1, &scissor);
 
-	std::array<VkBuffer, 1> vbs {};
-	vbs[0] = vertex_buffer->get_vulkan_buffer();
-	VkDeviceSize offsets { 0 };
-	vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
+		std::array<VkBuffer, 1> vbs {};
+		vbs[0] = vertex_buffer->get_vulkan_buffer();
+		VkDeviceSize offsets { 0 };
+		vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
 
-	vkCmdBindIndexBuffer(buffer, index_buffer->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(buffer, index_buffer->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-	vkCmdDrawIndexed(buffer, indices.size(), 1, 0, 0, 0);
+		vkCmdDrawIndexed(buffer, indices.size(), 1, 0, 0, 0);
 
-	vkCmdEndRenderPass(buffer);
+		vkCmdEndRenderPass(buffer);
 
-	vkEndCommandBuffer(buffer);
-
+		vkEndCommandBuffer(buffer);
 	});
-
 
 	Layer::update(ts);
 

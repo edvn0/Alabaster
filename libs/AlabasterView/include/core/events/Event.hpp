@@ -65,7 +65,7 @@ namespace Alabaster {
 	};
 
 	class EventDispatcher {
-		template <typename T> using EventFn = std::function<bool(T&)>;
+		template <typename T> using EventCallback = std::function<bool(T&)>;
 
 	public:
 		EventDispatcher(Event& event)
@@ -73,10 +73,11 @@ namespace Alabaster {
 		{
 		}
 
-		template <typename T> bool dispatch(EventFn<T> func)
+		template <typename T> bool dispatch(EventCallback<T> callback)
 		{
 			if (event.get_event_type() == T::get_static_type() && !event.handled) {
-				event.handled = func(*(T*)&event);
+				auto& cast = *static_cast<T*>(&event);
+				event.handled = callback(cast);
 				return true;
 			}
 			return false;

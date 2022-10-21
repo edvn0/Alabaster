@@ -227,6 +227,16 @@ namespace Alabaster {
 		vkDestroySwapchainKHR(GraphicsContext::the().device(), vk_swapchain, nullptr);
 	}
 
+	VkFramebuffer Swapchain::get_current_framebuffer() const { return frame_buffers[frame()]; };
+
+	uint32_t Swapchain::get_width() const { return sc_width; }
+
+	uint32_t Swapchain::get_height() const { return sc_height; }
+
+	uint32_t Swapchain::get_image_count() { return image_count; }
+
+	VkRenderPass Swapchain::get_render_pass() { return vk_render_pass; };
+
 	VkCommandBuffer Swapchain::get_current_drawbuffer() const { return command_buffers[frame()].buffer; }
 
 	uint32_t Swapchain::get_next_image()

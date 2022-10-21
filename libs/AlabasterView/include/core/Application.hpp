@@ -27,7 +27,7 @@ namespace Alabaster {
 
 	public:
 		void run();
-		void stop();
+		void exit();
 
 		double frametime();
 
@@ -69,10 +69,11 @@ namespace Alabaster {
 		static Application& the();
 		inline const std::unique_ptr<Window>& get_window() { return window; };
 		inline const std::unique_ptr<Window>& get_window() const { return window; }
-		inline const GUILayer& gui_layer();
-		inline const GUILayer& gui_layer() const;
+		inline GUILayer& gui_layer();
 
 	private:
+		void stop();
+
 		inline void layer_forward(LayerFunction&& func)
 		{
 			for (it layer = layers.begin(); layer != layers.end(); ++layer) {
@@ -115,6 +116,9 @@ namespace Alabaster {
 		float cpu_time;
 		float frame_time;
 		float last_frametime;
+
+		bool is_running { true };
+		GUILayer* ui_layer { nullptr };
 	};
 
 	Application* create(const ApplicationArguments&);
