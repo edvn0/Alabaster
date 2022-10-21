@@ -13,16 +13,16 @@ cmake -B build -GNinja \
     -DBUILD_TESTING="$build_testing" \
     -DBUILD_SHARED_LIBS=OFF -S "$current_dir"
 
-cmake --build build
+cmake --build build --clean-first
 rm "$current_dir/compile_commands.json"
 ln -s build/compile_commands.json "$current_dir"
 
 run_tests() {
-  ctest -j10 --test-dir "build"
+    ctest -j10 --test-dir "build"
 }
 
 run_app() {
-  exec ./build/app/AlabasterApp "$@"
+    exec ./build/app/AlabasterApp "$@"
 }
 
 run_tests

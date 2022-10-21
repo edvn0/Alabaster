@@ -42,6 +42,7 @@ namespace Alabaster {
 		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name, nullptr, nullptr);
 
 		glfwSetWindowUserPointer(handle, &user_data);
+		glfwWindowHint(GLFW_DECORATED, false);
 
 		int w, h;
 		glfwGetWindowSize(handle, &w, &h);
@@ -68,7 +69,8 @@ namespace Alabaster {
 		user_data.height = h;
 
 		swapchain = std::make_unique<Swapchain>();
-		swapchain->construct(handle, width, height);
+		swapchain->init(handle);
+		swapchain->construct(width, height);
 
 		setup_events();
 	};

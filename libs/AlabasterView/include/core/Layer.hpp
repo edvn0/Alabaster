@@ -13,6 +13,7 @@ namespace Alabaster {
 		virtual auto update(float ts) -> void {};
 		virtual auto destroy() -> void {};
 		virtual void ui(float ts) {};
+		virtual void ui() {};
 		virtual bool on_event(Event& event) { return true; };
 
 		std::string_view get_name() { return name(); }

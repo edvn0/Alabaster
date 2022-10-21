@@ -12,6 +12,7 @@ struct AlabasterLayer final : public Alabaster::Layer {
 	~AlabasterLayer() override = default;
 	void update(float ts) final;
 	void ui(float ts) final;
+	void ui() final;
 	bool initialise() final;
 	void destroy() final;
 	bool on_event(Alabaster::Event& event) final;

@@ -14,7 +14,8 @@ namespace Alabaster {
 
 		void destroy();
 
-		void construct(GLFWwindow*, uint32_t width, uint32_t height);
+		void init(GLFWwindow* window);
+		void construct(uint32_t width, uint32_t height);
 		void on_resize(uint32_t w, uint32_t h);
 
 		void present();
@@ -28,11 +29,11 @@ namespace Alabaster {
 		auto swapchain_extent() const { return extent; }
 
 		VkCommandBuffer get_current_drawbuffer() const;
-		VkFramebuffer get_current_framebuffer() const { return frame_buffers[frame()]; };
-		uint32_t get_width() const { return sc_width; }
-		uint32_t get_height() const { return sc_height; }
-		uint32_t get_image_count() { return image_count; }
-		VkRenderPass get_render_pass() { return vk_render_pass; };
+		VkFramebuffer get_current_framebuffer() const;
+		uint32_t get_width() const;
+		uint32_t get_height() const;
+		uint32_t get_image_count();
+		VkRenderPass get_render_pass();
 
 	private:
 		GLFWwindow* sc_handle;

@@ -43,10 +43,6 @@ namespace Alabaster {
 		virtual void on_event(Event&);
 		virtual void on_shutdown();
 
-		bool on_window_change(WindowResizeEvent& event);
-		bool on_window_change(WindowMinimizeEvent& event);
-		bool on_window_change(WindowCloseEvent& event);
-
 		void resize(int w, int h);
 
 		void push_layer(Layer* layer)
@@ -70,6 +66,12 @@ namespace Alabaster {
 		inline const std::unique_ptr<Window>& get_window() { return window; };
 		inline const std::unique_ptr<Window>& get_window() const { return window; }
 		inline GUILayer& gui_layer();
+
+	private:
+		bool on_window_change(WindowResizeEvent& event);
+		bool on_window_change(WindowMinimizeEvent& event);
+		bool on_window_change(WindowCloseEvent& event);
+		void render_imgui(float ts);
 
 	private:
 		void stop();

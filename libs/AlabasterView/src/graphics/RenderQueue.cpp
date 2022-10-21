@@ -2,6 +2,7 @@
 
 #include "graphics/RenderQueue.hpp"
 
+#include "core/CPUProfiler.hpp"
 #include "core/Logger.hpp"
 
 namespace Alabaster {
@@ -37,6 +38,7 @@ namespace Alabaster {
 	{
 		// Log::debug("[RenderQueue] -- [{0} command(s): {1} bytes]", command_count, (command_buffer_ptr - command_buffer));
 
+		CPUProfiler<double> profiler("RenderQueue-execute");
 		byte* buffer = command_buffer;
 
 		for (uint32_t i = 0; i < command_count; i++) {

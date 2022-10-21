@@ -6,6 +6,8 @@
 
 namespace Alabaster::IO {
 
+	std::filesystem::path resources() { return std::filesystem::path { "app" } / std::filesystem::path { "resources" }; }
+
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{
 		std::ifstream stream(filename, static_cast<unsigned int>(mode));

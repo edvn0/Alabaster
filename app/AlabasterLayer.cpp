@@ -72,20 +72,13 @@ bool AlabasterLayer::on_event(Event& e)
 
 		return false;
 	});
+	return false;
 }
 
 void AlabasterLayer::update(float ts)
 {
 	static size_t frame_number { 0 };
 	Renderer::submit([this, &frame = frame_number] {
-		static constexpr auto frame_to_rgb = [](size_t frame) {
-			float r = sin((frame % 255) / 255.0);
-			float g = cos((frame % 255) / 255.0);
-			float b = (frame % 255) / 255.0;
-			VkClearValue clear = { { { r, g, b, 1.0f } } };
-			return clear;
-		};
-
 		const auto& swapchain = Application::the().get_window()->get_swapchain();
 		VkCommandBufferBeginInfo command_buffer_begin_info = {};
 		command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -104,7 +97,7 @@ void AlabasterLayer::update(float ts)
 		render_pass_info.renderArea.offset = { 0, 0 };
 		render_pass_info.renderArea.extent = extent;
 
-		VkClearValue clear = frame_to_rgb(frame_number);
+		VkClearValue clear = { { { 0.1, 0.1, 0.1, 1.0 } } };
 		render_pass_info.clearValueCount = 1;
 		render_pass_info.pClearValues = &clear;
 
@@ -114,9 +107,9 @@ void AlabasterLayer::update(float ts)
 
 		VkViewport viewport {};
 		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = (float)extent.width;
-		viewport.height = (float)extent.height;
+		viewport.y = static_cast<float>(extent.height);
+		viewport.width = static_cast<float>(extent.width);
+		viewport.height = static_cast<float>(extent.height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
 		vkCmdSetViewport(buffer, 0, 1, &viewport);
@@ -144,6 +137,8 @@ void AlabasterLayer::update(float ts)
 
 	frame_number++;
 }
+
+void AlabasterLayer::ui() { }
 
 void AlabasterLayer::ui(float ts)
 {

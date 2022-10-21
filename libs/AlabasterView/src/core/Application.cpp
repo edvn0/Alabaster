@@ -3,6 +3,7 @@
 #include "core/Application.hpp"
 
 #include "core/Clock.hpp"
+#include "core/CPUProfiler.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/events/Event.hpp"
 #include "core/GUILayer.hpp"
@@ -34,6 +35,16 @@ namespace Alabaster {
 
 	Application::~Application() { stop(); }
 
+	void Application::render_imgui(float ts)
+	{
+		layer_forward([&ts = ts](Layer* layer) {
+			layer->ui(ts);
+			return true;
+		});
+	}
+
+	void Application::exit() { is_running = false; }
+
 	void Application::stop()
 	{
 		layer_forward([](auto* l) {
@@ -50,31 +61,33 @@ namespace Alabaster {
 
 	void Application::resize(int w, int h) { window->get_swapchain()->on_resize(w, h); }
 
-	const GUILayer& Application::gui_layer() const { return *static_cast<GUILayer*>(layers.at("ImGuiLayer")); };
-
-	const GUILayer& Application::gui_layer() { return *static_cast<GUILayer*>(layers.at("ImGuiLayer")); };
+	GUILayer& Application::gui_layer()
+	{
+		if (!ui_layer) {
+			ui_layer = static_cast<GUILayer*>(layers.at("ImGuiLayer"));
+		}
+		return *ui_layer;
+	};
 
 	void Application::run()
 	{
 		on_init();
 
-		while (!window->should_close()) {
+		while (!window->should_close() && is_running) {
 			window->update();
 
 			Timer<float> on_cpu;
 
 			Renderer::begin();
-			{
-				Renderer::submit([this, &ts = app_ts] {
-					GUILayer::begin();
-					layer_forward([&ts](Layer* layer) {
-						layer->ui(ts);
-						layer->update(ts);
-						return true;
-					});
-					GUILayer::end();
+			Renderer::submit([this, &ts = app_ts] {
+				layer_forward([&ts](Layer* layer) {
+					layer->update(ts);
+					return true;
 				});
-			}
+			});
+			Renderer::submit(&GUILayer::begin);
+			Renderer::submit([this, &ts = app_ts] { render_imgui(ts); });
+			Renderer::submit(&GUILayer::end);
 			Renderer::end();
 
 			window->get_swapchain()->begin_frame();
@@ -93,7 +106,11 @@ namespace Alabaster {
 
 	double Application::frametime() { return app_ts; }
 
-	void Application::on_shutdown() { window->close(); }
+	void Application::on_shutdown()
+	{
+		window->close();
+		vkDeviceWaitIdle(GraphicsContext::the().device());
+	}
 
 	void Application::on_event(Event& event)
 	{

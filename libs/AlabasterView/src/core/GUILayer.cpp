@@ -185,6 +185,8 @@ namespace Alabaster {
 		}
 	}
 
+	void GUILayer::ui() { }
+
 	void GUILayer::ui(float timestep)
 	{
 		ImGui::Begin("Test");
@@ -192,8 +194,6 @@ namespace Alabaster {
 			Log::info("Here");
 		}
 		ImGui::End();
-
-		Layer::ui(timestep);
 	}
 
 	GUILayer::~GUILayer() = default;

@@ -16,6 +16,7 @@ namespace Alabaster {
 		bool initialise() override;
 		void update(float timestep) override {};
 		void ui(float timestep) override;
+		void ui() override;
 		void destroy() override;
 
 		static void begin();
