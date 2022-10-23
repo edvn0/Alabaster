@@ -14,9 +14,13 @@ TEST(PlatformTests, VulkanCreateInfos)
 // Demonstrate some basic assertions.
 TEST(PlatformTests, VulkanCreateInfosShader)
 {
-	std::string code("a");
-	auto ci = Alabaster::Vulkan::Shader::module(code);
+	const uint32_t* code = new uint32_t[10];
 
-	EXPECT_EQ(ci.codeSize, code.size());
+	const auto size = 10;
+
+	auto ci = Alabaster::Vulkan::Shader::module(size, code);
+
+	EXPECT_EQ(ci.codeSize, size);
 	EXPECT_EQ(ci.sType, VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO);
+	EXPECT_EQ(ci.pCode, code);
 }

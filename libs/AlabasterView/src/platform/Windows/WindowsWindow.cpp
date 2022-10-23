@@ -1,8 +1,9 @@
 #include "av_pch.hpp"
 
+#include "core/Window.hpp"
+
 #include "core/Application.hpp"
 #include "core/Logger.hpp"
-#include "core/Window.hpp"
 #include "GLFW/glfw3.h"
 #include "graphics/Swapchain.hpp"
 
@@ -58,7 +59,8 @@ namespace Alabaster {
 		user_data.height = h;
 
 		swapchain = std::make_unique<Swapchain>();
-		swapchain->construct(handle, width, height);
+		swapchain->init(handle);
+		swapchain->construct(width, height);
 
 		setup_events();
 	};
@@ -87,11 +89,10 @@ namespace Alabaster {
 
 	void Window::update() { glfwPollEvents(); }
 
+	void Window::set_event_callback(const EventCallback& cb) { user_data.callback = cb; }
+
 	bool Window::should_close() { return glfwWindowShouldClose(handle); }
 
-	void Window::close()
-	{
-		glfwSetWindowShouldClose(handle, 1);
-	}
+	void Window::close() { glfwSetWindowShouldClose(handle, 1); }
 
 } // namespace Alabaster
