@@ -33,6 +33,8 @@ namespace Alabaster {
 
 		glfwCreateWindowSurface(instance, sc_handle, nullptr, &vk_surface);
 
+		glfwGetFramebufferSize(sc_handle, &pixel_size_x, &pixel_size_y);
+
 		auto capabilities = query();
 		verify(capabilities);
 
@@ -124,8 +126,8 @@ namespace Alabaster {
 		framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebuffer_create_info.renderPass = vk_render_pass;
 		framebuffer_create_info.attachmentCount = 1;
-		framebuffer_create_info.width = width;
-		framebuffer_create_info.height = height;
+		framebuffer_create_info.width = pixel_size_x;
+		framebuffer_create_info.height = pixel_size_y;
 		framebuffer_create_info.layers = 1;
 
 		frame_buffers.resize(image_count);
@@ -210,9 +212,9 @@ namespace Alabaster {
 
 	VkFramebuffer Swapchain::get_current_framebuffer() const { return frame_buffers[frame()]; };
 
-	uint32_t Swapchain::get_width() const { return sc_width; }
+	uint32_t Swapchain::get_width() const { return pixel_size_x; }
 
-	uint32_t Swapchain::get_height() const { return sc_height; }
+	uint32_t Swapchain::get_height() const { return pixel_size_y; }
 
 	uint32_t Swapchain::get_image_count() { return image_count; }
 

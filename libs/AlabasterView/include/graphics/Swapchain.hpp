@@ -42,6 +42,9 @@ namespace Alabaster {
 		uint32_t sc_height;
 		uint32_t current_image_index;
 
+		int pixel_size_x;
+		int pixel_size_y;
+
 		VkSwapchainKHR vk_swapchain;
 		VkSurfaceKHR vk_surface;
 		VkRenderPass vk_render_pass;
