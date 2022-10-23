@@ -6,6 +6,7 @@
 
 namespace Alabaster {
 	static bool renderer_is_initialized { false };
+	static bool frame_started { false };
 
 	RenderQueue& Renderer::render_queue()
 	{
@@ -13,11 +14,23 @@ namespace Alabaster {
 		return render_queue;
 	}
 
-	void Renderer::execute() { render_queue().execute(); }
+	void Renderer::execute()
+	{
+		verify(renderer_is_initialized, "Renderer should be initialized.");
+		render_queue().execute();
+	}
 
-	void Renderer::begin() { verify(renderer_is_initialized, "Renderer should be initialized."); }
+	void Renderer::begin()
+	{
+		verify(!frame_started);
+		frame_started = true;
+	}
 
-	void Renderer::end() { }
+	void Renderer::end()
+	{
+		verify(frame_started);
+		frame_started = false;
+	}
 
 	void Renderer::init()
 	{

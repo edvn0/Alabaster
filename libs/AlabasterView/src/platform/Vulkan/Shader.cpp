@@ -6,6 +6,8 @@
 #include "graphics/GraphicsContext.hpp"
 #include "utilities/FileInputOutput.hpp"
 
+#include <platform/Vulkan/CreateInfoStructures.hpp>
+
 namespace Alabaster {
 
 	std::pair<std::filesystem::path, std::filesystem::path> to_path(const auto& path)
@@ -15,13 +17,11 @@ namespace Alabaster {
 
 	static VkShaderModule create(std::string code)
 	{
-		VkShaderModuleCreateInfo shader_create_info {};
-		shader_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-		shader_create_info.codeSize = code.size();
-		shader_create_info.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
+		auto size = code.size();
+		auto data = reinterpret_cast<uint32_t*>(code.data());
+		auto create_info = Vulkan::Shader::module(size, data);
 		VkShaderModule shader_module;
-		vk_check(vkCreateShaderModule(GraphicsContext::the().device(), &shader_create_info, nullptr, &shader_module));
+		vk_check(vkCreateShaderModule(GraphicsContext::the().device(), &create_info, nullptr, &shader_module));
 
 		return shader_module;
 	}

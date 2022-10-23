@@ -34,6 +34,7 @@ namespace Alabaster {
 		uint32_t get_height() const;
 		uint32_t get_image_count();
 		VkRenderPass get_render_pass();
+		VkFormat get_format() { return format.format; }
 
 	private:
 		GLFWwindow* sc_handle;

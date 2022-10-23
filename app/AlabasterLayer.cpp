@@ -97,7 +97,7 @@ void AlabasterLayer::update(float ts)
 		render_pass_info.renderArea.offset = { 0, 0 };
 		render_pass_info.renderArea.extent = extent;
 
-		VkClearValue clear = { { { 0.1, 0.1, 0.1, 1.0 } } };
+		VkClearValue clear = { { { 0.5, 0.1, 0.1, 1.0 } } };
 		render_pass_info.clearValueCount = 1;
 		render_pass_info.pClearValues = &clear;
 
@@ -126,7 +126,7 @@ void AlabasterLayer::update(float ts)
 
 		vkCmdBindIndexBuffer(buffer, index_buffer->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdDrawIndexed(buffer, indices.size(), 1, 0, 0, 0);
+		vkCmdDraw(buffer, vertices.size(), 1, 0, 0);
 
 		vkCmdEndRenderPass(buffer);
 

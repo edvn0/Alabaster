@@ -11,6 +11,7 @@ namespace Alabaster::IO {
 
 	std::filesystem::path resources();
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);
+	std::string read_file(std::filesystem::path&& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);
 	bool exists(const std::filesystem::path& path);
 	std::filesystem::path independent_path(const std::string& path);
 

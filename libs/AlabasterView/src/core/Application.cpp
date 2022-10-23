@@ -33,7 +33,11 @@ namespace Alabaster {
 		Renderer::init();
 	}
 
-	Application::~Application() { stop(); }
+	Application::~Application()
+	{
+		if (is_running)
+			stop();
+	}
 
 	void Application::render_imgui(float ts)
 	{
@@ -79,15 +83,15 @@ namespace Alabaster {
 			Timer<float> on_cpu;
 
 			Renderer::begin();
+			Renderer::submit(&GUILayer::begin);
+			Renderer::submit([this, &ts = app_ts] { render_imgui(ts); });
+			Renderer::submit(&GUILayer::end);
 			Renderer::submit([this, &ts = app_ts] {
 				layer_forward([&ts](Layer* layer) {
 					layer->update(ts);
 					return true;
 				});
 			});
-			Renderer::submit(&GUILayer::begin);
-			Renderer::submit([this, &ts = app_ts] { render_imgui(ts); });
-			Renderer::submit(&GUILayer::end);
 			Renderer::end();
 
 			window->get_swapchain()->begin_frame();
@@ -108,8 +112,8 @@ namespace Alabaster {
 
 	void Application::on_shutdown()
 	{
-		window->close();
 		vkDeviceWaitIdle(GraphicsContext::the().device());
+		stop();
 	}
 
 	void Application::on_event(Event& event)

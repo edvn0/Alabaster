@@ -26,6 +26,8 @@ namespace Alabaster::IO {
 		return std::string(buffer.begin(), buffer.end());
 	}
 
+	std::string read_file(std::filesystem::path&& filename, OpenMode mode) { return IO::read_file(filename, mode); }
+
 	bool exists(const std::filesystem::path& path)
 	{
 		return std::filesystem::exists(path) || std::filesystem::exists(std::filesystem::current_path() / path);

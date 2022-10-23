@@ -58,7 +58,7 @@ namespace Alabaster {
 		init_info.Instance = vulkan_context.instance();
 		init_info.PhysicalDevice = vulkan_context.physical_device();
 		init_info.Device = vulkan_context.device();
-		init_info.Queue = vulkan_context.graphics_queue();
+		init_info.Queue = vulkan_context.present_queue();
 		init_info.PipelineCache = nullptr;
 		init_info.DescriptorPool = imgui_descriptor_pool;
 		init_info.Allocator = nullptr;
@@ -152,7 +152,7 @@ namespace Alabaster {
 
 			VkViewport viewport = {};
 			viewport.x = 0.0f;
-			viewport.y = 0.0f;
+			viewport.y = static_cast<float>(height);
 			viewport.width = static_cast<float>(width);
 			viewport.height = static_cast<float>(height);
 			viewport.minDepth = 0.0f;
