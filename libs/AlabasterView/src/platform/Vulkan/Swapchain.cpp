@@ -69,16 +69,20 @@ namespace Alabaster {
 		create_synchronisation_objects();
 
 		VkPipelineStageFlags pipeline_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		VkSemaphore wait_semaphores[] = { sync_objects[frame()].image_available };
-		VkSemaphore signal_semaphores[] = { sync_objects[frame()].render_finished };
+		std::vector<VkSemaphore> wait_semaphores;
+		std::vector<VkSemaphore> signal_semaphores;
+		for (const auto& [a, b, c] : sync_objects) {
+			wait_semaphores.push_back(a);
+			signal_semaphores.push_back(b);
+		}
 
 		submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submit_info.pWaitDstStageMask = &pipeline_stage_flags;
-		submit_info.waitSemaphoreCount = 1;
-		submit_info.pWaitSemaphores = wait_semaphores;
-		submit_info.signalSemaphoreCount = 1;
-		submit_info.pSignalSemaphores = signal_semaphores;
+		submit_info.waitSemaphoreCount = wait_semaphores.size();
+		submit_info.pWaitSemaphores = wait_semaphores.data();
+		submit_info.signalSemaphoreCount = signal_semaphores.size();
+		submit_info.pSignalSemaphores = signal_semaphores.data();
 
 		VkAttachmentDescription color_attachment_desc = {};
 		color_attachment_desc.format = format.format;
@@ -136,7 +140,7 @@ namespace Alabaster {
 			vk_check(vkCreateFramebuffer(GraphicsContext::the().device(), &framebuffer_create_info, nullptr, &frame_buffers[i]));
 		}
 
-		Log::info("[Swapchain] Successfully created the swapchain and retrieved its {} images.", image_count);
+		Log::info("[Swapchain] Successfully created the swapchain ({}, {}) and retrieved its {} images.", pixel_size_x, pixel_size_y, image_count);
 	}
 
 	void Swapchain::begin_frame()
@@ -180,14 +184,13 @@ namespace Alabaster {
 		if (result != VK_SUCCESS) {
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 				on_resize(sc_width, sc_height);
-				return;
 			} else {
 				vk_check(result);
 			}
 		}
 
-		current_frame = (frame() + 1) % image_count;
 		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence, VK_TRUE, default_fence_timeout));
+		current_frame = (frame() + 1) % image_count;
 	}
 
 	void Swapchain::on_resize(uint32_t w, uint32_t h)
@@ -287,18 +290,15 @@ namespace Alabaster {
 	{
 		const auto& capabilities = in.capabilities;
 
-		if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-			extent = capabilities.currentExtent;
-		} else {
-			auto&& [width, height] = Application::the().get_window()->framebuffer_extent();
+		int width, height;
+		glfwGetFramebufferSize(sc_handle, &width, &height);
 
-			VkExtent2D framebuffer_extent = { .width = static_cast<uint32_t>(width), .height = static_cast<uint32_t>(height) };
+		VkExtent2D framebuffer_extent = { .width = static_cast<uint32_t>(width), .height = static_cast<uint32_t>(height) };
 
-			framebuffer_extent.width = std::clamp(framebuffer_extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-			framebuffer_extent.height = std::clamp(framebuffer_extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+		framebuffer_extent.width = std::clamp(framebuffer_extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+		framebuffer_extent.height = std::clamp(framebuffer_extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
-			extent = framebuffer_extent;
-		}
+		extent = framebuffer_extent;
 	}
 
 	void Swapchain::create_swapchain(const Capabilities& in)
@@ -306,6 +306,12 @@ namespace Alabaster {
 		const auto& capabilities = in.capabilities;
 
 		image_count = capabilities.minImageCount + 1;
+
+		static constexpr auto preferred = 4;
+		if (image_count < preferred && preferred < capabilities.maxImageCount) {
+			image_count = preferred;
+		}
+
 		if (capabilities.maxImageCount > 0 && image_count > capabilities.maxImageCount) {
 			image_count = capabilities.maxImageCount;
 		}
@@ -354,6 +360,9 @@ namespace Alabaster {
 		swapchain_create_info.compositeAlpha = composite_alpha;
 		swapchain_create_info.presentMode = present_format;
 		swapchain_create_info.clipped = VK_TRUE;
+
+		if (old_sc)
+			wait();
 
 		vk_check(vkCreateSwapchainKHR(GraphicsContext::the().device(), &swapchain_create_info, nullptr, &vk_swapchain));
 

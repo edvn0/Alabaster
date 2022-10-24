@@ -36,7 +36,7 @@ namespace Alabaster {
 
 	void RenderQueue::execute()
 	{
-		// Log::debug("[RenderQueue] -- [{0} command(s): {1} bytes]", command_count, (command_buffer_ptr - command_buffer));
+		Log::debug("[RenderQueue] -- [{0} command(s): {1} bytes]", command_count, (command_buffer_ptr - command_buffer));
 
 		CPUProfiler<double> profiler("RenderQueue-execute");
 		byte* buffer = command_buffer;

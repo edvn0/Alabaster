@@ -28,10 +28,10 @@ struct Vertex {
 };
 
 const std::vector<Vertex> vertices = {
-	{ { -0.5, -0.5, 1, 1 }, { 1, 0, 0, 1 } },
-	{ { -0.5, 0.5, 1, 1 }, { 0, 1, 0, 1 } },
-	{ { 0.5, 0.5, 1, 1 }, { 0, 0, 1, 1 } },
-	{ { 0.5, -0.5, 1, 1 }, { 0, 0, 0, 1 } },
+	{ { -0.5, -0.5, 0, 1 }, { 0, 0, 0, 1 } },
+	{ { -0.5, 0.5, 0, 1 }, { 0,0, 0, 1 } },
+	{ { 0.5, 0.5, 0, 1 }, { 0, 0, 0, 1 } },
+	{ { 0.5, -0.5, 0, 1 }, { 0, 0, 0, 1 } },
 };
 
 const std::vector<uint32_t> indices = { 0, 1, 2, 2, 3, 0 };
@@ -53,7 +53,7 @@ bool AlabasterLayer::initialise()
 	};
 
 	vertex_buffer = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
-	index_buffer = std::make_unique<IndexBuffer>(indices.data(), indices.size() * sizeof(uint32_t));
+	index_buffer = std::make_unique<IndexBuffer>(indices.data(), indices.size());
 
 	graphics_pipeline = std::make_unique<Pipeline>(spec);
 	graphics_pipeline->invalidate();
@@ -126,7 +126,18 @@ void AlabasterLayer::update(float ts)
 
 		vkCmdBindIndexBuffer(buffer, index_buffer->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdDraw(buffer, vertices.size(), 1, 0, 0);
+		vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+		vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+
+				vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+
+						vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+						vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+						vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+
 
 		vkCmdEndRenderPass(buffer);
 
@@ -195,7 +206,7 @@ void AlabasterLayer::ui(float ts)
 				if (ImGui::MenuItem("Open...", "Ctrl+O")) { }
 				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) { }
 				if (ImGui::MenuItem("Exit")) {
-					Application::the().get_window()->close();
+					Application::the().exit();
 				}
 				ImGui::EndMenu();
 			}

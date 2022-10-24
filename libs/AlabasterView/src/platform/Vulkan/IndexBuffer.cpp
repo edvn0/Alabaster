@@ -9,8 +9,9 @@
 
 namespace Alabaster {
 
-	IndexBuffer::IndexBuffer(uint32_t size)
-		: buffer_size(size)
+	IndexBuffer::IndexBuffer(uint32_t count)
+		: buffer_size(count * sizeof(uint32_t))
+		, buffer_count(count)
 	{
 		index_data.allocate(buffer_size);
 
@@ -24,8 +25,9 @@ namespace Alabaster {
 		memory_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY, vulkan_buffer);
 	}
 
-	IndexBuffer::IndexBuffer(const void* data, uint32_t size)
-		: buffer_size(size)
+	IndexBuffer::IndexBuffer(const void* data, uint32_t count)
+		: buffer_size(count * sizeof(uint32_t))
+		, buffer_count(count)
 	{
 		index_data = Buffer::copy(data, buffer_size);
 

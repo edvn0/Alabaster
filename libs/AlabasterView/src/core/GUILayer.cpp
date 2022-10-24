@@ -104,11 +104,12 @@ namespace Alabaster {
 	{
 		ImGui::Render();
 
-		static constexpr VkClearColorValue clear_colour = { 0.1f, 0.1f, 0.1f, 1.0f };
+		static constexpr VkClearColorValue clear_colour = { 0.1f, 0.1f, 0.9f, 0.1f };
 
 		auto& swapchain = Application::the().get_window()->get_swapchain();
-		std::array<VkClearValue, 1> clear_values {};
+		std::array<VkClearValue, 2> clear_values {};
 		clear_values[0].color = clear_colour;
+		clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
 
 		uint32_t width = swapchain->get_width();
 		uint32_t height = swapchain->get_height();
