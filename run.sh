@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 
@@ -10,13 +10,13 @@ clean_first=${2:OFF}
 
 cmake -B "$build_folder" \
     -GNinja \
-    -DGLFW_INSTALL=OFF \
-    -DGLFW_BUILD_DOCS=OFF \
-    -DGLFW_BUILD_TESTS=OFF \
-    -DGLFW_BUILD_EXAMPLES=OFF \
-    -DCMAKE_BUILD_TYPE=Debug \
-    -DBUILD_TESTING="$build_testing" \
-    -DBUILD_SHARED_LIBS=OFF \
+    -D GLFW_INSTALL=OFF \
+    -D GLFW_BUILD_DOCS=OFF \
+    -D GLFW_BUILD_TESTS=OFF \
+    -D GLFW_BUILD_EXAMPLES=OFF \
+    -D CMAKE_BUILD_TYPE=Debug \
+    -D BUILD_TESTING="$build_testing" \
+    -D BUILD_SHARED_LIBS=OFF \
     -S "$current_dir"
 
 if [ "$clean_first" = "ON" ];
@@ -27,7 +27,7 @@ else
 fi;
 
 rm "$current_dir/compile_commands.json"
-ln -s build/compile_commands.json "$current_dir"
+ln -s "build/compile_commands.json" "$current_dir"
 
 run_tests() {
     ctest -j10 --test-dir "build"

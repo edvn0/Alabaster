@@ -11,6 +11,7 @@
 #include "core/Logger.hpp"
 #include "core/Timer.hpp"
 #include "core/Window.hpp"
+#include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
 #include "graphics/Swapchain.hpp"
 
@@ -41,26 +42,18 @@ namespace Alabaster {
 
 	void Application::render_imgui(float ts)
 	{
-		layer_forward([&ts = ts](Layer* layer) {
-			layer->ui(ts);
-			return true;
-		});
+		layer_forward([&ts = ts](Layer* layer) { layer->ui(ts); });
 	}
 
 	void Application::exit() { is_running = false; }
 
 	void Application::stop()
 	{
-		layer_forward([](auto* l) {
-			l->destroy();
-			return true;
-		});
+		layer_forward([](Layer* l) { l->destroy(); });
 
 		Log::info("[Application] Stopping.");
 
 		window->destroy();
-
-		Renderer::shutdown();
 	}
 
 	void Application::resize(int w, int h) { window->get_swapchain()->on_resize(w, h); }
@@ -86,12 +79,7 @@ namespace Alabaster {
 			Renderer::submit(&GUILayer::begin);
 			Renderer::submit([this, &ts = app_ts] { render_imgui(ts); });
 			Renderer::submit(&GUILayer::end);
-			Renderer::submit([this, &ts = app_ts] {
-				layer_forward([&ts](Layer* layer) {
-					layer->update(ts);
-					return true;
-				});
-			});
+			Renderer::submit([this, &ts = app_ts] { layer_forward([&ts](Layer* layer) { layer->update(ts); }); });
 			Renderer::end();
 
 			window->get_swapchain()->begin_frame();

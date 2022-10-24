@@ -7,7 +7,7 @@ cmake-*
 *.prof
 
 VS
-
+*.cache
 .cache
 
 *.spv

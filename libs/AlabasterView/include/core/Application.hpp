@@ -22,7 +22,7 @@ namespace Alabaster {
 	class Application {
 		using rev_it = std::map<std::string, Layer*>::reverse_iterator;
 		using it = std::map<std::string, Layer*>::iterator;
-		using LayerFunction = std::function<bool(Layer*)>;
+		using LayerFunction = std::function<void(Layer*)>;
 		using LayerTimestepFunction = void(Layer*, float);
 
 	public:
@@ -80,8 +80,7 @@ namespace Alabaster {
 		{
 			for (it layer = layers.begin(); layer != layers.end(); ++layer) {
 				auto&& [k, l] = *layer;
-				if (func(l))
-					break;
+				func(l);
 			}
 		}
 
@@ -89,8 +88,7 @@ namespace Alabaster {
 		{
 			for (rev_it layer = layers.rbegin(); layer != layers.rend(); ++layer) {
 				auto&& [k, l] = *layer;
-				if (func(l))
-					break;
+				func(l);
 			}
 		}
 

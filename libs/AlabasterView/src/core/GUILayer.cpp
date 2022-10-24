@@ -206,6 +206,7 @@ namespace Alabaster {
 		ImGui::DestroyContext();
 
 		vkDestroyDescriptorPool(GraphicsContext::the().device(), imgui_descriptor_pool, nullptr);
+		Log::info("[GUILayer] destroyed layer.");
 	};
 
 } // namespace Alabaster

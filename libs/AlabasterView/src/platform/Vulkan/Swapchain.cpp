@@ -418,7 +418,7 @@ namespace Alabaster {
 	void Swapchain::destroy()
 	{
 		auto vk_device = GraphicsContext::the().device();
-		vkDeviceWaitIdle(vk_device);
+		wait();
 
 		if (vk_swapchain)
 			vkDestroySwapchainKHR(vk_device, vk_swapchain, nullptr);
