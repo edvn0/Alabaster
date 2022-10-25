@@ -1,5 +1,6 @@
-#include "Alabaster.hpp"
 #include "AlabasterLayer.hpp"
+
+#include "Alabaster.hpp"
 #include "graphics/Renderer.hpp"
 #include "vulkan/vulkan_core.h"
 
@@ -256,5 +257,6 @@ void AlabasterLayer::destroy()
 	index_buffer->destroy();
 	graphics_pipeline->destroy();
 
+	Log::info("[AlabasterLayer] Destroyed layer.");
 	Layer::destroy();
 }

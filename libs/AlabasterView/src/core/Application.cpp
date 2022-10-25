@@ -78,8 +78,8 @@ namespace Alabaster {
 			Renderer::begin();
 			Renderer::submit(&GUILayer::begin);
 			Renderer::submit([this, &ts = app_ts] { render_imgui(ts); });
-			Renderer::submit(&GUILayer::end);
 			Renderer::submit([this, &ts = app_ts] { layer_forward([&ts](Layer* layer) { layer->update(ts); }); });
+			Renderer::submit(&GUILayer::end);
 			Renderer::end();
 
 			window->get_swapchain()->begin_frame();
