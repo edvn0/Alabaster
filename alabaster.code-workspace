@@ -193,6 +193,7 @@
             "frametime",
             "Glfw",
             "imageview",
+            "MILLIS",
             "Multisample",
             "renderable",
             "renderables",

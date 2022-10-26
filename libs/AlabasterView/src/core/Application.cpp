@@ -45,6 +45,11 @@ namespace Alabaster {
 		layer_forward([&ts = ts](Layer* layer) { layer->ui(ts); });
 	}
 
+	void Application::update_layers(float ts)
+	{
+		layer_forward([&ts](Layer* layer) { layer->update(ts); });
+	}
+
 	void Application::exit() { is_running = false; }
 
 	void Application::stop()
@@ -71,30 +76,36 @@ namespace Alabaster {
 		on_init();
 
 		while (!window->should_close() && is_running) {
+			Timer<ClockGranularity::MILLIS, float> on_cpu;
+
 			window->update();
 
-			Timer<float> on_cpu;
-
 			Renderer::begin();
-			Renderer::submit(&GUILayer::begin);
-			Renderer::submit([this, &ts = app_ts] { render_imgui(ts); });
-			Renderer::submit([this, &ts = app_ts] { layer_forward([&ts](Layer* layer) { layer->update(ts); }); });
-			Renderer::submit(&GUILayer::end);
+			// Renderer::submit(&GUILayer::begin);
+			// Renderer::submit([this, &ts = app_ts] { render_imgui(ts); });
+			// Renderer::submit(&GUILayer::end);
+			Renderer::submit([this, &ts = app_ts] { update_layers(ts); });
 			Renderer::end();
 
-			window->get_swapchain()->begin_frame();
-			Renderer::execute();
-			window->swap_buffers();
+			swapchain().begin_frame();
+			{
+				Renderer::execute();
+				cpu_time = on_cpu.elapsed();
+				float time = Clock::get_ms<float>();
+				frame_time = time - last_frametime;
+				app_ts = glm::min<float>(frame_time, 0.0333f);
+				last_frametime = time;
+			}
+			swapchain().end_frame();
 
-			cpu_time = on_cpu.elapsed();
-			float time = Clock::get_ms<float>();
-			frame_time = time - last_frametime;
-			app_ts = glm::min<float>(frame_time, 0.0333f);
-			last_frametime = time;
+			Log::info("[Application] CPU time: \t{}ms", cpu_time);
 		}
 
 		on_shutdown();
 	}
+
+	Swapchain& Application::swapchain() { return *window->get_swapchain(); }
+	Swapchain& Application::swapchain() const { return *window->get_swapchain(); }
 
 	double Application::frametime() { return app_ts; }
 

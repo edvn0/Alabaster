@@ -15,7 +15,7 @@
 
 namespace Alabaster {
 
-	static void initialize_window_library()
+	static inline const void initialize_window_library()
 	{
 		int success = glfwInit();
 		if (!success) {
@@ -88,6 +88,8 @@ namespace Alabaster {
 
 		glfwDestroyWindow(handle);
 		glfwTerminate();
+
+		Log::info("[Window] Destroyed window.");
 	}
 
 	void Window::swap_buffers() { swapchain->present(); }
@@ -97,13 +99,13 @@ namespace Alabaster {
 		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int w, int h) { Application::the().resize(w, h); });
 
 		// Set GLFW callbacks
-		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int width, int height) {
+		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int in_width, int in_height) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
-			WindowResizeEvent event((uint32_t)width, (uint32_t)height);
+			WindowResizeEvent event(static_cast<uint32_t>(in_width), static_cast<uint32_t>(in_height));
 			data.callback(event);
-			data.width = width;
-			data.height = height;
+			data.width = in_width;
+			data.height = in_height;
 		});
 
 		glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {
@@ -196,9 +198,8 @@ namespace Alabaster {
 
 	void Window::close()
 	{
-		const auto& sc = this->swapchain;
-		sc->wait();
 		glfwSetWindowShouldClose(handle, 1);
+		swapchain->wait();
 	}
 
 } // namespace Alabaster

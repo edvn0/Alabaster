@@ -51,7 +51,7 @@ namespace Alabaster {
 		vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		vertex_buffer_create_info.size = buffer_size;
 		vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_GPU_ONLY, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, vulkan_buffer);
 
 		auto copy_command = GraphicsContext::the().get_command_buffer();
 
@@ -73,6 +73,6 @@ namespace Alabaster {
 		vertex_data.release();
 		Log::info("[VertexBuffer] Destroying vertex buffer via VMA.");
 		destroyed = true;
-	};
+	}
 
 } // namespace Alabaster

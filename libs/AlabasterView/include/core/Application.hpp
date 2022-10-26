@@ -4,6 +4,7 @@
 #include "core/events/ApplicationEvent.hpp"
 #include "core/Layer.hpp"
 #include "graphics/GraphicsContext.hpp"
+#include "graphics/Swapchain.hpp"
 
 #include <map>
 #include <memory>
@@ -72,6 +73,7 @@ namespace Alabaster {
 		bool on_window_change(WindowMinimizeEvent& event);
 		bool on_window_change(WindowCloseEvent& event);
 		void render_imgui(float ts);
+		void update_layers(float ts);
 
 	private:
 		void stop();
@@ -107,6 +109,9 @@ namespace Alabaster {
 				func(l, ts);
 			}
 		}
+
+		Swapchain& swapchain();
+		Swapchain& swapchain() const;
 
 	private:
 		std::map<std::string, Layer*> layers;

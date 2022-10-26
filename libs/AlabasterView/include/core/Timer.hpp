@@ -10,38 +10,30 @@ namespace Alabaster {
 
 	enum class ClockGranularity : unsigned int { SECONDS = 0, MILLIS = 1, NANOS = 2 };
 
-	template <typename FloatLike = double> class Timer {
+	template <ClockGranularity in, typename FloatLike = double> class Timer {
 	public:
-		Timer(ClockGranularity granularity = ClockGranularity::MILLIS)
+		Timer()
 		{
-			switch (granularity) {
-			case ClockGranularity::SECONDS: {
+			if constexpr (in == ClockGranularity::SECONDS) {
 				start_time = Clock::get_seconds<FloatLike>();
-				break;
-			}
-			case ClockGranularity::MILLIS: {
+			} else if constexpr (in == ClockGranularity::MILLIS) {
 				start_time = Clock::get_ms<FloatLike>();
-				break;
-			}
-			case ClockGranularity::NANOS: {
+			} else {
 				start_time = Clock::get_nanos<FloatLike>();
-				break;
-			}
 			}
 		}
 
-		auto elapsed()
+		~Timer() = default;
+
+		FloatLike elapsed()
 		{
-			switch (granularity) {
-			case ClockGranularity::SECONDS: {
-				return static_cast<FloatLike>(Clock::get_seconds<FloatLike>() - static_cast<FloatLike>(start_time));
-			}
-			case ClockGranularity::MILLIS: {
-				return static_cast<FloatLike>(Clock::get_ms<FloatLike>() - static_cast<FloatLike>(start_time));
-			}
-			case ClockGranularity::NANOS: {
-				return static_cast<FloatLike>(Clock::get_ms<FloatLike>() - static_cast<FloatLike>(start_time));
-			}
+			constexpr auto out = [](auto&& f, auto&& start) { return static_cast<FloatLike>(f() - static_cast<FloatLike>(start)); };
+			if constexpr (in == ClockGranularity::SECONDS) {
+				return out(Clock::get_seconds<FloatLike>, start_time);
+			} else if constexpr (in == ClockGranularity::MILLIS) {
+				return out(Clock::get_ms<FloatLike>, start_time);
+			} else {
+				return out(Clock::get_nanos<FloatLike>, start_time);
 			}
 		}
 

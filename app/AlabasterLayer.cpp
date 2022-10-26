@@ -1,6 +1,5 @@
-#include "AlabasterLayer.hpp"
-
 #include "Alabaster.hpp"
+#include "AlabasterLayer.hpp"
 #include "graphics/Renderer.hpp"
 #include "vulkan/vulkan_core.h"
 
@@ -29,20 +28,63 @@ struct Vertex {
 };
 
 const std::vector<Vertex> vertices = {
-	{ { -0.5, -0.5, 0, 1 }, { 0, 0, 0, 1 } },
-	{ { -0.5, 0.5, 0, 1 }, { 0,0, 0, 1 } },
-	{ { 0.5, 0.5, 0, 1 }, { 0, 0, 0, 1 } },
-	{ { 0.5, -0.5, 0, 1 }, { 0, 0, 0, 1 } },
+	{ { -0.5, -0.5, 0, 1 }, { 0, 0, 1, 1 } },
+	{ { 0.5, -0.5, 0, 1 }, { 0, 0, 1, 1 } },
+	{ { 0.5, 0.5, 0, 1 }, { 0, 0, 1, 1 } },
+	{ { -0.5, 0.5, 0, 1 }, { 0, 0, 1, 1 } },
 };
 
 const std::vector<uint32_t> indices = { 0, 1, 2, 2, 3, 0 };
 
+void AlabasterLayer::create_renderpass()
+{
+	VkAttachmentDescription colorAttachment {};
+	colorAttachment.format = Application::the().get_window()->get_swapchain()->get_format();
+	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+	VkAttachmentReference colorAttachmentRef {};
+	colorAttachmentRef.attachment = 0;
+	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkSubpassDescription subpass {};
+	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass.colorAttachmentCount = 1;
+	subpass.pColorAttachments = &colorAttachmentRef;
+
+	VkSubpassDependency dependency {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+	VkRenderPassCreateInfo renderPassInfo {};
+	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	renderPassInfo.attachmentCount = 1;
+	renderPassInfo.pAttachments = &colorAttachment;
+	renderPassInfo.subpassCount = 1;
+	renderPassInfo.pSubpasses = &subpass;
+	renderPassInfo.dependencyCount = 1;
+	renderPassInfo.pDependencies = &dependency;
+
+	vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &renderPassInfo, nullptr, &render_pass));
+}
+
 bool AlabasterLayer::initialise()
 {
+	create_renderpass();
+
 	PipelineSpecification spec {
 		.shader = Shader("app/resources/shaders/main"),
 		.debug_name = "Test",
-		.render_pass = Application::the().get_window()->get_swapchain()->get_render_pass(),
+		.render_pass = render_pass,
 		.wireframe = false,
 		.backface_culling = false,
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -56,12 +98,16 @@ bool AlabasterLayer::initialise()
 	vertex_buffer = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 	index_buffer = std::make_unique<IndexBuffer>(indices.data(), indices.size());
 
+	aeroplane_texture = std::make_unique<Texture2D>("textures/aeroplane.png");
+	uint32_t black = 0x00000000;
+	black_texture = std::make_unique<Texture2D>(&black, sizeof(uint32_t));
+
 	graphics_pipeline = std::make_unique<Pipeline>(spec);
 	graphics_pipeline->invalidate();
 	return true;
 }
 
-bool AlabasterLayer::on_event(Event& e)
+void AlabasterLayer::on_event(Event& e)
 {
 	EventDispatcher dispatch(e);
 	dispatch.dispatch<KeyPressedEvent>([](KeyPressedEvent& key_event) {
@@ -73,34 +119,36 @@ bool AlabasterLayer::on_event(Event& e)
 
 		return false;
 	});
-	return false;
 }
 
 void AlabasterLayer::update(float ts)
 {
 	static size_t frame_number { 0 };
-	Renderer::submit([this, &frame = frame_number] {
+	Renderer::submit([this] {
 		const auto& swapchain = Application::the().get_window()->get_swapchain();
 		VkCommandBufferBeginInfo command_buffer_begin_info = {};
 		command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		command_buffer_begin_info.pNext = nullptr;
 
-		auto buffer = swapchain->get_current_drawbuffer();
+		const auto& buffer = swapchain->get_current_drawbuffer();
 		vk_check(vkBeginCommandBuffer(buffer, &command_buffer_begin_info));
 
 		auto extent = swapchain->swapchain_extent();
 
 		VkRenderPassBeginInfo render_pass_info {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_info.renderPass = swapchain->get_render_pass();
+		render_pass_info.renderPass = render_pass;
 		render_pass_info.framebuffer = swapchain->get_current_framebuffer();
 		render_pass_info.renderArea.offset = { 0, 0 };
 		render_pass_info.renderArea.extent = extent;
 
-		VkClearValue clear = { { { 0.5, 0.1, 0.1, 1.0 } } };
-		render_pass_info.clearValueCount = 1;
-		render_pass_info.pClearValues = &clear;
+		std::array<VkClearValue, 2> clear_values {};
+		clear_values[0].color = { 0, 1, 0, 1 };
+		clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
+
+		render_pass_info.clearValueCount = clear_values.size();
+		render_pass_info.pClearValues = clear_values.data();
 
 		vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
@@ -128,17 +176,6 @@ void AlabasterLayer::update(float ts)
 		vkCmdBindIndexBuffer(buffer, index_buffer->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
 		vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
-		vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
-
-				vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
-
-						vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
-				vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
-						vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
-				vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
-						vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
-				vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
-
 
 		vkCmdEndRenderPass(buffer);
 
@@ -253,6 +290,8 @@ void AlabasterLayer::ui(float ts)
 
 void AlabasterLayer::destroy()
 {
+	vkDestroyRenderPass(GraphicsContext::the().device(), render_pass, nullptr);
+
 	vertex_buffer->destroy();
 	index_buffer->destroy();
 	graphics_pipeline->destroy();

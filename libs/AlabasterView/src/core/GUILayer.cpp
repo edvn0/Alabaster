@@ -106,7 +106,7 @@ namespace Alabaster {
 
 		static constexpr VkClearColorValue clear_colour = { 0.1f, 0.1f, 0.9f, 0.1f };
 
-		auto& swapchain = Application::the().get_window()->get_swapchain();
+		const auto& swapchain = Application::the().get_window()->get_swapchain();
 		std::array<VkClearValue, 2> clear_values {};
 		clear_values[0].color = clear_colour;
 		clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
@@ -143,7 +143,7 @@ namespace Alabaster {
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 			inheritance_info.renderPass = swapchain->get_render_pass();
-			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
+			inheritance_info.subpass = 0;
 
 			VkCommandBufferBeginInfo cbi = {};
 			cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -176,8 +176,6 @@ namespace Alabaster {
 		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
 
 		vkCmdEndRenderPass(draw_command_buffer);
-
-		vk_check(vkEndCommandBuffer(draw_command_buffer));
 
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {

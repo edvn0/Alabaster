@@ -54,4 +54,6 @@ namespace Alabaster::IO {
 		return result;
 	}
 
+	std::filesystem::path slashed_to_fp(const std::string& slashed_string) { return independent_path(slashed_string); }
+
 } // namespace Alabaster::IO

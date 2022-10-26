@@ -1,0 +1,43 @@
+//
+// Created by Edwin Carlsson on 2022-10-25.
+//
+
+#pragma once
+
+#include "graphics/Buffer.hpp"
+#include "graphics/Image.hpp"
+#include "utilities/FileInputOutput.hpp"
+
+#include <string>
+
+namespace Alabaster {
+
+	class Texture {
+	public:
+		explicit Texture(std::string file_path)
+			: path(IO::slashed_to_fp(std::move(file_path)))
+		{
+			Log::info("Texture found at path: {}", path.string());
+		};
+		explicit Texture(void* data, size_t size);
+
+	private:
+		std::filesystem::path path;
+		uint32_t width;
+		uint32_t height;
+		Buffer image_data;
+		std::unique_ptr<Image2D> image;
+		ImageFormat format = ImageFormat::RBGA;
+	};
+
+	class Texture2D : public Texture {
+	public:
+		explicit Texture2D(std::string file_path)
+			: Texture(std::move(file_path)) {};
+		explicit Texture2D(void* data, size_t size)
+			: Texture(data, size) {};
+	};
+
+	class TextureCube : public Texture { };
+
+} // namespace Alabaster

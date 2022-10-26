@@ -24,8 +24,8 @@ namespace Alabaster {
 		*(RenderFunction*)command_buffer_ptr = func;
 		command_buffer_ptr += sizeof(RenderFunction);
 
-		*(uint32_t*)command_buffer_ptr = size;
-		command_buffer_ptr += sizeof(uint32_t);
+		*(BufferCount*)command_buffer_ptr = size;
+		command_buffer_ptr += sizeof(BufferCount);
 
 		void* memory = command_buffer_ptr;
 		command_buffer_ptr += size;

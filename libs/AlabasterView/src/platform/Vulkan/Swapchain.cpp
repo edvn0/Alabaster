@@ -29,7 +29,7 @@ namespace Alabaster {
 		if (window_width < sc_width || window_height < sc_height) { }
 
 		auto& context = GraphicsContext::the();
-		auto instance = context.instance();
+		const auto& instance = context.instance();
 
 		glfwCreateWindowSurface(instance, sc_handle, nullptr, &vk_surface);
 
@@ -102,15 +102,14 @@ namespace Alabaster {
 		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass_description.colorAttachmentCount = 1;
 		subpass_description.pColorAttachments = &color_reference;
-		subpass_description.inputAttachmentCount = 0;
 
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.srcAccessMask = 0;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -185,6 +184,7 @@ namespace Alabaster {
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 				on_resize(sc_width, sc_height);
 			} else {
+				Log::error("[Swapchain] Validation failed in present.");
 				vk_check(result);
 			}
 		}
@@ -458,6 +458,8 @@ namespace Alabaster {
 		vkDestroySurfaceKHR(GraphicsContext::the().instance(), vk_surface, nullptr);
 
 		vkDeviceWaitIdle(vk_device);
+
+		Log::info("[Swapchain] Destroyed swapchain.");
 	}
 
 	void Swapchain::wait()

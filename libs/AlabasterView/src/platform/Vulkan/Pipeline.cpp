@@ -61,19 +61,17 @@ namespace Alabaster {
 		VkPipelineInputAssemblyStateCreateInfo input_assembly_state = {};
 		input_assembly_state.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		input_assembly_state.topology = spec.topology;
+		input_assembly_state.primitiveRestartEnable = VK_FALSE;
 
 		VkPipelineRasterizationStateCreateInfo rasterisation_state = {};
 		rasterisation_state.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-		rasterisation_state.polygonMode = spec.wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
-		rasterisation_state.cullMode = spec.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_NONE;
-		rasterisation_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		rasterisation_state.depthClampEnable = VK_FALSE;
-		rasterisation_state.rasterizerDiscardEnable = VK_TRUE;
-		rasterisation_state.depthBiasEnable = VK_FALSE;
-		rasterisation_state.depthBiasConstantFactor = 0.0f; // Optional
-		rasterisation_state.depthBiasClamp = 0.0f; // Optional
-		rasterisation_state.depthBiasSlopeFactor = 0.0f; // Optional;
+		rasterisation_state.rasterizerDiscardEnable = VK_FALSE;
+		rasterisation_state.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterisation_state.lineWidth = 1.0f;
+		rasterisation_state.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterisation_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterisation_state.depthBiasEnable = VK_FALSE;
 
 		VkPipelineColorBlendAttachmentState color_blend_attachment {};
 		color_blend_attachment.colorWriteMask
@@ -107,23 +105,22 @@ namespace Alabaster {
 		dynamic_state.pDynamicStates = dynamic_state_enables.data();
 		dynamic_state.dynamicStateCount = static_cast<uint32_t>(dynamic_state_enables.size());
 
-		VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {};
+		/*VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {};
 		depth_stencil_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 		depth_stencil_state.depthTestEnable = spec.depth_test ? VK_TRUE : VK_FALSE;
 		depth_stencil_state.depthWriteEnable = spec.depth_write ? VK_TRUE : VK_FALSE;
-		depth_stencil_state.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		depth_stencil_state.depthCompareOp = VK_COMPARE_OP_LESS;
 		depth_stencil_state.front = depth_stencil_state.back;
 		depth_stencil_state.depthBoundsTestEnable = VK_FALSE;
 		depth_stencil_state.back.compareOp = VK_COMPARE_OP_ALWAYS;
 		depth_stencil_state.back.failOp = VK_STENCIL_OP_KEEP;
 		depth_stencil_state.back.passOp = VK_STENCIL_OP_KEEP;
-		depth_stencil_state.stencilTestEnable = VK_FALSE;
+		depth_stencil_state.stencilTestEnable = VK_FALSE;*/
 
-		// Multi sampling state
 		VkPipelineMultisampleStateCreateInfo multisample_state = {};
 		multisample_state.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		multisample_state.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-		multisample_state.pSampleMask = nullptr;
+		multisample_state.sampleShadingEnable = VK_FALSE;
 
 		// Vertex input descriptor
 		VertexBufferLayout& vertex_layout = spec.vertex_layout;
@@ -136,6 +133,7 @@ namespace Alabaster {
 		vertex_input_binding.stride = vertex_layout.get_stride();
 		vertex_input_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
+		Log::info("Instance Layout is empty: {}", !non_empty(instance_layout.get_elements()));
 		if (non_empty(instance_layout.get_elements())) {
 			VkVertexInputBindingDescription& instance_input_binding = vertex_input_binding_descriptor.emplace_back();
 			instance_input_binding.binding = 1;
@@ -171,27 +169,23 @@ namespace Alabaster {
 
 		const auto& stages = shader.stages();
 
-		// Set pipeline shader stage info
 		pipeline_create_info.stageCount = static_cast<uint32_t>(stages.size());
 		pipeline_create_info.pStages = stages.data();
 
-		// Assign the pipeline states to the pipeline creation info structure
 		pipeline_create_info.pVertexInputState = &vertex_input_state;
 		pipeline_create_info.pInputAssemblyState = &input_assembly_state;
 		pipeline_create_info.pRasterizationState = &rasterisation_state;
 		pipeline_create_info.pColorBlendState = &colour_blend_state;
 		pipeline_create_info.pMultisampleState = &multisample_state;
 		pipeline_create_info.pViewportState = &viewport_state;
-		pipeline_create_info.pDepthStencilState = &depth_stencil_state;
+		// pipeline_create_info.pDepthStencilState = &depth_stencil_state;
 		pipeline_create_info.renderPass = spec.render_pass;
 		pipeline_create_info.pDynamicState = &dynamic_state;
 
-		// What is this pipeline cache?
 		VkPipelineCacheCreateInfo pipeline_cache_info = {};
 		pipeline_cache_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
 		vk_check(vkCreatePipelineCache(device, &pipeline_cache_info, nullptr, &pipeline_cache));
 
-		// Create rendering pipeline using the specified states
 		vk_check(vkCreateGraphicsPipelines(device, pipeline_cache, 1, &pipeline_create_info, nullptr, &pipeline));
 
 		Log::info("[Pipeline] Created pipeline with name {}.", spec.debug_name);

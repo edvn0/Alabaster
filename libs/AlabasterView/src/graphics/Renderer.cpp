@@ -5,6 +5,7 @@
 #include "core/Common.hpp"
 
 namespace Alabaster {
+
 	static bool renderer_is_initialized { false };
 	static bool frame_started { false };
 
@@ -24,12 +25,14 @@ namespace Alabaster {
 	{
 		verify(!frame_started);
 		frame_started = true;
+		Log::info("[Renderer] Begin frame.");
 	}
 
 	void Renderer::end()
 	{
 		verify(frame_started);
 		frame_started = false;
+		Log::info("[Renderer] End frame.");
 	}
 
 	void Renderer::init()

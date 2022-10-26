@@ -21,6 +21,7 @@ namespace Alabaster {
 		void present();
 
 		void begin_frame();
+		void end_frame() { present(); }
 
 		void wait();
 

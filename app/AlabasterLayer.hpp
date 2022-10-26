@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Alabaster.hpp"
+#include "graphics/Texture.hpp"
 
 #include <glm/glm.hpp>
 
@@ -15,10 +16,12 @@ struct AlabasterLayer final : public Alabaster::Layer {
 	void ui() final;
 	bool initialise() final;
 	void destroy() final;
-	bool on_event(Alabaster::Event& event) final;
+	void on_event(Alabaster::Event& event) final;
 
 private:
 	std::string_view name() override { return "AlabasterLayer"; }
+    
+    void create_renderpass();
 
 	std::unique_ptr<Alabaster::Pipeline> graphics_pipeline;
 	glm::vec2 viewport_size = { 0.0f, 0.0f };
@@ -26,6 +29,10 @@ private:
 	bool viewport_focused = false, viewport_hovered = false;
 	bool is_dockspace_open { true };
 
+    VkRenderPass render_pass;
+
 	std::unique_ptr<Alabaster::VertexBuffer> vertex_buffer;
 	std::unique_ptr<Alabaster::IndexBuffer> index_buffer;
+	std::unique_ptr<Alabaster::Texture2D> aeroplane_texture;
+	std::unique_ptr<Alabaster::Texture2D> black_texture;
 };

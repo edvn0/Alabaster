@@ -44,7 +44,8 @@ target_include_directories(
           ${THIRD_PARTY_DIR}/imgui/backends
           ${THIRD_PARTY_DIR}/debugbreak
           ${THIRD_PARTY_DIR}/magic_enum/include
-          ${THIRD_PARTY_DIR}/VulkanMemoryAllocator/include)
+          ${THIRD_PARTY_DIR}/VulkanMemoryAllocator/include
+          ${THIRD_PARTY_DIR}/stb)
 
 target_link_libraries(
   ${PROJECT_NAME}
