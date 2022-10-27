@@ -5,6 +5,9 @@
 
 #include <concepts>
 
+typedef struct VkPipeline_T* VkPipeline;
+typedef struct VkPipelineLayout_T* VkPipelineLayout;
+
 namespace Alabaster {
 
 	template <typename T> using ConstUnique = const std::unique_ptr<T>&;
@@ -15,6 +18,7 @@ namespace Alabaster {
 	class SceneRenderer;
 	class Mesh;
 	class Camera;
+	class Pipeline;
 
 	class Renderer {
 	public:
@@ -26,7 +30,7 @@ namespace Alabaster {
 		static void end();
 
 	public:
-		static void basic_mesh(ConstUnique<Mesh>, ConstUnique<Camera>);
+		static void basic_mesh(ConstUnique<Mesh>, ConstUnique<Camera>, ConstUnique<Pipeline>);
 
 	public:
 		template <TriviallyDestructible CommandBufferFunction> static void submit(CommandBufferFunction&& func)

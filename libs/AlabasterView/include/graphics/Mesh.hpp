@@ -12,12 +12,12 @@ namespace Alabaster {
 	class IndexBuffer;
 
 	class Mesh {
-		using VertexMap = std::unordered_map<Vertex, uint32_t>;
 		using Indices = std::vector<Index>;
 		using Vertices = std::vector<Vertex>;
 
 	public:
 		explicit Mesh(const std::filesystem::path& path);
+		Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
 
 		const VertexBuffer& get_vertex_buffer() const { return *vertex_buffer; }
 		const IndexBuffer& get_index_buffer() const { return *index_buffer; }
@@ -37,6 +37,7 @@ namespace Alabaster {
 
 	public:
 		static std::unique_ptr<Mesh> from_path(std::string args);
+		static std::unique_ptr<Mesh> from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
 	};
 
 } // namespace Alabaster

@@ -66,6 +66,8 @@ namespace Alabaster {
 		static Application& the();
 		inline const std::unique_ptr<Window>& get_window() { return window; };
 		inline const std::unique_ptr<Window>& get_window() const { return window; }
+		Swapchain& swapchain();
+		Swapchain& swapchain() const;
 		inline GUILayer& gui_layer();
 
 	private:
@@ -109,9 +111,6 @@ namespace Alabaster {
 				func(l, ts);
 			}
 		}
-
-		Swapchain& swapchain();
-		Swapchain& swapchain() const;
 
 	private:
 		std::map<std::string, Layer*> layers;

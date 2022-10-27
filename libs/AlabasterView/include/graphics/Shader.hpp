@@ -18,9 +18,12 @@ namespace Alabaster {
 
 		void destroy();
 
+		const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts() const { return layouts; }
+
 	private:
 		std::array<VkPipelineShaderStageCreateInfo, 2> shader_stages {};
 		std::filesystem::path shader_path;
+		std::vector<VkDescriptorSetLayout> layouts;
 	};
 
 } // namespace Alabaster

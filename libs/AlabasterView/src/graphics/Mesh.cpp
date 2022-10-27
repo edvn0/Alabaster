@@ -24,7 +24,13 @@ namespace Alabaster {
 
 		vertex_buffer = VertexBuffer::create(std::move(vertices));
 		index_buffer = IndexBuffer::create(std::move(indices));
-	};
+	}
+
+	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)
+	{
+		vertex_buffer = VertexBuffer::create(vertices);
+		index_buffer = IndexBuffer::create(indices);
+	}
 
 	std::tuple<Mesh::Vertices, Mesh::Indices> Mesh::load_model()
 	{
@@ -85,6 +91,10 @@ namespace Alabaster {
 	}
 
 	std::unique_ptr<Mesh> Mesh::from_path(std::string path) { return std::make_unique<Mesh>(IO::slashed_to_fp(path)); }
+	std::unique_ptr<Mesh> Mesh::from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)
+	{
+		return std::make_unique<Mesh>(vertices, indices);
+	}
 
 	void Mesh::destroy()
 	{

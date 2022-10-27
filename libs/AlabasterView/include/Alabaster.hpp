@@ -5,6 +5,7 @@
 #include "core/events/Event.hpp"
 #include "core/events/KeyEvent.hpp"
 #include "core/events/MouseEvent.hpp"
+#include "core/Input.hpp"
 #include "core/Window.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/IndexBuffer.hpp"

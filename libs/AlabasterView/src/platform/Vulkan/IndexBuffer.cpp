@@ -2,10 +2,12 @@
 
 #include "graphics/IndexBuffer.hpp"
 
+#include "core/Common.hpp"
 #include "core/Logger.hpp"
 #include "graphics/Allocator.hpp"
 #include "graphics/GraphicsContext.hpp"
-#include "vulkan/vulkan_core.h"
+
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 

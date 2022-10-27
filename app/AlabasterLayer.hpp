@@ -18,6 +18,7 @@ struct AlabasterLayer final : public Alabaster::Layer {
 	bool initialise() final;
 	void destroy() final;
 	void on_event(Alabaster::Event& event) final;
+	void handle_events();
 
 private:
 	std::string_view name() override { return "AlabasterLayer"; }
@@ -38,4 +39,5 @@ private:
 	std::unique_ptr<Alabaster::Texture2D> black_texture;
 	std::unique_ptr<Alabaster::Mesh> car_model;
 	std::unique_ptr<Alabaster::Camera> camera;
+	std::unique_ptr<Alabaster::Mesh> square_model;
 };

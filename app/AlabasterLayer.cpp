@@ -8,21 +8,6 @@
 
 using namespace Alabaster;
 
-uint32_t find_memory_type(uint32_t type_filter, VkMemoryPropertyFlags properties)
-{
-	VkPhysicalDeviceMemoryProperties memory_properties;
-	vkGetPhysicalDeviceMemoryProperties(GraphicsContext::the().physical_device(), &memory_properties);
-
-	for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {
-		const auto filter = (type_filter & (1 << i));
-		if (filter && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties) {
-			return i;
-		}
-	}
-
-	throw std::runtime_error("failed to find suitable memory type!");
-}
-
 static const std::vector<Vertex> vertices { Vertex { .position = { -0.5, 0.5, 0, 1 }, .colour = { 1, 0, 0, 1 }, .uv = { -1, 1 } },
 	Vertex { .position = { 0.5, 0.5, 0, 1 }, .colour = { 1, 0, 0, 1 }, .uv = { 1, 1 } },
 	Vertex { .position = { 0.5, -0.5, 0, 1 }, .colour = { 1, 1, 0, 1 }, .uv = { 1, -1 } },
@@ -75,7 +60,7 @@ bool AlabasterLayer::initialise()
 {
 	create_renderpass();
 
-	camera = std::make_unique<EditorCamera>(90, 1200, 1200, 1, 1000);
+	camera = std::make_unique<EditorCamera>(45.0f, 1280, 600, .01f, 1000.0f);
 
 	PipelineSpecification spec {
 		.shader = Shader("app/resources/shaders/main"),
@@ -87,7 +72,7 @@ bool AlabasterLayer::initialise()
 		.depth_test = false,
 		.depth_write = false,
 		.vertex_layout
-		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
+		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 		.instance_layout = {},
 	};
 
@@ -102,6 +87,7 @@ bool AlabasterLayer::initialise()
 	graphics_pipeline->invalidate();
 
 	car_model = Mesh::from_path("app/resources/models/car_model.obj");
+	square_model = Mesh::from_data(vertices, indices);
 	return true;
 }
 
@@ -123,66 +109,11 @@ void AlabasterLayer::update(float ts)
 {
 	static size_t frame_number { 0 };
 
-	Renderer::basic_mesh(car_model, camera);
+	auto& ed = as<EditorCamera>(camera);
+	ed.on_update(ts);
+	Renderer::basic_mesh(square_model, camera, graphics_pipeline);
 
-	Renderer::submit([this] {
-		const auto& swapchain = Application::the().get_window()->get_swapchain();
-		VkCommandBufferBeginInfo command_buffer_begin_info = {};
-		command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		command_buffer_begin_info.pNext = nullptr;
-
-		const auto& buffer = swapchain->get_current_drawbuffer();
-		vk_check(vkBeginCommandBuffer(buffer, &command_buffer_begin_info));
-
-		auto extent = swapchain->swapchain_extent();
-
-		VkRenderPassBeginInfo render_pass_info {};
-		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_info.renderPass = render_pass;
-		render_pass_info.framebuffer = swapchain->get_current_framebuffer();
-		render_pass_info.renderArea.offset = { 0, 0 };
-		render_pass_info.renderArea.extent = extent;
-
-		std::array<VkClearValue, 1> clear_values {};
-		clear_values[0].color = { 0, 0, 0, 1 };
-
-		render_pass_info.clearValueCount = clear_values.size();
-		render_pass_info.pClearValues = clear_values.data();
-
-		vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-		vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphics_pipeline->get_vulkan_pipeline());
-
-		VkViewport viewport {};
-		viewport.x = 0.0f;
-		viewport.y = 0.0f;
-		viewport.width = static_cast<float>(extent.width);
-		viewport.height = static_cast<float>(extent.height);
-		viewport.minDepth = 0.0f;
-		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(buffer, 0, 1, &viewport);
-
-		VkRect2D scissor {};
-		scissor.offset = { 0, 0 };
-		scissor.extent = extent;
-		vkCmdSetScissor(buffer, 0, 1, &scissor);
-
-		std::array<VkBuffer, 1> vbs {};
-		vbs[0] = car_model->get_vertex_buffer().get_vulkan_buffer();
-		VkDeviceSize offsets { 0 };
-		vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
-
-		vkCmdBindIndexBuffer(buffer, car_model->get_index_buffer().get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
-
-		vkCmdDrawIndexed(buffer, car_model->get_index_buffer().count(), 1, 0, 0, 0);
-
-		vkCmdEndRenderPass(buffer);
-
-		vkEndCommandBuffer(buffer);
-	});
-
-	Layer::update(ts);
+	handle_events();
 
 	frame_number++;
 }
@@ -291,13 +222,21 @@ void AlabasterLayer::ui(float ts)
 void AlabasterLayer::destroy()
 {
 	vkDestroyRenderPass(GraphicsContext::the().device(), render_pass, nullptr);
+	car_model->destroy();
+	square_model->destroy();
 
 	vertex_buffer->destroy();
 	index_buffer->destroy();
 	graphics_pipeline->destroy();
 
-	car_model->destroy();
 
 	Log::info("[AlabasterLayer] Destroyed layer.");
 	Layer::destroy();
+}
+
+void AlabasterLayer::handle_events() {
+	if (Input::key(Key::G)) {
+		Logger::cycle_levels();
+		return;
+	}
 }

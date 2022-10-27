@@ -51,6 +51,21 @@ namespace Alabaster {
 		shader_stages = { vertex_stage, fragment_stage };
 
 		Log::info("[Shader] Shader stages created.");
+
+		// TODO: This should obviously be generated from the shader compilation.
+		std::array<VkDescriptorSetLayoutBinding, 1> bindings;
+		bindings[0].binding = 0;
+		bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
+		bindings[0].descriptorCount = 1;
+		bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+		VkDescriptorSetLayoutCreateInfo create_info {};
+		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		create_info.bindingCount = bindings.size();
+		create_info.pBindings = bindings.data();
+
+		layouts.resize(1);
+		vk_check(vkCreateDescriptorSetLayout(GraphicsContext::the().device(), &create_info, nullptr, layouts.data()));
 	}
 
 	void Shader::destroy()
@@ -60,6 +75,6 @@ namespace Alabaster {
 			stage = {};
 		}
 		Log::info("[Shader] Shader stages deleted.");
-	}
 
+	} // namespace Alabaster
 } // namespace Alabaster

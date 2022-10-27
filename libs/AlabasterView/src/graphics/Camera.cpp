@@ -7,6 +7,7 @@
 
 #include <GLFW/glfw3.h>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
 namespace Alabaster {
 
@@ -39,26 +40,32 @@ namespace Alabaster {
 	void EditorCamera::on_update(const float ts)
 	{
 		const glm::vec2& mouse = Input::mouse_position();
-		const glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.002f;
+		const glm::vec2 delta = (mouse - initial_mouse_position) * 0.002f;
 
 		if (Input::mouse(Mouse::Right) && !Input::key(Key::LeftAlt)) {
-			camera_mode = CameraMode::FLYCAM;
+			camera_mode = CameraMode::Flycam;
 			const float yaw_sign = get_up_direction().y < 0 ? -1.0f : 1.0f;
 
 			const float speed = get_camera_speed();
 
-			if (Input::key(Key::Q))
+			if (Input::key(Key::Q)) {
 				position_delta -= ts * speed * glm::vec3 { 0.f, yaw_sign, 0.f };
-			if (Input::key(Key::E))
+			}
+			if (Input::key(Key::E)) {
 				position_delta += ts * speed * glm::vec3 { 0.f, yaw_sign, 0.f };
-			if (Input::key(Key::S))
+			}
+			if (Input::key(Key::S)) {
 				position_delta -= ts * speed * direction;
-			if (Input::key(Key::W))
+			}
+			if (Input::key(Key::W)) {
 				position_delta += ts * speed * direction;
-			if (Input::key(Key::A))
+			}
+			if (Input::key(Key::A)) {
 				position_delta -= ts * speed * right_direction;
-			if (Input::key(Key::D))
+			}
+			if (Input::key(Key::D)) {
 				position_delta += ts * speed * right_direction;
+			}
 
 			constexpr float max_rate { 0.12f };
 			yaw_delta += glm::clamp(yaw_sign * delta.x * rotation_speed(), -max_rate, max_rate);
@@ -66,15 +73,17 @@ namespace Alabaster {
 
 			right_direction = glm::cross(direction, glm::vec3 { 0.f, yaw_sign, 0.f });
 
-			direction = glm::rotate(glm::normalize(glm::cross(
-										glm::angleAxis(-pitch_delta, right_direction), glm::angleAxis(-yaw_delta, glm::vec3 { 0.f, yaw_sign, 0.f }))),
-				direction);
+			const auto angle_axis_right = glm::angleAxis(-yaw_delta, glm::vec3 { 0.f, yaw_sign, 0.f });
+			const auto angle_axis_left = glm::angleAxis(-pitch_delta, right_direction);
+			const auto cross_product = glm::cross(angle_axis_left, angle_axis_right);
+			const auto normalised = glm::normalize(cross_product);
+			direction = glm::rotate(normalised, direction);
 
 			const float actual_distance = glm::distance(focal_point, position);
 			focal_point = position + get_forward_direction() * actual_distance;
 			distance = actual_distance;
 		} else if (Input::key(Key::LeftAlt)) {
-			camera_mode = CameraMode::ARCBALL;
+			camera_mode = CameraMode::Arcball;
 
 			if (Input::mouse(Mouse::Middle)) {
 				mouse_pan(delta);
@@ -85,12 +94,12 @@ namespace Alabaster {
 			}
 		}
 
-		m_InitialMousePosition = mouse;
+		initial_mouse_position = mouse;
 		position += position_delta;
 		yaw += yaw_delta;
 		pitch += pitch_delta;
 
-		if (camera_mode == CameraMode::ARCBALL)
+		if (camera_mode == CameraMode::Arcball)
 			position = calculate_position();
 
 		update_camera_view();
@@ -130,7 +139,7 @@ namespace Alabaster {
 	void EditorCamera::focus(const glm::vec3& focus_point)
 	{
 		focal_point = focus_point;
-		camera_mode = CameraMode::FLYCAM;
+		camera_mode = CameraMode::Flycam;
 		if (distance > min_focus_distance) {
 			distance -= distance - min_focus_distance;
 			position = focal_point - get_forward_direction() * distance;

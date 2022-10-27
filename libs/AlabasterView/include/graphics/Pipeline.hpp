@@ -42,6 +42,8 @@ namespace Alabaster {
 		VkPipelineLayout pipeline_layout {};
 		VkPipeline pipeline {};
 		VkPipelineCache pipeline_cache = nullptr;
+		std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
+		std::vector<VkPushConstantRange> push_constants_ranges;
 	};
 
 } // namespace Alabaster

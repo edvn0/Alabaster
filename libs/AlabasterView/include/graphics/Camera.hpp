@@ -23,6 +23,10 @@ namespace Alabaster {
 			, unreversed_projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, near_plane, far_plane)) {};
 		virtual ~Camera() = default;
 
+		virtual void focus(const glm::vec3& focus_point) {};
+		virtual void on_update(float ts) {};
+		virtual void on_event(Event& e) {};
+
 		const glm::mat4& get_projection_matrix() const { return projection_matrix; }
 		const glm::mat4& get_unreversed_projection_matrix() const { return unreversed_projection_matrix; }
 
@@ -56,16 +60,16 @@ namespace Alabaster {
 		glm::mat4 unreversed_projection_matrix = glm::mat4(1.0f);
 	};
 
-	enum class CameraMode { NONE, FLYCAM, ARCBALL };
+	enum class CameraMode { None, Flycam, Arcball };
 
 	class EditorCamera : public Camera {
 	public:
 		EditorCamera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane);
 		void init();
 
-		void focus(const glm::vec3& focusPoint);
-		void on_update(float ts);
-		void on_event(Event& e);
+		void focus(const glm::vec3& focus_point) final;
+		void on_update(float ts) final;
+		void on_event(Event& e) final;
 
 		bool is_active() const { return this->active; }
 		void set_active(bool in) { this->active = in; }
@@ -129,7 +133,7 @@ namespace Alabaster {
 
 		bool active = false;
 		bool m_Panning, m_Rotating;
-		glm::vec2 m_InitialMousePosition {};
+		glm::vec2 initial_mouse_position {};
 		glm::vec3 m_InitialFocalPoint, m_InitialRotation;
 
 		float distance;
@@ -140,7 +144,7 @@ namespace Alabaster {
 		glm::vec3 position_delta {};
 		glm::vec3 right_direction {};
 
-		CameraMode camera_mode { CameraMode::ARCBALL };
+		CameraMode camera_mode { CameraMode::Arcball };
 
 		float min_focus_distance { 100.0f };
 

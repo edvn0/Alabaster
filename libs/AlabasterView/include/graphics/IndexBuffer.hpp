@@ -33,6 +33,11 @@ namespace Alabaster {
 			return std::make_unique<IndexBuffer>(indices.data(), indices.size() * sizeof(Index));
 		}
 
+		static std::unique_ptr<IndexBuffer> create(const std::vector<Index>& indices)
+		{
+			return std::make_unique<IndexBuffer>(indices.data(), indices.size() * sizeof(Index));
+		}
+
 	private:
 		Buffer index_data;
 		VmaAllocation memory_allocation;

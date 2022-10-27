@@ -3,6 +3,7 @@
 #include "graphics/Renderer.hpp"
 
 #include "core/Common.hpp"
+#include "graphics/Pipeline.hpp"
 #include "graphics/SceneRenderer.hpp"
 
 namespace Alabaster {
@@ -32,7 +33,10 @@ namespace Alabaster {
 		Log::info("[Renderer] Begin frame.");
 	}
 
-	void Renderer::basic_mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Camera>& camera) { api().basic_mesh(mesh, camera); }
+	void Renderer::basic_mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Camera>& camera, const std::unique_ptr<Pipeline>& pipeline)
+	{
+		api().basic_mesh(mesh, camera, pipeline);
+	}
 
 	void Renderer::end()
 	{
@@ -46,6 +50,7 @@ namespace Alabaster {
 		Log::info("[Renderer] Initialisation of renderer.");
 		if (!renderer_is_initialized) {
 			renderer_is_initialized = true;
+			api().init();
 		}
 
 		// Initialisation code.
@@ -61,6 +66,7 @@ namespace Alabaster {
 	{
 		if (!scene_renderer_is_initialized) {
 			scene_renderer = new SceneRenderer();
+			scene_renderer_is_initialized = true;
 		}
 		return *scene_renderer;
 	}
