@@ -7,8 +7,14 @@
 
 namespace Alabaster {
 
+	template <typename T> using ConstUnique = const std::unique_ptr<T>&;
+
 	template <typename T>
 	concept TriviallyDestructible = std::is_trivially_destructible_v<T>;
+
+	class SceneRenderer;
+	class Mesh;
+	class Camera;
 
 	class Renderer {
 	public:
@@ -18,6 +24,9 @@ namespace Alabaster {
 	public:
 		static void begin();
 		static void end();
+
+	public:
+		static void basic_mesh(ConstUnique<Mesh>, ConstUnique<Camera>);
 
 	public:
 		template <TriviallyDestructible CommandBufferFunction> static void submit(CommandBufferFunction&& func)
@@ -43,6 +52,7 @@ namespace Alabaster {
 
 	private:
 		static RenderQueue& render_queue();
+		static SceneRenderer& api();
 	};
 
 } // namespace Alabaster

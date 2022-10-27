@@ -37,6 +37,12 @@ namespace Alabaster {
 		core_logger->set_level(spdlog::level::trace);
 		client_logger = spdlog::stdout_color_mt("App");
 		client_logger->set_level(spdlog::level::trace);
+
+#ifdef ALABASTER_DEBUG
+		Logger::set_level(LoggerLevel::Debug);
+#elif defined(ALABASTER_RELEASE)
+		Logger::set_level(LoggerLevel::Error);
+#endif
 	}
 
 	void Logger::init(const std::filesystem::path& log_dir)

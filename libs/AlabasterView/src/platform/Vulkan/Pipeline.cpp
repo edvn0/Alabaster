@@ -48,8 +48,8 @@ namespace Alabaster {
 		pipeline_layout_create_info.pNext = nullptr;
 		// pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t>(descriptorSetLayouts.size());
 		// pipeline_layout_create_info.pSetLayouts = descriptorSetLayouts.data();
-		//  pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t>(vulkanPushConstantRanges.size());
-		//  pipeline_layout_create_info.pPushConstantRanges = vulkanPushConstantRanges.data();
+		// pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t>(vulkanPushConstantRanges.size());
+		// pipeline_layout_create_info.pPushConstantRanges = vulkanPushConstantRanges.data();
 
 		vk_check(vkCreatePipelineLayout(device, &pipeline_layout_create_info, nullptr, &pipeline_layout));
 

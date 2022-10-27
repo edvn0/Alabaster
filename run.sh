@@ -7,6 +7,7 @@ build_folder="build"
 
 build_testing=${1:OFF}
 clean_first=${2:OFF}
+build_type=${3:Debug}
 
 cmake -B "$build_folder" \
     -GNinja \
@@ -14,7 +15,7 @@ cmake -B "$build_folder" \
     -D GLFW_BUILD_DOCS=OFF \
     -D GLFW_BUILD_TESTS=OFF \
     -D GLFW_BUILD_EXAMPLES=OFF \
-    -D CMAKE_BUILD_TYPE=Debug \
+    -D CMAKE_BUILD_TYPE="$build_type" \
     -D BUILD_TESTING="$build_testing" \
     -D BUILD_SHARED_LIBS=OFF \
     -S "$current_dir"

@@ -200,6 +200,7 @@
             "renderpass",
             "SSBO",
             "Subpass",
+            "Subpasses",
             "subresource",
             "swapchain",
             "Swapchains",

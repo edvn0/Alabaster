@@ -1,0 +1,152 @@
+//
+// Created by Edwin Carlsson on 2022-10-27.
+//
+
+#pragma once
+
+#include "core/events/Event.hpp"
+#include "core/events/MouseEvent.hpp"
+
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/glm.hpp>
+
+namespace Alabaster {
+
+	class Camera {
+	public:
+		Camera() = default;
+		Camera(const glm::mat4& projection, const glm::mat4& unreversed_projection)
+			: projection_matrix(projection)
+			, unreversed_projection_matrix(unreversed_projection) {};
+		Camera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane)
+			: projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, far_plane, near_plane))
+			, unreversed_projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, near_plane, far_plane)) {};
+		virtual ~Camera() = default;
+
+		const glm::mat4& get_projection_matrix() const { return projection_matrix; }
+		const glm::mat4& get_unreversed_projection_matrix() const { return unreversed_projection_matrix; }
+
+		void set_projection_matrix(const glm::mat4 projection, const glm::mat4 unreversed_projection)
+		{
+			projection_matrix = projection;
+			unreversed_projection_matrix = unreversed_projection;
+		}
+
+		void set_perspective_projection_matrix(
+			const float radians_fov, const float width, const float height, const float near_plane, const float far_plane)
+		{
+			projection_matrix = glm::perspectiveFov(radians_fov, width, height, far_plane, near_plane);
+			unreversed_projection_matrix = glm::perspectiveFov(radians_fov, width, height, near_plane, far_plane);
+		}
+
+		void set_ortho_projection_matrix(const float width, const float height, const float near_plane, const float far_plane)
+		{
+			projection_matrix = glm::ortho(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, far_plane, near_plane);
+			unreversed_projection_matrix = glm::ortho(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near_plane, far_plane);
+		}
+
+		float get_exposure() const { return exposure; }
+		float& get_exposure() { return exposure; }
+
+	protected:
+		float exposure = 0.8f;
+
+	private:
+		glm::mat4 projection_matrix = glm::mat4(1.0f);
+		glm::mat4 unreversed_projection_matrix = glm::mat4(1.0f);
+	};
+
+	enum class CameraMode { NONE, FLYCAM, ARCBALL };
+
+	class EditorCamera : public Camera {
+	public:
+		EditorCamera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane);
+		void init();
+
+		void focus(const glm::vec3& focusPoint);
+		void on_update(float ts);
+		void on_event(Event& e);
+
+		bool is_active() const { return this->active; }
+		void set_active(bool in) { this->active = in; }
+
+		CameraMode get_current_mode() const { return camera_mode; }
+
+		inline float get_distance() const { return distance; }
+		inline void set_distance(float in) { this->distance = in; }
+
+		const glm::vec3& get_focal_point() const { return focal_point; }
+
+		inline void set_viewport_size(uint32_t width, uint32_t height)
+		{
+			if (viewport_width == width && viewport_height == height)
+				return;
+			set_perspective_projection_matrix(vertical_fov, (float)width, (float)height, near_clip, far_clip);
+			viewport_width = width;
+			viewport_height = height;
+		}
+
+		const glm::mat4& get_view_matrix() const { return view_matrix; }
+		glm::mat4 get_view_projection() const { return get_projection_matrix() * view_matrix; }
+		glm::mat4 get_un_reversed_view_projection() const { return get_unreversed_projection_matrix() * view_matrix; }
+
+		glm::vec3 get_up_direction() const;
+		glm::vec3 get_right_direction() const;
+		glm::vec3 get_forward_direction() const;
+
+		const glm::vec3& get_position() const { return position; }
+
+		glm::quat get_orientation() const;
+
+		[[nodiscard]] float get_vertical_fov() const { return vertical_fov; }
+		[[nodiscard]] float get_aspect_ratio() const { return aspect_ratio; }
+		[[nodiscard]] float get_near_clip() const { return near_clip; }
+		[[nodiscard]] float get_far_clip() const { return far_clip; }
+		[[nodiscard]] float get_pitch() const { return pitch; }
+		[[nodiscard]] float get_yaw() const { return yaw; }
+		[[nodiscard]] float get_camera_speed() const;
+
+	private:
+		void update_camera_view();
+
+		bool on_mouse_scroll(MouseScrolledEvent& e);
+
+		void mouse_pan(const glm::vec2& delta);
+		void mouse_rotate(const glm::vec2& delta);
+		void mouse_zoom(float delta);
+
+		glm::vec3 calculate_position() const;
+
+		std::pair<float, float> pan_speed() const;
+		float rotation_speed() const;
+		float zoom_speed() const;
+
+	private:
+		glm::mat4 view_matrix;
+		glm::vec3 position, direction, focal_point;
+
+		float vertical_fov, aspect_ratio, near_clip, far_clip;
+
+		bool active = false;
+		bool m_Panning, m_Rotating;
+		glm::vec2 m_InitialMousePosition {};
+		glm::vec3 m_InitialFocalPoint, m_InitialRotation;
+
+		float distance;
+		float normal_speed { 0.002f };
+
+		float pitch, yaw;
+		float pitch_delta {}, yaw_delta {};
+		glm::vec3 position_delta {};
+		glm::vec3 right_direction {};
+
+		CameraMode camera_mode { CameraMode::ARCBALL };
+
+		float min_focus_distance { 100.0f };
+
+		uint32_t viewport_width { 1280 }, viewport_height { 720 };
+
+		constexpr static float min_speed { 0.0005f }, max_speed { 2.0f };
+	};
+
+} // namespace Alabaster

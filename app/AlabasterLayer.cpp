@@ -23,40 +23,33 @@ uint32_t find_memory_type(uint32_t type_filter, VkMemoryPropertyFlags properties
 	throw std::runtime_error("failed to find suitable memory type!");
 }
 
-struct Vertex {
-	glm::vec4 position;
-	glm::vec4 colour;
-};
+static const std::vector<Vertex> vertices { Vertex { .position = { -0.5, 0.5, 0, 1 }, .colour = { 1, 0, 0, 1 }, .uv = { -1, 1 } },
+	Vertex { .position = { 0.5, 0.5, 0, 1 }, .colour = { 1, 0, 0, 1 }, .uv = { 1, 1 } },
+	Vertex { .position = { 0.5, -0.5, 0, 1 }, .colour = { 1, 1, 0, 1 }, .uv = { 1, -1 } },
+	Vertex { .position = { -0.5, -0.5, 0, 1 }, .colour = { 1, 0, 1, 1 }, .uv = { -1, -1 } } };
 
-const std::vector<Vertex> vertices = {
-	{ { -0.5, -0.5, 0, 1 }, { 0, 0, 1, 1 } },
-	{ { 0.5, -0.5, 0, 1 }, { 0, 0, 1, 1 } },
-	{ { 0.5, 0.5, 0, 1 }, { 0, 0, 1, 1 } },
-	{ { -0.5, 0.5, 0, 1 }, { 0, 0, 1, 1 } },
-};
-
-const std::vector<uint32_t> indices = { 0, 1, 2, 2, 3, 0 };
+static const std::vector<Index> indices { 0,1,2,2,3,0 };
 
 void AlabasterLayer::create_renderpass()
 {
-	VkAttachmentDescription colorAttachment {};
-	colorAttachment.format = Application::the().get_window()->get_swapchain()->get_format();
-	colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
-	colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	VkAttachmentDescription color_attachment {};
+	color_attachment.format = Application::the().get_window()->get_swapchain()->get_format();
+	color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+	color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+	color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+	color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+	color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+	color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-	VkAttachmentReference colorAttachmentRef {};
-	colorAttachmentRef.attachment = 0;
-	colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	VkAttachmentReference color_attachment_ref {};
+	color_attachment_ref.attachment = 0;
+	color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	VkSubpassDescription subpass {};
 	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 	subpass.colorAttachmentCount = 1;
-	subpass.pColorAttachments = &colorAttachmentRef;
+	subpass.pColorAttachments = &color_attachment_ref;
 
 	VkSubpassDependency dependency {};
 	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -66,21 +59,23 @@ void AlabasterLayer::create_renderpass()
 	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-	VkRenderPassCreateInfo renderPassInfo {};
-	renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	renderPassInfo.attachmentCount = 1;
-	renderPassInfo.pAttachments = &colorAttachment;
-	renderPassInfo.subpassCount = 1;
-	renderPassInfo.pSubpasses = &subpass;
-	renderPassInfo.dependencyCount = 1;
-	renderPassInfo.pDependencies = &dependency;
+	VkRenderPassCreateInfo render_pass_info {};
+	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	render_pass_info.attachmentCount = 1;
+	render_pass_info.pAttachments = &color_attachment;
+	render_pass_info.subpassCount = 1;
+	render_pass_info.pSubpasses = &subpass;
+	render_pass_info.dependencyCount = 1;
+	render_pass_info.pDependencies = &dependency;
 
-	vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &renderPassInfo, nullptr, &render_pass));
+	vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &render_pass));
 }
 
 bool AlabasterLayer::initialise()
 {
 	create_renderpass();
+
+	camera = std::make_unique<EditorCamera>(90, 1200, 1200, 1, 1000);
 
 	PipelineSpecification spec {
 		.shader = Shader("app/resources/shaders/main"),
@@ -105,6 +100,8 @@ bool AlabasterLayer::initialise()
 
 	graphics_pipeline = std::make_unique<Pipeline>(spec);
 	graphics_pipeline->invalidate();
+
+	car_model = Mesh::from_path("app/resources/models/car_model.obj");
 	return true;
 }
 
@@ -125,6 +122,9 @@ void AlabasterLayer::on_event(Event& e)
 void AlabasterLayer::update(float ts)
 {
 	static size_t frame_number { 0 };
+
+	Renderer::basic_mesh(car_model, camera);
+
 	Renderer::submit([this] {
 		const auto& swapchain = Application::the().get_window()->get_swapchain();
 		VkCommandBufferBeginInfo command_buffer_begin_info = {};
@@ -144,9 +144,8 @@ void AlabasterLayer::update(float ts)
 		render_pass_info.renderArea.offset = { 0, 0 };
 		render_pass_info.renderArea.extent = extent;
 
-		std::array<VkClearValue, 2> clear_values {};
-		clear_values[0].color = { 0, 1, 0, 1 };
-		clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
+		std::array<VkClearValue, 1> clear_values {};
+		clear_values[0].color = { 0, 0, 0, 1 };
 
 		render_pass_info.clearValueCount = clear_values.size();
 		render_pass_info.pClearValues = clear_values.data();
@@ -170,13 +169,13 @@ void AlabasterLayer::update(float ts)
 		vkCmdSetScissor(buffer, 0, 1, &scissor);
 
 		std::array<VkBuffer, 1> vbs {};
-		vbs[0] = vertex_buffer->get_vulkan_buffer();
+		vbs[0] = car_model->get_vertex_buffer().get_vulkan_buffer();
 		VkDeviceSize offsets { 0 };
 		vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
 
-		vkCmdBindIndexBuffer(buffer, index_buffer->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(buffer, car_model->get_index_buffer().get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdDrawIndexed(buffer, index_buffer->count(), 1, 0, 0, 0);
+		vkCmdDrawIndexed(buffer, car_model->get_index_buffer().count(), 1, 0, 0, 0);
 
 		vkCmdEndRenderPass(buffer);
 
@@ -192,8 +191,8 @@ void AlabasterLayer::ui() { }
 
 void AlabasterLayer::ui(float ts)
 {
-	static bool opt_fullscreen_persistant = true;
-	bool opt_fullscreen = opt_fullscreen_persistant;
+	static bool persistent = true;
+	bool opt_fullscreen = persistent;
 	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
 	// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
@@ -296,6 +295,8 @@ void AlabasterLayer::destroy()
 	vertex_buffer->destroy();
 	index_buffer->destroy();
 	graphics_pipeline->destroy();
+
+	car_model->destroy();
 
 	Log::info("[AlabasterLayer] Destroyed layer.");
 	Layer::destroy();

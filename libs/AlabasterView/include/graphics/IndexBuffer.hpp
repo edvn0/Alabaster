@@ -7,6 +7,8 @@
 
 namespace Alabaster {
 
+	using Index = uint32_t;
+
 	class IndexBuffer {
 	public:
 		explicit IndexBuffer(uint32_t count);
@@ -24,6 +26,12 @@ namespace Alabaster {
 		uint32_t count() const { return buffer_count; };
 
 		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
+
+	public:
+		static std::unique_ptr<IndexBuffer> create(std::vector<Index>&& indices)
+		{
+			return std::make_unique<IndexBuffer>(indices.data(), indices.size() * sizeof(Index));
+		}
 
 	private:
 		Buffer index_data;

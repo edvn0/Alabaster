@@ -3,11 +3,15 @@
 #include "graphics/Renderer.hpp"
 
 #include "core/Common.hpp"
+#include "graphics/SceneRenderer.hpp"
 
 namespace Alabaster {
 
 	static bool renderer_is_initialized { false };
+	static bool scene_renderer_is_initialized { false };
 	static bool frame_started { false };
+
+	static SceneRenderer* scene_renderer { nullptr };
 
 	RenderQueue& Renderer::render_queue()
 	{
@@ -27,6 +31,8 @@ namespace Alabaster {
 		frame_started = true;
 		Log::info("[Renderer] Begin frame.");
 	}
+
+	void Renderer::basic_mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Camera>& camera) { api().basic_mesh(mesh, camera); }
 
 	void Renderer::end()
 	{
@@ -49,6 +55,14 @@ namespace Alabaster {
 	{
 		Log::info("[Renderer] Destruction of renderer.");
 		// Destruction code.
+	}
+
+	SceneRenderer& Renderer::api()
+	{
+		if (!scene_renderer_is_initialized) {
+			scene_renderer = new SceneRenderer();
+		}
+		return *scene_renderer;
 	}
 
 } // namespace Alabaster

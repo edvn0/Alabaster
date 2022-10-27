@@ -5,6 +5,7 @@
 #pragma once
 
 #include "graphics/Buffer.hpp"
+#include "graphics/Vertex.hpp"
 
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
@@ -27,6 +28,12 @@ namespace Alabaster {
 		void destroy();
 
 		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
+
+	public:
+		inline static std::unique_ptr<VertexBuffer> create(std::vector<Vertex>&& vertices)
+		{
+			return std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+		}
 
 	private:
 		Buffer vertex_data;

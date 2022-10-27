@@ -22,3 +22,6 @@ url = https://github.com/edvn0/imgui
 [submodule "third_party/stb"]
 	path = third_party/stb
 	url = https://github.com/edvn0/stb
+[submodule "third_party/tinyobjloader"]
+	path = third_party/tinyobjloader
+	url = https://github.com/edvn0/tinyobjloader
