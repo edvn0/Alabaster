@@ -33,6 +33,12 @@ namespace Alabaster::IO {
 		return std::filesystem::exists(path) || std::filesystem::exists(std::filesystem::current_path() / path);
 	}
 
+	bool is_file(const std::filesystem::path& path)
+	{
+		auto regular_file = std::filesystem::is_regular_file(path) || std::filesystem::is_regular_file(std::filesystem::current_path() / path);
+		return IO::exists(path) && regular_file;
+	}
+
 	std::filesystem::path independent_path(const std::string& path)
 	{
 		verify(path.find("/") != std::string::npos);

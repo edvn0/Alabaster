@@ -72,7 +72,7 @@ namespace Alabaster {
 		bool on_window_change(WindowResizeEvent& event);
 		bool on_window_change(WindowMinimizeEvent& event);
 		bool on_window_change(WindowCloseEvent& event);
-		void render_imgui(float ts);
+		void render_imgui();
 		void update_layers(float ts);
 
 	private:

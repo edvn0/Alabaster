@@ -1,5 +1,6 @@
-#include "Alabaster.hpp"
 #include "AlabasterLayer.hpp"
+
+#include "Alabaster.hpp"
 #include "graphics/Renderer.hpp"
 #include "vulkan/vulkan_core.h"
 
@@ -98,7 +99,7 @@ bool AlabasterLayer::initialise()
 	vertex_buffer = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 	index_buffer = std::make_unique<IndexBuffer>(indices.data(), indices.size());
 
-	aeroplane_texture = std::make_unique<Texture2D>("textures/aeroplane.png");
+	aeroplane_texture = std::make_unique<Texture2D>("app/resources/textures/aeroplane.png");
 	uint32_t black = 0x00000000;
 	black_texture = std::make_unique<Texture2D>(&black, sizeof(uint32_t));
 
@@ -156,7 +157,7 @@ void AlabasterLayer::update(float ts)
 
 		VkViewport viewport {};
 		viewport.x = 0.0f;
-		viewport.y = static_cast<float>(extent.height);
+		viewport.y = 0.0f;
 		viewport.width = static_cast<float>(extent.width);
 		viewport.height = static_cast<float>(extent.height);
 		viewport.minDepth = 0.0f;

@@ -17,8 +17,52 @@ namespace Alabaster {
 
 	static std::vector<VkCommandBuffer> imgui_command_buffers;
 
+	void GUILayer::create_render_pass()
+	{
+		VkAttachmentDescription colorAttachment {};
+		colorAttachment.format = Application::the().get_window()->get_swapchain()->get_format();
+		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		VkAttachmentReference colorAttachmentRef {};
+		colorAttachmentRef.attachment = 0;
+		colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpass {};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1;
+		subpass.pColorAttachments = &colorAttachmentRef;
+
+		VkSubpassDependency dependency {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		VkRenderPassCreateInfo renderPassInfo {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		renderPassInfo.attachmentCount = 1;
+		renderPassInfo.pAttachments = &colorAttachment;
+		renderPassInfo.subpassCount = 1;
+		renderPassInfo.pSubpasses = &subpass;
+		renderPassInfo.dependencyCount = 1;
+		renderPassInfo.pDependencies = &dependency;
+
+		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &renderPassInfo, nullptr, &render_pass));
+	}
+
 	bool GUILayer::initialise()
 	{
+		create_render_pass();
+
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -66,7 +110,7 @@ namespace Alabaster {
 		auto& swapchain = Application::the().get_window()->get_swapchain();
 		init_info.ImageCount = swapchain->get_image_count();
 		init_info.CheckVkResultFn = vk_check;
-		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
+		ImGui_ImplVulkan_Init(&init_info, render_pass);
 
 		imgui_command_buffers.resize(swapchain->get_image_count());
 		for (uint32_t i = 0; i < swapchain->get_image_count(); i++) {
@@ -127,7 +171,7 @@ namespace Alabaster {
 		VkRenderPassBeginInfo render_pass_begin_info = {};
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		render_pass_begin_info.pNext = nullptr;
-		render_pass_begin_info.renderPass = swapchain->get_render_pass();
+		render_pass_begin_info.renderPass = render_pass;
 		render_pass_begin_info.renderArea.offset.x = 0;
 		render_pass_begin_info.renderArea.offset.y = 0;
 		render_pass_begin_info.renderArea.extent.width = width;
@@ -142,7 +186,7 @@ namespace Alabaster {
 		{
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-			inheritance_info.renderPass = swapchain->get_render_pass();
+			inheritance_info.renderPass = render_pass;
 			inheritance_info.subpass = 0;
 
 			VkCommandBufferBeginInfo cbi = {};
@@ -153,7 +197,7 @@ namespace Alabaster {
 
 			VkViewport viewport = {};
 			viewport.x = 0.0f;
-			viewport.y = static_cast<float>(height);
+			viewport.y = 0.0f;
 			viewport.width = static_cast<float>(width);
 			viewport.height = static_cast<float>(height);
 			viewport.minDepth = 0.0f;
@@ -176,6 +220,8 @@ namespace Alabaster {
 		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
 
 		vkCmdEndRenderPass(draw_command_buffer);
+
+		vkEndCommandBuffer(draw_command_buffer);
 
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
@@ -205,6 +251,7 @@ namespace Alabaster {
 		ImGui::DestroyContext();
 
 		vkDestroyDescriptorPool(GraphicsContext::the().device(), imgui_descriptor_pool, nullptr);
+		vkDestroyRenderPass(GraphicsContext::the().device(), render_pass, nullptr);
 		Log::info("[GUILayer] Destroyed layer.");
 	};
 

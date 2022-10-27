@@ -14,11 +14,7 @@ namespace Alabaster {
 
 	class Texture {
 	public:
-		explicit Texture(std::string file_path)
-			: path(IO::slashed_to_fp(std::move(file_path)))
-		{
-			Log::info("Texture found at path: {}", path.string());
-		};
+		explicit Texture(std::string file_path);
 		explicit Texture(void* data, size_t size);
 
 	private:

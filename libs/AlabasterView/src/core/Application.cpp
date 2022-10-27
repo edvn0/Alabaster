@@ -40,16 +40,6 @@ namespace Alabaster {
 			stop();
 	}
 
-	void Application::render_imgui(float ts)
-	{
-		layer_forward([&ts = ts](Layer* layer) { layer->ui(ts); });
-	}
-
-	void Application::update_layers(float ts)
-	{
-		layer_forward([&ts](Layer* layer) { layer->update(ts); });
-	}
-
 	void Application::exit() { is_running = false; }
 
 	void Application::stop()
@@ -81,10 +71,8 @@ namespace Alabaster {
 			window->update();
 
 			Renderer::begin();
-			// Renderer::submit(&GUILayer::begin);
-			// Renderer::submit([this, &ts = app_ts] { render_imgui(ts); });
-			// Renderer::submit(&GUILayer::end);
 			Renderer::submit([this, &ts = app_ts] { update_layers(ts); });
+			Renderer::submit([this] { render_imgui(); });
 			Renderer::end();
 
 			swapchain().begin_frame();
@@ -105,7 +93,20 @@ namespace Alabaster {
 	}
 
 	Swapchain& Application::swapchain() { return *window->get_swapchain(); }
+
 	Swapchain& Application::swapchain() const { return *window->get_swapchain(); }
+
+	void Application::render_imgui()
+	{
+		gui_layer().begin();
+		layer_forward([&ts = app_ts](Layer* layer) { layer->ui(ts); });
+		gui_layer().end();
+	}
+
+	void Application::update_layers(float ts)
+	{
+		layer_forward([&ts](Layer* layer) { layer->update(ts); });
+	}
 
 	double Application::frametime() { return app_ts; }
 
