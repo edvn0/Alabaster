@@ -24,13 +24,13 @@ namespace Alabaster {
 		Log::info("Texture found at path: {}", path.string());
 		int w, h, channels;
 
-		if (stbi_is_hdr(path.c_str())) {
-			image_data.data = (byte*)stbi_loadf(path.c_str(), &w, &h, &channels, 4);
+		if (stbi_is_hdr(path.string().c_str())) {
+			image_data.data = (byte*)stbi_loadf(path.string().c_str(), &w, &h, &channels, 4);
 			image_data.size = width * height * 4 * sizeof(float);
 			format = ImageFormat::RGBA;
 		} else {
 			// stbi_set_flip_vertically_on_load(1);
-			image_data.data = stbi_load(path.c_str(), &w, &h, &channels, 4);
+			image_data.data = stbi_load(path.string().c_str(), &w, &h, &channels, 4);
 			image_data.size = width * height * 4;
 			format = ImageFormat::RGBA;
 		}
