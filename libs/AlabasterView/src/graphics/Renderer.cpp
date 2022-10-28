@@ -3,8 +3,8 @@
 #include "graphics/Renderer.hpp"
 
 #include "core/Common.hpp"
+#include "graphics/Camera.hpp"
 #include "graphics/Pipeline.hpp"
-#include "graphics/SceneRenderer.hpp"
 #include "utilities/FileInputOutput.hpp"
 
 namespace Alabaster {
@@ -14,8 +14,6 @@ namespace Alabaster {
 	static bool renderer_is_initialized { false };
 	static bool scene_renderer_is_initialized { false };
 	static bool frame_started { false };
-
-	static SceneRenderer* scene_renderer { nullptr };
 
 	RenderQueue& Renderer::render_queue()
 	{
@@ -36,11 +34,6 @@ namespace Alabaster {
 		Log::info("[Renderer] Begin frame.");
 	}
 
-	void Renderer::basic_mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Camera>& camera, const std::unique_ptr<Pipeline>& pipeline)
-	{
-		api().basic_mesh(mesh, camera, pipeline);
-	}
-
 	void Renderer::end()
 	{
 		verify(frame_started);
@@ -51,10 +44,8 @@ namespace Alabaster {
 	void Renderer::init()
 	{
 		Log::info("[Renderer] Initialisation of renderer.");
-		if (!renderer_is_initialized) {
-			renderer_is_initialized = true;
-			api().init();
-		}
+
+		renderer_is_initialized = true;
 
 		const auto all_files_in_shaders = IO::in_directory("app/resources/shaders", { ".spv" });
 
@@ -67,15 +58,6 @@ namespace Alabaster {
 	{
 		Log::info("[Renderer] Destruction of renderer.");
 		// Destruction code.
-	}
-
-	SceneRenderer& Renderer::api()
-	{
-		if (!scene_renderer_is_initialized) {
-			scene_renderer = new SceneRenderer();
-			scene_renderer_is_initialized = true;
-		}
-		return *scene_renderer;
 	}
 
 } // namespace Alabaster

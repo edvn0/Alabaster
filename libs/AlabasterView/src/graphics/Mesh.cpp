@@ -30,7 +30,6 @@ namespace Alabaster {
 	{
 		vertex_buffer = VertexBuffer::create(vertices);
 		index_buffer = IndexBuffer::create(indices);
-		Log::info("{}", index_buffer->count());
 	}
 
 	std::tuple<Mesh::Vertices, Mesh::Indices> Mesh::load_model()

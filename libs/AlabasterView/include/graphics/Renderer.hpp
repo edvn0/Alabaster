@@ -4,6 +4,7 @@
 #include "graphics/RenderQueue.hpp"
 
 #include <concepts>
+#include <glm/glm.hpp>
 
 typedef struct VkPipeline_T* VkPipeline;
 typedef struct VkPipelineLayout_T* VkPipelineLayout;
@@ -18,6 +19,7 @@ namespace Alabaster {
 	class SceneRenderer;
 	class Mesh;
 	class Camera;
+	class EditorCamera;
 	class Pipeline;
 
 	class Renderer {
@@ -28,9 +30,6 @@ namespace Alabaster {
 	public:
 		static void begin();
 		static void end();
-
-	public:
-		static void basic_mesh(ConstUnique<Mesh>, ConstUnique<Camera>, ConstUnique<Pipeline>);
 
 	public:
 		template <TriviallyDestructible CommandBufferFunction> static void submit(CommandBufferFunction&& func)
@@ -56,7 +55,6 @@ namespace Alabaster {
 
 	private:
 		static RenderQueue& render_queue();
-		static SceneRenderer& api();
 	};
 
 } // namespace Alabaster

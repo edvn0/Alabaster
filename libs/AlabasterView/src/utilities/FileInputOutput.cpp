@@ -67,16 +67,17 @@ namespace Alabaster::IO {
 
 	std::vector<std::filesystem::path> in_directory(const std::filesystem::path& path, std::unordered_set<std::string> extensions, bool recursive)
 	{
+		static constexpr auto entry_to_string = [](const auto& input) { return input.path().extension().string(); };
 		std::vector<std::filesystem::path> output;
 		if (recursive) {
 			for (const auto& fd : std::filesystem::recursive_directory_iterator { path }) {
-				if (extensions.count(fd.path().extension().string())) {
+				if (extensions.count(entry_to_string(fd))) {
 					output.push_back(fd.path());
 				}
 			}
 		} else {
 			for (const auto& fd : std::filesystem::directory_iterator { path }) {
-				if (extensions.count(fd.path().extension().string())) {
+				if (extensions.count(entry_to_string(fd))) {
 					output.push_back(fd.path());
 				}
 			}

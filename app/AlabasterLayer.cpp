@@ -1,6 +1,5 @@
-#include "AlabasterLayer.hpp"
-
 #include "Alabaster.hpp"
+#include "AlabasterLayer.hpp"
 #include "graphics/Renderer.hpp"
 #include "vulkan/vulkan_core.h"
 
@@ -13,7 +12,7 @@ static const std::vector<Vertex> vertices { Vertex { .position = { -0.5, 0.5, 0,
 	Vertex { .position = { 0.5, -0.5, 0, 1 }, .colour = { 1, 1, 0, 1 }, .uv = { 1, -1 } },
 	Vertex { .position = { -0.5, -0.5, 0, 1 }, .colour = { 1, 0, 1, 1 }, .uv = { -1, -1 } } };
 
-static const std::vector<Index> indices { 0,1,2,2,3,0 };
+static const std::vector<Index> indices { 0, 1, 2, 2, 3, 0 };
 
 void AlabasterLayer::create_renderpass()
 {
@@ -60,8 +59,6 @@ bool AlabasterLayer::initialise()
 {
 	create_renderpass();
 
-	camera = std::make_unique<EditorCamera>(45.0f, 1280, 600, .01f, 1000.0f);
-
 	PipelineSpecification spec {
 		.shader = Shader("app/resources/shaders/main"),
 		.debug_name = "Test",
@@ -71,10 +68,12 @@ bool AlabasterLayer::initialise()
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 		.depth_test = true,
 		.depth_write = false,
-		.vertex_layout
-		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+		.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
+			VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 		.instance_layout = {},
 	};
+	graphics_pipeline = std::make_unique<Pipeline>(spec);
+	graphics_pipeline->invalidate();
 
 	vertex_buffer = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 	index_buffer = std::make_unique<IndexBuffer>(indices.data(), indices.size());
@@ -82,9 +81,6 @@ bool AlabasterLayer::initialise()
 	aeroplane_texture = std::make_unique<Texture2D>("app/resources/textures/aeroplane.png");
 	uint32_t black = 0x00000000;
 	black_texture = std::make_unique<Texture2D>(&black, sizeof(uint32_t));
-
-	graphics_pipeline = std::make_unique<Pipeline>(spec);
-	graphics_pipeline->invalidate();
 
 	car_model = Mesh::from_path("app/resources/models/car_model.obj");
 	square_model = Mesh::from_data(vertices, indices);
@@ -109,9 +105,9 @@ void AlabasterLayer::update(float ts)
 {
 	static size_t frame_number { 0 };
 
-	auto& ed = as<EditorCamera>(camera);
-	ed.on_update(ts);
-	Renderer::basic_mesh(square_model, camera, graphics_pipeline);
+	renderer.begin_scene();
+	renderer.quad();
+	renderer.end_scene();
 
 	handle_events();
 
@@ -229,12 +225,12 @@ void AlabasterLayer::destroy()
 	index_buffer->destroy();
 	graphics_pipeline->destroy();
 
-
 	Log::info("[AlabasterLayer] Destroyed layer.");
 	Layer::destroy();
 }
 
-void AlabasterLayer::handle_events() {
+void AlabasterLayer::handle_events()
+{
 	if (Input::key(Key::G)) {
 		Logger::cycle_levels();
 		return;

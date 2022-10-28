@@ -27,6 +27,8 @@ namespace Alabaster {
 
 		void destroy();
 
+		void set_data(const void* data, size_t size);
+
 		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
 
 		VkBuffer operator*() const { return vulkan_buffer; }
@@ -41,6 +43,8 @@ namespace Alabaster {
 		{
 			return std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 		}
+
+		inline static std::unique_ptr<VertexBuffer> create(size_t size) { return std::make_unique<VertexBuffer>(static_cast<uint32_t>(size)); }
 
 	private:
 		Buffer vertex_data;

@@ -141,7 +141,14 @@
             "semaphore": "cpp",
             "cinttypes": "cpp",
             "__availability": "cpp",
-            "__std_stream": "cpp"
+            "__std_stream": "cpp",
+            "barrier": "cpp",
+            "coroutine": "cpp",
+            "csetjmp": "cpp",
+            "execution": "cpp",
+            "latch": "cpp",
+            "scoped_allocator": "cpp",
+            "syncstream": "cpp"
         },
         "C_Cpp.files.exclude": {
             "**/*.tmp": true,

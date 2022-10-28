@@ -63,8 +63,10 @@ def load_cache(parsed: Namespace) -> List[CacheRecord]:
     if cache_name.endswith(".cache"):
         cache_name = cache_name.split(".cache")[0]
 
+    cache_path = f"{parsed.dir}/{cache_name}.cache"
+
     try:
-        with open(f'{parsed.dir}/{cache_name}.cache', 'r') as cache_file:
+        with open(f'{cache_path}', 'r') as cache_file:
             cache = json.load(cache_file)
             records = map(lambda x: CacheRecord(compiled_name=x['compiled_name'], file_name=x['file_name'],
                                                 timestamp=x['timestamp']), cache)
@@ -76,9 +78,15 @@ def load_cache(parsed: Namespace) -> List[CacheRecord]:
 
 
 def write_cache(parsed: Namespace, records: List[CacheRecord]) -> None:
+    cache_name = str(parsed.cache_name)
+    if cache_name.endswith(".cache"):
+        cache_name = cache_name.split(".cache")[0]
+
+    cache_path = f"{parsed.dir}/{cache_name}.cache"
+
     try:
-        with open(f'{parsed.dir}/{parsed.cache_name}.cache', 'w') as cache_file:
-            cache_file.writelines(json.dumps(records, cls=EnhancedJSONEncoder))
+        with open(cache_path, 'w') as cache_file:
+            cache_file.writelines(json.dumps(records, cls=EnhancedJSONEncoder, indent=2))
             cache_file.write("\n")
     except FileNotFoundError:
         print("Could not write to cache file.")

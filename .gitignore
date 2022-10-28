@@ -15,8 +15,6 @@ VS
 *.jpeg
 
 *.spv
-*.vert*
-*.frag*
 
 XCode
 Xcode

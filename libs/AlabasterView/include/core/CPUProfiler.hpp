@@ -11,9 +11,6 @@ namespace Alabaster {
 		~CPUProfiler();
 
 	private:
-		void write_profile();
-
-	private:
 		FloatLike start_time;
 		std::string_view tag;
 		std::string_view dir;

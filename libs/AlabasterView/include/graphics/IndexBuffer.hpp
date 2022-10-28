@@ -2,6 +2,8 @@
 
 #include "graphics/Buffer.hpp"
 
+#include <array>
+#include <vector>
 #include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
 
@@ -30,15 +32,17 @@ namespace Alabaster {
 		VkBuffer operator*() const { return vulkan_buffer; }
 
 	public:
-		static std::unique_ptr<IndexBuffer> create(std::vector<Index>&& indices)
+		inline static std::unique_ptr<IndexBuffer> create(std::vector<Index>&& indices)
 		{
-			return std::make_unique<IndexBuffer>(indices.data(), indices.size());
+			return std::make_unique<IndexBuffer>(indices.data(), static_cast<uint32_t>(indices.size()));
 		}
 
-		static std::unique_ptr<IndexBuffer> create(const std::vector<Index>& indices)
+		inline static std::unique_ptr<IndexBuffer> create(const std::vector<Index>& indices)
 		{
-			return std::make_unique<IndexBuffer>(indices.data(), indices.size());
+			return std::make_unique<IndexBuffer>(indices.data(), static_cast<uint32_t>(indices.size()));
 		}
+
+		inline static std::unique_ptr<IndexBuffer> create(size_t count) { return std::make_unique<IndexBuffer>(static_cast<uint32_t>(count)); }
 
 	private:
 		Buffer index_data;

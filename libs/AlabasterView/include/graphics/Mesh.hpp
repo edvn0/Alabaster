@@ -1,6 +1,8 @@
 #pragma once
 
+#include "graphics/IndexBuffer.hpp"
 #include "graphics/Vertex.hpp"
+#include "graphics/VertexBuffer.hpp"
 
 #include <filesystem>
 #include <memory>

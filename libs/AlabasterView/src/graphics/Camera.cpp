@@ -163,9 +163,9 @@ namespace Alabaster {
 
 	float EditorCamera::zoom_speed() const
 	{
-		float distance = distance * 0.2f;
-		distance = glm::max(distance, 0.0f);
-		float speed = distance * distance;
+		float dist = distance * 0.2f;
+		dist = glm::max(dist, 0.0f);
+		float speed = dist * dist;
 		speed = glm::min(speed, 50.0f); // max speed = 50
 		return speed;
 	}

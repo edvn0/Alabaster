@@ -5,13 +5,14 @@
 #pragma once
 
 #include "Alabaster.hpp"
-#include "graphics/Camera.hpp"
-#include "graphics/Texture.hpp"
 
 #include <glm/glm.hpp>
 
 struct AlabasterLayer final : public Alabaster::Layer {
 	~AlabasterLayer() override = default;
+	AlabasterLayer()
+		: camera(Alabaster::EditorCamera(45.0f, 1280.0f, 600.0f, .01f, 1000.0f))
+		, renderer(camera) {};
 	void update(float ts) final;
 	void ui(float ts) final;
 	void ui() final;
@@ -22,8 +23,8 @@ struct AlabasterLayer final : public Alabaster::Layer {
 
 private:
 	std::string_view name() override { return "AlabasterLayer"; }
-
-	void create_renderpass();
+	Alabaster::EditorCamera camera;
+	Alabaster::Renderer3D renderer;
 
 	std::unique_ptr<Alabaster::Pipeline> graphics_pipeline;
 	glm::vec2 viewport_size = { 0.0f, 0.0f };
@@ -32,12 +33,12 @@ private:
 	bool is_dockspace_open { true };
 
 	VkRenderPass render_pass;
+	void create_renderpass();
 
 	std::unique_ptr<Alabaster::VertexBuffer> vertex_buffer;
 	std::unique_ptr<Alabaster::IndexBuffer> index_buffer;
 	std::unique_ptr<Alabaster::Texture2D> aeroplane_texture;
 	std::unique_ptr<Alabaster::Texture2D> black_texture;
 	std::unique_ptr<Alabaster::Mesh> car_model;
-	std::unique_ptr<Alabaster::Camera> camera;
 	std::unique_ptr<Alabaster::Mesh> square_model;
 };
