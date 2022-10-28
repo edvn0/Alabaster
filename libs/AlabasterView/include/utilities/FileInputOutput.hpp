@@ -17,6 +17,9 @@ namespace Alabaster::IO {
 	std::filesystem::path independent_path(const std::string& path);
 	std::filesystem::path slashed_to_fp(const std::string& slashed_string);
 
+	std::vector<std::filesystem::path> in_directory(
+		const std::filesystem::path& path, std::unordered_set<std::string> extensions = {}, bool recursive = true);
+
 	template <typename Printable> static inline bool write_file(const std::filesystem::path& filename, Printable& printable)
 	{
 		std::ofstream output_stream(filename);

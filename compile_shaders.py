@@ -71,6 +71,8 @@ def load_cache(parsed: Namespace) -> List[CacheRecord]:
             return list(records)
     except FileNotFoundError:
         return []
+    except ValueError:
+        return []
 
 
 def write_cache(parsed: Namespace, records: List[CacheRecord]) -> None:
@@ -86,12 +88,15 @@ def compile_to_spirv(parsed: Namespace, uncompiled_file: Path) -> CacheRecord:
     try:
         compile_call = f"{parsed.compiler} {uncompiled_file} -o {parsed.output_dir}/{uncompiled_file.name}.spv"
         check_call(compile_call.split(" "))
-        return CacheRecord(file_name=uncompiled_file.as_posix(),
-                           compiled_name=f"{parsed.dir}/{uncompiled_file.name}.spv",
-                           timestamp=datetime.datetime.now().isoformat())
+        out = CacheRecord(file_name=uncompiled_file.as_posix(),
+                          compiled_name=f"{parsed.dir}/{uncompiled_file.name}.spv",
+                          timestamp=datetime.datetime.now().isoformat())
+        print(f"Successfully compiled file {uncompiled_file}.")
+        return out
     except CalledProcessError as e:
         print(
             f"Could not compile shader {uncompiled_file.name}. Message: {e.output}")
+        return CacheRecord(file_name=uncompiled_file.as_posix(), compiled_name="Failure", timestamp=datetime.datetime.now().isoformat())
 
 
 def main(parsed: Namespace):

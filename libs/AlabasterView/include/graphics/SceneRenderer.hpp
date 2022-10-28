@@ -7,6 +7,7 @@
 
 typedef struct VkPipeline_T* VkPipeline;
 typedef struct VkDeviceMemory_T* VkDeviceMemory;
+typedef struct VkRenderPass_T* VkRenderPass;
 
 namespace Alabaster {
 
@@ -35,6 +36,7 @@ namespace Alabaster {
 		void create_descriptor_set_layout();
 		void create_descriptor_pool();
 		void create_descriptor_sets();
+		void create_renderpass();
 
 		std::vector<UniformBuffer> ubo_memory;
 		std::vector<VkBuffer> uniform_buffers;
@@ -43,5 +45,7 @@ namespace Alabaster {
 		std::vector<VkDescriptorSet> descriptor_sets;
 		VkDescriptorSetLayout descriptor_set_layout;
 		VkDescriptorPool descriptor_pool;
+
+		VkRenderPass render_pass;
 	};
 } // namespace Alabaster

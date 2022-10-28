@@ -5,8 +5,11 @@
 #include "core/Common.hpp"
 #include "graphics/Pipeline.hpp"
 #include "graphics/SceneRenderer.hpp"
+#include "utilities/FileInputOutput.hpp"
 
 namespace Alabaster {
+
+	static std::unordered_map<std::string, Shader> shaders;
 
 	static bool renderer_is_initialized { false };
 	static bool scene_renderer_is_initialized { false };
@@ -53,7 +56,11 @@ namespace Alabaster {
 			api().init();
 		}
 
-		// Initialisation code.
+		const auto all_files_in_shaders = IO::in_directory("app/resources/shaders", { ".spv" });
+
+		for (const auto& shader : all_files_in_shaders) {
+			Log::info("[Renderer] Shader found: {}", shader.filename());
+		}
 	}
 
 	void Renderer::shutdown()

@@ -27,15 +27,17 @@ namespace Alabaster {
 
 		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
 
+		VkBuffer operator*() const { return vulkan_buffer; }
+
 	public:
 		static std::unique_ptr<IndexBuffer> create(std::vector<Index>&& indices)
 		{
-			return std::make_unique<IndexBuffer>(indices.data(), indices.size() * sizeof(Index));
+			return std::make_unique<IndexBuffer>(indices.data(), indices.size());
 		}
 
 		static std::unique_ptr<IndexBuffer> create(const std::vector<Index>& indices)
 		{
-			return std::make_unique<IndexBuffer>(indices.data(), indices.size() * sizeof(Index));
+			return std::make_unique<IndexBuffer>(indices.data(), indices.size());
 		}
 
 	private:

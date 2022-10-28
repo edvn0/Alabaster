@@ -15,6 +15,47 @@
 
 namespace Alabaster {
 
+	void SceneRenderer::create_renderpass()
+	{
+		VkAttachmentDescription colour_attachment {};
+		colour_attachment.format = Application::the().get_window()->get_swapchain()->get_format();
+		colour_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		colour_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		colour_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		colour_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		colour_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		colour_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		colour_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		VkAttachmentReference colour_attachment_ref {};
+		colour_attachment_ref.attachment = 0;
+		colour_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpass {};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1;
+		subpass.pColorAttachments = &colour_attachment_ref;
+
+		VkSubpassDependency dependency {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		VkRenderPassCreateInfo render_pass_info {};
+		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		render_pass_info.attachmentCount = 1;
+		render_pass_info.pAttachments = &colour_attachment;
+		render_pass_info.subpassCount = 1;
+		render_pass_info.pSubpasses = &subpass;
+		render_pass_info.dependencyCount = 1;
+		render_pass_info.pDependencies = &dependency;
+
+		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &render_pass));
+	}
+
 	void SceneRenderer::create_descriptor_set_layout()
 	{
 		VkDescriptorSetLayoutBinding ubo_layout_binding {};
@@ -144,6 +185,7 @@ namespace Alabaster {
 		create_descriptor_set_layout();
 		create_descriptor_pool();
 		create_descriptor_sets();
+		create_renderpass();
 	}
 
 	void SceneRenderer::basic_mesh(
@@ -152,67 +194,70 @@ namespace Alabaster {
 		const auto& editor_camera = as<EditorCamera>(camera);
 		update_uniform_buffers(editor_camera.get_view_matrix(), editor_camera.get_projection_matrix());
 
-		Renderer::submit([this, &basic_mesh, &pipeline] {
-			const auto& swapchain = Application::the().get_window()->get_swapchain();
-			VkCommandBufferBeginInfo command_buffer_begin_info = {};
-			command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-			command_buffer_begin_info.pNext = nullptr;
+		Renderer::submit(
+			[this, &basic_mesh, &pipeline] {
+				const auto& swapchain = Application::the().swapchain();
+				VkCommandBufferBeginInfo command_buffer_begin_info = {};
+				command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+				command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+				command_buffer_begin_info.pNext = nullptr;
 
-			const auto& buffer = swapchain->get_current_drawbuffer();
-			vk_check(vkBeginCommandBuffer(buffer, &command_buffer_begin_info));
+				const auto& buffer = swapchain.get_current_drawbuffer();
+				vk_check(vkBeginCommandBuffer(buffer, &command_buffer_begin_info));
 
-			auto extent = swapchain->swapchain_extent();
+				auto extent = swapchain.swapchain_extent();
 
-			VkRenderPassBeginInfo render_pass_info {};
-			render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			render_pass_info.renderPass = swapchain->get_render_pass();
-			render_pass_info.framebuffer = swapchain->get_current_framebuffer();
-			render_pass_info.renderArea.offset = { 0, 0 };
-			render_pass_info.renderArea.extent = extent;
+				VkRenderPassBeginInfo render_pass_info {};
+				render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				render_pass_info.renderPass = render_pass;
+				render_pass_info.framebuffer = swapchain.get_current_framebuffer();
+				render_pass_info.renderArea.offset = { 0, 0 };
+				render_pass_info.renderArea.extent = extent;
 
-			std::array<VkClearValue, 1> clear_values {};
-			clear_values[0].color = { 0, 0, 0, 1 };
+				std::array<VkClearValue, 2> clear_values {};
+				clear_values[0].color = { 0, 0, 0, 0 };
+				clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
 
-			render_pass_info.clearValueCount = clear_values.size();
-			render_pass_info.pClearValues = clear_values.data();
+				render_pass_info.clearValueCount = clear_values.size();
+				render_pass_info.pClearValues = clear_values.data();
 
-			vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+				vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
-			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
+				vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-			VkViewport viewport {};
-			viewport.x = 0.0f;
-			viewport.y = 0.0f;
-			viewport.width = static_cast<float>(extent.width);
-			viewport.height = static_cast<float>(extent.height);
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
-			vkCmdSetViewport(buffer, 0, 1, &viewport);
+				VkViewport viewport {};
+				viewport.x = 0.0f;
+				viewport.y = 0.0f;
+				viewport.width = static_cast<float>(extent.width);
+				viewport.height = static_cast<float>(extent.height);
+				viewport.minDepth = 0.0f;
+				viewport.maxDepth = 1.0f;
+				vkCmdSetViewport(buffer, 0, 1, &viewport);
 
-			VkRect2D scissor {};
-			scissor.offset = { 0, 0 };
-			scissor.extent = extent;
-			vkCmdSetScissor(buffer, 0, 1, &scissor);
+				VkRect2D scissor {};
+				scissor.offset = { 0, 0 };
+				scissor.extent = extent;
+				vkCmdSetScissor(buffer, 0, 1, &scissor);
 
-			std::array<VkBuffer, 1> vbs {};
-			vbs[0] = basic_mesh->get_vertex_buffer().get_vulkan_buffer();
-			VkDeviceSize offsets { 0 };
-			vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
+				std::array<VkBuffer, 1> vbs {};
+				vbs[0] = *basic_mesh->get_vertex_buffer();
+				VkDeviceSize offsets { 0 };
+				vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
 
-			vkCmdBindIndexBuffer(buffer, basic_mesh->get_index_buffer().get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+				vkCmdBindIndexBuffer(buffer, *basic_mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			if (pipeline->get_vulkan_pipeline_layout()) {
-				vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
-					&descriptor_sets[swapchain->frame()], 0, nullptr);
-			}
+				if (pipeline->get_vulkan_pipeline_layout()) {
+					vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
+						&descriptor_sets[swapchain.frame()], 0, nullptr);
+				}
 
-			vkCmdDrawIndexed(buffer, basic_mesh->get_index_buffer().count(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(buffer, basic_mesh->get_index_buffer().count(), 1, 0, 0, 0);
 
-			vkCmdEndRenderPass(buffer);
+				vkCmdEndRenderPass(buffer);
 
-			vkEndCommandBuffer(buffer);
-		});
+				vkEndCommandBuffer(buffer);
+			},
+			"BasicMesh");
 	}
 
 	void SceneRenderer::update_uniform_buffers(const glm::mat4& view, const glm::mat4& projection)

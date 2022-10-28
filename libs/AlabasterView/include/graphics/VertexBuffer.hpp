@@ -29,6 +29,8 @@ namespace Alabaster {
 
 		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
 
+		VkBuffer operator*() const { return vulkan_buffer; }
+
 	public:
 		inline static std::unique_ptr<VertexBuffer> create(std::vector<Vertex>&& vertices)
 		{

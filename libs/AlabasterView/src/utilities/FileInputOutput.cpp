@@ -6,6 +6,9 @@
 
 namespace Alabaster::IO {
 
+	static constexpr auto filter_file_types
+		= [](const auto& fd) { return fd.path().extension() == ".DS_Store" || fd.path().extension() == ".gitkeep"; };
+
 	std::filesystem::path resources() { return std::filesystem::path { "app" } / std::filesystem::path { "resources" }; }
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
@@ -61,5 +64,24 @@ namespace Alabaster::IO {
 	}
 
 	std::filesystem::path slashed_to_fp(const std::string& slashed_string) { return independent_path(slashed_string); }
+
+	std::vector<std::filesystem::path> in_directory(const std::filesystem::path& path, std::unordered_set<std::string> extensions, bool recursive)
+	{
+		std::vector<std::filesystem::path> output;
+		if (recursive) {
+			for (const auto& fd : std::filesystem::recursive_directory_iterator { path }) {
+				if (extensions.count(fd.path().extension())) {
+					output.push_back(fd.path());
+				}
+			}
+		} else {
+			for (const auto& fd : std::filesystem::directory_iterator { path }) {
+				if (extensions.count(fd.path().extension())) {
+					output.push_back(fd.path());
+				}
+			}
+		}
+		return output;
+	}
 
 } // namespace Alabaster::IO

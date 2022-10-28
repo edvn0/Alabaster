@@ -183,6 +183,7 @@ namespace Alabaster {
 		if (result != VK_SUCCESS) {
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 				on_resize(sc_width, sc_height);
+				return;
 			} else {
 				Log::error("[Swapchain] Validation failed in present.");
 				vk_check(result);

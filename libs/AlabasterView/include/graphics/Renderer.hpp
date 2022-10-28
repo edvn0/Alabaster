@@ -43,7 +43,7 @@ namespace Alabaster {
 			auto render_command = [message](void* function_ptr) {
 				const auto& this_function = *static_cast<CommandBufferFunction*>(function_ptr);
 				if (!message.empty()) {
-					Log::trace("{}", message);
+					Log::info("[Renderer - Command] {}", message);
 				}
 				this_function();
 			};
