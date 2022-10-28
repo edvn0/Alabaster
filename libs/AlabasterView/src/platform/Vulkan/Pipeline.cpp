@@ -69,7 +69,7 @@ namespace Alabaster {
 		rasterisation_state.rasterizerDiscardEnable = VK_FALSE;
 		rasterisation_state.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterisation_state.lineWidth = 1.0f;
-		rasterisation_state.cullMode = VK_CULL_MODE_BACK_BIT;
+		rasterisation_state.cullMode = VK_CULL_MODE_NONE;
 		rasterisation_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		rasterisation_state.depthBiasEnable = VK_FALSE;
 
@@ -105,17 +105,17 @@ namespace Alabaster {
 		dynamic_state.pDynamicStates = dynamic_state_enables.data();
 		dynamic_state.dynamicStateCount = static_cast<uint32_t>(dynamic_state_enables.size());
 
-		/*VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {};
+		VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {};
 		depth_stencil_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 		depth_stencil_state.depthTestEnable = spec.depth_test ? VK_TRUE : VK_FALSE;
 		depth_stencil_state.depthWriteEnable = spec.depth_write ? VK_TRUE : VK_FALSE;
 		depth_stencil_state.depthCompareOp = VK_COMPARE_OP_LESS;
-		depth_stencil_state.front = depth_stencil_state.back;
 		depth_stencil_state.depthBoundsTestEnable = VK_FALSE;
 		depth_stencil_state.back.compareOp = VK_COMPARE_OP_ALWAYS;
 		depth_stencil_state.back.failOp = VK_STENCIL_OP_KEEP;
 		depth_stencil_state.back.passOp = VK_STENCIL_OP_KEEP;
-		depth_stencil_state.stencilTestEnable = VK_FALSE;*/
+		depth_stencil_state.front = depth_stencil_state.back;
+		depth_stencil_state.stencilTestEnable = VK_FALSE;
 
 		VkPipelineMultisampleStateCreateInfo multisample_state = {};
 		multisample_state.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -178,7 +178,7 @@ namespace Alabaster {
 		pipeline_create_info.pColorBlendState = &colour_blend_state;
 		pipeline_create_info.pMultisampleState = &multisample_state;
 		pipeline_create_info.pViewportState = &viewport_state;
-		// pipeline_create_info.pDepthStencilState = &depth_stencil_state;
+		pipeline_create_info.pDepthStencilState = &depth_stencil_state;
 		pipeline_create_info.renderPass = spec.render_pass;
 		pipeline_create_info.pDynamicState = &dynamic_state;
 

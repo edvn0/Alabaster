@@ -70,13 +70,13 @@ namespace Alabaster::IO {
 		std::vector<std::filesystem::path> output;
 		if (recursive) {
 			for (const auto& fd : std::filesystem::recursive_directory_iterator { path }) {
-				if (extensions.count(fd.path().extension())) {
+				if (extensions.count(fd.path().extension().string())) {
 					output.push_back(fd.path());
 				}
 			}
 		} else {
 			for (const auto& fd : std::filesystem::directory_iterator { path }) {
-				if (extensions.count(fd.path().extension())) {
+				if (extensions.count(fd.path().extension().string())) {
 					output.push_back(fd.path());
 				}
 			}

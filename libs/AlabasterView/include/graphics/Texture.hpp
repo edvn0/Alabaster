@@ -19,8 +19,8 @@ namespace Alabaster {
 
 	private:
 		std::filesystem::path path;
-		uint32_t width;
-		uint32_t height;
+		uint32_t width { 0 };
+		uint32_t height { 0 };
 		Buffer image_data;
 		std::unique_ptr<Image2D> image;
 		ImageFormat format = ImageFormat::RBGA;

@@ -69,7 +69,7 @@ bool AlabasterLayer::initialise()
 		.wireframe = false,
 		.backface_culling = false,
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		.depth_test = false,
+		.depth_test = true,
 		.depth_write = false,
 		.vertex_layout
 		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },

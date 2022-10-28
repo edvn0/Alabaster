@@ -30,16 +30,17 @@ namespace Alabaster {
 	{
 		vertex_buffer = VertexBuffer::create(vertices);
 		index_buffer = IndexBuffer::create(indices);
+		Log::info("{}", index_buffer->count());
 	}
 
 	std::tuple<Mesh::Vertices, Mesh::Indices> Mesh::load_model()
 	{
 		tinyobj::ObjReaderConfig reader_config;
-		reader_config.mtl_search_path = path.parent_path().c_str();
+		reader_config.mtl_search_path = path.parent_path().string().c_str();
 
 		tinyobj::ObjReader reader;
 
-		if (!reader.ParseFromFile(path.c_str(), reader_config)) {
+		if (!reader.ParseFromFile(path.string().c_str(), reader_config)) {
 			if (!reader.Error().empty()) {
 				Log::error("{}", reader.Error());
 			}
