@@ -355,7 +355,7 @@ namespace Alabaster {
 			Log::info("[Renderer3D] Draw calls: {}", data.draw_calls);
 			uint32_t vertex_count = data.vertices_submitted;
 
-			auto size = vertex_count * sizeof(QuadVertex);
+			uint32_t size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer.reset(new VertexBuffer(data.quad_buffer.data(), size));
 
 			draw_quads();
@@ -427,7 +427,7 @@ namespace Alabaster {
 					&descriptor[swapchain.frame()], 0, nullptr);
 			}
 
-			vkCmdDrawIndexed(buffer, index_count, 1, 0, 0, 0);
+			vkCmdDrawIndexed(buffer, index_count, index_count / 6, 0, 0, 0);
 
 			vkCmdEndRenderPass(buffer);
 
@@ -438,11 +438,21 @@ namespace Alabaster {
 	void Renderer3D::update_uniform_buffers()
 	{
 		auto image_index = Application::the().swapchain().frame();
+		static auto startTime = std::chrono::high_resolution_clock::now();
 
+		auto currentTime = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 		UBO ubo {};
-		ubo.projection = camera.get_projection_matrix();
+		/* ubo.projection = camera.get_projection_matrix();
 		ubo.view = camera.get_view_matrix();
-		ubo.view_projection = camera.get_view_projection();
+		ubo.view_projection = camera.get_view_projection();*/
+
+		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo.projection = glm::perspective(glm::radians(45.0f),
+			static_cast<float>(Application::the().swapchain().get_width()) / static_cast<float>(Application::the().swapchain().get_height()), 0.1f,
+			10.0f);
+		ubo.view_projection = ubo.projection * ubo.view;
+		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 		void* mapped;
 		vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index], 0, sizeof(ubo), 0, &mapped);

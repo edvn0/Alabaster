@@ -76,7 +76,12 @@ namespace Alabaster {
 		VkPipelineColorBlendAttachmentState color_blend_attachment {};
 		color_blend_attachment.colorWriteMask
 			= VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-		color_blend_attachment.blendEnable = VK_FALSE;
+		color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+		color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
+		color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+		color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
 		VkPipelineColorBlendStateCreateInfo colour_blend_state = {};
 		colour_blend_state.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -133,7 +138,6 @@ namespace Alabaster {
 		vertex_input_binding.stride = vertex_layout.get_stride();
 		vertex_input_binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
-		Log::info("Instance Layout is empty: {}", !non_empty(instance_layout.get_elements()));
 		if (non_empty(instance_layout.get_elements())) {
 			VkVertexInputBindingDescription& instance_input_binding = vertex_input_binding_descriptor.emplace_back();
 			instance_input_binding.binding = 1;

@@ -37,6 +37,14 @@ namespace Alabaster {
 		VkPipelineLayout get_vulkan_pipeline_layout() const { return pipeline_layout; }
 		VkPipeline get_vulkan_pipeline() const { return pipeline; }
 
+	public:
+		inline static std::unique_ptr<Pipeline> create(PipelineSpecification spec)
+		{
+			auto pipeline = std::make_unique<Pipeline>(spec);
+			pipeline->invalidate();
+			return pipeline;
+		}
+
 	private:
 		PipelineSpecification spec;
 		VkPipelineLayout pipeline_layout {};

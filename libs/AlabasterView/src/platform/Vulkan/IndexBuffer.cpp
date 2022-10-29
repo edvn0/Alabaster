@@ -63,6 +63,7 @@ namespace Alabaster {
 		GraphicsContext::the().flush_command_buffer(copy_command);
 
 		allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
+		index_data.release();
 
 		Log::info("[IndexBuffer] Initialised with size: {}", buffer_size);
 	}

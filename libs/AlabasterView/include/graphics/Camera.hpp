@@ -65,7 +65,6 @@ namespace Alabaster {
 	class EditorCamera : public Camera {
 	public:
 		EditorCamera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane);
-		EditorCamera() = default;
 		void init();
 
 		void focus(const glm::vec3& focus_point) final;

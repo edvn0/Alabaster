@@ -25,16 +25,13 @@ namespace Alabaster {
 
 	void Swapchain::construct(uint32_t width, uint32_t height)
 	{
-		sc_width = width;
-		sc_height = height;
-
-		// Check that pixel screen size can contain SC images...
-		int window_width, window_height;
-		glfwGetWindowSize(sc_handle, &window_width, &window_height);
-
-		if (window_width < sc_width || window_height < sc_height) { }
-
 		glfwGetFramebufferSize(sc_handle, &pixel_size_x, &pixel_size_y);
+		while (pixel_size_x == 0 || pixel_size_y == 0) {
+			glfwGetFramebufferSize(sc_handle, &pixel_size_x, &pixel_size_y);
+			glfwWaitEvents();
+		}
+		sc_width = pixel_size_x;
+		sc_height = pixel_size_y;
 
 		auto capabilities = query();
 		verify(capabilities);
@@ -46,26 +43,7 @@ namespace Alabaster {
 		create_swapchain(capabilities);
 		retrieve_images();
 
-		for (auto& cmd_buffer : command_buffers)
-			vkDestroyCommandPool(GraphicsContext::the().device(), cmd_buffer.command_pool, nullptr);
-
-		VkCommandPoolCreateInfo pci = {};
-		pci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		pci.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
-		pci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-
-		VkCommandBufferAllocateInfo command_buffer_allocate_info {};
-		command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		command_buffer_allocate_info.commandBufferCount = 1;
-
-		command_buffers.resize(image_count);
-		for (auto& cmd_buffer : command_buffers) {
-			vk_check(vkCreateCommandPool(GraphicsContext::the().device(), &pci, nullptr, &cmd_buffer.command_pool));
-
-			command_buffer_allocate_info.commandPool = cmd_buffer.command_pool;
-			vk_check(vkAllocateCommandBuffers(GraphicsContext::the().device(), &command_buffer_allocate_info, &cmd_buffer.buffer));
-		}
+		create_command_structures();
 
 		create_synchronisation_objects();
 
@@ -146,7 +124,9 @@ namespace Alabaster {
 	void Swapchain::begin_frame()
 	{
 		current_image_index = get_next_image();
-		vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[frame()].command_pool, 0));
+		if (current_image_index >= 0) {
+			vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[frame()].command_pool, 0));
+		}
 	}
 
 	void Swapchain::present()
@@ -190,8 +170,8 @@ namespace Alabaster {
 			}
 		}
 
-		current_frame = (frame() + 1) % image_count;
 		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence, VK_TRUE, default_fence_timeout));
+		current_frame = (frame() + 1) % image_count;
 	}
 
 	void Swapchain::on_resize(uint32_t w, uint32_t h)
@@ -232,8 +212,15 @@ namespace Alabaster {
 		vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence);
 
 		uint32_t image_index;
-		vk_check(vkAcquireNextImageKHR(GraphicsContext::the().device(), vk_swapchain, default_fence_timeout, sync_objects[frame()].image_available,
-			(VkFence) nullptr, &image_index));
+		auto result = vkAcquireNextImageKHR(GraphicsContext::the().device(), vk_swapchain, default_fence_timeout,
+			sync_objects[frame()].image_available, (VkFence) nullptr, &image_index);
+
+		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+			on_resize(pixel_size_x, pixel_size_y);
+			return -1;
+		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+			throw std::runtime_error("failed to acquire swap chain image!");
+		}
 
 		return image_index;
 	}
@@ -415,6 +402,30 @@ namespace Alabaster {
 			vk_check(vkCreateSemaphore(device, &semaphore_info, nullptr, &sync_objects[i].image_available));
 			vk_check(vkCreateSemaphore(device, &semaphore_info, nullptr, &sync_objects[i].render_finished));
 			vk_check(vkCreateFence(device, &fence_info, nullptr, &sync_objects[i].in_flight_fence));
+		}
+	}
+
+	void Swapchain::create_command_structures()
+	{
+		for (auto& cmd_buffer : command_buffers)
+			vkDestroyCommandPool(GraphicsContext::the().device(), cmd_buffer.command_pool, nullptr);
+
+		VkCommandPoolCreateInfo pci = {};
+		pci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		pci.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
+		pci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+
+		VkCommandBufferAllocateInfo command_buffer_allocate_info {};
+		command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		command_buffer_allocate_info.commandBufferCount = 1;
+
+		command_buffers.resize(image_count);
+		for (auto& cmd_buffer : command_buffers) {
+			vk_check(vkCreateCommandPool(GraphicsContext::the().device(), &pci, nullptr, &cmd_buffer.command_pool));
+
+			command_buffer_allocate_info.commandPool = cmd_buffer.command_pool;
+			vk_check(vkAllocateCommandBuffers(GraphicsContext::the().device(), &command_buffer_allocate_info, &cmd_buffer.buffer));
 		}
 	}
 

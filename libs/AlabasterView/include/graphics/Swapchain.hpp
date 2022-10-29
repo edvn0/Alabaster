@@ -97,6 +97,7 @@ namespace Alabaster {
 		void choose_extent(const Capabilities&);
 		void create_swapchain(const Capabilities&);
 		void create_synchronisation_objects();
+		void create_command_structures();
 		void retrieve_images();
 		void cleanup_swapchain();
 	};

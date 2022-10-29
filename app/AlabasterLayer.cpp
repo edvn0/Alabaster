@@ -65,9 +65,9 @@ bool AlabasterLayer::initialise()
 	PipelineSpecification spec {
 		.shader = Shader("app/resources/shaders/main"),
 		.debug_name = "Test",
-		.render_pass = render_pass,
+		.render_pass = Application::the().swapchain().get_render_pass(),
 		.wireframe = false,
-		.backface_culling = false,
+		.backface_culling = true,
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 		.depth_test = true,
 		.depth_write = false,
@@ -78,14 +78,30 @@ bool AlabasterLayer::initialise()
 	graphics_pipeline = std::make_unique<Pipeline>(spec);
 	graphics_pipeline->invalidate();
 
-	vertex_buffer = std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
-	index_buffer = std::make_unique<IndexBuffer>(indices.data(), indices.size());
+		PipelineSpecification viking_spec {
+		.shader = Shader("app/resources/shaders/car"),
+		.debug_name = "Test",
+		.render_pass = Application::the().swapchain().get_render_pass(),
+		.wireframe = false,
+		.backface_culling = true,
+		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		.depth_test = true,
+		.depth_write = false,
+		.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
+			VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+		.instance_layout = {},
+	};
+	viking_room_pipeline = Pipeline::create(viking_spec);
+
+
+	vertex_buffer = VertexBuffer::create(vertices);
+	index_buffer = IndexBuffer::create(indices);
 
 	aeroplane_texture = std::make_unique<Texture2D>("app/resources/textures/aeroplane.png");
 	uint32_t black = 0x00000000;
 	black_texture = std::make_unique<Texture2D>(&black, sizeof(uint32_t));
 
-	car_model = Mesh::from_path("app/resources/models/car_model.obj");
+	viking_room_model = Mesh::from_path("app/resources/models/viking_room.obj");
 	square_model = Mesh::from_data(vertices, indices);
 	return true;
 }
@@ -114,12 +130,12 @@ void AlabasterLayer::update(float ts)
 	static size_t frame_number { 0 };
 
     renderer.reset_stats();
-	renderer.begin_scene();
     camera.on_update(ts);
-	for (uint32_t i = 0; i < quads; i++) {
-        renderer.quad();
-	}
-    // renderer.mesh(car_model, graphics_pipeline);
+	renderer.begin_scene();
+	/* for (uint32_t i = 0; i < quads; i++) {
+		renderer.quad();
+	}*/
+	renderer.mesh(viking_room_model, viking_room_pipeline);
 	renderer.end_scene();
 
 	handle_events();
@@ -231,7 +247,8 @@ void AlabasterLayer::ui(float ts)
 void AlabasterLayer::destroy()
 {
 	vkDestroyRenderPass(GraphicsContext::the().device(), render_pass, nullptr);
-	car_model->destroy();
+	viking_room_model->destroy();
+	viking_room_pipeline->destroy();
 	square_model->destroy();
 
 	vertex_buffer->destroy();

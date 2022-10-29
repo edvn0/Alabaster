@@ -27,13 +27,14 @@ namespace Alabaster {
 	};
 
 	struct UBO {
+		alignas(16) glm::mat4 model;
 		alignas(16) glm::mat4 view;
 		alignas(16) glm::mat4 projection;
 		alignas(16) glm::mat4 view_projection;
 	};
 
 	struct RendererData {
-		static constexpr size_t max_vertices = 200;
+		static constexpr size_t max_vertices = 200'000;
 		static constexpr size_t max_indices = 6 * max_vertices;
 
 		size_t indices_submitted { 0 };

@@ -24,7 +24,7 @@ namespace Alabaster {
 
 	void EditorCamera::init()
 	{
-		static constexpr glm::vec3 pos = { -5, 5, 5 };
+		static constexpr glm::vec3 pos = { 0, -3, 5 };
 		distance = glm::distance(pos, focal_point);
 
 		yaw = 3.0f * glm::pi<float>() / 4.0f;
@@ -42,7 +42,7 @@ namespace Alabaster {
 		const glm::vec2& mouse = Input::mouse_position();
 		const glm::vec2 delta = (mouse - initial_mouse_position) * 0.002f;
 
-		if (Input::mouse(Mouse::Right) && !Input::key(Key::LeftAlt)) {
+		if (Input::mouse(Mouse::Right) && !Input::key(Key::LeftControl)) {
 			camera_mode = CameraMode::Flycam;
 			const float yaw_sign = get_up_direction().y < 0 ? -1.0f : 1.0f;
 
@@ -82,14 +82,21 @@ namespace Alabaster {
 			const float actual_distance = glm::distance(focal_point, position);
 			focal_point = position + get_forward_direction() * actual_distance;
 			distance = actual_distance;
-		} else if (Input::key(Key::LeftAlt)) {
+		} else if (Input::key(Key::LeftControl)) {
 			camera_mode = CameraMode::Arcball;
+			Log::info("Here!");
 
 			if (Input::mouse(Mouse::Middle)) {
+				Log::info("pan!");
+
 				mouse_pan(delta);
 			} else if (Input::mouse(Mouse::Left)) {
+				Log::info("rotate!");
+
 				mouse_rotate(delta);
 			} else if (Input::mouse(Mouse::Right)) {
+				Log::info("zoom!");
+
 				mouse_zoom(delta.x + delta.y);
 			}
 		}

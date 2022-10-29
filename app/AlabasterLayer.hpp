@@ -27,18 +27,19 @@ private:
 	Alabaster::Renderer3D renderer;
 
 	std::unique_ptr<Alabaster::Pipeline> graphics_pipeline;
+	std::unique_ptr<Alabaster::Pipeline> viking_room_pipeline;
 	glm::vec2 viewport_size = { 0.0f, 0.0f };
 	glm::vec2 viewport_bounds[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
 	bool viewport_focused = false, viewport_hovered = false;
 	bool is_dockspace_open { true };
 
-	VkRenderPass render_pass;
+	VkRenderPass render_pass {nullptr};
 	void create_renderpass();
 
 	std::unique_ptr<Alabaster::VertexBuffer> vertex_buffer;
 	std::unique_ptr<Alabaster::IndexBuffer> index_buffer;
 	std::unique_ptr<Alabaster::Texture2D> aeroplane_texture;
 	std::unique_ptr<Alabaster::Texture2D> black_texture;
-	std::unique_ptr<Alabaster::Mesh> car_model;
+	std::unique_ptr<Alabaster::Mesh> viking_room_model;
 	std::unique_ptr<Alabaster::Mesh> square_model;
 };
