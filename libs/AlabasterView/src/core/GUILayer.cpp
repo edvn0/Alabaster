@@ -22,12 +22,11 @@ namespace Alabaster {
 		VkAttachmentDescription color_attachment {};
 		color_attachment.format = Application::the().get_window()->get_swapchain()->get_format();
 		color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		color_attachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 		VkAttachmentReference color_attachment_ref {};
@@ -148,80 +147,80 @@ namespace Alabaster {
 	{
 		ImGui::Render();
 
-		static constexpr VkClearColorValue clear_colour = { 0.1f, 0.1f, 1.0f, 0.1f };
+		/*		static constexpr VkClearColorValue clear_colour = { 0.1f, 0.1f, 1.0f, 0.1f };
 
-		const auto& swapchain = Application::the().get_window()->get_swapchain();
-		std::array<VkClearValue, 2> clear_values {};
-		clear_values[0].color = clear_colour;
-		clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
+				const auto& swapchain = Application::the().get_window()->get_swapchain();
+				std::array<VkClearValue, 2> clear_values {};
+				clear_values[0].color = clear_colour;
+				clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
 
-		uint32_t width = swapchain->get_width();
-		uint32_t height = swapchain->get_height();
+				uint32_t width = swapchain->get_width();
+				uint32_t height = swapchain->get_height();
 
-		uint32_t command_buffer_index = swapchain->frame();
+				uint32_t command_buffer_index = swapchain->frame();
 
-		VkCommandBufferBeginInfo cmd_bbi = {};
-		cmd_bbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cmd_bbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-		cmd_bbi.pNext = nullptr;
+				VkCommandBufferBeginInfo cmd_bbi = {};
+				cmd_bbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+				cmd_bbi.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+				cmd_bbi.pNext = nullptr;
 
-		VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
-		vk_check(vkBeginCommandBuffer(draw_command_buffer, &cmd_bbi));
+				VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
+				vk_check(vkBeginCommandBuffer(draw_command_buffer, &cmd_bbi));
 
-		VkRenderPassBeginInfo render_pass_begin_info = {};
-		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_begin_info.pNext = nullptr;
-		render_pass_begin_info.renderPass = render_pass;
-		render_pass_begin_info.renderArea.offset.x = 0;
-		render_pass_begin_info.renderArea.offset.y = 0;
-		render_pass_begin_info.renderArea.extent.width = width;
-		render_pass_begin_info.renderArea.extent.height = height;
-		render_pass_begin_info.clearValueCount = clear_values.size();
-		render_pass_begin_info.pClearValues = clear_values.data();
-		render_pass_begin_info.framebuffer = swapchain->get_current_framebuffer();
+				VkRenderPassBeginInfo render_pass_begin_info = {};
+				render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				render_pass_begin_info.pNext = nullptr;
+				render_pass_begin_info.renderPass = render_pass;
+				render_pass_begin_info.renderArea.offset.x = 0;
+				render_pass_begin_info.renderArea.offset.y = 0;
+				render_pass_begin_info.renderArea.extent.width = width;
+				render_pass_begin_info.renderArea.extent.height = height;
+				render_pass_begin_info.clearValueCount = clear_values.size();
+				render_pass_begin_info.pClearValues = clear_values.data();
+				render_pass_begin_info.framebuffer = swapchain->get_current_framebuffer();
 
-		vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+				vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-		const auto& imgui_buffer = imgui_command_buffers[command_buffer_index];
-		{
-			VkCommandBufferInheritanceInfo inheritance_info = {};
-			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-			inheritance_info.renderPass = render_pass;
-			inheritance_info.subpass = 0;
+				const auto& imgui_buffer = imgui_command_buffers[command_buffer_index];
+				{
+					VkCommandBufferInheritanceInfo inheritance_info = {};
+					inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+					inheritance_info.renderPass = render_pass;
+					inheritance_info.subpass = 0;
 
-			VkCommandBufferBeginInfo cbi = {};
-			cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-			cbi.pInheritanceInfo = &inheritance_info;
-			vk_check(vkBeginCommandBuffer(imgui_buffer, &cbi));
+					VkCommandBufferBeginInfo cbi = {};
+					cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+					cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+					cbi.pInheritanceInfo = &inheritance_info;
+					vk_check(vkBeginCommandBuffer(imgui_buffer, &cbi));
 
-			VkViewport viewport = {};
-			viewport.x = 0.0f;
-			viewport.y = static_cast<float>(height);
-			viewport.height = -static_cast<float>(height);
-			viewport.width = static_cast<float>(width);
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
-			vkCmdSetViewport(imgui_buffer, 0, 1, &viewport);
+					VkViewport viewport = {};
+					viewport.x = 0.0f;
+					viewport.y = 0.0f;
+					viewport.height = static_cast<float>(height);
+					viewport.width = static_cast<float>(width);
+					viewport.minDepth = 0.0f;
+					viewport.maxDepth = 1.0f;
+					vkCmdSetViewport(imgui_buffer, 0, 1, &viewport);
 
-			VkRect2D scissor = {};
-			scissor.extent.width = width;
-			scissor.extent.height = height;
-			scissor.offset.x = 0;
-			scissor.offset.y = 0;
-			vkCmdSetScissor(imgui_buffer, 0, 1, &scissor);
+					VkRect2D scissor = {};
+					scissor.extent.width = width;
+					scissor.extent.height = height;
+					scissor.offset.x = 0;
+					scissor.offset.y = 0;
+					vkCmdSetScissor(imgui_buffer, 0, 1, &scissor);
 
-			ImDrawData* main_draw_data = ImGui::GetDrawData();
-			ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_buffer);
+					ImDrawData* main_draw_data = ImGui::GetDrawData();
+					ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_buffer);
 
-			vk_check(vkEndCommandBuffer(imgui_buffer));
-		}
+					vk_check(vkEndCommandBuffer(imgui_buffer));
+				}
 
-		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
+				vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
 
-		vkCmdEndRenderPass(draw_command_buffer);
+				vkCmdEndRenderPass(draw_command_buffer);
 
-		vkEndCommandBuffer(draw_command_buffer);
+				vkEndCommandBuffer(draw_command_buffer);*/
 
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {

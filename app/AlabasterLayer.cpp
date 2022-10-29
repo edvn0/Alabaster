@@ -1,5 +1,6 @@
-#include "Alabaster.hpp"
 #include "AlabasterLayer.hpp"
+
+#include "Alabaster.hpp"
 #include "graphics/Renderer.hpp"
 #include "vulkan/vulkan_core.h"
 
@@ -14,6 +15,8 @@ static const std::vector<Vertex> vertices { Vertex { .position = { -0.5, 0.5, 0,
 
 static const std::vector<Index> indices { 0, 1, 2, 2, 3, 0 };
 
+static uint32_t quads { 1 };
+
 void AlabasterLayer::create_renderpass()
 {
 	VkAttachmentDescription color_attachment {};
@@ -24,7 +27,7 @@ void AlabasterLayer::create_renderpass()
 	color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 	color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 	color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	color_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 	VkAttachmentReference color_attachment_ref {};
 	color_attachment_ref.attachment = 0;
@@ -97,6 +100,11 @@ void AlabasterLayer::on_event(Event& e)
 			return true;
 		}
 
+		if (key_code == Key::C) {
+			quads++;
+            return true;
+		}
+
 		return false;
 	});
 }
@@ -105,8 +113,13 @@ void AlabasterLayer::update(float ts)
 {
 	static size_t frame_number { 0 };
 
+    renderer.reset_stats();
 	renderer.begin_scene();
-	renderer.quad();
+    camera.on_update(ts);
+	for (uint32_t i = 0; i < quads; i++) {
+        renderer.quad();
+	}
+    // renderer.mesh(car_model, graphics_pipeline);
 	renderer.end_scene();
 
 	handle_events();

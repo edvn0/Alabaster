@@ -14,6 +14,7 @@ namespace Alabaster {
 		GUILayer() = default;
 		~GUILayer();
 
+		void on_event(Event& e) override {};
 		bool initialise() override;
 		void update(float timestep) override {};
 		void ui(float timestep) override;

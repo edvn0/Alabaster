@@ -13,9 +13,19 @@
 #include "graphics/Swapchain.hpp"
 #include "graphics/VertexBuffer.hpp"
 
+#include <imgui.h>
+#include <imgui_impl_glfw.h>
+#include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan.h>
 
 namespace Alabaster {
+
+	static void reset_data(RendererData& to_reset)
+	{
+		to_reset.quad_buffer_ptr = &to_reset.quad_buffer[0];
+		to_reset.indices_submitted = 0;
+		to_reset.vertices_submitted = 0;
+	}
 
 	void Renderer3D::create_renderpass()
 	{
@@ -203,7 +213,7 @@ namespace Alabaster {
 			.backface_culling = false,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.depth_test = true,
-			.depth_write = false,
+			.depth_write = true,
 			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.instance_layout = {},
@@ -236,18 +246,95 @@ namespace Alabaster {
 
 	void Renderer3D::begin_scene()
 	{
-		data.quad_buffer_ptr = &data.quad_buffer[0];
-		data.indices_submitted = 0;
+		reset_data(data);
 
 		update_uniform_buffers();
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const RenderProps& props) { }
+	void Renderer3D::reset_stats()
+	{
+		reset_data(data);
+		data.draw_calls = 0;
+	}
+
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipe, const RenderProps& props)
+	{
+		Renderer::submit([&mesh = mesh, &render_pass = data.render_pass, &descriptor = data.descriptor_sets, &pipeline = pipe] {
+			const auto& swapchain = Application::the().swapchain();
+			VkCommandBufferBeginInfo command_buffer_begin_info = {};
+			command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+			command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+			command_buffer_begin_info.pNext = nullptr;
+
+			const auto& buffer = swapchain.get_current_drawbuffer();
+			vk_check(vkBeginCommandBuffer(buffer, &command_buffer_begin_info));
+
+			auto extent = swapchain.swapchain_extent();
+
+			VkRenderPassBeginInfo render_pass_info {};
+			render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+			render_pass_info.renderPass = render_pass;
+			render_pass_info.framebuffer = swapchain.get_current_framebuffer();
+			render_pass_info.renderArea.offset = { 0, 0 };
+			render_pass_info.renderArea.extent = extent;
+
+			std::array<VkClearValue, 2> clear_values {};
+			clear_values[0].color = { 0, 0, 0, 0 };
+			clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
+
+			render_pass_info.clearValueCount = clear_values.size();
+			render_pass_info.pClearValues = clear_values.data();
+
+			vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
+
+			VkViewport viewport {};
+			viewport.x = 0.0f;
+			viewport.y = 0.0f;
+			viewport.width = static_cast<float>(extent.width);
+			viewport.height = static_cast<float>(extent.height);
+			viewport.minDepth = 0.0f;
+			viewport.maxDepth = 1.0f;
+			vkCmdSetViewport(buffer, 0, 1, &viewport);
+
+			VkRect2D scissor {};
+			scissor.offset = { 0, 0 };
+			scissor.extent = extent;
+			vkCmdSetScissor(buffer, 0, 1, &scissor);
+
+			std::array<VkBuffer, 1> vbs {};
+			vbs[0] = *mesh->get_vertex_buffer();
+			VkDeviceSize offsets { 0 };
+			vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
+
+			vkCmdBindIndexBuffer(buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
+
+			if (pipeline->get_vulkan_pipeline_layout()) {
+				vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
+					&descriptor[swapchain.frame()], 0, nullptr);
+			}
+
+			vkCmdDrawIndexed(buffer, mesh->get_index_buffer().count(), 1, 0, 0, 0);
+
+			vkCmdEndRenderPass(buffer);
+
+			vkEndCommandBuffer(buffer);
+		});
+	}
 
 	void Renderer3D::quad(const RenderProps& props)
 	{
 		static constexpr size_t quad_vertex_count = 4;
 		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+
+		if (data.indices_submitted >= RendererData::max_indices) {
+			flush();
+		}
+
+		if (data.vertices_submitted >= RendererData::max_vertices) {
+			flush();
+		}
 
 		const auto transform = glm::translate(glm::mat4(1.0f), props.pos) * glm::scale(glm::mat4(1.0f), { props.scale.x, props.scale.y, 1.0f });
 
@@ -262,17 +349,24 @@ namespace Alabaster {
 		data.indices_submitted += 6;
 	}
 
-	void Renderer3D::end_scene()
+	void Renderer3D::flush()
 	{
 		if (data.indices_submitted > 0) {
+			Log::info("[Renderer3D] Draw calls: {}", data.draw_calls);
 			uint32_t vertex_count = data.vertices_submitted;
 
 			auto size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer.reset(new VertexBuffer(data.quad_buffer.data(), size));
 
 			draw_quads();
+
+			data.draw_calls++;
 		}
+
+		reset_data(data);
 	}
+
+	void Renderer3D::end_scene() { flush(); }
 
 	void Renderer3D::draw_quads()
 	{
@@ -346,11 +440,9 @@ namespace Alabaster {
 		auto image_index = Application::the().swapchain().frame();
 
 		UBO ubo {};
-		ubo.model = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.projection = glm::perspective(glm::radians(45.0f), 1280.0f / 720.0f, 0.1f, 10.0f);
-		;
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-		ubo.view_projection = ubo.projection * ubo.view;
+		ubo.projection = camera.get_projection_matrix();
+		ubo.view = camera.get_view_matrix();
+		ubo.view_projection = camera.get_view_projection();
 
 		void* mapped;
 		vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index], 0, sizeof(ubo), 0, &mapped);

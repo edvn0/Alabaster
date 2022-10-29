@@ -34,7 +34,7 @@ namespace Alabaster {
 	public:
 		template <TriviallyDestructible CommandBufferFunction> static void submit(CommandBufferFunction&& func)
 		{
-			Renderer::submit(std::move(func), {});
+			Renderer::submit(std::forward<CommandBufferFunction>(func), {});
 		}
 
 		template <TriviallyDestructible CommandBufferFunction> static void submit(CommandBufferFunction&& func, std::string_view message)

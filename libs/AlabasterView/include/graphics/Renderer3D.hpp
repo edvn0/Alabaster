@@ -27,18 +27,18 @@ namespace Alabaster {
 	};
 
 	struct UBO {
-		alignas(16) glm::mat4 model;
 		alignas(16) glm::mat4 view;
 		alignas(16) glm::mat4 projection;
 		alignas(16) glm::mat4 view_projection;
 	};
 
 	struct RendererData {
-		static constexpr size_t max_vertices = 25'000;
+		static constexpr size_t max_vertices = 200;
 		static constexpr size_t max_indices = 6 * max_vertices;
 
 		size_t indices_submitted { 0 };
 		size_t vertices_submitted { 0 };
+		size_t draw_calls { 0 };
 
 		std::unique_ptr<Pipeline> quad_pipeline;
 		std::array<QuadVertex, max_vertices> quad_buffer;
@@ -63,11 +63,15 @@ namespace Alabaster {
 
 		void begin_scene();
 		void quad(const RenderProps& props = { .pos = { 0, 0, 0 }, .colour = { 1, 1, 1, 1 }, .scale = { 1, 1, 1 } });
-		void mesh(const std::unique_ptr<Mesh>& mesh, const RenderProps& props);
+		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline,
+			const RenderProps& props = { .pos = { 0, 0, 0 }, .colour = { 1, 1, 1, 1 }, .scale = { 1, 1, 1 } });
 		void end_scene();
+
+		void reset_stats();
 
 	private:
 		void draw_quads();
+		void flush();
 
 		void update_uniform_buffers();
 		void create_descriptor_set_layout();

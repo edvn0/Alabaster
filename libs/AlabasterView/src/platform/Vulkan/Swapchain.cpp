@@ -15,7 +15,13 @@ namespace Alabaster {
 
 	static constexpr auto default_fence_timeout = std::numeric_limits<uint64_t>::max();
 
-	void Swapchain::init(GLFWwindow* window) { sc_handle = window; }
+	void Swapchain::init(GLFWwindow* window)
+	{
+		auto& context = GraphicsContext::the();
+		const auto& instance = context.instance();
+		sc_handle = window;
+		glfwCreateWindowSurface(instance, sc_handle, nullptr, &vk_surface);
+	}
 
 	void Swapchain::construct(uint32_t width, uint32_t height)
 	{
@@ -27,11 +33,6 @@ namespace Alabaster {
 		glfwGetWindowSize(sc_handle, &window_width, &window_height);
 
 		if (window_width < sc_width || window_height < sc_height) { }
-
-		auto& context = GraphicsContext::the();
-		const auto& instance = context.instance();
-
-		glfwCreateWindowSurface(instance, sc_handle, nullptr, &vk_surface);
 
 		glfwGetFramebufferSize(sc_handle, &pixel_size_x, &pixel_size_y);
 
@@ -183,15 +184,14 @@ namespace Alabaster {
 		if (result != VK_SUCCESS) {
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 				on_resize(sc_width, sc_height);
-				return;
 			} else {
 				Log::error("[Swapchain] Validation failed in present.");
 				vk_check(result);
 			}
 		}
 
-		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence, VK_TRUE, default_fence_timeout));
 		current_frame = (frame() + 1) % image_count;
+		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence, VK_TRUE, default_fence_timeout));
 	}
 
 	void Swapchain::on_resize(uint32_t w, uint32_t h)
@@ -341,9 +341,7 @@ namespace Alabaster {
 			swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		}
 
-		// Find a supported composite alpha format (not all devices support alpha opaque)
 		VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		// Simply select the first composite alpha format available
 		std::vector<VkCompositeAlphaFlagBitsKHR> composite_alpha_flags = {
 			VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 			VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
@@ -361,9 +359,6 @@ namespace Alabaster {
 		swapchain_create_info.compositeAlpha = composite_alpha;
 		swapchain_create_info.presentMode = present_format;
 		swapchain_create_info.clipped = VK_TRUE;
-
-		if (old_sc)
-			wait();
 
 		vk_check(vkCreateSwapchainKHR(GraphicsContext::the().device(), &swapchain_create_info, nullptr, &vk_swapchain));
 

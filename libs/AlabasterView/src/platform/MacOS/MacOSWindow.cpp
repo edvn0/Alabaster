@@ -176,7 +176,7 @@ namespace Alabaster {
 
 		glfwSetWindowIconifyCallback(handle, [](GLFWwindow* window, int iconified) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
-			WindowMinimizeEvent event((bool)iconified);
+			WindowMinimizeEvent event(static_cast<bool>(iconified));
 			data.callback(event);
 		});
 
