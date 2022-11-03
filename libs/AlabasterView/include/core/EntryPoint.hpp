@@ -32,8 +32,8 @@ int main(int argc, char** argv)
 	// clang-format off
 	desc.add_options()
 		("help", "Show help message")
-		("width", boost::program_options::value<uint32_t>()->default_value(1280), "Width of window")
-		("height", boost::program_options::value<uint32_t>()->default_value(720), "Height of window")
+		("width", boost::program_options::value<uint32_t>()->default_value(1920), "Width of window")
+		("height", boost::program_options::value<uint32_t>()->default_value(1280), "Height of window")
 		("name", boost::program_options::value<std::string>()->default_value(std::string { "Alabaster" }), "Title of window")
 		("vsync", boost::program_options::value<bool>()->default_value(true), "Window vsync");
 	// clang-format on
@@ -93,6 +93,6 @@ int main(int argc, char** argv)
 	}
 
 	delete app;
-	Alabaster::Allocator::shutdown();
 	Alabaster::GraphicsContext::the().destroy();
+	Alabaster::Allocator::shutdown();
 }

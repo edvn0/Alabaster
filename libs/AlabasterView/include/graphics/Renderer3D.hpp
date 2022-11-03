@@ -60,12 +60,12 @@ namespace Alabaster {
 
 	class Renderer3D {
 	public:
-		Renderer3D(EditorCamera& camera);
+		explicit Renderer3D(EditorCamera& camera) noexcept;
 
 		void begin_scene();
-		void quad(const RenderProps& props = { .pos = { 0, 0, 0 }, .colour = { 1, 1, 1, 1 }, .scale = { 1, 1, 1 } });
-		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline,
-			const RenderProps& props = { .pos = { 0, 0, 0 }, .colour = { 1, 1, 1, 1 }, .scale = { 1, 1, 1 } });
+		void quad(const glm::vec4& pos = { 0, 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
+		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec4& pos = { 0, 0, 0, 0 },
+			const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
 		void end_scene();
 
 		void reset_stats();
@@ -78,7 +78,6 @@ namespace Alabaster {
 		void create_descriptor_set_layout();
 		void create_descriptor_pool();
 		void create_descriptor_sets();
-		void create_renderpass();
 
 	private:
 		EditorCamera& camera;

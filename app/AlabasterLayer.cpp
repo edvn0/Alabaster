@@ -78,7 +78,7 @@ bool AlabasterLayer::initialise()
 	graphics_pipeline = std::make_unique<Pipeline>(spec);
 	graphics_pipeline->invalidate();
 
-		PipelineSpecification viking_spec {
+	PipelineSpecification viking_spec {
 		.shader = Shader("app/resources/shaders/car"),
 		.debug_name = "Test",
 		.render_pass = Application::the().swapchain().get_render_pass(),
@@ -92,7 +92,6 @@ bool AlabasterLayer::initialise()
 		.instance_layout = {},
 	};
 	viking_room_pipeline = Pipeline::create(viking_spec);
-
 
 	vertex_buffer = VertexBuffer::create(vertices);
 	index_buffer = IndexBuffer::create(indices);
@@ -118,7 +117,7 @@ void AlabasterLayer::on_event(Event& e)
 
 		if (key_code == Key::C) {
 			quads++;
-            return true;
+			return true;
 		}
 
 		return false;
@@ -129,12 +128,14 @@ void AlabasterLayer::update(float ts)
 {
 	static size_t frame_number { 0 };
 
-    renderer.reset_stats();
-    camera.on_update(ts);
+	renderer.reset_stats();
+	camera.on_update(ts);
 	renderer.begin_scene();
-	/* for (uint32_t i = 0; i < quads; i++) {
-		renderer.quad();
-	}*/
+	for (int x = -2; x <= 2; x++) {
+		for (int y = -2; y <= 2; y++) {
+			renderer.quad(glm::vec4 { x, 0, y, 0 }, glm::vec4 { x / 5.0f, 1, y / 5.0f, 1 }, glm::vec3 { 0.2, 0.2, 0.2 });
+		}
+	}
 	renderer.mesh(viking_room_model, viking_room_pipeline);
 	renderer.end_scene();
 

@@ -34,13 +34,18 @@ namespace Alabaster {
 		const std::pair<int, int> framebuffer_extent() const;
 
 		void swap_buffers();
-
+        
+        bool was_resized() const { return resize_status; }
+        void reset_resize_status() { resize_status = false; }
+        bool resize_status{false};
+        
 	private:
 		void setup_events();
 
 	private:
 		uint32_t width;
 		uint32_t height;
+
 
 		struct UserData {
 			uint32_t width;

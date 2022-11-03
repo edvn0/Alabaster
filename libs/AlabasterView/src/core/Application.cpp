@@ -69,9 +69,9 @@ namespace Alabaster {
 			Timer<ClockGranularity::MILLIS, float> on_cpu;
 
 			window->update();
+			Renderer::submit([this, &ts = app_ts] { update_layers(ts); });
 
 			Renderer::begin();
-			Renderer::submit([this, &ts = app_ts] { update_layers(ts); });
 			Renderer::submit([this] { render_imgui(); });
 			Renderer::end();
 
@@ -126,8 +126,7 @@ namespace Alabaster {
 		layer_backward([&event](Layer* layer) {
 			layer->on_event(event);
 			if (event.handled)
-				return true;
-			return false;
+				return;
 		});
 
 		if (event.handled)

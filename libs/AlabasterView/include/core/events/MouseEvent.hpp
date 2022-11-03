@@ -33,19 +33,19 @@ namespace Alabaster {
 
 	class MouseScrolledEvent : public Event {
 	public:
-		MouseScrolledEvent(float xOffset, float yOffset)
-			: x_offset(xOffset)
-			, y_offset(yOffset)
+		MouseScrolledEvent(float x_offset, float y_offset)
+			: x_offset(x_offset)
+			, y_offset(y_offset)
 		{
 		}
 
-		float GetXOffset() const { return x_offset; }
-		float GetYOffset() const { return y_offset; }
+		float get_x_offset() const { return x_offset; }
+		float get_y_offset() const { return y_offset; }
 
 		std::string to_string() const override
 		{
 			std::stringstream ss;
-			ss << "MouseScrolledEvent: " << GetXOffset() << ", " << GetYOffset();
+			ss << "MouseScrolledEvent: " << get_x_offset() << ", " << get_y_offset();
 			return ss.str();
 		}
 
@@ -57,7 +57,7 @@ namespace Alabaster {
 
 	class MouseButtonEvent : public Event {
 	public:
-		MouseCode GetMouseButton() const { return button; }
+		MouseCode get_mouse_button() const { return button; }
 
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 	protected:

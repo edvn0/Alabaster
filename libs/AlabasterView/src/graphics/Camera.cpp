@@ -24,7 +24,7 @@ namespace Alabaster {
 
 	void EditorCamera::init()
 	{
-		static constexpr glm::vec3 pos = { 0, -3, 5 };
+		static constexpr glm::vec3 pos = { 0, -2, -2 };
 		distance = glm::distance(pos, focal_point);
 
 		yaw = 3.0f * glm::pi<float>() / 4.0f;
@@ -84,19 +84,12 @@ namespace Alabaster {
 			distance = actual_distance;
 		} else if (Input::key(Key::LeftControl)) {
 			camera_mode = CameraMode::Arcball;
-			Log::info("Here!");
 
 			if (Input::mouse(Mouse::Middle)) {
-				Log::info("pan!");
-
 				mouse_pan(delta);
 			} else if (Input::mouse(Mouse::Left)) {
-				Log::info("rotate!");
-
 				mouse_rotate(delta);
 			} else if (Input::mouse(Mouse::Right)) {
-				Log::info("zoom!");
-
 				mouse_zoom(delta.x + delta.y);
 			}
 		}
@@ -158,12 +151,12 @@ namespace Alabaster {
 	std::pair<float, float> EditorCamera::pan_speed() const
 	{
 		const float x = glm::min(float(viewport_width) / 1000.0f, 2.4f); // max = 2.4f
-		const float xFactor = 0.0366f * (x * x) - 0.1778f * x + 0.3021f;
+		const float x_factor = 0.0366f * (x * x) - 0.1778f * x + 0.3021f;
 
 		const float y = glm::min(float(viewport_height) / 1000.0f, 2.4f); // max = 2.4f
-		const float yFactor = 0.0366f * (y * y) - 0.1778f * y + 0.3021f;
+		const float y_factor = 0.0366f * (y * y) - 0.1778f * y + 0.3021f;
 
-		return { xFactor, yFactor };
+		return { x_factor, y_factor };
 	}
 
 	float EditorCamera::rotation_speed() const { return 0.3f; }
@@ -186,10 +179,10 @@ namespace Alabaster {
 	bool EditorCamera::on_mouse_scroll(MouseScrolledEvent& e)
 	{
 		if (Input::mouse(Mouse::Right)) {
-			normal_speed += e.GetYOffset() * 0.3f * normal_speed;
+			normal_speed += e.get_y_offset() * 0.3f * normal_speed;
 			normal_speed = std::clamp(normal_speed, min_speed, max_speed);
 		} else {
-			mouse_zoom(e.GetYOffset() * 0.1f);
+			mouse_zoom(e.get_y_offset() * 0.1f);
 			update_camera_view();
 		}
 

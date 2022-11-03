@@ -3,6 +3,7 @@
 #include "graphics/Shader.hpp"
 
 #include "core/Common.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "utilities/FileInputOutput.hpp"
 
@@ -18,6 +19,11 @@ namespace Alabaster {
 	static VkShaderModule create(std::string code)
 	{
 		auto size = code.size();
+
+		if (code.empty()) {
+			throw AlabasterException("No shader code read.");
+		}
+
 		auto data = reinterpret_cast<uint32_t*>(code.data());
 		auto create_info = Vulkan::Shader::module(size, data);
 		VkShaderModule shader_module;

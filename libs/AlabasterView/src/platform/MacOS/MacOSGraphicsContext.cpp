@@ -162,7 +162,6 @@ namespace Alabaster {
 		instance_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
 		instance_info.ppEnabledExtensionNames = extensions.data();
 
-		// Validation layers
 		instance_info.enabledLayerCount = 0;
 		instance_info.pNext = nullptr;
 
@@ -328,16 +327,13 @@ namespace Alabaster {
 		qsi.commandBufferCount = 1;
 		qsi.pCommandBuffers = &command_buffer;
 
-		// Create fence to ensure that the command buffer has finished executing
 		VkFenceCreateInfo fci = {};
 		fci.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 
 		VkFence fence;
 		vk_check(vkCreateFence(device(), &fci, nullptr, &fence));
 
-		// Submit to the queue
 		vk_check(vkQueueSubmit(queue, 1, &qsi, fence));
-		// Wait for the fence to signal that command buffer has finished executing
 		vk_check(vkWaitForFences(device(), 1, &fence, VK_TRUE, default_fence_timeout));
 
 		vkDestroyFence(device(), fence, nullptr);

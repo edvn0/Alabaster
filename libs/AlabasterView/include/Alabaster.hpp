@@ -6,6 +6,7 @@
 #include "core/events/KeyEvent.hpp"
 #include "core/events/MouseEvent.hpp"
 #include "core/Input.hpp"
+#include "core/Random.hpp"
 #include "core/Window.hpp"
 #include "graphics/Camera.hpp"
 #include "graphics/GraphicsContext.hpp"

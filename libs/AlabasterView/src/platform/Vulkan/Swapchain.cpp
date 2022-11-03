@@ -20,18 +20,13 @@ namespace Alabaster {
 		auto& context = GraphicsContext::the();
 		const auto& instance = context.instance();
 		sc_handle = window;
-		glfwCreateWindowSurface(instance, sc_handle, nullptr, &vk_surface);
+		vk_check(glfwCreateWindowSurface(instance, sc_handle, nullptr, &vk_surface));
 	}
 
 	void Swapchain::construct(uint32_t width, uint32_t height)
 	{
-		glfwGetFramebufferSize(sc_handle, &pixel_size_x, &pixel_size_y);
-		while (pixel_size_x == 0 || pixel_size_y == 0) {
-			glfwGetFramebufferSize(sc_handle, &pixel_size_x, &pixel_size_y);
-			glfwWaitEvents();
-		}
-		sc_width = pixel_size_x;
-		sc_height = pixel_size_y;
+		sc_width = width;
+		sc_height = height;
 
 		auto capabilities = query();
 		verify(capabilities);
@@ -48,12 +43,8 @@ namespace Alabaster {
 		create_synchronisation_objects();
 
 		VkPipelineStageFlags pipeline_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		std::vector<VkSemaphore> wait_semaphores;
-		std::vector<VkSemaphore> signal_semaphores;
-		for (const auto& [a, b, c] : sync_objects) {
-			wait_semaphores.push_back(a);
-			signal_semaphores.push_back(b);
-		}
+		std::vector<VkSemaphore> wait_semaphores { sync_objects[frame()].image_available };
+		std::vector<VkSemaphore> signal_semaphores { sync_objects[frame()].render_finished };
 
 		submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -108,8 +99,8 @@ namespace Alabaster {
 		framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebuffer_create_info.renderPass = vk_render_pass;
 		framebuffer_create_info.attachmentCount = 1;
-		framebuffer_create_info.width = pixel_size_x;
-		framebuffer_create_info.height = pixel_size_y;
+		framebuffer_create_info.width = sc_width;
+		framebuffer_create_info.height = sc_height;
 		framebuffer_create_info.layers = 1;
 
 		frame_buffers.resize(image_count);
@@ -118,7 +109,7 @@ namespace Alabaster {
 			vk_check(vkCreateFramebuffer(GraphicsContext::the().device(), &framebuffer_create_info, nullptr, &frame_buffers[i]));
 		}
 
-		Log::info("[Swapchain] Successfully created the swapchain ({}, {}) and retrieved its {} images.", pixel_size_x, pixel_size_y, image_count);
+		Log::info("[Swapchain] Successfully created the swapchain ({}, {}) and retrieved its {} images.", sc_width, sc_height, image_count);
 	}
 
 	void Swapchain::begin_frame()
@@ -162,7 +153,8 @@ namespace Alabaster {
 		}
 
 		if (result != VK_SUCCESS) {
-			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+			auto was_resized = Application::the().get_window()->was_resized();
+			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || was_resized) {
 				on_resize(sc_width, sc_height);
 			} else {
 				Log::error("[Swapchain] Validation failed in present.");
@@ -178,6 +170,7 @@ namespace Alabaster {
 	{
 		vkDeviceWaitIdle(GraphicsContext::the().device());
 		construct(w, h);
+		Application::the().get_window()->reset_resize_status();
 		vkDeviceWaitIdle(GraphicsContext::the().device());
 	}
 
@@ -196,13 +189,13 @@ namespace Alabaster {
 
 	VkFramebuffer Swapchain::get_current_framebuffer() const { return frame_buffers[frame()]; };
 
-	uint32_t Swapchain::get_width() const { return pixel_size_x; }
+	uint32_t Swapchain::get_width() const { return sc_width; }
 
-	uint32_t Swapchain::get_height() const { return pixel_size_y; }
+	uint32_t Swapchain::get_height() const { return sc_height; }
 
 	uint32_t Swapchain::get_image_count() { return image_count; }
 
-	VkRenderPass Swapchain::get_render_pass() { return vk_render_pass; };
+	VkRenderPass Swapchain::get_render_pass() const { return vk_render_pass; };
 
 	VkCommandBuffer Swapchain::get_current_drawbuffer() const { return command_buffers[frame()].buffer; }
 
@@ -216,7 +209,9 @@ namespace Alabaster {
 			sync_objects[frame()].image_available, (VkFence) nullptr, &image_index);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-			on_resize(pixel_size_x, pixel_size_y);
+			on_resize(sc_width, sc_height);
+			Application::the().get_window()->resize_status = true;
+			Application::the().resize(sc_width, sc_height);
 			return -1;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("failed to acquire swap chain image!");
@@ -277,16 +272,7 @@ namespace Alabaster {
 	void Swapchain::choose_extent(const Capabilities& in)
 	{
 		const auto& capabilities = in.capabilities;
-
-		int width, height;
-		glfwGetFramebufferSize(sc_handle, &width, &height);
-
-		VkExtent2D framebuffer_extent = { .width = static_cast<uint32_t>(width), .height = static_cast<uint32_t>(height) };
-
-		framebuffer_extent.width = std::clamp(framebuffer_extent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
-		framebuffer_extent.height = std::clamp(framebuffer_extent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
-
-		extent = framebuffer_extent;
+		extent = { sc_width, sc_height };
 	}
 
 	void Swapchain::create_swapchain(const Capabilities& in)

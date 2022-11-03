@@ -25,3 +25,6 @@ url = https://github.com/edvn0/imgui
 [submodule "third_party/tinyobjloader"]
 	path = third_party/tinyobjloader
 	url = https://github.com/edvn0/tinyobjloader
+[submodule "third_party/random"]
+	path = third_party/random
+	url = https://github.com/effolkronium/random

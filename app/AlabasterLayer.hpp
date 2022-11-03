@@ -33,7 +33,7 @@ private:
 	bool viewport_focused = false, viewport_hovered = false;
 	bool is_dockspace_open { true };
 
-	VkRenderPass render_pass {nullptr};
+	VkRenderPass render_pass { nullptr };
 	void create_renderpass();
 
 	std::unique_ptr<Alabaster::VertexBuffer> vertex_buffer;

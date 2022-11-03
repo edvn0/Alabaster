@@ -34,7 +34,7 @@ namespace Alabaster {
 		uint32_t get_width() const;
 		uint32_t get_height() const;
 		uint32_t get_image_count();
-		VkRenderPass get_render_pass();
+		VkRenderPass get_render_pass() const;
 		VkFormat get_format() { return format.format; }
 
 	private:

@@ -14,9 +14,9 @@
 #include "graphics/VertexBuffer.hpp"
 
 #include <imgui.h>
-#include <imgui_impl_glfw.h>
-#include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan.h>
+
+// #define USE_CAMERA
 
 namespace Alabaster {
 
@@ -25,47 +25,6 @@ namespace Alabaster {
 		to_reset.quad_buffer_ptr = &to_reset.quad_buffer[0];
 		to_reset.indices_submitted = 0;
 		to_reset.vertices_submitted = 0;
-	}
-
-	void Renderer3D::create_renderpass()
-	{
-		VkAttachmentDescription colour_attachment {};
-		colour_attachment.format = Application::the().get_window()->get_swapchain()->get_format();
-		colour_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		colour_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		colour_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		colour_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		colour_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		colour_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		colour_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		VkAttachmentReference colour_attachment_ref {};
-		colour_attachment_ref.attachment = 0;
-		colour_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subpass {};
-		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &colour_attachment_ref;
-
-		VkSubpassDependency dependency {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-		VkRenderPassCreateInfo render_pass_info {};
-		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_info.attachmentCount = 1;
-		render_pass_info.pAttachments = &colour_attachment;
-		render_pass_info.subpassCount = 1;
-		render_pass_info.pSubpasses = &subpass;
-		render_pass_info.dependencyCount = 1;
-		render_pass_info.pDependencies = &dependency;
-
-		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &data.render_pass));
 	}
 
 	void Renderer3D::create_descriptor_set_layout()
@@ -176,26 +135,24 @@ namespace Alabaster {
 		vkBindBufferMemory(GraphicsContext::the().device(), buffer, memory, 0);
 	}
 
-	Renderer3D::Renderer3D(EditorCamera& camera)
+	Renderer3D::Renderer3D(EditorCamera& camera) noexcept
 		: camera(camera)
 	{
-
 		auto image_count = Application::the().swapchain().get_image_count();
 
-		VkDeviceSize buffer_size = sizeof(UBO);
+		VkDeviceSize uniform_buffer_size = sizeof(UBO);
 
 		data.uniform_buffers.resize(image_count);
 		data.uniform_buffers_memory.resize(image_count);
 
 		for (size_t i = 0; i < image_count; i++) {
-			create_buffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-				data.uniform_buffers[i], data.uniform_buffers_memory[i]);
+			create_buffer(uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, data.uniform_buffers[i], data.uniform_buffers_memory[i]);
 		}
 
 		create_descriptor_set_layout();
 		create_descriptor_pool();
 		create_descriptor_sets();
-		create_renderpass();
 
 		std::array<QuadVertex, 4> quad_vertices {};
 		std::array<uint32_t, 6> quad_indices {};
@@ -208,12 +165,12 @@ namespace Alabaster {
 		PipelineSpecification spec {
 			.shader = Shader("app/resources/shaders/main"),
 			.debug_name = "Test",
-			.render_pass = data.render_pass,
+			.render_pass = Application::the().swapchain().get_render_pass(),
 			.wireframe = false,
 			.backface_culling = false,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.depth_test = true,
-			.depth_write = true,
+			.depth_test = false,
+			.depth_write = false,
 			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.instance_layout = {},
@@ -257,7 +214,8 @@ namespace Alabaster {
 		data.draw_calls = 0;
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipe, const RenderProps& props)
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipe, const glm::vec4& pos, const glm::vec4& colour,
+		const glm::vec3& scale)
 	{
 		Renderer::submit([&mesh = mesh, &render_pass = data.render_pass, &descriptor = data.descriptor_sets, &pipeline = pipe] {
 			const auto& swapchain = Application::the().swapchain();
@@ -273,7 +231,7 @@ namespace Alabaster {
 
 			VkRenderPassBeginInfo render_pass_info {};
 			render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			render_pass_info.renderPass = render_pass;
+			render_pass_info.renderPass = swapchain.get_render_pass();
 			render_pass_info.framebuffer = swapchain.get_current_framebuffer();
 			render_pass_info.renderArea.offset = { 0, 0 };
 			render_pass_info.renderArea.extent = extent;
@@ -323,7 +281,7 @@ namespace Alabaster {
 		});
 	}
 
-	void Renderer3D::quad(const RenderProps& props)
+	void Renderer3D::quad(const glm::vec4& pos, const glm::vec4& colour, const glm::vec3& scale)
 	{
 		static constexpr size_t quad_vertex_count = 4;
 		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
@@ -336,12 +294,12 @@ namespace Alabaster {
 			flush();
 		}
 
-		const auto transform = glm::translate(glm::mat4(1.0f), props.pos) * glm::scale(glm::mat4(1.0f), { props.scale.x, props.scale.y, 1.0f });
+		const auto transform = glm::translate(glm::mat4(1.0f), glm::vec3(pos)) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
 
 		for (size_t i = 0; i < quad_vertex_count; i++) {
 			auto& vertex = data.quad_buffer[data.vertices_submitted];
 			vertex.position = transform * data.quad_positions[i];
-			vertex.colour = props.colour;
+			vertex.colour = colour;
 			vertex.uvs = texture_coordinates[i];
 			data.vertices_submitted++;
 		}
@@ -370,8 +328,8 @@ namespace Alabaster {
 
 	void Renderer3D::draw_quads()
 	{
-		Renderer::submit([index_count = data.indices_submitted, &render_pass = data.render_pass, &pipeline = data.quad_pipeline,
-							 &vb = data.quad_vertex_buffer, &ib = data.quad_index_buffer, &descriptor = data.descriptor_sets] {
+		Renderer::submit([index_count = data.indices_submitted, &pipeline = data.quad_pipeline, &vb = data.quad_vertex_buffer,
+							 &ib = data.quad_index_buffer, &descriptor = data.descriptor_sets] {
 			const auto& swapchain = Application::the().swapchain();
 			VkCommandBufferBeginInfo command_buffer_begin_info = {};
 			command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -385,7 +343,7 @@ namespace Alabaster {
 
 			VkRenderPassBeginInfo render_pass_info {};
 			render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			render_pass_info.renderPass = render_pass;
+			render_pass_info.renderPass = swapchain.get_render_pass();
 			render_pass_info.framebuffer = swapchain.get_current_framebuffer();
 			render_pass_info.renderArea.offset = { 0, 0 };
 			render_pass_info.renderArea.extent = extent;
@@ -403,9 +361,9 @@ namespace Alabaster {
 
 			VkViewport viewport {};
 			viewport.x = 0.0f;
-			viewport.y = 0.0f;
+			viewport.y = static_cast<float>(extent.height);
 			viewport.width = static_cast<float>(extent.width);
-			viewport.height = static_cast<float>(extent.height);
+			viewport.height = -static_cast<float>(extent.height);
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
 			vkCmdSetViewport(buffer, 0, 1, &viewport);
@@ -438,21 +396,23 @@ namespace Alabaster {
 	void Renderer3D::update_uniform_buffers()
 	{
 		auto image_index = Application::the().swapchain().frame();
-		static auto startTime = std::chrono::high_resolution_clock::now();
+		static auto start_time = std::chrono::high_resolution_clock::now();
 
-		auto currentTime = std::chrono::high_resolution_clock::now();
-		float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+		auto current_time = std::chrono::high_resolution_clock::now();
+		float time = std::chrono::duration<float, std::chrono::seconds::period>(current_time - start_time).count();
 		UBO ubo {};
-		/* ubo.projection = camera.get_projection_matrix();
+#ifdef USE_CAMERA
+		ubo.projection = camera.get_projection_matrix();
 		ubo.view = camera.get_view_matrix();
-		ubo.view_projection = camera.get_view_projection();*/
-
-		ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+		ubo.view_projection = camera.get_view_projection();
+#else
+		ubo.view = glm::lookAt(glm::vec3(0, -2, -2), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		ubo.projection = glm::perspective(glm::radians(45.0f),
 			static_cast<float>(Application::the().swapchain().get_width()) / static_cast<float>(Application::the().swapchain().get_height()), 0.1f,
 			10.0f);
 		ubo.view_projection = ubo.projection * ubo.view;
-		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+#endif
+		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 		void* mapped;
 		vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index], 0, sizeof(ubo), 0, &mapped);

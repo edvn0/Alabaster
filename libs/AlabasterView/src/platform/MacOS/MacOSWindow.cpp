@@ -26,8 +26,6 @@ namespace Alabaster {
 	Window::~Window() = default;
 
 	Window::Window(const ApplicationArguments& arguments)
-		: width(arguments.width)
-		, height(arguments.height)
 	{
 		try {
 			initialize_window_library();
@@ -37,36 +35,32 @@ namespace Alabaster {
 		}
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
+		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, false);
+		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
 		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name, nullptr, nullptr);
+		int actual_w, actual_h;
+		glfwGetWindowSize(handle, &actual_w, &actual_h);
 
 		glfwSetWindowUserPointer(handle, &user_data);
-		glfwWindowHint(GLFW_DECORATED, false);
 
-		int w, h;
-		glfwGetWindowSize(handle, &w, &h);
+		static constexpr auto set_and_get_window_size = [](GLFWwindow* handle, uint32_t w, uint32_t h) {
+			glfwSetWindowSize(handle, static_cast<int>(w), static_cast<int>(h));
 
-		Log::info("[Window] Window size is {} by {}", w, h);
+			int actual_w, actual_h;
+			glfwGetWindowSize(handle, &actual_w, &actual_h);
+			return std::make_tuple(actual_w, actual_h);
+		};
 
-		uint32_t use_width = arguments.width;
-		uint32_t use_height = arguments.height;
-		if (w < arguments.width)
-			use_width = w;
+		const auto&& [calc_w, calc_h] = set_and_get_window_size(handle, actual_w, actual_h);
 
-		if (h < arguments.height)
-			use_height = h;
+		width = calc_w;
+		height = calc_h;
 
-		float pixel_size_x, pixel_size_y;
-		glfwGetWindowContentScale(handle, &pixel_size_x, &pixel_size_y);
+		Log::info("[Window] Window size is {} by {}", width, height);
 
-		Log::info("[Window] Set window pixel size to {} by {}", pixel_size_x, pixel_size_y);
-
-		glfwSetWindowSize(handle, use_width / pixel_size_x, use_height / pixel_size_y);
-
-		glfwGetWindowSize(handle, &w, &h);
-		user_data.width = w;
-		user_data.height = h;
+		user_data.width = width;
+		user_data.height = height;
 
 		swapchain = std::make_unique<Swapchain>();
 		swapchain->init(handle);
@@ -96,7 +90,10 @@ namespace Alabaster {
 
 	void Window::setup_events()
 	{
-		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int w, int h) { Application::the().resize(w, h); });
+		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int w, int h) {
+			Application::the().get_window()->resize_status = true;
+			Application::the().resize(w, h);
+		});
 
 		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int in_width, int in_height) {
@@ -106,6 +103,9 @@ namespace Alabaster {
 			data.callback(event);
 			data.width = in_width;
 			data.height = in_height;
+
+			Application::the().get_window()->resize_status = true;
+			Application::the().resize(in_width, in_height);
 		});
 
 		glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {

@@ -26,11 +26,7 @@ namespace Alabaster {
 
 	private:
 		std::string_view name() override { return gui_layer_name; }
-
-		void create_render_pass();
-
 		VkDescriptorPool imgui_descriptor_pool;
-		VkRenderPass render_pass;
 	};
 
 } // namespace Alabaster

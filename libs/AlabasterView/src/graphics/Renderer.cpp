@@ -31,14 +31,16 @@ namespace Alabaster {
 	{
 		verify(!frame_started);
 		frame_started = true;
-		Log::info("[Renderer] Begin frame.");
+
+		Renderer::submit([] { Log::info("[Renderer] Begin frame."); });
 	}
 
 	void Renderer::end()
 	{
 		verify(frame_started);
 		frame_started = false;
-		Log::info("[Renderer] End frame.");
+
+		Renderer::submit([] { Log::info("[Renderer] End frame."); });
 	}
 
 	void Renderer::init()
