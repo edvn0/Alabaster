@@ -5,6 +5,7 @@
 #include "core/Common.hpp"
 #include "core/Logger.hpp"
 #include "graphics/GraphicsContext.hpp"
+#include "graphics/Renderer.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 
@@ -68,7 +69,7 @@ namespace Alabaster {
 		rasterisation_state.depthClampEnable = VK_FALSE;
 		rasterisation_state.rasterizerDiscardEnable = VK_FALSE;
 		rasterisation_state.polygonMode = VK_POLYGON_MODE_FILL;
-		rasterisation_state.lineWidth = 1.0f;
+		rasterisation_state.lineWidth = spec.line_width;
 		rasterisation_state.cullMode = VK_CULL_MODE_NONE;
 		rasterisation_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		rasterisation_state.depthBiasEnable = VK_FALSE;
@@ -82,6 +83,7 @@ namespace Alabaster {
 		color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 		color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 		color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
+		color_blend_attachment.blendEnable = VK_FALSE;
 
 		VkPipelineColorBlendStateCreateInfo colour_blend_state = {};
 		colour_blend_state.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -102,8 +104,16 @@ namespace Alabaster {
 		std::vector<VkDynamicState> dynamic_state_enables;
 		dynamic_state_enables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 		dynamic_state_enables.push_back(VK_DYNAMIC_STATE_SCISSOR);
-		if (spec.topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST || spec.topology == VK_PRIMITIVE_TOPOLOGY_LINE_STRIP || spec.wireframe)
+		if (spec.topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST || spec.topology == VK_PRIMITIVE_TOPOLOGY_LINE_STRIP || spec.wireframe) {
+			VkPhysicalDeviceFeatures features;
+			vkGetPhysicalDeviceFeatures(GraphicsContext::the().physical_device(), &features);
+
+			if (!features.wideLines) {
+				throw AlabasterException("Wide lines are not supported on this system.");
+			}
+
 			dynamic_state_enables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
+		}
 
 		VkPipelineDynamicStateCreateInfo dynamic_state = {};
 		dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -198,10 +208,13 @@ namespace Alabaster {
 	void Pipeline::destroy()
 	{
 		spec.shader.destroy();
-		vkDestroyPipelineCache(GraphicsContext::the().device(), pipeline_cache, nullptr);
-		vkDestroyPipelineLayout(GraphicsContext::the().device(), pipeline_layout, nullptr);
-		vkDestroyPipeline(GraphicsContext::the().device(), pipeline, nullptr);
-		Log::info("[Pipeline] Destroyed pipeline {} and its dependents.", spec.debug_name);
+
+		Renderer::free_resource([this] {
+			vkDestroyPipelineCache(GraphicsContext::the().device(), pipeline_cache, nullptr);
+			vkDestroyPipelineLayout(GraphicsContext::the().device(), pipeline_layout, nullptr);
+			vkDestroyPipeline(GraphicsContext::the().device(), pipeline, nullptr);
+			Log::info("[Pipeline] Destroyed pipeline {} and its dependents.", spec.debug_name);
+		});
 	}
 
 } // namespace Alabaster

@@ -25,7 +25,7 @@ namespace Alabaster {
 
 	private:
 		std::string_view name() override { return gui_layer_name; }
-		VkDescriptorPool imgui_descriptor_pool;
+		VkDescriptorPool imgui_descriptor_pool { nullptr };
 	};
 
 } // namespace Alabaster

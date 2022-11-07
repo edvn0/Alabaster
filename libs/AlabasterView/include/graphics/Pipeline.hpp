@@ -19,6 +19,7 @@ namespace Alabaster {
 		bool depth_write { true };
 		VertexBufferLayout vertex_layout;
 		VertexBufferLayout instance_layout;
+		float line_width { 1.0f };
 	};
 
 	class Pipeline {

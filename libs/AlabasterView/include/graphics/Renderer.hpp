@@ -57,7 +57,22 @@ namespace Alabaster {
 			new (storage_buffer) CommandBufferFunction(std::forward<CommandBufferFunction>(func));
 		}
 
+		template <TriviallyDestructible ResourceFreeFunction> static void free_resource(ResourceFreeFunction&& func)
+		{
+			auto command = [](void* function_ptr) {
+				const auto& this_function = *static_cast<ResourceFreeFunction*>(function_ptr);
+				this_function();
+			};
+
+			Renderer::submit([command, func]() {
+				const uint32_t index = Renderer::current_frame();
+				auto storage_buffer = Renderer::resource_release_queue(index).allocate(command, sizeof(func));
+				new (storage_buffer) ResourceFreeFunction(std::forward<ResourceFreeFunction>((ResourceFreeFunction &&) func));
+			});
+		}
+
 		static void execute();
+		static RenderQueue& resource_release_queue(uint32_t index);
 
 	private:
 		static RenderQueue& render_queue();

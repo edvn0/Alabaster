@@ -73,7 +73,7 @@ void AlabasterLayer::update(float ts)
 
 	renderer.line({ 0, 0, 0 }, { 3, 0, 0 }, { 1, 0, 0, 1 });
 	renderer.line({ 0, 0, 0 }, { 0, 3, 0 }, { 0, 1, 0, 1 });
-	renderer.line({ 0, 0, 0 }, { 0, 0, 3 }, { 0, 0, 1, 1 });
+	renderer.line({ 0, 0, 0 }, { 0, 0, -3 }, { 0, 0, 1, 1 });
 
 	// renderer.mesh(viking_room_model, viking_room_pipeline);
 	renderer.end_scene();
@@ -175,15 +175,17 @@ void AlabasterLayer::ui(float ts)
 
 void AlabasterLayer::destroy()
 {
-	vkDestroyRenderPass(GraphicsContext::the().device(), render_pass, nullptr);
-	viking_room_model->destroy();
-	viking_room_pipeline->destroy();
-	square_model->destroy();
+	Renderer::free_resource([this] {
+		vkDestroyRenderPass(GraphicsContext::the().device(), render_pass, nullptr);
+		viking_room_model->destroy();
+		viking_room_pipeline->destroy();
+		square_model->destroy();
 
-	vertex_buffer->destroy();
-	index_buffer->destroy();
-	graphics_pipeline->destroy();
+		vertex_buffer->destroy();
+		index_buffer->destroy();
+		graphics_pipeline->destroy();
 
-	Log::info("[AlabasterLayer] Destroyed layer.");
+		Log::info("[AlabasterLayer] Destroyed layer.");
+	});
 	Layer::destroy();
 }

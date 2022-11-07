@@ -8,9 +8,10 @@
 #include "core/Window.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
-#include "vulkan/vulkan_core.h"
+#include "graphics/Renderer.hpp"
 
 #include <GLFW/glfw3.h>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -115,6 +116,9 @@ namespace Alabaster {
 
 	void Swapchain::begin_frame()
 	{
+		auto& queue = Renderer::resource_release_queue(frame());
+		queue.execute();
+
 		current_image_index = get_next_image();
 		if (current_image_index >= 0) {
 			vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[frame()].get_command_pool(), 0));

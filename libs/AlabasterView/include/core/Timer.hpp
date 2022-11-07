@@ -39,7 +39,7 @@ namespace Alabaster {
 
 	private:
 		FloatLike start_time { 0.0 };
-		ClockGranularity granularity;
+		ClockGranularity granularity { ClockGranularity::MILLIS };
 	};
 
 } // namespace Alabaster

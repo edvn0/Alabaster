@@ -199,6 +199,8 @@ namespace Alabaster {
 		device_create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
 		device_create_info.pQueueCreateInfos = queue_create_infos.data();
 		VkPhysicalDeviceFeatures device_features {};
+		device_features.wideLines = true;
+
 		device_create_info.pEnabledFeatures = &device_features;
 
 		if (!device_exts.empty()) {

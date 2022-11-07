@@ -11,6 +11,7 @@
 #include "graphics/Renderer.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/Swapchain.hpp"
+#include "graphics/UniformBuffer.hpp"
 #include "graphics/VertexBuffer.hpp"
 
 #include <imgui.h>
@@ -40,7 +41,7 @@ namespace Alabaster {
 		color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		color_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
 		VkAttachmentReference color_attachment_ref {};
 		color_attachment_ref.attachment = 0;
@@ -202,7 +203,7 @@ namespace Alabaster {
 
 		PipelineSpecification spec {
 			.shader = Shader("app/resources/shaders/main"),
-			.debug_name = "Test",
+			.debug_name = "Quad Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
 			.backface_culling = false,
@@ -216,9 +217,8 @@ namespace Alabaster {
 		data.quad_pipeline = std::make_unique<Pipeline>(spec);
 		data.quad_pipeline->invalidate();
 
-		PipelineSpecification line {
-			.shader = Shader("app/resources/shaders/line"),
-			.debug_name = "Test",
+		PipelineSpecification line { .shader = Shader("app/resources/shaders/line"),
+			.debug_name = "Line Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
 			.backface_culling = false,
@@ -228,8 +228,8 @@ namespace Alabaster {
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
 			.instance_layout = {},
-		};
-		data.line_pipeline = std::make_unique<Pipeline>(spec);
+			.line_width = 2.0f };
+		data.line_pipeline = std::make_unique<Pipeline>(line);
 		data.line_pipeline->invalidate();
 
 		data.quad_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(QuadVertex));
@@ -405,6 +405,11 @@ namespace Alabaster {
 						&descriptor[Renderer::current_frame()], 0, nullptr);
 				}
 
+				const auto line_width = pipeline->get_specification().line_width;
+				if (line_width >= 1.0f) {
+					vkCmdSetLineWidth(*buffer, line_width);
+				}
+
 				const auto count = static_cast<uint32_t>(index_count);
 				const auto instances = static_cast<uint32_t>(index_count / 2);
 				vkCmdDrawIndexed(*buffer, count, instances, 0, 0, 0);
@@ -442,10 +447,10 @@ namespace Alabaster {
 		UBO ubo {};
 		ubo.projection = camera.get_projection_matrix();
 		ubo.view = camera.get_view_matrix();
-		ubo.view = glm::lookAt(glm::vec3(0, -2, -2), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		ubo.projection = glm::perspective(glm::radians(45.0f),
-			static_cast<float>(Application::the().swapchain().get_width()) / static_cast<float>(Application::the().swapchain().get_height()), 0.1f,
-			10.0f);
+		// ubo.view = glm::lookAt(glm::vec3(0, -2, -2), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		// ubo.projection = glm::perspective(glm::radians(45.0f),
+		//	static_cast<float>(Application::the().swapchain().get_width()) / static_cast<float>(Application::the().swapchain().get_height()), 0.1f,
+		//	10.0f);
 		ubo.view_projection = ubo.projection * ubo.view;
 		ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 

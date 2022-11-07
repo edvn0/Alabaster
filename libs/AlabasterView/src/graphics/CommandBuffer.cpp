@@ -39,10 +39,10 @@ namespace Alabaster {
 		}
 	}
 
-	CommandBuffer::CommandBuffer(std::string_view name)
+	CommandBuffer::CommandBuffer(std::string_view n)
 	{
-		name = std::string { name };
-		init(3);
+		std::string name = std::string { n };
+		init(4);
 		owned_by_swapchain = true;
 	}
 

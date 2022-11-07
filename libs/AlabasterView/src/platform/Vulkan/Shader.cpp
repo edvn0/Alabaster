@@ -5,6 +5,7 @@
 #include "core/Common.hpp"
 #include "core/exceptions/AlabasterException.hpp"
 #include "graphics/GraphicsContext.hpp"
+#include "graphics/Renderer.hpp"
 #include "utilities/FileInputOutput.hpp"
 
 #include <platform/Vulkan/CreateInfoStructures.hpp>
@@ -76,11 +77,12 @@ namespace Alabaster {
 
 	void Shader::destroy()
 	{
-		for (auto& stage : shader_stages) {
-			vkDestroyShaderModule(GraphicsContext::the().device(), stage.module, nullptr);
-			stage = {};
-		}
-		Log::info("[Shader] Shader stages deleted.");
+		Renderer::free_resource([&shader_stages = shader_stages] {
+			for (auto& stage : shader_stages)
+				vkDestroyShaderModule(GraphicsContext::the().device(), stage.module, nullptr);
 
-	} // namespace Alabaster
+			Log::info("[Shader] Shader stages deleted.");
+		});
+	}
+
 } // namespace Alabaster

@@ -12,9 +12,7 @@ namespace Alabaster {
 		: size(size)
 		, binding(binding)
 	{
-		local_data = new uint8_t[size];
-
-		invalidate();
+		Renderer::submit([this]() { invalidate(); });
 	}
 
 	UniformBuffer::~UniformBuffer() { release(); }
@@ -24,14 +22,13 @@ namespace Alabaster {
 		if (!allocation)
 			return;
 
-		Allocator allocator("UniformBuffer");
-		allocator.destroy_buffer(buffer, allocation);
+		Renderer::free_resource([&buffer = buffer, &allocation = allocation] {
+			Allocator allocator("UniformBuffer");
+			allocator.destroy_buffer(buffer, allocation);
+		});
 
 		buffer = nullptr;
 		allocation = nullptr;
-
-		delete[] local_data;
-		local_data = nullptr;
 	}
 
 	void UniformBuffer::invalidate()
@@ -47,19 +44,16 @@ namespace Alabaster {
 
 		Allocator allocator("UniformBuffer");
 		allocation = allocator.allocate_buffer(buffer_info, VMA_MEMORY_USAGE_CPU_TO_GPU, buffer);
-
-		descriptor_info.buffer = buffer;
-		descriptor_info.offset = 0;
-		descriptor_info.range = size;
 	}
 
 	void UniformBuffer::set_data(const void* data, uint32_t input_size, uint32_t offset)
 	{
-		std::memcpy(local_data, data, input_size);
-		Allocator allocator("UniformBuffer");
-		uint8_t* mapped = allocator.map_memory<uint8_t>(allocation);
-		std::memcpy(mapped, (const uint8_t*)data + offset, size);
-		allocator.unmap_memory(allocation);
+		Renderer::submit([this, &data, &offset] {
+			Allocator allocator("UniformBuffer");
+			uint8_t* mapped = allocator.map_memory<uint8_t>(allocation);
+			std::memcpy(mapped, (const uint8_t*)data + offset, size);
+			allocator.unmap_memory(allocation);
+		});
 	}
 
 } // namespace Alabaster

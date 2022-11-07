@@ -12,6 +12,7 @@
 namespace Alabaster {
 
 	static std::unordered_map<std::string, Shader> shaders;
+	static RenderQueue global_release_queues[4];
 
 	static bool renderer_is_initialized { false };
 	static bool scene_renderer_is_initialized { false };
@@ -22,6 +23,8 @@ namespace Alabaster {
 		static RenderQueue render_queue;
 		return render_queue;
 	}
+
+	RenderQueue& Renderer::resource_release_queue(uint32_t index) { return global_release_queues[index]; }
 
 	void Renderer::execute()
 	{
@@ -62,9 +65,9 @@ namespace Alabaster {
 
 				VkViewport viewport {};
 				viewport.x = 0.0f;
-				viewport.y = static_cast<float>(extent.height);
+				viewport.y = 0.0f;
 				viewport.width = static_cast<float>(extent.width);
-				viewport.height = -static_cast<float>(extent.height);
+				viewport.height = static_cast<float>(extent.height);
 				viewport.minDepth = 0.0f;
 				viewport.maxDepth = 1.0f;
 				vkCmdSetViewport(*buffer, 0, 1, &viewport);
@@ -108,7 +111,10 @@ namespace Alabaster {
 	void Renderer::shutdown()
 	{
 		Log::info("[Renderer] Destruction of renderer.");
-		// Destruction code.
+		for (int i = 0; i < Application::the().swapchain().get_image_count(); i++) {
+			auto& queue = Renderer::resource_release_queue(i);
+			queue.execute();
+		}
 	}
 
 } // namespace Alabaster

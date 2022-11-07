@@ -11,7 +11,7 @@
 struct AlabasterLayer final : public Alabaster::Layer {
 	~AlabasterLayer() override = default;
 	AlabasterLayer()
-		: camera(Alabaster::CameraType::LookAt, 1280.0f / 600.0f, 0.1, 20, 45.0f)
+		: camera(Alabaster::CameraType::LookAt, 1920 / 1060.0f, 0.1, 20, 45.0f)
 		, renderer(camera) {};
 
 	void update(float ts) final;
