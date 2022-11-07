@@ -3,7 +3,6 @@
 #include "core/Application.hpp"
 
 typedef struct VkDescriptorPool_T* VkDescriptorPool;
-typedef struct VkRenderPass_T* VkRenderPass;
 
 namespace Alabaster {
 

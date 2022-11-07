@@ -23,6 +23,39 @@ int main(int argc, char** argv)
 	Alabaster::Application* app { nullptr };
 	Alabaster::Logger::init();
 
+	constexpr const auto sanity_checks = [] {
+		auto cwd = std::filesystem::current_path();
+		const auto app_dir_exists = std::filesystem::exists(cwd / std::filesystem::path { "app" });
+		const auto shaders_dir_exists = std::filesystem::exists(
+			cwd / std::filesystem::path { "app" } / std::filesystem::path { "resources" } / std::filesystem::path { "shaders" });
+		const auto models_dir_exists = std::filesystem::exists(
+			cwd / std::filesystem::path { "app" } / std::filesystem::path { "resources" } / std::filesystem::path { "models" });
+		const auto textures_dir_exists = std::filesystem::exists(
+			cwd / std::filesystem::path { "app" } / std::filesystem::path { "resources" } / std::filesystem::path { "textures" });
+
+		if (!app_dir_exists) {
+			Alabaster::Log::error("Your CWD is: {}, and Alabaster could not find the 'app' directory there.", cwd.string());
+			std::exit(1);
+		}
+
+		if (!shaders_dir_exists) {
+			Alabaster::Log::error("Your CWD is: {}, and Alabaster could not find the 'app/shaders' directory there.", cwd.string());
+			std::exit(1);
+		}
+
+		if (!models_dir_exists) {
+			Alabaster::Log::error("Your CWD is: {}, and Alabaster could not find the 'app/models' directory there.", cwd.string());
+			std::exit(1);
+		}
+
+		if (!textures_dir_exists) {
+			Alabaster::Log::error("Your CWD is: {}, and Alabaster could not find the 'app/textures' directory there.", cwd.string());
+			std::exit(1);
+		}
+	};
+
+	sanity_checks();
+
 	auto cwd = std::filesystem::current_path();
 	Alabaster::Log::info("{}", cwd);
 

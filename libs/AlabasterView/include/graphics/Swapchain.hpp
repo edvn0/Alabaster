@@ -1,5 +1,8 @@
 #pragma once
 
+#include "graphics/CommandBuffer.hpp"
+
+#include <memory>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -30,6 +33,7 @@ namespace Alabaster {
 		auto swapchain_extent() const { return extent; }
 
 		VkCommandBuffer get_current_drawbuffer() const;
+		VkCommandBuffer get_drawbuffer(uint32_t frame) const;
 		VkFramebuffer get_current_framebuffer() const;
 		uint32_t get_width() const;
 		uint32_t get_height() const;
@@ -67,11 +71,6 @@ namespace Alabaster {
 			std::vector<VkImage> images {};
 			std::vector<VkImageView> views {};
 		} images;
-
-		struct CommandBuffer {
-			VkCommandBuffer buffer { nullptr };
-			VkCommandPool command_pool { nullptr };
-		};
 
 		struct Sync {
 			VkSemaphore image_available;

@@ -64,7 +64,7 @@ namespace Alabaster {
 		auto& swapchain = Application::the().get_window()->get_swapchain();
 		init_info.ImageCount = swapchain->get_image_count();
 		init_info.CheckVkResultFn = vk_check;
-		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
+		ImGui_ImplVulkan_Init(&init_info, Application::the().swapchain().get_render_pass());
 
 		imgui_command_buffers.resize(swapchain->get_image_count());
 		for (uint32_t i = 0; i < swapchain->get_image_count(); i++) {
@@ -102,7 +102,7 @@ namespace Alabaster {
 	{
 		ImGui::Render();
 
-		static constexpr VkClearColorValue clear_colour = { 0.1f, 0.1f, 0.1f, 1.0f };
+		static constexpr VkClearColorValue clear_colour { 0.1f, 0.1f, 0.1f, 1.0f };
 
 		const auto& swapchain = Application::the().get_window()->get_swapchain();
 		std::array<VkClearValue, 2> clear_values {};
@@ -117,14 +117,12 @@ namespace Alabaster {
 		VkCommandBufferBeginInfo cmd_bbi = {};
 		cmd_bbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		cmd_bbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-		cmd_bbi.pNext = nullptr;
 
 		VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
 		vk_check(vkBeginCommandBuffer(draw_command_buffer, &cmd_bbi));
 
 		VkRenderPassBeginInfo render_pass_begin_info = {};
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_begin_info.pNext = nullptr;
 		render_pass_begin_info.renderPass = swapchain->get_render_pass();
 		render_pass_begin_info.renderArea.offset.x = 0;
 		render_pass_begin_info.renderArea.offset.y = 0;
@@ -141,6 +139,7 @@ namespace Alabaster {
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 			inheritance_info.renderPass = swapchain->get_render_pass();
+			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
 			inheritance_info.subpass = 0;
 
 			VkCommandBufferBeginInfo cbi = {};

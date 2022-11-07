@@ -68,7 +68,7 @@ namespace Alabaster {
 	void VertexBuffer::set_data(const void* data, size_t size)
 	{
 		destroy();
-		vertex_data = Buffer::copy(data, size);
+		vertex_data = Buffer::copy(data, static_cast<uint32_t>(size));
 
 		Allocator allocator("VertexBuffer");
 

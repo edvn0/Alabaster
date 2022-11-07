@@ -1,12 +1,14 @@
 #pragma once
 
 #include "core/Logger.hpp"
+#include "graphics/CommandBuffer.hpp"
 #include "graphics/RenderQueue.hpp"
 
 #include <concepts>
 #include <glm/glm.hpp>
 
 typedef struct VkPipeline_T* VkPipeline;
+typedef struct VkRenderPass_T* VkRenderPass;
 typedef struct VkPipelineLayout_T* VkPipelineLayout;
 
 namespace Alabaster {
@@ -29,7 +31,11 @@ namespace Alabaster {
 
 	public:
 		static void begin();
+		static void begin_render_pass(const CommandBuffer& buffer, VkRenderPass render_pass);
+		static void end_render_pass(const CommandBuffer& buffer);
 		static void end();
+
+		static uint32_t current_frame();
 
 	public:
 		template <TriviallyDestructible CommandBufferFunction> static void submit(CommandBufferFunction&& func)

@@ -11,19 +11,19 @@
 struct AlabasterLayer final : public Alabaster::Layer {
 	~AlabasterLayer() override = default;
 	AlabasterLayer()
-		: camera(Alabaster::EditorCamera(45.0f, 1280.0f, 600.0f, .01f, 1000.0f))
+		: camera(Alabaster::CameraType::LookAt, 1280.0f / 600.0f, 0.1, 20, 45.0f)
 		, renderer(camera) {};
+
 	void update(float ts) final;
 	void ui(float ts) final;
 	void ui() final;
 	bool initialise() final;
 	void destroy() final;
 	void on_event(Alabaster::Event& event) final;
-	void handle_events();
 
 private:
 	std::string_view name() override { return "AlabasterLayer"; }
-	Alabaster::EditorCamera camera;
+	Alabaster::SimpleCamera camera;
 	Alabaster::Renderer3D renderer;
 
 	std::unique_ptr<Alabaster::Pipeline> graphics_pipeline;
@@ -34,7 +34,6 @@ private:
 	bool is_dockspace_open { true };
 
 	VkRenderPass render_pass { nullptr };
-	void create_renderpass();
 
 	std::unique_ptr<Alabaster::VertexBuffer> vertex_buffer;
 	std::unique_ptr<Alabaster::IndexBuffer> index_buffer;

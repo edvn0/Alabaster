@@ -46,7 +46,7 @@ namespace Alabaster {
 		VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
 		pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipeline_layout_create_info.pNext = nullptr;
-		pipeline_layout_create_info.setLayoutCount = shader.descriptor_set_layouts().size();
+		pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t>(shader.descriptor_set_layouts().size());
 		pipeline_layout_create_info.pSetLayouts = shader.descriptor_set_layouts().data();
 		// pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t>(push_constant_ranges.size());
 		// pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();

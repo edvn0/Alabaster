@@ -13,7 +13,8 @@ namespace Alabaster {
 
 	class AssetLoader {
 	private:
-		AssetLoader(); // Disallow instantiation outside of the class.
+		AssetLoader() {};
+
 	public:
 		AssetLoader(const AssetLoader&) = delete;
 		AssetLoader& operator=(const AssetLoader&) = delete;

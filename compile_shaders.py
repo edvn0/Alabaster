@@ -113,6 +113,8 @@ def main(parsed: Namespace):
         print("Could not find compiler.")
         exit(1)
 
+    print(parsed.dir)
+    
     cached_records = load_cache(parsed)
 
     compiled_file_cache: List[CacheRecord] = []
@@ -137,4 +139,5 @@ if __name__ == "__main__":
                         default="shaders.cache")
     parser.add_argument("--force-reload", type=bool, default=False, metavar='F',
                         help="Recompile shader regardless of their cache status.")
+ 
     main(parser.parse_args())

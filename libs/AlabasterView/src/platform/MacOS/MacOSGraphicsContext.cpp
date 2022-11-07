@@ -166,7 +166,7 @@ namespace Alabaster {
 		instance_info.pNext = nullptr;
 
 		if (enable_layers) {
-			instance_info.enabledLayerCount = requested_validation_layers.size();
+			instance_info.enabledLayerCount = static_cast<uint32_t>(requested_validation_layers.size());
 			instance_info.ppEnabledLayerNames = requested_validation_layers.data();
 
 			VkDebugUtilsMessengerCreateInfoEXT debug_create_info {};

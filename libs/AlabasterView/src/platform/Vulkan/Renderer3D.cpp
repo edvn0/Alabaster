@@ -16,7 +16,7 @@
 #include <imgui.h>
 #include <vulkan/vulkan.h>
 
-// #define USE_CAMERA
+#define USE_CAMERA
 
 namespace Alabaster {
 
@@ -25,6 +25,50 @@ namespace Alabaster {
 		to_reset.quad_buffer_ptr = &to_reset.quad_buffer[0];
 		to_reset.indices_submitted = 0;
 		to_reset.vertices_submitted = 0;
+		to_reset.line_buffer_ptr = &to_reset.line_buffer[0];
+		to_reset.line_indices_submitted = 0;
+		to_reset.line_vertices_submitted = 0;
+	}
+
+	void Renderer3D::create_renderpass()
+	{
+		VkAttachmentDescription color_attachment {};
+		color_attachment.format = Application::the().get_window()->get_swapchain()->get_format();
+		color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+		color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		color_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference color_attachment_ref {};
+		color_attachment_ref.attachment = 0;
+		color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpass {};
+		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass.colorAttachmentCount = 1;
+		subpass.pColorAttachments = &color_attachment_ref;
+
+		VkSubpassDependency dependency {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+		VkRenderPassCreateInfo render_pass_info {};
+		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		render_pass_info.attachmentCount = 1;
+		render_pass_info.pAttachments = &color_attachment;
+		render_pass_info.subpassCount = 1;
+		render_pass_info.pSubpasses = &subpass;
+		render_pass_info.dependencyCount = 1;
+		render_pass_info.pDependencies = &dependency;
+
+		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &data.render_pass));
 	}
 
 	void Renderer3D::create_descriptor_set_layout()
@@ -135,10 +179,12 @@ namespace Alabaster {
 		vkBindBufferMemory(GraphicsContext::the().device(), buffer, memory, 0);
 	}
 
-	Renderer3D::Renderer3D(EditorCamera& camera) noexcept
+	Renderer3D::Renderer3D(SimpleCamera& camera) noexcept
 		: camera(camera)
+		, command_buffer("Swapchain")
 	{
 		auto image_count = Application::the().swapchain().get_image_count();
+		create_renderpass();
 
 		VkDeviceSize uniform_buffer_size = sizeof(UBO);
 
@@ -154,18 +200,10 @@ namespace Alabaster {
 		create_descriptor_pool();
 		create_descriptor_sets();
 
-		std::array<QuadVertex, 4> quad_vertices {};
-		std::array<uint32_t, 6> quad_indices {};
-
-		quad_vertices[0] = QuadVertex { .position = { -0.5, 0.5, 0, 1 }, .colour = { 1, 0, 0, 1 }, .uvs = { 0, 0 } };
-		quad_vertices[1] = QuadVertex { .position = { 0.5, 0.5, 0, 1 }, .colour = { 1, 0, 0, 1 }, .uvs = { 1, 0 } };
-		quad_vertices[2] = QuadVertex { .position = { 0.5, -0.5, 0, 1 }, .colour = { 1, 1, 0, 1 }, .uvs = { 1, 1 } };
-		quad_vertices[3] = QuadVertex { .position = { -0.5, -0.5, 0, 1 }, .colour = { 1, 0, 1, 1 }, .uvs = { 0, 1 } };
-
 		PipelineSpecification spec {
 			.shader = Shader("app/resources/shaders/main"),
 			.debug_name = "Test",
-			.render_pass = Application::the().swapchain().get_render_pass(),
+			.render_pass = data.render_pass,
 			.wireframe = false,
 			.backface_culling = false,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -178,11 +216,27 @@ namespace Alabaster {
 		data.quad_pipeline = std::make_unique<Pipeline>(spec);
 		data.quad_pipeline->invalidate();
 
+		PipelineSpecification line {
+			.shader = Shader("app/resources/shaders/line"),
+			.debug_name = "Test",
+			.render_pass = data.render_pass,
+			.wireframe = false,
+			.backface_culling = false,
+			.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+			.depth_test = false,
+			.depth_write = false,
+			.vertex_layout
+			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
+			.instance_layout = {},
+		};
+		data.line_pipeline = std::make_unique<Pipeline>(spec);
+		data.line_pipeline->invalidate();
+
 		data.quad_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(QuadVertex));
+		data.line_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(LineVertex));
 
 		std::vector<uint32_t> indices;
 		indices.resize(RendererData::max_indices);
-
 		uint32_t offset = 0;
 		for (size_t i = 0; i < RendererData::max_indices; i += 6) {
 			indices[i + 0] = 0 + offset;
@@ -193,8 +247,15 @@ namespace Alabaster {
 			indices[i + 5] = 0 + offset;
 			offset += 4;
 		}
-
 		data.quad_index_buffer = IndexBuffer::create(indices);
+
+		indices.clear();
+		indices.resize(RendererData::max_indices);
+		for (uint32_t i = 0; i < RendererData::max_indices; i++) {
+			indices[i] = i;
+		}
+		data.line_index_buffer = IndexBuffer::create(indices);
+
 		data.quad_positions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
 		data.quad_positions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
 		data.quad_positions[2] = { 0.5f, 0.5f, 0.0f, 1.0f };
@@ -204,7 +265,6 @@ namespace Alabaster {
 	void Renderer3D::begin_scene()
 	{
 		reset_data(data);
-
 		update_uniform_buffers();
 	}
 
@@ -212,73 +272,6 @@ namespace Alabaster {
 	{
 		reset_data(data);
 		data.draw_calls = 0;
-	}
-
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipe, const glm::vec4& pos, const glm::vec4& colour,
-		const glm::vec3& scale)
-	{
-		Renderer::submit([&mesh = mesh, &render_pass = data.render_pass, &descriptor = data.descriptor_sets, &pipeline = pipe] {
-			const auto& swapchain = Application::the().swapchain();
-			VkCommandBufferBeginInfo command_buffer_begin_info = {};
-			command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-			command_buffer_begin_info.pNext = nullptr;
-
-			const auto& buffer = swapchain.get_current_drawbuffer();
-			vk_check(vkBeginCommandBuffer(buffer, &command_buffer_begin_info));
-
-			auto extent = swapchain.swapchain_extent();
-
-			VkRenderPassBeginInfo render_pass_info {};
-			render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			render_pass_info.renderPass = swapchain.get_render_pass();
-			render_pass_info.framebuffer = swapchain.get_current_framebuffer();
-			render_pass_info.renderArea.offset = { 0, 0 };
-			render_pass_info.renderArea.extent = extent;
-
-			std::array<VkClearValue, 2> clear_values {};
-			clear_values[0].color = { 0, 0, 0, 0 };
-			clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
-
-			render_pass_info.clearValueCount = clear_values.size();
-			render_pass_info.pClearValues = clear_values.data();
-
-			vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
-			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
-
-			VkViewport viewport {};
-			viewport.x = 0.0f;
-			viewport.y = 0.0f;
-			viewport.width = static_cast<float>(extent.width);
-			viewport.height = static_cast<float>(extent.height);
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
-			vkCmdSetViewport(buffer, 0, 1, &viewport);
-
-			VkRect2D scissor {};
-			scissor.offset = { 0, 0 };
-			scissor.extent = extent;
-			vkCmdSetScissor(buffer, 0, 1, &scissor);
-
-			std::array<VkBuffer, 1> vbs {};
-			vbs[0] = *mesh->get_vertex_buffer();
-			VkDeviceSize offsets { 0 };
-			vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
-
-			vkCmdBindIndexBuffer(buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
-
-			if (pipeline->get_vulkan_pipeline_layout()) {
-				vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
-					&descriptor[swapchain.frame()], 0, nullptr);
-			}
-
-			vkCmdDrawIndexed(buffer, mesh->get_index_buffer().count(), 1, 0, 0, 0);
-
-			vkCmdEndRenderPass(buffer);
-
-			vkEndCommandBuffer(buffer);
-		});
 	}
 
 	void Renderer3D::quad(const glm::vec4& pos, const glm::vec4& colour, const glm::vec3& scale)
@@ -307,11 +300,39 @@ namespace Alabaster {
 		data.indices_submitted += 6;
 	}
 
+	void Renderer3D::line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
+	{
+		if (data.line_indices_submitted >= RendererData::max_indices) {
+			flush();
+		}
+
+		if (data.line_vertices_submitted >= RendererData::max_vertices) {
+			flush();
+		}
+
+		auto& first_line_vertex = data.line_buffer[data.line_vertices_submitted++];
+		first_line_vertex.position = glm::vec4(p0, 1.0f);
+		first_line_vertex.colour = color;
+
+		auto& second_line_vertex = data.line_buffer[data.line_vertices_submitted++];
+		second_line_vertex.position = glm::vec4(p1, 1.0f);
+		second_line_vertex.colour = color;
+
+		data.line_indices_submitted += 2;
+	}
+
 	void Renderer3D::flush()
 	{
+		// Flush ignores these for now...
+	}
+
+	void Renderer3D::end_scene()
+	{
+		command_buffer.begin();
+		Renderer::begin_render_pass(command_buffer, data.render_pass);
+
 		if (data.indices_submitted > 0) {
-			Log::info("[Renderer3D] Draw calls: {}", data.draw_calls);
-			uint32_t vertex_count = data.vertices_submitted;
+			uint32_t vertex_count = static_cast<uint32_t>(data.vertices_submitted);
 
 			uint32_t size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer.reset(new VertexBuffer(data.quad_buffer.data(), size));
@@ -321,98 +342,112 @@ namespace Alabaster {
 			data.draw_calls++;
 		}
 
+		if (data.line_indices_submitted > 0) {
+			uint32_t vertex_count = static_cast<uint32_t>(data.line_vertices_submitted);
+
+			uint32_t size = vertex_count * sizeof(LineVertex);
+			data.line_vertex_buffer.reset(new VertexBuffer(data.line_buffer.data(), size));
+
+			draw_lines();
+
+			data.draw_calls++;
+		}
+
+		Log::info("[Renderer3D] Draw calls: {}", data.draw_calls);
+
+		Renderer::end_render_pass(command_buffer);
+		command_buffer.end();
+		command_buffer.submit();
+
 		reset_data(data);
 	}
 
-	void Renderer3D::end_scene() { flush(); }
-
 	void Renderer3D::draw_quads()
 	{
-		Renderer::submit([index_count = data.indices_submitted, &pipeline = data.quad_pipeline, &vb = data.quad_vertex_buffer,
-							 &ib = data.quad_index_buffer, &descriptor = data.descriptor_sets] {
-			const auto& swapchain = Application::the().swapchain();
-			VkCommandBufferBeginInfo command_buffer_begin_info = {};
-			command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-			command_buffer_begin_info.pNext = nullptr;
+		Renderer::submit(
+			[&buffer = command_buffer, index_count = data.indices_submitted, &pipeline = data.quad_pipeline, &vb = data.quad_vertex_buffer,
+				&ib = data.quad_index_buffer, &descriptor = data.descriptor_sets] {
+				vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-			const auto& buffer = swapchain.get_current_drawbuffer();
-			vk_check(vkBeginCommandBuffer(buffer, &command_buffer_begin_info));
+				std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
+				VkDeviceSize offsets { 0 };
+				vkCmdBindVertexBuffers(*buffer, 0, 1, vbs.data(), &offsets);
 
-			auto extent = swapchain.swapchain_extent();
+				vkCmdBindIndexBuffer(*buffer, ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			VkRenderPassBeginInfo render_pass_info {};
-			render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			render_pass_info.renderPass = swapchain.get_render_pass();
-			render_pass_info.framebuffer = swapchain.get_current_framebuffer();
-			render_pass_info.renderArea.offset = { 0, 0 };
-			render_pass_info.renderArea.extent = extent;
+				if (pipeline->get_vulkan_pipeline_layout()) {
+					vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
+						&descriptor[Renderer::current_frame()], 0, nullptr);
+				}
 
-			std::array<VkClearValue, 2> clear_values {};
-			clear_values[0].color = { 0, 0, 0, 0 };
-			clear_values[1].depthStencil = { .depth = -1.0f, .stencil = 0 };
+				const auto count = static_cast<uint32_t>(index_count);
+				const auto instances = static_cast<uint32_t>(index_count / 6);
+				vkCmdDrawIndexed(*buffer, count, instances, 0, 0, 0);
+			},
+			"Draw quads");
+	}
 
-			render_pass_info.clearValueCount = clear_values.size();
-			render_pass_info.pClearValues = clear_values.data();
+	void Renderer3D::draw_lines()
+	{
+		Renderer::submit(
+			[&buffer = command_buffer, index_count = data.line_indices_submitted, &pipeline = data.line_pipeline, &vb = data.line_vertex_buffer,
+				&ib = data.line_index_buffer, &descriptor = data.descriptor_sets] {
+				vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-			vkCmdBeginRenderPass(buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+				std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
+				VkDeviceSize offsets { 0 };
+				vkCmdBindVertexBuffers(*buffer, 0, 1, vbs.data(), &offsets);
 
-			vkCmdBindPipeline(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
+				vkCmdBindIndexBuffer(*buffer, ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			VkViewport viewport {};
-			viewport.x = 0.0f;
-			viewport.y = static_cast<float>(extent.height);
-			viewport.width = static_cast<float>(extent.width);
-			viewport.height = -static_cast<float>(extent.height);
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
-			vkCmdSetViewport(buffer, 0, 1, &viewport);
+				if (pipeline->get_vulkan_pipeline_layout()) {
+					vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
+						&descriptor[Renderer::current_frame()], 0, nullptr);
+				}
 
-			VkRect2D scissor {};
-			scissor.offset = { 0, 0 };
-			scissor.extent = extent;
-			vkCmdSetScissor(buffer, 0, 1, &scissor);
+				const auto count = static_cast<uint32_t>(index_count);
+				const auto instances = static_cast<uint32_t>(index_count / 2);
+				vkCmdDrawIndexed(*buffer, count, instances, 0, 0, 0);
+			},
+			"Draw lines");
+	}
 
-			std::array<VkBuffer, 1> vbs {};
-			vbs[0] = vb->get_vulkan_buffer();
-			VkDeviceSize offsets { 0 };
-			vkCmdBindVertexBuffers(buffer, 0, 1, vbs.data(), &offsets);
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipe, const glm::vec4& pos, const glm::vec4& colour,
+		const glm::vec3& scale)
+	{
+		Renderer::submit(
+			[&buffer = command_buffer, &mesh = mesh, &descriptor = data.descriptor_sets, &pipeline = pipe] {
+				vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-			vkCmdBindIndexBuffer(buffer, ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+				std::array<VkBuffer, 1> vbs { *mesh->get_vertex_buffer() };
+				VkDeviceSize offsets { 0 };
+				vkCmdBindVertexBuffers(*buffer, 0, 1, vbs.data(), &offsets);
 
-			if (pipeline->get_vulkan_pipeline_layout()) {
-				vkCmdBindDescriptorSets(buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
-					&descriptor[swapchain.frame()], 0, nullptr);
-			}
+				vkCmdBindIndexBuffer(*buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-			vkCmdDrawIndexed(buffer, index_count, index_count / 6, 0, 0, 0);
+				if (pipeline->get_vulkan_pipeline_layout()) {
+					vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
+						&descriptor[Renderer::current_frame()], 0, nullptr);
+				}
 
-			vkCmdEndRenderPass(buffer);
-
-			vkEndCommandBuffer(buffer);
-		});
+				vkCmdDrawIndexed(*buffer, mesh->get_index_buffer().count(), 1, 0, 0, 0);
+			},
+			"Draw meshes");
 	}
 
 	void Renderer3D::update_uniform_buffers()
 	{
 		auto image_index = Application::the().swapchain().frame();
-		static auto start_time = std::chrono::high_resolution_clock::now();
 
-		auto current_time = std::chrono::high_resolution_clock::now();
-		float time = std::chrono::duration<float, std::chrono::seconds::period>(current_time - start_time).count();
 		UBO ubo {};
-#ifdef USE_CAMERA
 		ubo.projection = camera.get_projection_matrix();
 		ubo.view = camera.get_view_matrix();
-		ubo.view_projection = camera.get_view_projection();
-#else
 		ubo.view = glm::lookAt(glm::vec3(0, -2, -2), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 		ubo.projection = glm::perspective(glm::radians(45.0f),
 			static_cast<float>(Application::the().swapchain().get_width()) / static_cast<float>(Application::the().swapchain().get_height()), 0.1f,
 			10.0f);
 		ubo.view_projection = ubo.projection * ubo.view;
-#endif
-		ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 		void* mapped;
 		vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index], 0, sizeof(ubo), 0, &mapped);

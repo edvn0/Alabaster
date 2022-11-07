@@ -7,7 +7,10 @@ file(GLOB_RECURSE sources main.cpp Alabaster.hpp AlabasterLayer.hpp AlabasterLay
 find_program(CLANG_FORMAT "clang-format")
 
 if(CLANG_FORMAT)
+  file(GLOB_RECURSE shaders resources/shaders/**.vert resources/shaders/**.frag)
+
   set(formattable_files ${sources})
+  list(APPEND formattable_files ${shaders})
 
   add_custom_target(clang-format-app COMMAND ${CLANG_FORMAT} -i -style=file
                                              ${formattable_files})

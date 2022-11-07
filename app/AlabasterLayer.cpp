@@ -17,82 +17,8 @@ static const std::vector<Index> indices { 0, 1, 2, 2, 3, 0 };
 
 static uint32_t quads { 1 };
 
-void AlabasterLayer::create_renderpass()
-{
-	VkAttachmentDescription color_attachment {};
-	color_attachment.format = Application::the().get_window()->get_swapchain()->get_format();
-	color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-	color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-	color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-	color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-	color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-	color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-	color_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-	VkAttachmentReference color_attachment_ref {};
-	color_attachment_ref.attachment = 0;
-	color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-	VkSubpassDescription subpass {};
-	subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-	subpass.colorAttachmentCount = 1;
-	subpass.pColorAttachments = &color_attachment_ref;
-
-	VkSubpassDependency dependency {};
-	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-	dependency.dstSubpass = 0;
-	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependency.srcAccessMask = 0;
-	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-	VkRenderPassCreateInfo render_pass_info {};
-	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-	render_pass_info.attachmentCount = 1;
-	render_pass_info.pAttachments = &color_attachment;
-	render_pass_info.subpassCount = 1;
-	render_pass_info.pSubpasses = &subpass;
-	render_pass_info.dependencyCount = 1;
-	render_pass_info.pDependencies = &dependency;
-
-	vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &render_pass));
-}
-
 bool AlabasterLayer::initialise()
 {
-	create_renderpass();
-
-	PipelineSpecification spec {
-		.shader = Shader("app/resources/shaders/main"),
-		.debug_name = "Test",
-		.render_pass = Application::the().swapchain().get_render_pass(),
-		.wireframe = false,
-		.backface_culling = true,
-		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		.depth_test = true,
-		.depth_write = false,
-		.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
-			VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-		.instance_layout = {},
-	};
-	graphics_pipeline = std::make_unique<Pipeline>(spec);
-	graphics_pipeline->invalidate();
-
-	PipelineSpecification viking_spec {
-		.shader = Shader("app/resources/shaders/car"),
-		.debug_name = "Test",
-		.render_pass = Application::the().swapchain().get_render_pass(),
-		.wireframe = false,
-		.backface_culling = true,
-		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		.depth_test = true,
-		.depth_write = false,
-		.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
-			VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-		.instance_layout = {},
-	};
-	viking_room_pipeline = Pipeline::create(viking_spec);
-
 	vertex_buffer = VertexBuffer::create(vertices);
 	index_buffer = IndexBuffer::create(indices);
 
@@ -107,6 +33,8 @@ bool AlabasterLayer::initialise()
 
 void AlabasterLayer::on_event(Event& e)
 {
+	camera.on_event(e);
+
 	EventDispatcher dispatch(e);
 	dispatch.dispatch<KeyPressedEvent>([](KeyPressedEvent& key_event) {
 		const auto key_code = key_event.get_key_code();
@@ -120,6 +48,11 @@ void AlabasterLayer::on_event(Event& e)
 			return true;
 		}
 
+		if (Input::key(Key::G)) {
+			Logger::cycle_levels();
+			return true;
+		}
+
 		return false;
 	});
 }
@@ -129,17 +62,21 @@ void AlabasterLayer::update(float ts)
 	static size_t frame_number { 0 };
 
 	renderer.reset_stats();
-	camera.on_update(ts);
 	renderer.begin_scene();
-	for (int x = -2; x <= 2; x++) {
-		for (int y = -2; y <= 2; y++) {
-			renderer.quad(glm::vec4 { x, 0, y, 0 }, glm::vec4 { x / 5.0f, 1, y / 5.0f, 1 }, glm::vec3 { 0.2, 0.2, 0.2 });
+	camera.on_update(ts);
+
+	for (int x = -1; x <= 1; x++) {
+		for (int y = -1; y <= 1; y++) {
+			renderer.quad(glm::vec4 { x, y, 0, 0 }, glm::vec4 { x / 5.0f, 1, y / 5.0f, 1 }, glm::vec3 { 0.2, 0.2, 0.2 });
 		}
 	}
-	renderer.mesh(viking_room_model, viking_room_pipeline);
-	renderer.end_scene();
 
-	handle_events();
+	renderer.line({ 0, 0, 0 }, { 3, 0, 0 }, { 1, 0, 0, 1 });
+	renderer.line({ 0, 0, 0 }, { 0, 3, 0 }, { 0, 1, 0, 1 });
+	renderer.line({ 0, 0, 0 }, { 0, 0, 3 }, { 0, 0, 1, 1 });
+
+	// renderer.mesh(viking_room_model, viking_room_pipeline);
+	renderer.end_scene();
 
 	frame_number++;
 }
@@ -152,8 +89,6 @@ void AlabasterLayer::ui(float ts)
 	bool opt_fullscreen = persistent;
 	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
-	// We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-	// because it would be confusing to have two docking targets within each others.
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 	if (opt_fullscreen) {
 		ImGuiViewport* viewport = ImGui::GetMainViewport();
@@ -166,16 +101,9 @@ void AlabasterLayer::ui(float ts)
 		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 	}
 
-	// When using ImGuiDockNodeFlags_PassthruCentralNode, DockSpace() will render our background and handle the
-	// pass-thru hole, so we ask Begin() to not render a background.
 	if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
 		window_flags |= ImGuiWindowFlags_NoBackground;
 
-	// Important: note that we proceed even if Begin() returns false (aka window is collapsed).
-	// This is because we want to keep our DockSpace() active. If a DockSpace() is inactive,
-	// all active windows docked into it will lose their parent and become undocked.
-	// We cannot preserve the docking relationship between an active window and an inactive docking, otherwise
-	// any change of dockspace/settings would lead to windows being stuck in limbo and never being visible.
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 	ImGui::Begin("DockSpace", &is_dockspace_open, window_flags);
 	ImGui::PopStyleVar();
@@ -258,12 +186,4 @@ void AlabasterLayer::destroy()
 
 	Log::info("[AlabasterLayer] Destroyed layer.");
 	Layer::destroy();
-}
-
-void AlabasterLayer::handle_events()
-{
-	if (Input::key(Key::G)) {
-		Logger::cycle_levels();
-		return;
-	}
 }

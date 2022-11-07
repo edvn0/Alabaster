@@ -5,6 +5,8 @@ project(AlabasterView)
 find_package(Vulkan REQUIRED)
 find_package(Boost REQUIRED COMPONENTS program_options)
 
+find_package (Python3 COMPONENTS Interpreter)
+
 file(GLOB_RECURSE sources av_pch.hpp Alabaster.hpp include/**.hpp src/**.cpp)
 
 message(STATUS "Alabaster chosen OS: ${ALABASTER_OS}")
@@ -78,5 +80,14 @@ endif()
 if(BUILD_TESTING)
   add_subdirectory(tests)
 endif()
+
+add_custom_target(
+  compile_all_shaders ALL
+  COMMAND
+    ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/compile_shaders.py --dir ${CMAKE_SOURCE_DIR}/app/resources/shaders --compiler
+    "/usr/local/bin/glslc" --cache-name shaders --output-dir ${CMAKE_SOURCE_DIR}/app/resources/shaders
+  COMMENT "Compiling shaders.")
+
+add_dependencies(${PROJECT_NAME} compile_all_shaders)
 
 add_dependencies(${PROJECT_NAME} clang-format-lib)

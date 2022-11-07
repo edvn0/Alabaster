@@ -1,6 +1,8 @@
 #pragma once
 
 #include "graphics/Camera.hpp"
+#include "graphics/CommandBuffer.hpp"
+#include "SimpleCamera.hpp"
 
 #include <array>
 #include <memory>
@@ -26,6 +28,11 @@ namespace Alabaster {
 		glm::vec2 uvs;
 	};
 
+	struct LineVertex {
+		glm::vec4 position;
+		glm::vec4 colour;
+	};
+
 	struct UBO {
 		alignas(16) glm::mat4 model;
 		alignas(16) glm::mat4 view;
@@ -48,6 +55,14 @@ namespace Alabaster {
 		std::unique_ptr<VertexBuffer> quad_vertex_buffer;
 		std::unique_ptr<IndexBuffer> quad_index_buffer;
 
+		std::unique_ptr<Pipeline> line_pipeline;
+		std::array<LineVertex, max_vertices> line_buffer;
+		LineVertex* line_buffer_ptr;
+		std::unique_ptr<VertexBuffer> line_vertex_buffer;
+		std::unique_ptr<IndexBuffer> line_index_buffer;
+		size_t line_indices_submitted { 0 };
+		size_t line_vertices_submitted { 0 };
+
 		std::vector<VkBuffer> uniform_buffers;
 		std::vector<VkDeviceMemory> uniform_buffers_memory;
 
@@ -60,28 +75,33 @@ namespace Alabaster {
 
 	class Renderer3D {
 	public:
-		explicit Renderer3D(EditorCamera& camera) noexcept;
+		explicit Renderer3D(SimpleCamera& camera) noexcept;
 
 		void begin_scene();
 		void quad(const glm::vec4& pos = { 0, 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
 		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec4& pos = { 0, 0, 0, 0 },
 			const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
+		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void end_scene();
 
 		void reset_stats();
 
 	private:
 		void draw_quads();
-		void flush();
+		void draw_lines();
 
+	private:
+		void flush();
 		void update_uniform_buffers();
 		void create_descriptor_set_layout();
 		void create_descriptor_pool();
 		void create_descriptor_sets();
+		void create_renderpass();
 
 	private:
-		EditorCamera& camera;
+		SimpleCamera& camera;
 		RendererData data;
+		CommandBuffer command_buffer;
 	};
 
 } // namespace Alabaster

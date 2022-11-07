@@ -6,6 +6,7 @@
 #include "core/Common.hpp"
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
+#include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "vulkan/vulkan_core.h"
 
@@ -49,9 +50,9 @@ namespace Alabaster {
 		submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submit_info.pWaitDstStageMask = &pipeline_stage_flags;
-		submit_info.waitSemaphoreCount = wait_semaphores.size();
+		submit_info.waitSemaphoreCount = static_cast<uint32_t>(wait_semaphores.size());
 		submit_info.pWaitSemaphores = wait_semaphores.data();
-		submit_info.signalSemaphoreCount = signal_semaphores.size();
+		submit_info.signalSemaphoreCount = static_cast<uint32_t>(signal_semaphores.size());
 		submit_info.pSignalSemaphores = signal_semaphores.data();
 
 		VkAttachmentDescription color_attachment_desc = {};
@@ -116,7 +117,7 @@ namespace Alabaster {
 	{
 		current_image_index = get_next_image();
 		if (current_image_index >= 0) {
-			vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[frame()].command_pool, 0));
+			vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[frame()].get_command_pool(), 0));
 		}
 	}
 
@@ -131,7 +132,7 @@ namespace Alabaster {
 		present_submit_info.waitSemaphoreCount = 1;
 		present_submit_info.pSignalSemaphores = &sync_objects[frame()].render_finished;
 		present_submit_info.signalSemaphoreCount = 1;
-		present_submit_info.pCommandBuffers = &command_buffers[frame()].buffer;
+		present_submit_info.pCommandBuffers = &command_buffers[frame()].get_buffer();
 		present_submit_info.commandBufferCount = 1;
 
 		vk_check(vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence));
@@ -197,7 +198,8 @@ namespace Alabaster {
 
 	VkRenderPass Swapchain::get_render_pass() const { return vk_render_pass; };
 
-	VkCommandBuffer Swapchain::get_current_drawbuffer() const { return command_buffers[frame()].buffer; }
+	VkCommandBuffer Swapchain::get_current_drawbuffer() const { return command_buffers[frame()].get_buffer(); }
+	VkCommandBuffer Swapchain::get_drawbuffer(uint32_t frame) const { return command_buffers[frame].get_buffer(); }
 
 	uint32_t Swapchain::get_next_image()
 	{
@@ -393,25 +395,30 @@ namespace Alabaster {
 
 	void Swapchain::create_command_structures()
 	{
-		for (auto& cmd_buffer : command_buffers)
-			vkDestroyCommandPool(GraphicsContext::the().device(), cmd_buffer.command_pool, nullptr);
+		const auto& device = GraphicsContext::the().device();
 
-		VkCommandPoolCreateInfo pci = {};
-		pci.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		pci.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
-		pci.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		for (auto& commandBuffer : command_buffers)
+			vkDestroyCommandPool(device, commandBuffer.get_command_pool(), nullptr);
 
-		VkCommandBufferAllocateInfo command_buffer_allocate_info {};
-		command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		command_buffer_allocate_info.commandBufferCount = 1;
+		VkCommandPoolCreateInfo cmdPoolInfo = {};
+		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		cmdPoolInfo.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
+		cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-		command_buffers.resize(image_count);
-		for (auto& cmd_buffer : command_buffers) {
-			vk_check(vkCreateCommandPool(GraphicsContext::the().device(), &pci, nullptr, &cmd_buffer.command_pool));
+		VkCommandBufferAllocateInfo commandBufferAllocateInfo {};
+		commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		commandBufferAllocateInfo.commandBufferCount = 1;
 
-			command_buffer_allocate_info.commandPool = cmd_buffer.command_pool;
-			vk_check(vkAllocateCommandBuffers(GraphicsContext::the().device(), &command_buffer_allocate_info, &cmd_buffer.buffer));
+		command_buffers.reserve(image_count);
+		for (int i = 0; i < image_count; i++) {
+			CommandBuffer command_buffer("ThisSwapchain");
+			vk_check(vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &command_buffer.get_command_pool()));
+
+			commandBufferAllocateInfo.commandPool = command_buffer.get_command_pool();
+			vk_check(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &command_buffer.get_buffer()));
+
+			command_buffers.emplace_back(command_buffer);
 		}
 	}
 
@@ -427,9 +434,6 @@ namespace Alabaster {
 
 		for (auto& view : images.views)
 			vkDestroyImageView(vk_device, view, nullptr);
-
-		for (auto& cmd_buffer : command_buffers)
-			vkDestroyCommandPool(vk_device, cmd_buffer.command_pool, nullptr);
 
 		if (vk_render_pass)
 			vkDestroyRenderPass(vk_device, vk_render_pass, nullptr);
@@ -462,7 +466,7 @@ namespace Alabaster {
 			fences.push_back(frame.in_flight_fence);
 		}
 
-		vkWaitForFences(GraphicsContext::the().device(), fences.size(), fences.data(), VK_TRUE, default_fence_timeout);
+		vkWaitForFences(GraphicsContext::the().device(), static_cast<uint32_t>(fences.size()), fences.data(), VK_TRUE, default_fence_timeout);
 	}
 
 } // namespace Alabaster

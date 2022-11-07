@@ -16,7 +16,7 @@ namespace Alabaster {
 	{
 		VkResult err = result;
 		if (err) {
-			Log::info("Vulkan failed with error: {}", result);
+			Log::info("[VkCheck] Vulkan failed with error: {}", result);
 			debug_break();
 		}
 	};

@@ -69,15 +69,16 @@ namespace Alabaster {
 			Timer<ClockGranularity::MILLIS, float> on_cpu;
 
 			window->update();
-			Renderer::submit([this, &ts = app_ts] { update_layers(ts); });
 
 			Renderer::begin();
-			Renderer::submit([this] { render_imgui(); });
+			Renderer::submit([this, &ts = app_ts] { update_layers(ts); }, "Update Layers");
+			Renderer::submit([this] { render_imgui(); }, "Update Imgui");
 			Renderer::end();
 
 			swapchain().begin_frame();
 			{
 				Renderer::execute();
+
 				cpu_time = on_cpu.elapsed();
 				float time = Clock::get_ms<float>();
 				frame_time = time - last_frametime;
