@@ -68,11 +68,10 @@ namespace Alabaster {
 
 	void SimpleCamera::on_update(float ts)
 	{
-		const auto&& [x, y] = Application::the().swapchain().swapchain_extent();
-		const auto maybe_new_aspect = x / y;
+		const auto maybe_new_aspect = Application::the().swapchain().aspect_ratio();
 		if (std::fabs(aspect - maybe_new_aspect) >= 1e-5) {
 			update_aspect_ratio(maybe_new_aspect);
-			Log::info("[SimpleCamera] New aspect ratio: {} by {}", x, y);
+			Log::info("[SimpleCamera] New aspect ratio: {}", aspect);
 		}
 
 		updated = false;
@@ -174,7 +173,8 @@ namespace Alabaster {
 			matrices.view = translation_matrix * rotation_matrix;
 		}
 
-		view_position = glm::vec4(position, 0.0f) * glm::vec4(-1.0f, 1.0f, -1.0f, 1.0f);
+		view_position = glm::vec4(position, 0.0f);
+		;
 
 		updated = true;
 	};

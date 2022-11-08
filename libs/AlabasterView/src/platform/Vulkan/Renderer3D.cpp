@@ -264,14 +264,18 @@ namespace Alabaster {
 
 	void Renderer3D::begin_scene()
 	{
-		reset_data(data);
-		update_uniform_buffers();
+		Renderer::submit([this] {
+			reset_data(data);
+			update_uniform_buffers();
+		});
 	}
 
 	void Renderer3D::reset_stats()
 	{
-		reset_data(data);
-		data.draw_calls = 0;
+		Renderer::submit([this] {
+			reset_data(data);
+			data.draw_calls = 0;
+		});
 	}
 
 	void Renderer3D::quad(const glm::vec4& pos, const glm::vec4& colour, const glm::vec3& scale)
@@ -287,7 +291,7 @@ namespace Alabaster {
 			flush();
 		}
 
-		const auto transform = glm::translate(glm::mat4(1.0f), glm::vec3(pos)) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
+		const auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z }) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
 
 		for (size_t i = 0; i < quad_vertex_count; i++) {
 			auto& vertex = data.quad_buffer[data.vertices_submitted];
@@ -406,9 +410,7 @@ namespace Alabaster {
 				}
 
 				const auto line_width = pipeline->get_specification().line_width;
-				if (line_width >= 1.0f) {
-					vkCmdSetLineWidth(*buffer, line_width);
-				}
+				vkCmdSetLineWidth(*buffer, line_width);
 
 				const auto count = static_cast<uint32_t>(index_count);
 				const auto instances = static_cast<uint32_t>(index_count / 2);
@@ -442,22 +444,23 @@ namespace Alabaster {
 
 	void Renderer3D::update_uniform_buffers()
 	{
-		auto image_index = Application::the().swapchain().frame();
+		Renderer::submit([this] {
+			auto image_index = Application::the().swapchain().frame();
 
-		UBO ubo {};
-		ubo.projection = camera.get_projection_matrix();
-		ubo.view = camera.get_view_matrix();
-		// ubo.view = glm::lookAt(glm::vec3(0, -2, -2), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		// ubo.projection = glm::perspective(glm::radians(45.0f),
-		//	static_cast<float>(Application::the().swapchain().get_width()) / static_cast<float>(Application::the().swapchain().get_height()), 0.1f,
-		//	10.0f);
-		ubo.view_projection = ubo.projection * ubo.view;
-		ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			UBO ubo {};
+			ubo.projection = camera.get_projection_matrix();
+			ubo.view = camera.get_view_matrix();
+			// ubo.view = glm::lookAt(glm::vec3(0, 2, 2), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+			const auto ar = Application::the().swapchain().aspect_ratio();
+			// ubo.projection = glm::perspective(glm::radians(45.0f), 0.1f, ar, 10.0f);
+			ubo.view_projection = ubo.projection * ubo.view;
+			ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
-		void* mapped;
-		vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index], 0, sizeof(ubo), 0, &mapped);
-		std::memcpy(mapped, &ubo, sizeof(ubo));
-		vkUnmapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index]);
+			void* mapped;
+			vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index], 0, sizeof(ubo), 0, &mapped);
+			std::memcpy(mapped, &ubo, sizeof(ubo));
+			vkUnmapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index]);
+		});
 	}
 
 } // namespace Alabaster

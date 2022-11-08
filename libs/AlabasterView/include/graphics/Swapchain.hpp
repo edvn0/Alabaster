@@ -31,6 +31,7 @@ namespace Alabaster {
 		uint32_t frame() const { return current_frame; }
 		auto image() const { return images.views[frame()]; }
 		auto swapchain_extent() const { return extent; }
+		float aspect_ratio() const { return static_cast<float>(extent.width) / static_cast<float>(extent.height); }
 
 		VkCommandBuffer get_current_drawbuffer() const;
 		VkCommandBuffer get_drawbuffer(uint32_t frame) const;

@@ -216,8 +216,6 @@ namespace Alabaster {
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			on_resize(sc_width, sc_height);
-			Application::the().get_window()->resize_status = true;
-			Application::the().resize(sc_width, sc_height);
 			return -1;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw std::runtime_error("failed to acquire swap chain image!");
@@ -338,6 +336,7 @@ namespace Alabaster {
 		swapchain_create_info.compositeAlpha = composite_alpha;
 		swapchain_create_info.presentMode = present_format;
 		swapchain_create_info.clipped = VK_TRUE;
+		swapchain_create_info.oldSwapchain = old_sc;
 
 		vk_check(vkCreateSwapchainKHR(GraphicsContext::the().device(), &swapchain_create_info, nullptr, &vk_swapchain));
 

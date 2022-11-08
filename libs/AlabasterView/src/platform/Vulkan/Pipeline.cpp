@@ -44,6 +44,10 @@ namespace Alabaster {
 		VkDevice device = GraphicsContext::the().device();
 		const auto& shader = spec.shader;
 
+#ifdef ALABASTER_MACOS
+		spec.line_width = 1.0f;
+#endif
+
 		VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
 		pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipeline_layout_create_info.pNext = nullptr;
@@ -105,13 +109,6 @@ namespace Alabaster {
 		dynamic_state_enables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 		dynamic_state_enables.push_back(VK_DYNAMIC_STATE_SCISSOR);
 		if (spec.topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST || spec.topology == VK_PRIMITIVE_TOPOLOGY_LINE_STRIP || spec.wireframe) {
-			VkPhysicalDeviceFeatures features;
-			vkGetPhysicalDeviceFeatures(GraphicsContext::the().physical_device(), &features);
-
-			if (!features.wideLines) {
-				throw AlabasterException("Wide lines are not supported on this system.");
-			}
-
 			dynamic_state_enables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
 		}
 
