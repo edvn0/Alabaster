@@ -27,9 +27,6 @@ namespace Alabaster {
 		};
 	};
 
-	std::shared_ptr<spdlog::logger> Logger::core_logger;
-	std::shared_ptr<spdlog::logger> Logger::client_logger;
-
 	void Logger::init()
 	{
 		spdlog::set_pattern("%^[%T] %n: %v%$");

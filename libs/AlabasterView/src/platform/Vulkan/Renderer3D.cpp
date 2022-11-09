@@ -278,7 +278,7 @@ namespace Alabaster {
 		});
 	}
 
-	void Renderer3D::quad(const glm::vec4& pos, const glm::vec4& colour, const glm::vec3& scale)
+	void Renderer3D::quad(const glm::vec4& pos, const glm::vec4& colour, const glm::vec3& scale, float rotation)
 	{
 		static constexpr size_t quad_vertex_count = 4;
 		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
@@ -291,7 +291,8 @@ namespace Alabaster {
 			flush();
 		}
 
-		const auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z }) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
+		const auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z })
+			* glm::rotate(glm::mat4(1.0f), rotation, glm::vec3 { 1, 0, 0 }) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
 
 		for (size_t i = 0; i < quad_vertex_count; i++) {
 			auto& vertex = data.quad_buffer[data.vertices_submitted];
@@ -450,11 +451,8 @@ namespace Alabaster {
 			UBO ubo {};
 			ubo.projection = camera.get_projection_matrix();
 			ubo.view = camera.get_view_matrix();
-			// ubo.view = glm::lookAt(glm::vec3(0, 2, 2), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-			const auto ar = Application::the().swapchain().aspect_ratio();
-			// ubo.projection = glm::perspective(glm::radians(45.0f), 0.1f, ar, 10.0f);
-			ubo.view_projection = ubo.projection * ubo.view;
 			ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			ubo.view_projection = ubo.projection * ubo.view;
 
 			void* mapped;
 			vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index], 0, sizeof(ubo), 0, &mapped);

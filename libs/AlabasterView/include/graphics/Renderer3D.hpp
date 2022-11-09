@@ -78,7 +78,8 @@ namespace Alabaster {
 		explicit Renderer3D(SimpleCamera& camera) noexcept;
 
 		void begin_scene();
-		void quad(const glm::vec4& pos = { 0, 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
+		void quad(const glm::vec4& pos = { 0, 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
+			float rotation = 0.0f);
 		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec4& pos = { 0, 0, 0, 0 },
 			const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
 		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);

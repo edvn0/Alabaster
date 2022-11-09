@@ -67,11 +67,13 @@ void AlabasterLayer::update(float ts)
 
 	for (int x = -1; x <= 1; x++) {
 		for (int y = -1; y <= 1; y++) {
-			renderer.quad(glm::vec4 { x, y, 0, 0 }, glm::vec4 { x / 5.0f, 1, y / 5.0f, 1 }, glm::vec3 { 0.2, 0.2, 0.2 });
+			renderer.quad(glm::vec4 { x, y, 0, 0 }, glm::vec4 { 0.2, 0.2, 0.2, 0.2 }, glm::vec4 { x / 5.0f, 1, y / 5.0f, 1 });
 		}
 	}
 
-	renderer.line({ 0, 0, 0 }, { 3, 0, 0 }, { 1, 0, 0, 1 });
+	renderer.quad({ 0, 0, 0, 0 }, glm::vec4 { 0.7, 0.1, 0.1, 1.0f }, { 30.0, 30.0, 1 }, 90.0f);
+
+	renderer.line({ 0, 0, 0 }, { -3, 0, 0 }, { 1, 0, 0, 1 });
 	renderer.line({ 0, 0, 0 }, { 0, 3, 0 }, { 0, 1, 0, 1 });
 	renderer.line({ 0, 0, 0 }, { 0, 0, -3 }, { 0, 0, 1, 1 });
 

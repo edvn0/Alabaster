@@ -13,8 +13,9 @@ namespace Alabaster {
 		///     or <path_and_filename>-vert.spv and <path_and_filename>-frag.spv
 		/// @param path_and_filename
 		explicit Shader(const std::filesystem::path& path_and_filename);
+		Shader(const std::string& vertex_path, const std::string& fragment_path);
 
-		inline std::array<VkPipelineShaderStageCreateInfo, 2> stages() const { return shader_stages; };
+		const std::array<VkPipelineShaderStageCreateInfo, 2>& stages() const { return shader_stages; };
 
 		void destroy();
 

@@ -100,11 +100,19 @@ namespace Alabaster {
 		Log::info("[Renderer] Initialisation of renderer.");
 
 		renderer_is_initialized = true;
+		std::vector<std::string> all_files_in_shaders = IO::in_directory<std::string>("app/resources/shaders", { ".spv" });
+		std::sort(all_files_in_shaders.begin(), all_files_in_shaders.end());
+		verify(all_files_in_shaders.size() % 2 == 0, "2N shaders, hopefully matching by name");
+		for (size_t i = 0; i < all_files_in_shaders.size(); i += 2) {
+			auto fragment = all_files_in_shaders[i];
+			auto vertex = all_files_in_shaders[i + 1];
+			const auto path = std::filesystem::path { vertex };
+			const auto wo_extensions = path.filename().replace_extension().replace_extension().string();
+			shaders.try_emplace(wo_extensions, vertex, fragment);
+		}
 
-		const auto all_files_in_shaders = IO::in_directory("app/resources/shaders", { ".spv" });
-
-		for (const auto& shader : all_files_in_shaders) {
-			Log::info("[Renderer] Shader found: {}", shader.filename());
+		for (auto&& [k, v] : shaders) {
+			Log::info("Shader created: \"{}\"", k);
 		}
 	}
 

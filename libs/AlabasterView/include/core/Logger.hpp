@@ -28,8 +28,8 @@ namespace Alabaster {
 		static void cycle_levels();
 
 	private:
-		static LoggerWrapper core_logger;
-		static LoggerWrapper client_logger;
+		static inline LoggerWrapper core_logger;
+		static inline LoggerWrapper client_logger;
 	};
 
 	namespace Log {

@@ -27,6 +27,8 @@ namespace Alabaster {
 		, field_of_view(fov)
 	{
 		set_perspective(fov, aspect, near, far);
+		set_position({ 0, 3, -5 });
+		set_rotation({ -30, 0, 0 });
 		update_view_matrix();
 	};
 
