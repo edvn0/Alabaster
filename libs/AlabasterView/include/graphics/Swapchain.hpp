@@ -8,7 +8,15 @@
 
 struct GLFWwindow;
 
+typedef struct VmaAllocation_T* VmaAllocation;
+
 namespace Alabaster {
+
+	struct DepthImage {
+		VkImage image;
+		VkImageView view;
+		VmaAllocation allocation;
+	};
 
 	class Swapchain {
 	public:
@@ -42,14 +50,13 @@ namespace Alabaster {
 		VkRenderPass get_render_pass() const;
 		VkFormat get_format() { return format.format; }
 
+		std::tuple<VkFormat, VkFormat> get_formats();
+
 	private:
 		GLFWwindow* sc_handle;
 		uint32_t sc_width;
 		uint32_t sc_height;
 		uint32_t current_image_index;
-
-		int pixel_size_x;
-		int pixel_size_y;
 
 		VkSwapchainKHR vk_swapchain;
 		VkSurfaceKHR vk_surface;
@@ -59,6 +66,8 @@ namespace Alabaster {
 		VkSurfaceFormatKHR format;
 		VkPresentModeKHR present_format;
 		VkExtent2D extent;
+		VkFormat depth_format;
+		DepthImage depth_image;
 
 		struct Capabilities {
 			VkSurfaceCapabilitiesKHR capabilities;

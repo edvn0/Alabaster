@@ -14,7 +14,6 @@
             "suppressLineUncommittedWarning": false,
             "suppressNoRepositoryWarning": false
         },
-        "editor.formatOnType": false,
         "files.associations": {
             "*.module": "php",
             "*.sass": "css",
@@ -160,6 +159,7 @@
             "**/target": true
         },
         "editor.formatOnSave": true,
+        "editor.formatOnType": false,
         "editor.detectIndentation": false,
         "editor.tabSize": 4,
         "prettier.tabWidth": 4,

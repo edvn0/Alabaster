@@ -17,6 +17,65 @@ namespace Alabaster {
 
 	static std::vector<VkCommandBuffer> imgui_command_buffers;
 
+	VkRenderPass create_gui_renderpass(VkFormat color_format, VkFormat depth_format)
+	{
+		VkAttachmentDescription color_attachment_desc = {};
+		color_attachment_desc.format = color_format;
+		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+		VkAttachmentDescription depth_attachment_desc {};
+		depth_attachment_desc.format = depth_format;
+		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference color_reference = {};
+		color_reference.attachment = 0;
+		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depth_reference = {};
+		depth_reference.attachment = 1;
+		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpass_description = {};
+		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass_description.colorAttachmentCount = 1;
+		subpass_description.pColorAttachments = &color_reference;
+		subpass_description.pDepthStencilAttachment = &depth_reference;
+
+		VkSubpassDependency dependency = {};
+		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+		dependency.dstSubpass = 0;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.srcAccessMask = 0;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+		std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
+		VkRenderPassCreateInfo render_pass_info = {};
+		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+		render_pass_info.pAttachments = descriptions.data();
+		render_pass_info.attachmentCount = static_cast<uint32_t>(descriptions.size());
+		render_pass_info.pSubpasses = &subpass_description;
+		render_pass_info.subpassCount = 1;
+		render_pass_info.pDependencies = &dependency;
+		render_pass_info.dependencyCount = 1;
+
+		VkRenderPass render_pass;
+		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &render_pass));
+		return render_pass;
+	}
+
 	bool GUILayer::initialise()
 	{
 		ImGui::CreateContext();
@@ -37,6 +96,9 @@ namespace Alabaster {
 
 		auto& vulkan_context = GraphicsContext::the();
 		auto device = vulkan_context.device();
+
+		const auto&& [color, depth] = Application::the().swapchain().get_formats();
+		gui_renderpass = create_gui_renderpass(color, depth);
 
 		// Create Descriptor Pool
 		VkDescriptorPoolSize pool_sizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 }, { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
@@ -64,7 +126,7 @@ namespace Alabaster {
 		auto& swapchain = Application::the().get_window()->get_swapchain();
 		init_info.ImageCount = swapchain->get_image_count();
 		init_info.CheckVkResultFn = vk_check;
-		ImGui_ImplVulkan_Init(&init_info, Application::the().swapchain().get_render_pass());
+		ImGui_ImplVulkan_Init(&init_info, gui_renderpass);
 
 		imgui_command_buffers.resize(swapchain->get_image_count());
 		for (uint32_t i = 0; i < swapchain->get_image_count(); i++) {
@@ -123,7 +185,7 @@ namespace Alabaster {
 
 		VkRenderPassBeginInfo render_pass_begin_info = {};
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_begin_info.renderPass = swapchain->get_render_pass();
+		render_pass_begin_info.renderPass = gui_renderpass;
 		render_pass_begin_info.renderArea.offset.x = 0;
 		render_pass_begin_info.renderArea.offset.y = 0;
 		render_pass_begin_info.renderArea.extent.width = width;
@@ -138,7 +200,7 @@ namespace Alabaster {
 		{
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-			inheritance_info.renderPass = swapchain->get_render_pass();
+			inheritance_info.renderPass = gui_renderpass;
 			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
 			inheritance_info.subpass = 0;
 

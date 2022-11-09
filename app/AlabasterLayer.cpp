@@ -63,21 +63,27 @@ void AlabasterLayer::update(float ts)
 
 	renderer.reset_stats();
 	renderer.begin_scene();
-	camera.on_update(ts);
+	{
+		camera.on_update(ts);
 
-	for (int x = -1; x <= 1; x++) {
-		for (int y = -1; y <= 1; y++) {
-			renderer.quad(glm::vec4 { x, y, 0, 0 }, glm::vec4 { 0.2, 0.2, 0.2, 0.2 }, glm::vec4 { x / 5.0f, 1, y / 5.0f, 1 });
-		}
+		/*for (int x = -10; x <= 10; x++) {
+			for (int y = -10; y <= 10; y++) {
+				auto xf = static_cast<float>(x) / 10;
+				auto yf = static_cast<float>(y) / 10;
+				renderer.quad(
+					glm::vec4 { xf, yf, sin(xf + yf) * cos(xf + yf), 0 }, glm::vec4 { 0.1, 0.9, 0.1, 1.0f }, glm::vec3 { 0.2, 0.2, 0.2 }, 90.0f);
+			}
+		}*/
+
+		renderer.quad({ 0, 3, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+
+		glm::vec3 axis_base { 0, 3, 0 };
+		renderer.line(axis_base, axis_base + glm::vec3 { 3, 0, 0 }, { 1, 0, 0, 1 });
+		renderer.line(axis_base, axis_base + glm::vec3 { 0, -3, 0 }, { 0, 1, 0, 1 });
+		renderer.line(axis_base, axis_base + glm::vec3 { 0, 0, -3 }, { 0, 0, 1, 1 });
+
+		renderer.mesh(square_model, nullptr, { 0, -2, 0, 1 }, { 1, 1, 1, 1 }, { 2, 2, 2 });
 	}
-
-	renderer.quad({ 0, 0, 0, 0 }, glm::vec4 { 0.7, 0.1, 0.1, 1.0f }, { 30.0, 30.0, 1 }, 90.0f);
-
-	renderer.line({ 0, 0, 0 }, { -3, 0, 0 }, { 1, 0, 0, 1 });
-	renderer.line({ 0, 0, 0 }, { 0, 3, 0 }, { 0, 1, 0, 1 });
-	renderer.line({ 0, 0, 0 }, { 0, 0, -3 }, { 0, 0, 1, 1 });
-
-	// renderer.mesh(viking_room_model, viking_room_pipeline);
 	renderer.end_scene();
 
 	frame_number++;

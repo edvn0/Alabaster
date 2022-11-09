@@ -14,6 +14,7 @@
 #include "graphics/UniformBuffer.hpp"
 #include "graphics/VertexBuffer.hpp"
 
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
 #include <vulkan/vulkan.h>
 
@@ -29,45 +30,65 @@ namespace Alabaster {
 		to_reset.line_buffer_ptr = &to_reset.line_buffer[0];
 		to_reset.line_indices_submitted = 0;
 		to_reset.line_vertices_submitted = 0;
+		to_reset.mesh_pipeline_submit = nullptr;
+		to_reset.mesh = nullptr;
 	}
 
 	void Renderer3D::create_renderpass()
 	{
-		VkAttachmentDescription color_attachment {};
-		color_attachment.format = Application::the().get_window()->get_swapchain()->get_format();
-		color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-		color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		const auto&& [color, depth] = Application::the().swapchain().get_formats();
 
-		VkAttachmentReference color_attachment_ref {};
-		color_attachment_ref.attachment = 0;
-		color_attachment_ref.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		VkAttachmentDescription color_attachment_desc = {};
+		color_attachment_desc.format = color;
+		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		VkSubpassDescription subpass {};
-		subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass.colorAttachmentCount = 1;
-		subpass.pColorAttachments = &color_attachment_ref;
+		VkAttachmentDescription depth_attachment_desc {};
+		depth_attachment_desc.format = depth;
+		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-		VkSubpassDependency dependency {};
+		VkAttachmentReference color_reference = {};
+		color_reference.attachment = 0;
+		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depth_reference = {};
+		depth_reference.attachment = 1;
+		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+		VkSubpassDescription subpass_description = {};
+		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+		subpass_description.colorAttachmentCount = 1;
+		subpass_description.pColorAttachments = &color_reference;
+		subpass_description.pDepthStencilAttachment = &depth_reference;
+
+		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-		VkRenderPassCreateInfo render_pass_info {};
+		std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
+		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_info.attachmentCount = 1;
-		render_pass_info.pAttachments = &color_attachment;
+		render_pass_info.pAttachments = descriptions.data();
+		render_pass_info.attachmentCount = static_cast<uint32_t>(descriptions.size());
+		render_pass_info.pSubpasses = &subpass_description;
 		render_pass_info.subpassCount = 1;
-		render_pass_info.pSubpasses = &subpass;
-		render_pass_info.dependencyCount = 1;
 		render_pass_info.pDependencies = &dependency;
+		render_pass_info.dependencyCount = 1;
 
 		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &data.render_pass));
 	}
@@ -206,10 +227,10 @@ namespace Alabaster {
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
-			.backface_culling = false,
+			.backface_culling = true,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.depth_test = false,
-			.depth_write = false,
+			.depth_test = true,
+			.depth_write = true,
 			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.instance_layout = {},
@@ -217,14 +238,30 @@ namespace Alabaster {
 		data.quad_pipeline = std::make_unique<Pipeline>(spec);
 		data.quad_pipeline->invalidate();
 
+		PipelineSpecification mesh {
+			.shader = Shader("app/resources/shaders/mesh"),
+			.debug_name = "Mesh Pipeline",
+			.render_pass = data.render_pass,
+			.wireframe = false,
+			.backface_culling = true,
+			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.depth_test = true,
+			.depth_write = true,
+			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
+				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+			.instance_layout = {},
+		};
+		data.mesh_pipeline = std::make_unique<Pipeline>(spec);
+		data.mesh_pipeline->invalidate();
+
 		PipelineSpecification line { .shader = Shader("app/resources/shaders/line"),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
 			.backface_culling = false,
 			.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-			.depth_test = false,
-			.depth_write = false,
+			.depth_test = true,
+			.depth_write = true,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
 			.instance_layout = {},
@@ -292,7 +329,7 @@ namespace Alabaster {
 		}
 
 		const auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z })
-			* glm::rotate(glm::mat4(1.0f), rotation, glm::vec3 { 1, 0, 0 }) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
+			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3 { 1, 0, 0 }) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
 
 		for (size_t i = 0; i < quad_vertex_count; i++) {
 			auto& vertex = data.quad_buffer[data.vertices_submitted];
@@ -303,6 +340,15 @@ namespace Alabaster {
 		}
 
 		data.indices_submitted += 6;
+	}
+
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipe, const glm::vec4& pos, const glm::vec4& colour,
+		const glm::vec3& scale)
+	{
+		auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z }) * glm::scale(glm::mat4(1.0f), scale);
+		mesh->set_transform(std::move(transform));
+		data.mesh = mesh.get();
+		data.mesh_pipeline_submit = pipe ? pipe.get() : data.mesh_pipeline.get();
 	}
 
 	void Renderer3D::line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
@@ -358,13 +404,18 @@ namespace Alabaster {
 			data.draw_calls++;
 		}
 
+		if (data.mesh) {
+
+			draw_meshes();
+
+			data.draw_calls++;
+		}
+
 		Log::info("[Renderer3D] Draw calls: {}", data.draw_calls);
 
 		Renderer::end_render_pass(command_buffer);
 		command_buffer.end();
 		command_buffer.submit();
-
-		reset_data(data);
 	}
 
 	void Renderer3D::draw_quads()
@@ -420,23 +471,24 @@ namespace Alabaster {
 			"Draw lines");
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipe, const glm::vec4& pos, const glm::vec4& colour,
-		const glm::vec3& scale)
+	void Renderer3D::draw_meshes()
 	{
 		Renderer::submit(
-			[&buffer = command_buffer, &mesh = mesh, &descriptor = data.descriptor_sets, &pipeline = pipe] {
-				vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
+			[&buffer = command_buffer, mesh = data.mesh, pipe = data.mesh_pipeline_submit, &descriptor = data.descriptor_sets] {
+				vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe->get_vulkan_pipeline());
+
+				vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe->get_vulkan_pipeline_layout(), 0, 1,
+					&descriptor[Renderer::current_frame()], 0, nullptr);
 
 				std::array<VkBuffer, 1> vbs { *mesh->get_vertex_buffer() };
 				VkDeviceSize offsets { 0 };
 				vkCmdBindVertexBuffers(*buffer, 0, 1, vbs.data(), &offsets);
 
-				vkCmdBindIndexBuffer(*buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
+				const glm::mat4& transform = *mesh->get_transform();
+				vkCmdPushConstants(
+					*buffer, pipe->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(transform));
 
-				if (pipeline->get_vulkan_pipeline_layout()) {
-					vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
-						&descriptor[Renderer::current_frame()], 0, nullptr);
-				}
+				vkCmdBindIndexBuffer(*buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
 				vkCmdDrawIndexed(*buffer, mesh->get_index_buffer().count(), 1, 0, 0, 0);
 			},

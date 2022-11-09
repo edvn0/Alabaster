@@ -3,6 +3,7 @@
 #include "core/Application.hpp"
 
 typedef struct VkDescriptorPool_T* VkDescriptorPool;
+typedef struct VkRenderPass_T* VkRenderPass;
 
 namespace Alabaster {
 
@@ -26,6 +27,7 @@ namespace Alabaster {
 	private:
 		std::string_view name() override { return gui_layer_name; }
 		VkDescriptorPool imgui_descriptor_pool { nullptr };
+		VkRenderPass gui_renderpass { nullptr };
 	};
 
 } // namespace Alabaster

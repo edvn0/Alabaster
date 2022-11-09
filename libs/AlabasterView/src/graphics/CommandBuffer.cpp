@@ -14,11 +14,11 @@ namespace Alabaster {
 	void CommandBuffer::init(uint32_t count)
 	{
 		uint32_t frames = count;
-		VkCommandPoolCreateInfo cmdPoolInfo = {};
-		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		cmdPoolInfo.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
-		cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		vk_check(vkCreateCommandPool(GraphicsContext::the().device(), &cmdPoolInfo, nullptr, &pool));
+		VkCommandPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		pool_info.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
+		pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		vk_check(vkCreateCommandPool(GraphicsContext::the().device(), &pool_info, nullptr, &pool));
 
 		VkCommandBufferAllocateInfo cbai {};
 		cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -30,12 +30,12 @@ namespace Alabaster {
 		buffers.resize(frames);
 		vk_check(vkAllocateCommandBuffers(GraphicsContext::the().device(), &cbai, buffers.data()));
 
-		VkFenceCreateInfo fenceCreateInfo {};
-		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+		VkFenceCreateInfo fence_create_info {};
+		fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 		fences.resize(frames);
 		for (int i = 0; i < frames; i++) {
-			vk_check(vkCreateFence(GraphicsContext::the().device(), &fenceCreateInfo, nullptr, &fences[i]));
+			vk_check(vkCreateFence(GraphicsContext::the().device(), &fence_create_info, nullptr, &fences[i]));
 		}
 	}
 
@@ -61,20 +61,20 @@ namespace Alabaster {
 	{
 		Renderer::submit(
 			[this] {
-				uint32_t frameIndex = Renderer::current_frame();
+				uint32_t frame_index = Renderer::current_frame();
 
-				VkCommandBufferBeginInfo cmdBufInfo = {};
-				cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-				cmdBufInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-				cmdBufInfo.pNext = nullptr;
+				VkCommandBufferBeginInfo begin_info = {};
+				begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+				begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+				begin_info.pNext = nullptr;
 
 				if (owned_by_swapchain) {
-					active = Application::the().swapchain().get_drawbuffer(frameIndex);
+					active = Application::the().swapchain().get_drawbuffer(frame_index);
 				} else {
-					active = buffers[frameIndex];
+					active = buffers[frame_index];
 				}
 
-				vk_check(vkBeginCommandBuffer(active, &cmdBufInfo));
+				vk_check(vkBeginCommandBuffer(active, &begin_info));
 			},
 			"Begin Command Buffer");
 	}
@@ -95,17 +95,17 @@ namespace Alabaster {
 			return;
 
 		Renderer::submit([this] {
-			uint32_t frameIndex = Renderer::current_frame();
+			uint32_t frame_index = Renderer::current_frame();
 
 			VkSubmitInfo submitInfo {};
 			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 			submitInfo.commandBufferCount = 1;
-			VkCommandBuffer commandBuffer = buffers[frameIndex];
+			VkCommandBuffer commandBuffer = buffers[frame_index];
 			submitInfo.pCommandBuffers = &commandBuffer;
 
-			vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frameIndex], VK_TRUE, UINT64_MAX));
-			vk_check(vkResetFences(GraphicsContext::the().device(), 1, &fences[frameIndex]));
-			vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &submitInfo, fences[frameIndex]));
+			vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frame_index], VK_TRUE, UINT64_MAX));
+			vk_check(vkResetFences(GraphicsContext::the().device(), 1, &fences[frame_index]));
+			vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &submitInfo, fences[frame_index]));
 		});
 	}
 

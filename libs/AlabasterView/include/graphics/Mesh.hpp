@@ -24,6 +24,10 @@ namespace Alabaster {
 		const VertexBuffer& get_vertex_buffer() const { return *vertex_buffer; }
 		const IndexBuffer& get_index_buffer() const { return *index_buffer; }
 
+		void set_transform(glm::mat4&& input) { transform = input; }
+		void reset_transform() { transform.reset(); }
+		const auto& get_transform() { return transform; }
+
 		void destroy();
 
 	private:
@@ -31,6 +35,8 @@ namespace Alabaster {
 
 		std::unique_ptr<VertexBuffer> vertex_buffer;
 		std::unique_ptr<IndexBuffer> index_buffer;
+
+		std::optional<glm::mat4> transform { std::nullopt };
 
 		size_t vertex_count { 0 };
 		size_t index_count { 0 };

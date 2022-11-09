@@ -53,8 +53,15 @@ namespace Alabaster {
 		pipeline_layout_create_info.pNext = nullptr;
 		pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t>(shader.descriptor_set_layouts().size());
 		pipeline_layout_create_info.pSetLayouts = shader.descriptor_set_layouts().data();
-		// pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t>(push_constant_ranges.size());
-		// pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
+
+		VkPushConstantRange range {};
+		range.offset = 0;
+		range.size = sizeof(glm::mat4);
+		range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		std::array<VkPushConstantRange, 1> push_constant_ranges { range };
+
+		pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t>(push_constant_ranges.size());
+		pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
 
 		vk_check(vkCreatePipelineLayout(device, &pipeline_layout_create_info, nullptr, &pipeline_layout));
 
@@ -74,7 +81,7 @@ namespace Alabaster {
 		rasterisation_state.rasterizerDiscardEnable = VK_FALSE;
 		rasterisation_state.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterisation_state.lineWidth = spec.line_width;
-		rasterisation_state.cullMode = VK_CULL_MODE_NONE;
+		rasterisation_state.cullMode = spec.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
 		rasterisation_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		rasterisation_state.depthBiasEnable = VK_FALSE;
 
@@ -87,7 +94,7 @@ namespace Alabaster {
 		color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 		color_blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
 		color_blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
-		color_blend_attachment.blendEnable = VK_FALSE;
+		color_blend_attachment.blendEnable = VK_TRUE;
 
 		VkPipelineColorBlendStateCreateInfo colour_blend_state = {};
 		colour_blend_state.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;

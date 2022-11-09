@@ -43,22 +43,6 @@ namespace Alabaster {
 				type = type == CameraType::FirstPerson ? CameraType::LookAt : CameraType::FirstPerson;
 			}
 
-			if (in.get_key_code() == Key::I) {
-				rotate({ -1, 0, 0 });
-			}
-
-			if (in.get_key_code() == Key::K) {
-				rotate({ 1, 0, 0 });
-			}
-
-			if (in.get_key_code() == Key::J) {
-				rotate({ 0, -1, 0 });
-			}
-
-			if (in.get_key_code() == Key::L) {
-				rotate({ 0, 1, 0 });
-			}
-
 			if (in.get_key_code() == Key::R) {
 				set_position({ 0, -5, -5 });
 				set_rotation({ 0, 0, 0 });
@@ -78,7 +62,7 @@ namespace Alabaster {
 
 		updated = false;
 		if (type == CameraType::FirstPerson) {
-			const auto any_movement_key_pressed = Input::any(Key::A, Key::W, Key::S, Key::D);
+			const auto any_movement_key_pressed = Input::any(Key::A, Key::W, Key::S, Key::D, Key::I, Key::J, Key::K, Key::L);
 
 			if (any_movement_key_pressed) {
 				glm::vec3 cam_front;
@@ -97,6 +81,14 @@ namespace Alabaster {
 					position -= glm::normalize(glm::cross(cam_front, glm::vec3(0.0f, 1.0f, 0.0f))) * move_speed;
 				if (Input::key(Key::D))
 					position += glm::normalize(glm::cross(cam_front, glm::vec3(0.0f, 1.0f, 0.0f))) * move_speed;
+				if (Input::key(Key::I))
+					rotate({ -1, 0, 0 });
+				if (Input::key(Key::K))
+					rotate({ 1, 0, 0 });
+				if (Input::key(Key::J))
+					rotate({ 0, -1, 0 });
+				if (Input::key(Key::L))
+					rotate({ 0, 1, 0 });
 
 				update_view_matrix();
 			}

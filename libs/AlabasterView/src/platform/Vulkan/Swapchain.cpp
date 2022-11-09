@@ -6,6 +6,7 @@
 #include "core/Common.hpp"
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
+#include "graphics/Allocator.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
@@ -14,6 +15,33 @@
 #include <vulkan/vulkan.h>
 
 namespace Alabaster {
+
+	void create_image(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits, DepthImage& image);
+	void create_image_view(VkFormat format, VkImageAspectFlagBits bits, DepthImage& image);
+
+	VkFormat find_supported_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+	{
+		for (VkFormat format : candidates) {
+			VkFormatProperties props;
+			vkGetPhysicalDeviceFormatProperties(GraphicsContext::the().physical_device(), format, &props);
+
+			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+				return format;
+			} else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+				return format;
+			}
+		}
+
+		throw std::runtime_error("failed to find supported format!");
+	}
+
+	VkFormat find_depth_format()
+	{
+		auto format = find_supported_format({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+			VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+		;
+		return format;
+	}
 
 	static constexpr auto default_fence_timeout = std::numeric_limits<uint64_t>::max();
 
@@ -45,8 +73,12 @@ namespace Alabaster {
 		create_synchronisation_objects();
 
 		VkPipelineStageFlags pipeline_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		std::vector<VkSemaphore> wait_semaphores { sync_objects[frame()].image_available };
-		std::vector<VkSemaphore> signal_semaphores { sync_objects[frame()].render_finished };
+		std::vector<VkSemaphore> wait_semaphores;
+		std::vector<VkSemaphore> signal_semaphores;
+		for (auto i = 0; i < image_count; i++) {
+			wait_semaphores.push_back(sync_objects[i].image_available);
+			signal_semaphores.push_back(sync_objects[i].render_finished);
+		}
 
 		submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -66,31 +98,47 @@ namespace Alabaster {
 		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+		VkAttachmentDescription depth_attachment_desc {};
+		depth_attachment_desc.format = depth_format;
+		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
 		VkAttachmentReference color_reference = {};
 		color_reference.attachment = 0;
 		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+		VkAttachmentReference depth_reference = {};
+		depth_reference.attachment = 1;
+		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkSubpassDescription subpass_description = {};
 		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass_description.colorAttachmentCount = 1;
 		subpass_description.pColorAttachments = &color_reference;
+		subpass_description.pDepthStencilAttachment = &depth_reference;
 
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
 		dependency.srcAccessMask = 0;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
+		std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_info.attachmentCount = 1;
-		render_pass_info.pAttachments = &color_attachment_desc;
-		render_pass_info.subpassCount = 1;
+		render_pass_info.pAttachments = descriptions.data();
+		render_pass_info.attachmentCount = static_cast<uint32_t>(descriptions.size());
 		render_pass_info.pSubpasses = &subpass_description;
-		render_pass_info.dependencyCount = 1;
+		render_pass_info.subpassCount = 1;
 		render_pass_info.pDependencies = &dependency;
+		render_pass_info.dependencyCount = 1;
 
 		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &vk_render_pass));
 
@@ -100,14 +148,15 @@ namespace Alabaster {
 		VkFramebufferCreateInfo framebuffer_create_info = {};
 		framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebuffer_create_info.renderPass = vk_render_pass;
-		framebuffer_create_info.attachmentCount = 1;
 		framebuffer_create_info.width = sc_width;
 		framebuffer_create_info.height = sc_height;
 		framebuffer_create_info.layers = 1;
 
 		frame_buffers.resize(image_count);
 		for (uint32_t i = 0; i < frame_buffers.size(); i++) {
-			framebuffer_create_info.pAttachments = &images.views[i];
+			std::array<VkImageView, 2> attachments = { images.views[i], depth_image.view };
+			framebuffer_create_info.pAttachments = attachments.data();
+			framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
 			vk_check(vkCreateFramebuffer(GraphicsContext::the().device(), &framebuffer_create_info, nullptr, &frame_buffers[i]));
 		}
 
@@ -251,6 +300,7 @@ namespace Alabaster {
 
 	void Swapchain::choose_format(const Capabilities& capabilities)
 	{
+		depth_format = find_depth_format();
 		for (const auto& available : capabilities.formats) {
 			if (available.format == VK_FORMAT_B8G8R8A8_SRGB && available.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 				format = available;
@@ -374,6 +424,9 @@ namespace Alabaster {
 
 			vk_check(vkCreateImageView(GraphicsContext::the().device(), &view_create_info, nullptr, &views[i]));
 		}
+
+		create_image(extent.width, extent.height, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depth_image);
+		create_image_view(depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, depth_image);
 	}
 
 	void Swapchain::create_synchronisation_objects()
@@ -400,26 +453,26 @@ namespace Alabaster {
 	{
 		const auto& device = GraphicsContext::the().device();
 
-		for (auto& commandBuffer : command_buffers)
-			vkDestroyCommandPool(device, commandBuffer.get_command_pool(), nullptr);
+		for (auto& command_buffer : command_buffers)
+			vkDestroyCommandPool(device, command_buffer.get_command_pool(), nullptr);
 
-		VkCommandPoolCreateInfo cmdPoolInfo = {};
-		cmdPoolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		cmdPoolInfo.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
-		cmdPoolInfo.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		VkCommandPoolCreateInfo cmd_pool_info = {};
+		cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		cmd_pool_info.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
+		cmd_pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 
-		VkCommandBufferAllocateInfo commandBufferAllocateInfo {};
-		commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		commandBufferAllocateInfo.commandBufferCount = 1;
+		VkCommandBufferAllocateInfo command_buffer_allocate_info {};
+		command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		command_buffer_allocate_info.commandBufferCount = 1;
 
 		command_buffers.reserve(image_count);
 		for (int i = 0; i < image_count; i++) {
 			CommandBuffer command_buffer("ThisSwapchain");
-			vk_check(vkCreateCommandPool(device, &cmdPoolInfo, nullptr, &command_buffer.get_command_pool()));
+			vk_check(vkCreateCommandPool(device, &cmd_pool_info, nullptr, &command_buffer.get_command_pool()));
 
-			commandBufferAllocateInfo.commandPool = command_buffer.get_command_pool();
-			vk_check(vkAllocateCommandBuffers(device, &commandBufferAllocateInfo, &command_buffer.get_buffer()));
+			command_buffer_allocate_info.commandPool = command_buffer.get_command_pool();
+			vk_check(vkAllocateCommandBuffers(device, &command_buffer_allocate_info, &command_buffer.get_buffer()));
 
 			command_buffers.emplace_back(command_buffer);
 		}
@@ -470,6 +523,45 @@ namespace Alabaster {
 		}
 
 		vkWaitForFences(GraphicsContext::the().device(), static_cast<uint32_t>(fences.size()), fences.data(), VK_TRUE, default_fence_timeout);
+	}
+
+	std::tuple<VkFormat, VkFormat> Swapchain::get_formats() { return { format.format, depth_format }; }
+
+	void create_image_view(VkFormat format, VkImageAspectFlagBits bits, DepthImage& image)
+	{
+		VkImageViewCreateInfo view_info {};
+		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		view_info.image = image.image;
+		view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+		view_info.format = format;
+		view_info.subresourceRange.aspectMask = bits;
+		view_info.subresourceRange.baseMipLevel = 0;
+		view_info.subresourceRange.levelCount = 1;
+		view_info.subresourceRange.baseArrayLayer = 0;
+		view_info.subresourceRange.layerCount = 1;
+
+		vk_check(vkCreateImageView(GraphicsContext::the().device(), &view_info, nullptr, &image.view));
+	}
+
+	void create_image(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits, DepthImage& image)
+	{
+		VkImageCreateInfo image_info {};
+		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		image_info.imageType = VK_IMAGE_TYPE_2D;
+		image_info.extent.width = width;
+		image_info.extent.height = height;
+		image_info.extent.depth = 1;
+		image_info.mipLevels = 1;
+		image_info.arrayLayers = 1;
+		image_info.format = format;
+		image_info.tiling = tiling;
+		image_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		image_info.usage = bits;
+		image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+		image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+		Allocator allocator("Create Image");
+		image.allocation = allocator.allocate_image(image_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, image.image);
 	}
 
 } // namespace Alabaster

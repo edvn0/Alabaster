@@ -21,7 +21,7 @@ namespace Alabaster {
 		auto& get_buffer() { return active; }
 		auto& get_command_pool() { return pool; }
 
-		auto& operator*() const { return active; }
+		const auto& operator*() const { return active; }
 
 	private:
 		void init(uint32_t count = 0);
