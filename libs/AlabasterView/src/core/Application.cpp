@@ -71,14 +71,16 @@ namespace Alabaster {
 			window->update();
 
 			Renderer::begin();
-			Renderer::submit([this, &ts = app_ts] { update_layers(ts); }, "Update Layers");
-			//			Renderer::submit([this] { render_imgui(); }, "Update Imgui");
+			update_layers(app_ts);
+
+			Renderer::submit([this] { gui_layer().begin(); }, "Begin ImGui");
+			Renderer::submit([this] { render_imgui(); }, "Update Imgui");
+			Renderer::submit([this] { gui_layer().end(); }, "End Scene ImGui");
 			Renderer::end();
 
 			swapchain().begin_frame();
 			{
 				Renderer::execute();
-
 				cpu_time = on_cpu.elapsed();
 				float time = Clock::get_ms<float>();
 				frame_time = time - last_frametime;
@@ -99,9 +101,9 @@ namespace Alabaster {
 
 	void Application::render_imgui()
 	{
-		gui_layer().begin();
-		layer_forward([&ts = app_ts](Layer* layer) { layer->ui(ts); });
-		gui_layer().end();
+		for (const auto& [key, layer] : layers) {
+			layer->ui(app_ts);
+		}
 	}
 
 	void Application::update_layers(float ts)

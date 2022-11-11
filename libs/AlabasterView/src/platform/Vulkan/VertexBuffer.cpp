@@ -3,6 +3,7 @@
 #include "graphics/VertexBuffer.hpp"
 
 #include "core/Logger.hpp"
+#include "core/Utilities.hpp"
 #include "graphics/Allocator.hpp"
 #include "graphics/GraphicsContext.hpp"
 
@@ -62,7 +63,9 @@ namespace Alabaster {
 		GraphicsContext::the().flush_command_buffer(copy_command);
 
 		allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
-		Log::info("[VertexBuffer] Initialised with size: {}", buffer_size);
+
+		auto human_readable_size = Utilities::human_readable_size(buffer_size);
+		Log::info("[VertexBuffer] Initialised with size: {}", human_readable_size);
 	}
 
 	void VertexBuffer::set_data(const void* data, size_t size)

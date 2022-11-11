@@ -10,7 +10,7 @@ namespace Alabaster {
 
 	enum class ClockGranularity : unsigned int { SECONDS = 0, MILLIS = 1, NANOS = 2 };
 
-	template <ClockGranularity in, typename FloatLike = double> class Timer {
+	template <ClockGranularity in = ClockGranularity::MILLIS, typename FloatLike = double> class Timer {
 	public:
 		Timer()
 		{

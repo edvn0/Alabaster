@@ -8,26 +8,12 @@
 
 using namespace Alabaster;
 
-static const std::vector<Vertex> vertices { Vertex { .position = { -0.5, 0.5, 0, 1 }, .colour = { 1, 0, 0, 1 }, .uv = { -1, 1 } },
-	Vertex { .position = { 0.5, 0.5, 0, 1 }, .colour = { 1, 0, 0, 1 }, .uv = { 1, 1 } },
-	Vertex { .position = { 0.5, -0.5, 0, 1 }, .colour = { 1, 1, 0, 1 }, .uv = { 1, -1 } },
-	Vertex { .position = { -0.5, -0.5, 0, 1 }, .colour = { 1, 0, 1, 1 }, .uv = { -1, -1 } } };
-
-static const std::vector<Index> indices { 0, 1, 2, 2, 3, 0 };
-
 static uint32_t quads { 1 };
 
 bool AlabasterLayer::initialise()
 {
-	vertex_buffer = VertexBuffer::create(vertices);
-	index_buffer = IndexBuffer::create(indices);
-
-	aeroplane_texture = std::make_unique<Texture2D>("app/resources/textures/aeroplane.png");
-	uint32_t black = 0x00000000;
-	black_texture = std::make_unique<Texture2D>(&black, sizeof(uint32_t));
-
 	viking_room_model = Mesh::from_path("app/resources/models/viking_room.obj");
-	square_model = Mesh::from_data(vertices, indices);
+	sphere_model = Mesh::from_path("app/resources/models/sphere.obj");
 	return true;
 }
 
@@ -70,8 +56,9 @@ void AlabasterLayer::update(float ts)
 			for (int y = -10; y <= 10; y++) {
 				auto xf = static_cast<float>(x) / 10;
 				auto yf = static_cast<float>(y) / 10;
-				renderer.quad(
-					glm::vec4 { xf, yf, sin(xf + yf) * cos(xf + yf), 0 }, glm::vec4 { 0.1, 0.9, 0.1, 1.0f }, glm::vec3 { 0.2, 0.2, 0.2 }, 90.0f);
+
+					  renderer.quad(glm::vec4 { xf, yf, sin(xf + yf) * cos(xf + yf), 0 }, glm::vec4 { 0.1, 0.9, 0.1, 1.0f },
+						  glm::vec3 { 0.2, 0.2, 0.2 }, frame_number % 360);
 			}
 		}*/
 
@@ -82,7 +69,9 @@ void AlabasterLayer::update(float ts)
 		renderer.line(axis_base, axis_base + glm::vec3 { 0, -3, 0 }, { 0, 1, 0, 1 });
 		renderer.line(axis_base, axis_base + glm::vec3 { 0, 0, -3 }, { 0, 0, 1, 1 });
 
-		renderer.mesh(square_model, nullptr, { 0, -2, 0, 1 }, { 1, 1, 1, 1 }, { 2, 2, 2 });
+		renderer.mesh(sphere_model);
+
+		// renderer.mesh(viking_room_model, nullptr, { 0, 0, 0, 1 }, { 1, 1, 1, 1 }, { 2, 2, 2 });
 	}
 	renderer.end_scene();
 
@@ -187,11 +176,7 @@ void AlabasterLayer::destroy()
 		vkDestroyRenderPass(GraphicsContext::the().device(), render_pass, nullptr);
 		viking_room_model->destroy();
 		viking_room_pipeline->destroy();
-		square_model->destroy();
-
-		vertex_buffer->destroy();
-		index_buffer->destroy();
-		graphics_pipeline->destroy();
+		sphere_model->destroy();
 
 		Log::info("[AlabasterLayer] Destroyed layer.");
 	});

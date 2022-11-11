@@ -54,4 +54,17 @@ namespace Alabaster::IO {
 		return false;
 	}
 
+	template <typename Printable> static inline bool write_file(const std::filesystem::path& filename, const char* buffer, size_t size)
+	{
+		std::ofstream output_stream(filename);
+		if (!output_stream) {
+			Log::error("Could not write output file: {}", filename);
+			return false;
+		}
+
+		output_stream.write(buffer, size);
+		Log::error("Could not write to output file stream.");
+		return false;
+	}
+
 } // namespace Alabaster::IO

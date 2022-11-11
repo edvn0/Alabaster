@@ -41,7 +41,7 @@ namespace Alabaster {
 	};
 
 	struct RendererData {
-		static constexpr size_t max_vertices = 200'000;
+		static constexpr size_t max_vertices = 20000;
 		static constexpr size_t max_indices = 6 * max_vertices;
 
 		size_t indices_submitted { 0 };

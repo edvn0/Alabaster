@@ -73,20 +73,14 @@ namespace Alabaster {
 		create_synchronisation_objects();
 
 		VkPipelineStageFlags pipeline_stage_flags = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		std::vector<VkSemaphore> wait_semaphores;
-		std::vector<VkSemaphore> signal_semaphores;
-		for (auto i = 0; i < image_count; i++) {
-			wait_semaphores.push_back(sync_objects[i].image_available);
-			signal_semaphores.push_back(sync_objects[i].render_finished);
-		}
 
 		submit_info = {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submit_info.pWaitDstStageMask = &pipeline_stage_flags;
-		submit_info.waitSemaphoreCount = static_cast<uint32_t>(wait_semaphores.size());
-		submit_info.pWaitSemaphores = wait_semaphores.data();
-		submit_info.signalSemaphoreCount = static_cast<uint32_t>(signal_semaphores.size());
-		submit_info.pSignalSemaphores = signal_semaphores.data();
+		submit_info.waitSemaphoreCount = 1;
+		submit_info.pWaitSemaphores = &present_complete;
+		submit_info.signalSemaphoreCount = 1;
+		submit_info.pSignalSemaphores = &render_complete;
 
 		VkAttachmentDescription color_attachment_desc = {};
 		color_attachment_desc.format = format.format;
@@ -152,6 +146,7 @@ namespace Alabaster {
 		framebuffer_create_info.height = sc_height;
 		framebuffer_create_info.layers = 1;
 
+		frame_buffers.clear();
 		frame_buffers.resize(image_count);
 		for (uint32_t i = 0; i < frame_buffers.size(); i++) {
 			std::array<VkImageView, 2> attachments = { images.views[i], depth_image.view };
@@ -170,7 +165,7 @@ namespace Alabaster {
 
 		current_image_index = get_next_image();
 		if (current_image_index >= 0) {
-			vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[frame()].get_command_pool(), 0));
+			vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[frame()].pool, 0));
 		}
 	}
 
@@ -181,11 +176,11 @@ namespace Alabaster {
 		VkSubmitInfo present_submit_info = {};
 		present_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		present_submit_info.pWaitDstStageMask = &wait_stage_mask;
-		present_submit_info.pWaitSemaphores = &sync_objects[frame()].image_available;
+		present_submit_info.pWaitSemaphores = &present_complete;
 		present_submit_info.waitSemaphoreCount = 1;
-		present_submit_info.pSignalSemaphores = &sync_objects[frame()].render_finished;
+		present_submit_info.pSignalSemaphores = &render_complete;
 		present_submit_info.signalSemaphoreCount = 1;
-		present_submit_info.pCommandBuffers = &command_buffers[frame()].get_buffer();
+		present_submit_info.pCommandBuffers = &command_buffers[frame()].buffer;
 		present_submit_info.commandBufferCount = 1;
 
 		vk_check(vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence));
@@ -197,13 +192,13 @@ namespace Alabaster {
 			present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
 			present_info.waitSemaphoreCount = 1;
-			present_info.pWaitSemaphores = &sync_objects[frame()].render_finished;
+			present_info.pWaitSemaphores = &render_complete;
 
 			present_info.pSwapchains = &vk_swapchain;
 			present_info.swapchainCount = 1;
 
 			present_info.pImageIndices = &current_image_index;
-			result = vkQueuePresentKHR(GraphicsContext::the().present_queue(), &present_info);
+			result = vkQueuePresentKHR(GraphicsContext::the().graphics_queue(), &present_info);
 		}
 
 		if (result != VK_SUCCESS) {
@@ -215,9 +210,8 @@ namespace Alabaster {
 				vk_check(result);
 			}
 		}
-
-		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence, VK_TRUE, default_fence_timeout));
 		current_frame = (frame() + 1) % image_count;
+		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence, VK_TRUE, default_fence_timeout));
 	}
 
 	void Swapchain::on_resize(uint32_t w, uint32_t h)
@@ -251,8 +245,9 @@ namespace Alabaster {
 
 	VkRenderPass Swapchain::get_render_pass() const { return vk_render_pass; };
 
-	VkCommandBuffer Swapchain::get_current_drawbuffer() const { return command_buffers[frame()].get_buffer(); }
-	VkCommandBuffer Swapchain::get_drawbuffer(uint32_t frame) const { return command_buffers[frame].get_buffer(); }
+	VkCommandBuffer Swapchain::get_current_drawbuffer() const { return command_buffers[frame()].buffer; }
+
+	VkCommandBuffer Swapchain::get_drawbuffer(uint32_t frame) const { return command_buffers[frame].buffer; }
 
 	uint32_t Swapchain::get_next_image()
 	{
@@ -260,14 +255,14 @@ namespace Alabaster {
 		vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence);
 
 		uint32_t image_index;
-		auto result = vkAcquireNextImageKHR(GraphicsContext::the().device(), vk_swapchain, default_fence_timeout,
-			sync_objects[frame()].image_available, (VkFence) nullptr, &image_index);
+		auto result = vkAcquireNextImageKHR(
+			GraphicsContext::the().device(), vk_swapchain, default_fence_timeout, present_complete, (VkFence) nullptr, &image_index);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			on_resize(sc_width, sc_height);
 			return -1;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-			throw std::runtime_error("failed to acquire swap chain image!");
+			throw AlabasterException("Failed to acquire swap chain image!");
 		}
 
 		return image_index;
@@ -436,6 +431,11 @@ namespace Alabaster {
 		VkSemaphoreCreateInfo semaphore_info {};
 		semaphore_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
+		if (!render_complete || !present_complete) {
+			vk_check(vkCreateSemaphore(GraphicsContext::the().device(), &semaphore_info, nullptr, &present_complete));
+			vk_check(vkCreateSemaphore(GraphicsContext::the().device(), &semaphore_info, nullptr, &render_complete));
+		}
+
 		VkFenceCreateInfo fence_info {};
 		fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
@@ -443,8 +443,6 @@ namespace Alabaster {
 		const auto& device = GraphicsContext::the().device();
 
 		for (size_t i = 0; i < image_count; i++) {
-			vk_check(vkCreateSemaphore(device, &semaphore_info, nullptr, &sync_objects[i].image_available));
-			vk_check(vkCreateSemaphore(device, &semaphore_info, nullptr, &sync_objects[i].render_finished));
 			vk_check(vkCreateFence(device, &fence_info, nullptr, &sync_objects[i].in_flight_fence));
 		}
 	}
@@ -454,7 +452,7 @@ namespace Alabaster {
 		const auto& device = GraphicsContext::the().device();
 
 		for (auto& command_buffer : command_buffers)
-			vkDestroyCommandPool(device, command_buffer.get_command_pool(), nullptr);
+			vkDestroyCommandPool(device, command_buffer.pool, nullptr);
 
 		VkCommandPoolCreateInfo cmd_pool_info = {};
 		cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -466,15 +464,12 @@ namespace Alabaster {
 		command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
 		command_buffer_allocate_info.commandBufferCount = 1;
 
-		command_buffers.reserve(image_count);
-		for (int i = 0; i < image_count; i++) {
-			CommandBuffer command_buffer("ThisSwapchain");
-			vk_check(vkCreateCommandPool(device, &cmd_pool_info, nullptr, &command_buffer.get_command_pool()));
+		command_buffers.resize(image_count);
+		for (auto& structure : command_buffers) {
+			vk_check(vkCreateCommandPool(device, &cmd_pool_info, nullptr, &structure.pool));
 
-			command_buffer_allocate_info.commandPool = command_buffer.get_command_pool();
-			vk_check(vkAllocateCommandBuffers(device, &command_buffer_allocate_info, &command_buffer.get_buffer()));
-
-			command_buffers.emplace_back(command_buffer);
+			command_buffer_allocate_info.commandPool = structure.pool;
+			vk_check(vkAllocateCommandBuffers(device, &command_buffer_allocate_info, &structure.buffer));
 		}
 	}
 
@@ -483,7 +478,7 @@ namespace Alabaster {
 	void Swapchain::destroy()
 	{
 		auto vk_device = GraphicsContext::the().device();
-		wait();
+		vkDeviceWaitIdle(vk_device);
 
 		if (vk_swapchain)
 			vkDestroySwapchainKHR(vk_device, vk_swapchain, nullptr);
@@ -497,13 +492,11 @@ namespace Alabaster {
 		for (auto framebuffer : frame_buffers)
 			vkDestroyFramebuffer(vk_device, framebuffer, nullptr);
 
-		for (auto i = 0; i < sync_objects.size(); i++)
-			if (sync_objects[i].image_available)
-				vkDestroySemaphore(vk_device, sync_objects[i].image_available, nullptr);
+		if (render_complete)
+			vkDestroySemaphore(vk_device, render_complete, nullptr);
 
-		for (auto i = 0; i < sync_objects.size(); i++)
-			if (sync_objects[i].render_finished)
-				vkDestroySemaphore(vk_device, sync_objects[i].render_finished, nullptr);
+		if (present_complete)
+			vkDestroySemaphore(vk_device, present_complete, nullptr);
 
 		for (auto i = 0; i < sync_objects.size(); i++)
 			vkDestroyFence(vk_device, sync_objects[i].in_flight_fence, nullptr);

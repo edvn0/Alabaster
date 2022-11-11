@@ -4,6 +4,7 @@
 
 #include "core/Common.hpp"
 #include "core/Logger.hpp"
+#include "core/Utilities.hpp"
 #include "graphics/Allocator.hpp"
 #include "graphics/GraphicsContext.hpp"
 
@@ -65,7 +66,8 @@ namespace Alabaster {
 		allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
 		index_data.release();
 
-		Log::info("[IndexBuffer] Initialised with size: {}", buffer_size);
+		auto human_readable_size = Utilities::human_readable_size(buffer_size);
+		Log::info("[IndexBuffer] Initialised with size: {}", human_readable_size);
 	}
 
 	void IndexBuffer::destroy()

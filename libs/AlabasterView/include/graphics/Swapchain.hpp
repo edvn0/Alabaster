@@ -83,13 +83,18 @@ namespace Alabaster {
 		} images;
 
 		struct Sync {
-			VkSemaphore image_available;
-			VkSemaphore render_finished;
 			VkFence in_flight_fence;
 		};
 
-		std::vector<CommandBuffer> command_buffers;
+		struct SwapchainCommandBuffer {
+			VkCommandPool pool;
+			VkCommandBuffer buffer;
+		};
+
+		std::vector<SwapchainCommandBuffer> command_buffers;
 		std::vector<Sync> sync_objects;
+		VkSemaphore render_complete;
+		VkSemaphore present_complete;
 		std::vector<VkFramebuffer> frame_buffers;
 
 		uint32_t current_frame { 0 };

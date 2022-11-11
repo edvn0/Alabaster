@@ -7,6 +7,9 @@
 
 namespace Alabaster {
 
+	static uint64_t written_to_buffer { 0 };
+	static char buffer[4096];
+
 	template <typename FloatLike> struct Profile {
 		FloatLike time_taken;
 		std::string_view tag;
@@ -29,9 +32,11 @@ namespace Alabaster {
 
 	template <typename FloatLike> CPUProfiler<FloatLike>::~CPUProfiler()
 	{
+#ifdef ALABASTER_PROFILE
 		FloatLike time_taken = Clock::get_ms<FloatLike>() - start_time;
 		Profile<FloatLike> profile { time_taken, tag };
 		IO::write_file(IO::resources() / std::filesystem::path { "profiles" } / std::filesystem::path { file_name }, profile);
+#endif
 	}
 
 	template class CPUProfiler<double>;

@@ -24,6 +24,9 @@ namespace Alabaster {
 
 		auto&& [vertices, indices] = load_model();
 
+		vertex_count = vertices.size();
+		index_count = indices.size();
+
 		vertex_buffer = VertexBuffer::create(std::move(vertices));
 		index_buffer = IndexBuffer::create(std::move(indices));
 		auto t1 = Clock::get_ms<float>() - t0;

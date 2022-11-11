@@ -1,5 +1,6 @@
 #pragma once
 
+#include "glm/fwd.hpp"
 #include "graphics/IndexBuffer.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBuffer.hpp"
@@ -27,6 +28,8 @@ namespace Alabaster {
 		void set_transform(glm::mat4&& input) { transform = input; }
 		void reset_transform() { transform.reset(); }
 		const auto& get_transform() { return transform; }
+
+		size_t get_index_count() const { return index_count; }
 
 		void destroy();
 

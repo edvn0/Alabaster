@@ -42,7 +42,7 @@ namespace Alabaster {
 	CommandBuffer::CommandBuffer(std::string_view n)
 	{
 		std::string name = std::string { n };
-		init(4);
+		init(3);
 		owned_by_swapchain = true;
 	}
 

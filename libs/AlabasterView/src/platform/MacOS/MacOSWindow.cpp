@@ -199,7 +199,7 @@ namespace Alabaster {
 	void Window::close()
 	{
 		glfwSetWindowShouldClose(handle, 1);
-		swapchain->wait();
+		vkDeviceWaitIdle(GraphicsContext::the().device());
 	}
 
 } // namespace Alabaster

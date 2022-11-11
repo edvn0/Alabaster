@@ -13,6 +13,7 @@
 #include "graphics/Swapchain.hpp"
 #include "graphics/UniformBuffer.hpp"
 #include "graphics/VertexBuffer.hpp"
+#include "vulkan/vulkan_core.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
@@ -43,18 +44,18 @@ namespace Alabaster {
 		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentDescription depth_attachment_desc {};
 		depth_attachment_desc.format = depth;
 		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
@@ -250,8 +251,9 @@ namespace Alabaster {
 			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.instance_layout = {},
+			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)) },
 		};
-		data.mesh_pipeline = std::make_unique<Pipeline>(spec);
+		data.mesh_pipeline = std::make_unique<Pipeline>(mesh);
 		data.mesh_pipeline->invalidate();
 
 		PipelineSpecification line { .shader = Shader("app/resources/shaders/line"),
@@ -474,23 +476,24 @@ namespace Alabaster {
 	void Renderer3D::draw_meshes()
 	{
 		Renderer::submit(
-			[&buffer = command_buffer, mesh = data.mesh, pipe = data.mesh_pipeline_submit, &descriptor = data.descriptor_sets] {
+			[&buffer = command_buffer, mesh = data.mesh, pipe = data.mesh_pipeline_submit,
+				&descriptor = data.descriptor_sets[Renderer::current_frame()]] {
 				vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe->get_vulkan_pipeline());
 
-				vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe->get_vulkan_pipeline_layout(), 0, 1,
-					&descriptor[Renderer::current_frame()], 0, nullptr);
+				vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
 
 				std::array<VkBuffer, 1> vbs { *mesh->get_vertex_buffer() };
 				VkDeviceSize offsets { 0 };
 				vkCmdBindVertexBuffers(*buffer, 0, 1, vbs.data(), &offsets);
 
-				const glm::mat4& transform = *mesh->get_transform();
-				vkCmdPushConstants(
-					*buffer, pipe->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(transform));
+				const auto& transform = mesh->get_transform();
+				if (transform) {
+					vkCmdPushConstants(
+						*buffer, pipe->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(*transform));
+					vkCmdBindIndexBuffer(*buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
+				}
 
-				vkCmdBindIndexBuffer(*buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
-
-				vkCmdDrawIndexed(*buffer, mesh->get_index_buffer().count(), 1, 0, 0, 0);
+				vkCmdDrawIndexed(*buffer, static_cast<uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 			},
 			"Draw meshes");
 	}
@@ -498,7 +501,7 @@ namespace Alabaster {
 	void Renderer3D::update_uniform_buffers()
 	{
 		Renderer::submit([this] {
-			auto image_index = Application::the().swapchain().frame();
+			const auto image_index = Application::the().swapchain().frame();
 
 			UBO ubo {};
 			ubo.projection = camera.get_projection_matrix();

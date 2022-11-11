@@ -54,14 +54,15 @@ namespace Alabaster {
 		pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t>(shader.descriptor_set_layouts().size());
 		pipeline_layout_create_info.pSetLayouts = shader.descriptor_set_layouts().data();
 
-		VkPushConstantRange range {};
-		range.offset = 0;
-		range.size = sizeof(glm::mat4);
-		range.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-		std::array<VkPushConstantRange, 1> push_constant_ranges { range };
+		if (spec.ranges) {
+			const auto used = *spec.ranges;
+			const auto range = used.get_push_constant_range();
 
-		pipeline_layout_create_info.pushConstantRangeCount = static_cast<uint32_t>(push_constant_ranges.size());
-		pipeline_layout_create_info.pPushConstantRanges = push_constant_ranges.data();
+			Log::info("[Pipeline - Push Constant] Size: {}, Flags: {}, Offset: {}", range.size, range.stageFlags, range.offset);
+
+			pipeline_layout_create_info.pushConstantRangeCount = 1;
+			pipeline_layout_create_info.pPushConstantRanges = &range;
+		}
 
 		vk_check(vkCreatePipelineLayout(device, &pipeline_layout_create_info, nullptr, &pipeline_layout));
 
