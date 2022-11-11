@@ -90,10 +90,7 @@ namespace Alabaster {
 
 	void Window::setup_events()
 	{
-		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int w, int h) {
-			Application::the().get_window()->resize_status = true;
-			Application::the().resize(w, h);
-		});
+		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int w, int h) { Application::the().get_window()->resize_status = true; });
 
 		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int in_width, int in_height) {
@@ -105,7 +102,6 @@ namespace Alabaster {
 			data.height = in_height;
 
 			Application::the().get_window()->resize_status = true;
-			Application::the().resize(in_width, in_height);
 		});
 
 		glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {

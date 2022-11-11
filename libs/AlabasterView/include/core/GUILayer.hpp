@@ -7,7 +7,7 @@ typedef struct VkRenderPass_T* VkRenderPass;
 
 namespace Alabaster {
 
-	static constexpr std::string_view gui_layer_name = "ImGuiLayer";
+	static constexpr std::string_view gui_layer_name = "GUILayer";
 
 	class GUILayer : public Layer {
 	public:

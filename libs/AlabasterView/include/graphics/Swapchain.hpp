@@ -43,6 +43,7 @@ namespace Alabaster {
 
 		VkCommandBuffer get_current_drawbuffer() const;
 		VkCommandBuffer get_drawbuffer(uint32_t frame) const;
+		std::tuple<VkImageView, VkImage> get_current_image() const { return { images.views[frame()], images.images[frame()] }; }
 		VkFramebuffer get_current_framebuffer() const;
 		uint32_t get_width() const;
 		uint32_t get_height() const;
@@ -57,6 +58,8 @@ namespace Alabaster {
 		uint32_t sc_width;
 		uint32_t sc_height;
 		uint32_t current_image_index;
+
+		bool unsafe_semaphore { false };
 
 		VkSwapchainKHR vk_swapchain;
 		VkSurfaceKHR vk_surface;
@@ -103,7 +106,7 @@ namespace Alabaster {
 
 	private:
 		Capabilities query();
-
+		void cleanup_unsafe_semaphore();
 		uint32_t get_next_image();
 
 		void choose_format(const Capabilities&);

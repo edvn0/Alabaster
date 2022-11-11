@@ -8,10 +8,12 @@
 
 #include <glm/glm.hpp>
 
-struct AlabasterLayer final : public Alabaster::Layer {
+using namespace Alabaster;
+
+struct AlabasterLayer final : public Layer {
 	~AlabasterLayer() override = default;
 	AlabasterLayer()
-		: camera(Alabaster::CameraType::FirstPerson, 1920 / 1060.0f, 0.1, 20, 45.0f)
+		: camera(CameraType::FirstPerson, 1920 / 1060.0f, 0.1, 20, 45.0f)
 		, renderer(camera) {};
 
 	void update(float ts) final;
@@ -19,12 +21,12 @@ struct AlabasterLayer final : public Alabaster::Layer {
 	void ui() final;
 	bool initialise() final;
 	void destroy() final;
-	void on_event(Alabaster::Event& event) final;
+	void on_event(Event& event) final;
 
 private:
 	std::string_view name() override { return "AlabasterLayer"; }
-	Alabaster::SimpleCamera camera;
-	Alabaster::Renderer3D renderer;
+	SimpleCamera camera;
+	Renderer3D renderer;
 
 	glm::vec2 viewport_size = { 0.0f, 0.0f };
 	glm::vec2 viewport_bounds[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
@@ -32,7 +34,11 @@ private:
 	bool is_dockspace_open { true };
 
 	VkRenderPass render_pass { nullptr };
-	std::unique_ptr<Alabaster::Mesh> viking_room_model;
-	std::unique_ptr<Alabaster::Pipeline> viking_room_pipeline;
-	std::unique_ptr<Alabaster::Mesh> sphere_model;
+	std::unique_ptr<Mesh> viking_room_model;
+	std::unique_ptr<Pipeline> viking_room_pipeline;
+	std::unique_ptr<Mesh> sphere_model;
+
+	UI::VulkanImage vk_image;
+
+	VkSampler vk_sampler;
 };

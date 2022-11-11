@@ -46,6 +46,10 @@ namespace Alabaster {
 	{
 		layer_forward([](Layer* l) { l->destroy(); });
 
+		for (const auto& [key, layer] : layers) {
+			pop_layer(key);
+		}
+
 		Log::info("[Application] Stopping.");
 
 		window->destroy();
@@ -56,7 +60,7 @@ namespace Alabaster {
 	GUILayer& Application::gui_layer()
 	{
 		if (!ui_layer) {
-			ui_layer = static_cast<GUILayer*>(layers.at("ImGuiLayer"));
+			ui_layer = static_cast<GUILayer*>(layers.at("GUILayer"));
 		}
 		return *ui_layer;
 	};
@@ -73,9 +77,11 @@ namespace Alabaster {
 			Renderer::begin();
 			update_layers(app_ts);
 
+#ifdef ALABASTER_USE_IMGUI
 			Renderer::submit([this] { gui_layer().begin(); }, "Begin ImGui");
-			Renderer::submit([this] { render_imgui(); }, "Update Imgui");
+			// Renderer::submit([this] { render_imgui(); }, "Update Imgui");
 			Renderer::submit([this] { gui_layer().end(); }, "End Scene ImGui");
+#endif
 			Renderer::end();
 
 			swapchain().begin_frame();

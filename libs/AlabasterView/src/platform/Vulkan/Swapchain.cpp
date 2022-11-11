@@ -163,7 +163,9 @@ namespace Alabaster {
 		auto& queue = Renderer::resource_release_queue(frame());
 		queue.execute();
 
+		unsafe_semaphore = false;
 		current_image_index = get_next_image();
+		unsafe_semaphore = true;
 		if (current_image_index >= 0) {
 			vk_check(vkResetCommandPool(GraphicsContext::the().device(), command_buffers[frame()].pool, 0));
 		}
@@ -204,6 +206,10 @@ namespace Alabaster {
 		if (result != VK_SUCCESS) {
 			auto was_resized = Application::the().get_window()->was_resized();
 			if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || was_resized) {
+
+				if (unsafe_semaphore && result == VK_SUBOPTIMAL_KHR) {
+					cleanup_unsafe_semaphore();
+				}
 				on_resize(sc_width, sc_height);
 			} else {
 				Log::error("[Swapchain] Validation failed in present.");
@@ -555,6 +561,17 @@ namespace Alabaster {
 
 		Allocator allocator("Create Image");
 		image.allocation = allocator.allocate_image(image_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, image.image);
+	}
+
+	void Swapchain::cleanup_unsafe_semaphore()
+	{
+		const VkPipelineStageFlags psw = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
+		VkSubmitInfo submit_info = {};
+		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_info.waitSemaphoreCount = 1;
+		submit_info.pWaitSemaphores = &present_complete;
+
+		vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &submit_info, VK_NULL_HANDLE);
 	}
 
 } // namespace Alabaster
