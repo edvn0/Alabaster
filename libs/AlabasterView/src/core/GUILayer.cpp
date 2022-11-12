@@ -83,10 +83,6 @@ namespace Alabaster {
 	{
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
-		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
-
 		ImGui::StyleColorsDark();
 
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -156,94 +152,116 @@ namespace Alabaster {
 
 	void GUILayer::begin()
 	{
-		ImGui_ImplVulkan_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
+		Renderer::submit(
+			[] {
+				ImGui_ImplVulkan_NewFrame();
+				ImGui_ImplGlfw_NewFrame();
+				ImGui::NewFrame();
+			},
+			"[GUILayer] Frame begin");
 	}
 
 	void GUILayer::end()
 	{
-		ImGui::Render();
+		Renderer::submit(
+			[] {
+				ImGui::Render();
 
-		static constexpr VkClearColorValue clear_colour { 0.1f, 0.1f, 0.1f, 1.0f };
+				static constexpr VkClearColorValue clear_colour { 0.1f, 0.1f, 0.1f, 1.0f };
 
-		const auto& swapchain = Application::the().get_window()->get_swapchain();
-		std::array<VkClearValue, 2> clear_values {};
-		clear_values[0].color = clear_colour;
-		clear_values[1].depthStencil = { .depth = 1.0f, .stencil = 0 };
+				const auto& swapchain = Application::the().get_window()->get_swapchain();
+				std::array<VkClearValue, 2> clear_values {};
+				clear_values[0].color = clear_colour;
+				clear_values[1].depthStencil = { .depth = 1.0f, .stencil = 0 };
 
-		uint32_t width = swapchain->get_width();
-		uint32_t height = swapchain->get_height();
+				uint32_t width = swapchain->get_width();
+				uint32_t height = swapchain->get_height();
 
-		uint32_t command_buffer_index = swapchain->frame();
+				uint32_t command_buffer_index = swapchain->frame();
 
-		VkCommandBufferBeginInfo cmd_bbi = {};
-		cmd_bbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-		cmd_bbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+				VkCommandBufferBeginInfo cmd_bbi = {};
+				cmd_bbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+				cmd_bbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
 
-		VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
-		vk_check(vkBeginCommandBuffer(draw_command_buffer, &cmd_bbi));
+				VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
+				vk_check(vkBeginCommandBuffer(draw_command_buffer, &cmd_bbi));
 
-		VkRenderPassBeginInfo render_pass_begin_info = {};
-		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_begin_info.renderPass = swapchain->get_render_pass();
-		render_pass_begin_info.renderArea.offset.x = 0;
-		render_pass_begin_info.renderArea.offset.y = 0;
-		render_pass_begin_info.renderArea.extent.width = width;
-		render_pass_begin_info.renderArea.extent.height = height;
-		render_pass_begin_info.clearValueCount = clear_values.size();
-		render_pass_begin_info.pClearValues = clear_values.data();
-		render_pass_begin_info.framebuffer = swapchain->get_current_framebuffer();
+				Log::info("[GUILayer] Begin swapchain command buffer");
 
-		vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
+				VkRenderPassBeginInfo render_pass_begin_info = {};
+				render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+				render_pass_begin_info.renderPass = swapchain->get_render_pass();
+				render_pass_begin_info.renderArea.offset.x = 0;
+				render_pass_begin_info.renderArea.offset.y = 0;
+				render_pass_begin_info.renderArea.extent.width = width;
+				render_pass_begin_info.renderArea.extent.height = height;
+				render_pass_begin_info.clearValueCount = clear_values.size();
+				render_pass_begin_info.pClearValues = clear_values.data();
+				render_pass_begin_info.framebuffer = swapchain->get_current_framebuffer();
 
-		const auto& imgui_buffer = imgui_command_buffers[command_buffer_index];
-		{
-			VkCommandBufferInheritanceInfo inheritance_info = {};
-			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-			inheritance_info.renderPass = swapchain->get_render_pass();
-			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
-			inheritance_info.subpass = 0;
+				vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-			VkCommandBufferBeginInfo cbi = {};
-			cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
-			cbi.pInheritanceInfo = &inheritance_info;
-			vk_check(vkBeginCommandBuffer(imgui_buffer, &cbi));
+				Log::info("[GUILayer] Begin render pass");
 
-			VkViewport viewport = {};
-			viewport.x = 0.0f;
-			viewport.y = static_cast<float>(height);
-			viewport.height = -static_cast<float>(height);
-			viewport.width = static_cast<float>(width);
-			viewport.minDepth = 0.0f;
-			viewport.maxDepth = 1.0f;
-			vkCmdSetViewport(imgui_buffer, 0, 1, &viewport);
+				const auto& imgui_buffer = imgui_command_buffers[command_buffer_index];
+				{
+					VkCommandBufferInheritanceInfo inheritance_info = {};
+					inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
+					inheritance_info.renderPass = swapchain->get_render_pass();
+					inheritance_info.framebuffer = swapchain->get_current_framebuffer();
+					inheritance_info.subpass = 0;
 
-			VkRect2D scissor = {};
-			scissor.extent.width = width;
-			scissor.extent.height = height;
-			scissor.offset.x = 0;
-			scissor.offset.y = 0;
-			vkCmdSetScissor(imgui_buffer, 0, 1, &scissor);
+					VkCommandBufferBeginInfo cbi = {};
+					cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+					cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
+					cbi.pInheritanceInfo = &inheritance_info;
+					vk_check(vkBeginCommandBuffer(imgui_buffer, &cbi));
 
-			ImDrawData* main_draw_data = ImGui::GetDrawData();
-			ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_buffer);
+					Log::info("[GUILayer] Begin secondary buffer");
 
-			vk_check(vkEndCommandBuffer(imgui_buffer));
-		}
+					VkViewport viewport = {};
+					viewport.x = 0.0f;
+					viewport.y = static_cast<float>(height);
+					viewport.height = -static_cast<float>(height);
+					viewport.width = static_cast<float>(width);
+					viewport.minDepth = 0.0f;
+					viewport.maxDepth = 1.0f;
+					vkCmdSetViewport(imgui_buffer, 0, 1, &viewport);
 
-		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
+					VkRect2D scissor = {};
+					scissor.extent.width = width;
+					scissor.extent.height = height;
+					scissor.offset.x = 0;
+					scissor.offset.y = 0;
+					vkCmdSetScissor(imgui_buffer, 0, 1, &scissor);
 
-		vkCmdEndRenderPass(draw_command_buffer);
+					ImDrawData* main_draw_data = ImGui::GetDrawData();
+					ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_buffer);
 
-		vkEndCommandBuffer(draw_command_buffer);
+					vk_check(vkEndCommandBuffer(imgui_buffer));
 
-		ImGuiIO& io = ImGui::GetIO();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-			ImGui::UpdatePlatformWindows();
-			ImGui::RenderPlatformWindowsDefault();
-		}
+					Log::info("[GUILayer] End secondary buffer");
+				}
+
+				vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
+
+				Log::info("[GUILayer] Execute secondary buffer");
+
+				vkCmdEndRenderPass(draw_command_buffer);
+
+				Log::info("[GUILayer] End render pass");
+
+				vkEndCommandBuffer(draw_command_buffer);
+
+				Log::info("[GUILayer] End swapchain command buffer");
+
+				ImGuiIO& io = ImGui::GetIO();
+				if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+					ImGui::UpdatePlatformWindows();
+					ImGui::RenderPlatformWindowsDefault();
+				}
+			},
+			"[GUILayer] End scene");
 	}
 
 	void GUILayer::ui() { }

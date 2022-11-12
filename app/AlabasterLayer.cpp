@@ -109,90 +109,13 @@ void AlabasterLayer::ui() { }
 
 void AlabasterLayer::ui(float ts)
 {
-	static bool persistent = true;
-	bool opt_fullscreen = persistent;
-	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
-
-	ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-	if (opt_fullscreen) {
-		ImGuiViewport* viewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(viewport->Pos);
-		ImGui::SetNextWindowSize(viewport->Size);
-		ImGui::SetNextWindowViewport(viewport->ID);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-		window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-		window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-	}
-
-	if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
-		window_flags |= ImGuiWindowFlags_NoBackground;
-
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-	ImGui::Begin("DockSpace", &is_dockspace_open, window_flags);
-	ImGui::PopStyleVar();
+	ImGui::Begin("Stats");
 	{
-		if (opt_fullscreen)
-			ImGui::PopStyleVar(2);
-
-		// DockSpace
-		ImGuiIO& io = ImGui::GetIO();
-		ImGuiStyle& style = ImGui::GetStyle();
-		float min_window_size_x = style.WindowMinSize.x;
-		style.WindowMinSize.x = 370.0f;
-		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
-			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
-			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
-		}
-
-		style.WindowMinSize.x = min_window_size_x;
-
-		if (ImGui::BeginMenuBar()) {
-			if (ImGui::BeginMenu("File")) {
-				if (ImGui::MenuItem("New", "Ctrl+N")) { }
-				if (ImGui::MenuItem("Open...", "Ctrl+O")) { }
-				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) { }
-				if (ImGui::MenuItem("Exit")) {
-					Application::the().exit();
-				}
-				ImGui::EndMenu();
-			}
-
-			ImGui::EndMenuBar();
-		}
-
-		ImGui::Begin("Stats");
-		{
-			ImGui::Text("Renderer Stats:");
-			std::string name = "None";
-			ImGui::Text("Hovered Entity: %s", name.c_str());
-			auto frametime = Application::the().frametime();
-			ImGui::Text("Frametime: %s", std::to_string(frametime).c_str());
-		}
-		ImGui::End();
-
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 { 0, 0 });
-		{
-			ImGui::Begin("Viewport");
-			{
-				auto viewport_min_region = ImGui::GetWindowContentRegionMin();
-				auto viewport_max_region = ImGui::GetWindowContentRegionMax();
-				auto viewport_offset = ImGui::GetWindowPos();
-				viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
-				viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
-
-				viewport_focused = ImGui::IsWindowFocused();
-				viewport_hovered = ImGui::IsWindowHovered();
-
-				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
-				viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
-
-				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
-
-				ImGui::End();
-			}
-		}
-		ImGui::PopStyleVar();
+		ImGui::Text("Renderer Stats:");
+		std::string name = "None";
+		ImGui::Text("Hovered Entity: %s", name.c_str());
+		auto frametime = Application::the().frametime();
+		ImGui::Text("Frametime: %s", std::to_string(frametime).c_str());
 	}
 	ImGui::End();
 }

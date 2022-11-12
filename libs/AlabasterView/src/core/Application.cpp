@@ -15,6 +15,8 @@
 #include "graphics/Renderer.hpp"
 #include "graphics/Swapchain.hpp"
 
+#define ALABASTER_USE_IMGUI
+
 namespace Alabaster {
 
 	static Application* global_app;
@@ -79,7 +81,7 @@ namespace Alabaster {
 
 #ifdef ALABASTER_USE_IMGUI
 			Renderer::submit([this] { gui_layer().begin(); }, "Begin ImGui");
-			// Renderer::submit([this] { render_imgui(); }, "Update Imgui");
+			Renderer::submit([this] { render_imgui(); }, "Update Imgui");
 			Renderer::submit([this] { gui_layer().end(); }, "End Scene ImGui");
 #endif
 			Renderer::end();
@@ -90,7 +92,7 @@ namespace Alabaster {
 				cpu_time = on_cpu.elapsed();
 				float time = Clock::get_ms<float>();
 				frame_time = time - last_frametime;
-				app_ts = glm::min<float>(frame_time, 0.0333f);
+				app_ts = frame_time;
 				last_frametime = time;
 			}
 			swapchain().end_frame();
@@ -107,9 +109,13 @@ namespace Alabaster {
 
 	void Application::render_imgui()
 	{
-		for (const auto& [key, layer] : layers) {
-			layer->ui(app_ts);
-		}
+		Renderer::submit(
+			[&layers = layers, &app_ts = app_ts] {
+				for (const auto& [key, layer] : layers) {
+					layer->ui(app_ts);
+				}
+			},
+			"[GUILayer] All layer update ");
 	}
 
 	void Application::update_layers(float ts)
