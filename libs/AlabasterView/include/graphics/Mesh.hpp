@@ -47,7 +47,7 @@ namespace Alabaster {
 		std::tuple<Vertices, Indices> load_model();
 
 	public:
-		static std::unique_ptr<Mesh> from_path(std::string args);
+		static std::unique_ptr<Mesh> from_file(std::string args);
 		static std::unique_ptr<Mesh> from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
 	};
 

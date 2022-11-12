@@ -10,7 +10,22 @@
 
 namespace Alabaster::IO {
 
+	void init_with_cwd(const std::filesystem::path& path);
+
 	std::filesystem::path resources();
+	template <typename Path = std::filesystem::path> std::filesystem::path shader(const Path& path)
+	{
+		return IO::resources() / std::filesystem::path { "shaders" } / std::filesystem::path { path };
+	}
+	template <typename Path = std::filesystem::path> std::filesystem::path model(const Path& path)
+	{
+		return IO::resources() / std::filesystem::path { "models" } / std::filesystem::path { path };
+	}
+	template <typename Path = std::filesystem::path> std::filesystem::path texture(const Path& path)
+	{
+		return IO::resources() / std::filesystem::path { "textures" } / std::filesystem::path { path };
+	}
+
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);
 	std::string read_file(std::filesystem::path&& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);
 	bool exists(const std::filesystem::path& path);

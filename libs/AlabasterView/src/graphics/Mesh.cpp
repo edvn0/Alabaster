@@ -98,7 +98,7 @@ namespace Alabaster {
 		return { vertices, indices };
 	}
 
-	std::unique_ptr<Mesh> Mesh::from_path(std::string path) { return std::make_unique<Mesh>(IO::slashed_to_fp(path)); }
+	std::unique_ptr<Mesh> Mesh::from_file(std::string path) { return std::make_unique<Mesh>(IO::model(std::move(path))); }
 	std::unique_ptr<Mesh> Mesh::from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)
 	{
 		return std::make_unique<Mesh>(vertices, indices);

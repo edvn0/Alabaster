@@ -71,7 +71,7 @@ namespace Alabaster {
 	}
 
 	Shader::Shader(const std::filesystem::path& p)
-		: shader_path(p)
+		: shader_path(IO::shader(p))
 	{
 		auto [vert, frag] = to_path(shader_path);
 		verify(IO::exists(vert), "Could not find vertex shader.");

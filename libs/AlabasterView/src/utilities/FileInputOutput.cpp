@@ -6,10 +6,14 @@
 
 namespace Alabaster::IO {
 
+	std::filesystem::path root;
+
 	static constexpr auto filter_file_types
 		= [](const auto& fd) { return fd.path().extension() == ".DS_Store" || fd.path().extension() == ".gitkeep"; };
 
-	std::filesystem::path resources() { return std::filesystem::path { "app" } / std::filesystem::path { "resources" }; }
+	void init_with_cwd(const std::filesystem::path& path) { root = path; }
+
+	std::filesystem::path resources() { return root; }
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{

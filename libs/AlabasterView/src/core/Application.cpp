@@ -135,11 +135,11 @@ namespace Alabaster {
 		dispatcher.dispatch<WindowMinimizeEvent>([this](WindowMinimizeEvent& e) { return on_window_change(e); });
 		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return on_window_change(e); });
 
-		layer_backward([&event](Layer* layer) {
+		for (const auto& [key, layer] : layers) {
 			layer->on_event(event);
 			if (event.handled)
 				return;
-		});
+		};
 
 		if (event.handled)
 			return;

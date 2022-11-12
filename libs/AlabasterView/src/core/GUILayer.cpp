@@ -158,6 +158,8 @@ namespace Alabaster {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		auto& io = ImGui::GetIO();
 	}
 
 	void GUILayer::end()

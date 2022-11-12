@@ -13,6 +13,7 @@
 #include "graphics/Swapchain.hpp"
 #include "graphics/UniformBuffer.hpp"
 #include "graphics/VertexBuffer.hpp"
+#include "utilities/FileInputOutput.hpp"
 #include "vulkan/vulkan_core.h"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -229,7 +230,7 @@ namespace Alabaster {
 		create_descriptor_sets();
 
 		PipelineSpecification spec {
-			.shader = Shader("app/resources/shaders/main"),
+			.shader = Shader("main"),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
@@ -245,7 +246,7 @@ namespace Alabaster {
 		data.quad_pipeline->invalidate();
 
 		PipelineSpecification mesh {
-			.shader = Shader("app/resources/shaders/mesh"),
+			.shader = Shader("mesh"),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
@@ -261,7 +262,7 @@ namespace Alabaster {
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh);
 		data.mesh_pipeline->invalidate();
 
-		PipelineSpecification line { .shader = Shader("app/resources/shaders/line"),
+		PipelineSpecification line { .shader = Shader("line"),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
@@ -490,11 +491,13 @@ namespace Alabaster {
 				VkDeviceSize offsets { 0 };
 				vkCmdBindVertexBuffers(*buffer, 0, 1, vbs.data(), &offsets);
 
+				vkCmdBindIndexBuffer(*buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
+
 				const auto& transform = mesh->get_transform();
 				if (transform) {
-					vkCmdPushConstants(
-						*buffer, pipe->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(*transform));
-					vkCmdBindIndexBuffer(*buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
+					const auto transform_matrix = *transform;
+					vkCmdPushConstants(*buffer, pipe->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
+						glm::value_ptr(transform_matrix));
 				}
 
 				vkCmdDrawIndexed(*buffer, static_cast<uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);

@@ -12,31 +12,8 @@ static uint32_t quads { 1 };
 
 bool AlabasterLayer::initialise()
 {
-	viking_room_model = Mesh::from_path("app/resources/models/viking_room.obj");
-	sphere_model = Mesh::from_path("app/resources/models/sphere.obj");
-
-	VkPhysicalDeviceProperties properties {};
-	vkGetPhysicalDeviceProperties(GraphicsContext::the().physical_device(), &properties);
-
-	VkSamplerCreateInfo samplerInfo {};
-	samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-	samplerInfo.magFilter = VK_FILTER_LINEAR;
-	samplerInfo.minFilter = VK_FILTER_LINEAR;
-	samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-	samplerInfo.anisotropyEnable = VK_TRUE;
-	samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
-	samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
-	samplerInfo.unnormalizedCoordinates = VK_FALSE;
-	samplerInfo.compareEnable = VK_FALSE;
-	samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-	samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-	samplerInfo.minLod = 0.0f;
-	samplerInfo.maxLod = 0.0f;
-	samplerInfo.mipLodBias = 0.0f;
-
-	vk_check(vkCreateSampler(GraphicsContext::the().device(), &samplerInfo, nullptr, &vk_sampler));
+	viking_room_model = Mesh::from_file("viking_room.obj");
+	sphere_model = Mesh::from_file("sphere.obj");
 
 	return true;
 }
@@ -86,12 +63,12 @@ void AlabasterLayer::update(float ts)
 			}
 		}*/
 
-		renderer.quad({ 0, 3, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 0, 0, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 
-		glm::vec3 axis_base { 0, 3, 0 };
-		renderer.line(axis_base, axis_base + glm::vec3 { 3, 0, 0 }, { 1, 0, 0, 1 });
-		renderer.line(axis_base, axis_base + glm::vec3 { 0, -3, 0 }, { 0, 1, 0, 1 });
-		renderer.line(axis_base, axis_base + glm::vec3 { 0, 0, -3 }, { 0, 0, 1, 1 });
+		glm::vec3 axis_base { 0, -0.1, 0 };
+		renderer.line(axis_base, axis_base + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
+		renderer.line(axis_base, axis_base + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
+		renderer.line(axis_base, axis_base + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
 
 		renderer.mesh(sphere_model);
 

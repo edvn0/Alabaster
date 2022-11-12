@@ -6,6 +6,7 @@
 #include "core/Application.hpp"
 #include "core/events/Event.hpp"
 #include "core/events/KeyEvent.hpp"
+#include "core/events/MouseEvent.hpp"
 #include "core/Input.hpp"
 #include "core/Logger.hpp"
 
@@ -35,6 +36,26 @@ namespace Alabaster {
 	void SimpleCamera::on_event(Event& event)
 	{
 		EventDispatcher dispatcher(event);
+		dispatcher.dispatch<MouseScrolledEvent>([=](MouseScrolledEvent& event) {
+			glm::vec3 cam_front;
+			cam_front.x = -cos(glm::radians(rotation.x)) * sin(glm::radians(rotation.y));
+			cam_front.y = sin(glm::radians(rotation.x));
+			cam_front.z = cos(glm::radians(rotation.x)) * cos(glm::radians(rotation.y));
+			cam_front = glm::normalize(cam_front);
+
+			if (event.get_y_offset() > 0)
+				position += cam_front * event.get_y_offset();
+			if (event.get_y_offset() < 0)
+				position -= cam_front * event.get_y_offset();
+			if (event.get_x_offset() > 0)
+				position -= glm::normalize(glm::cross(cam_front, glm::vec3(0.0f, 1.0f, 0.0f))) * event.get_x_offset();
+			if (event.get_x_offset() < 0)
+				position += glm::normalize(glm::cross(cam_front, glm::vec3(0.0f, 1.0f, 0.0f))) * event.get_x_offset();
+
+			update_view_matrix();
+			return false;
+		});
+
 		dispatcher.dispatch<KeyPressedEvent>([this, &type = type, &flip = should_flip_y_axis](KeyPressedEvent& in) {
 			if (in.get_key_code() == Key::V) {
 				flip = !flip;

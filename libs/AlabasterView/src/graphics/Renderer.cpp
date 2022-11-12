@@ -100,7 +100,7 @@ namespace Alabaster {
 		Log::info("[Renderer] Initialisation of renderer.");
 
 		renderer_is_initialized = true;
-		std::vector<std::string> all_files_in_shaders = IO::in_directory<std::string>("app/resources/shaders", { ".spv" });
+		std::vector<std::string> all_files_in_shaders = IO::in_directory<std::string>(IO::resources(), { ".spv" });
 		std::sort(all_files_in_shaders.begin(), all_files_in_shaders.end());
 		verify(all_files_in_shaders.size() % 2 == 0, "2N shaders, hopefully matching by name");
 		for (size_t i = 0; i < all_files_in_shaders.size(); i += 2) {

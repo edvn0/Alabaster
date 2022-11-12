@@ -9,6 +9,8 @@
 #include "graphics/Shader.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 
+#include <vulkan/vulkan_core.h>
+
 namespace Alabaster {
 
 	static VkFormat datatype_to_vulkan(ShaderDataType type)
@@ -82,7 +84,7 @@ namespace Alabaster {
 		rasterisation_state.rasterizerDiscardEnable = VK_FALSE;
 		rasterisation_state.polygonMode = VK_POLYGON_MODE_FILL;
 		rasterisation_state.lineWidth = spec.line_width;
-		rasterisation_state.cullMode = spec.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
+		rasterisation_state.cullMode = VK_CULL_MODE_NONE; // spec.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
 		rasterisation_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
 		rasterisation_state.depthBiasEnable = VK_FALSE;
 
