@@ -20,7 +20,7 @@ bool AlabasterLayer::initialise()
 
 void AlabasterLayer::on_event(Event& e)
 {
-	camera.on_event(e);
+	editor.on_event(e);
 
 	EventDispatcher dispatch(e);
 	dispatch.dispatch<KeyPressedEvent>([](KeyPressedEvent& key_event) {
@@ -51,7 +51,7 @@ void AlabasterLayer::update(float ts)
 	renderer.reset_stats();
 	renderer.begin_scene();
 	{
-		camera.on_update(ts);
+		editor.on_update(ts);
 
 		/*for (int x = -10; x <= 10; x++) {
 			for (int y = -10; y <= 10; y++) {
@@ -171,15 +171,4 @@ void AlabasterLayer::ui(float ts)
 	ImGui::End();
 }
 
-void AlabasterLayer::destroy()
-{
-	Renderer::free_resource([this] {
-		vkDestroyRenderPass(GraphicsContext::the().device(), render_pass, nullptr);
-		viking_room_model->destroy();
-		viking_room_pipeline->destroy();
-		sphere_model->destroy();
-
-		Log::info("[AlabasterLayer] Destroyed layer.");
-	});
-	Layer::destroy();
-}
+void AlabasterLayer::destroy() { }

@@ -6,6 +6,7 @@
 
 #include "core/events/Event.hpp"
 #include "core/events/MouseEvent.hpp"
+#include "glm/fwd.hpp"
 
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/glm.hpp>
@@ -27,8 +28,10 @@ namespace Alabaster {
 		virtual void on_update(float ts) {};
 		virtual void on_event(Event& e) {};
 
-		const glm::mat4& get_projection_matrix() const { return projection_matrix; }
-		const glm::mat4& get_unreversed_projection_matrix() const { return unreversed_projection_matrix; }
+		virtual const glm::mat4& get_projection_matrix() const { return projection_matrix; }
+		virtual const glm::mat4& get_view_matrix() const { return view_matrix; }
+		virtual const glm::mat4& get_unreversed_projection_matrix() const { return unreversed_projection_matrix; }
+		const glm::mat4 get_view_projection() const { return get_projection_matrix() * get_view_matrix(); }
 
 		void set_projection_matrix(const glm::mat4 projection, const glm::mat4 unreversed_projection)
 		{
@@ -56,8 +59,9 @@ namespace Alabaster {
 		float exposure = 0.8f;
 
 	private:
-		glm::mat4 projection_matrix = glm::mat4(1.0f);
-		glm::mat4 unreversed_projection_matrix = glm::mat4(1.0f);
+		glm::mat4 projection_matrix { 1.0f };
+		glm::mat4 unreversed_projection_matrix { 1.0f };
+		glm::mat4 view_matrix { 1.0f };
 	};
 
 	enum class CameraMode { None, Flycam, Arcball };

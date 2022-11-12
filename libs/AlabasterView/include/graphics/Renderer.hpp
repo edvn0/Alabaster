@@ -15,9 +15,6 @@ namespace Alabaster {
 
 	template <typename T> using ConstUnique = const std::unique_ptr<T>&;
 
-	template <typename T>
-	concept TriviallyDestructible = std::is_trivially_destructible_v<T>;
-
 	class SceneRenderer;
 	class Mesh;
 	class Camera;
@@ -38,33 +35,32 @@ namespace Alabaster {
 		static uint32_t current_frame();
 
 	public:
-		template <TriviallyDestructible CommandBufferFunction> static void submit(CommandBufferFunction&& func)
-		{
-			Renderer::submit(std::move(func), {});
-		}
+		template <typename CommandBufferFunction> static void submit(CommandBufferFunction&& func) { Renderer::submit(std::move(func), {}); }
 
-		template <TriviallyDestructible CommandBufferFunction> static void submit(CommandBufferFunction&& func, std::string_view message)
+		template <typename CommandBufferFunction> static void submit(CommandBufferFunction&& func, std::string_view message)
 		{
 			auto render_command = [message](void* function_ptr) {
-				const auto& this_function = *static_cast<CommandBufferFunction*>(function_ptr);
+				auto this_function = (CommandBufferFunction*)function_ptr;
 				if (!message.empty()) {
 					Log::info("[Renderer - Command] {}", message);
 				}
-				this_function();
+				(*this_function)();
+				this_function->~CommandBufferFunction();
 			};
 
 			auto storage_buffer = Renderer::render_queue().allocate(render_command, sizeof(func));
 			new (storage_buffer) CommandBufferFunction(std::forward<CommandBufferFunction>(func));
 		}
 
-		template <TriviallyDestructible ResourceFreeFunction> static void free_resource(ResourceFreeFunction&& func)
+		template <typename ResourceFreeFunction> static void free_resource(ResourceFreeFunction&& func)
 		{
 			auto command = [](void* function_ptr) {
-				const auto& this_function = *static_cast<ResourceFreeFunction*>(function_ptr);
-				this_function();
+				auto this_function = (ResourceFreeFunction*)function_ptr;
+				(*this_function)();
+				this_function->~ResourceFreeFunction();
 			};
 
-			Renderer::submit([command, func]() {
+			submit([command, func]() {
 				const uint32_t index = Renderer::current_frame();
 				auto storage_buffer = Renderer::resource_release_queue(index).allocate(command, sizeof(func));
 				new (storage_buffer) ResourceFreeFunction(std::forward<ResourceFreeFunction>((ResourceFreeFunction &&) func));

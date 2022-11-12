@@ -4,6 +4,7 @@
 
 #include "core/Application.hpp"
 #include "core/Window.hpp"
+#include "graphics/Camera.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/IndexBuffer.hpp"
 #include "graphics/Mesh.hpp"
@@ -208,7 +209,7 @@ namespace Alabaster {
 		vkBindBufferMemory(GraphicsContext::the().device(), buffer, memory, 0);
 	}
 
-	Renderer3D::Renderer3D(SimpleCamera& camera) noexcept
+	Renderer3D::Renderer3D(Camera& camera) noexcept
 		: camera(camera)
 		, command_buffer("Swapchain")
 	{
@@ -240,7 +241,6 @@ namespace Alabaster {
 			.depth_write = true,
 			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-			.instance_layout = {},
 		};
 		data.quad_pipeline = std::make_unique<Pipeline>(spec);
 		data.quad_pipeline->invalidate();
@@ -256,7 +256,6 @@ namespace Alabaster {
 			.depth_write = true,
 			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-			.instance_layout = {},
 			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)) },
 		};
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh);
@@ -272,7 +271,6 @@ namespace Alabaster {
 			.depth_write = true,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
-			.instance_layout = {},
 			.line_width = 2.0f };
 		data.line_pipeline = std::make_unique<Pipeline>(line);
 		data.line_pipeline->invalidate();
@@ -514,7 +512,7 @@ namespace Alabaster {
 			ubo.projection = camera.get_projection_matrix();
 			ubo.view = camera.get_view_matrix();
 			ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-			ubo.view_projection = ubo.projection * ubo.view;
+			ubo.view_projection = camera.get_view_projection();
 
 			void* mapped;
 			vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index], 0, sizeof(ubo), 0, &mapped);

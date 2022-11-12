@@ -64,7 +64,7 @@ namespace Alabaster {
 	public:
 		explicit Pipeline(PipelineSpecification spec)
 			: spec(std::move(spec)) {};
-		~Pipeline() = default;
+		~Pipeline() { destroy(); };
 
 		void destroy();
 

@@ -22,10 +22,12 @@ namespace Alabaster {
 		explicit Mesh(const std::filesystem::path& path);
 		Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
 
+		~Mesh() { destroy(); }
+
 		const VertexBuffer& get_vertex_buffer() const { return *vertex_buffer; }
 		const IndexBuffer& get_index_buffer() const { return *index_buffer; }
 
-		void set_transform(glm::mat4&& input) { transform = input; }
+		void set_transform(glm::mat4&& input) { transform = std::move(input); }
 		void reset_transform() { transform.reset(); }
 		const auto& get_transform() { return transform; }
 
@@ -44,6 +46,7 @@ namespace Alabaster {
 		size_t vertex_count { 0 };
 		size_t index_count { 0 };
 
+	private:
 		std::tuple<Vertices, Indices> load_model();
 
 	public:

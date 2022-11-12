@@ -79,7 +79,7 @@ namespace Alabaster {
 
 	class Renderer3D {
 	public:
-		explicit Renderer3D(SimpleCamera& camera) noexcept;
+		explicit Renderer3D(Camera& camera) noexcept;
 
 		void begin_scene();
 		void quad(const glm::vec4& pos = { 0, 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
@@ -90,6 +90,8 @@ namespace Alabaster {
 		void end_scene();
 
 		void reset_stats();
+
+		void set_camera(Camera& cam) { camera = cam; }
 
 	private:
 		void draw_quads();
@@ -104,7 +106,7 @@ namespace Alabaster {
 		void create_renderpass();
 
 	private:
-		SimpleCamera& camera;
+		Camera& camera;
 		RendererData data;
 		CommandBuffer command_buffer;
 		void draw_meshes();

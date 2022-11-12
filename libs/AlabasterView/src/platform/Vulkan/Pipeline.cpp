@@ -214,8 +214,6 @@ namespace Alabaster {
 
 	void Pipeline::destroy()
 	{
-		spec.shader.destroy();
-
 		Renderer::free_resource([this] {
 			vkDestroyPipelineCache(GraphicsContext::the().device(), pipeline_cache, nullptr);
 			vkDestroyPipelineLayout(GraphicsContext::the().device(), pipeline_layout, nullptr);

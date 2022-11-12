@@ -9,12 +9,12 @@ namespace Alabaster {
 
 	struct Layer {
 		virtual ~Layer() = default;
-		virtual auto initialise() -> bool { return true; };
-		virtual auto update(float ts) -> void {};
-		virtual auto destroy() -> void {};
-		virtual void ui(float ts) {};
-		virtual void ui() {};
-		virtual void on_event(Event& event) {};
+		virtual auto initialise() -> bool = 0;
+		virtual auto update(float ts) -> void = 0;
+		virtual auto destroy() -> void = 0;
+		virtual void ui(float ts) = 0;
+		virtual void ui() = 0;
+		virtual void on_event(Event& event) = 0;
 
 		std::string_view get_name() { return name(); }
 

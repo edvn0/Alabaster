@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/events/Event.hpp"
+#include "graphics/Camera.hpp"
 
 #include <glm/glm.hpp>
 
@@ -8,15 +9,15 @@ namespace Alabaster {
 
 	enum class CameraType { LookAt, FirstPerson };
 
-	class SimpleCamera {
+	class SimpleCamera : public Camera {
 	public:
 		SimpleCamera(CameraType type, float aspect, float near, float far, float fov);
 
-		void on_event(Event& event);
-		void on_update(float ts);
+		void on_event(Event& event) final;
+		void on_update(float ts) final;
 
-		const glm::mat4& get_projection_matrix() const;
-		const glm::mat4& get_view_matrix() const;
+		const glm::mat4& get_projection_matrix() const override;
+		const glm::mat4& get_view_matrix() const override;
 		float get_near_clip() const;
 		float get_far_clip() const;
 

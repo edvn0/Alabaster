@@ -46,8 +46,6 @@ namespace Alabaster {
 
 	void Application::stop()
 	{
-		layer_forward([](Layer* l) { l->destroy(); });
-
 		for (const auto& [key, layer] : layers) {
 			pop_layer(key);
 		}

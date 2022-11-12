@@ -60,7 +60,7 @@ namespace Alabaster {
 			verify(found_it != layers.end());
 
 			(*found_it).second->destroy();
-			layers.erase(found_it);
+			layers.erase(name);
 		}
 
 		static Application& the();

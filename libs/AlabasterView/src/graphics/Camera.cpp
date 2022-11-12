@@ -12,8 +12,7 @@
 namespace Alabaster {
 
 	EditorCamera::EditorCamera(const float deg_fov, const float width, const float height, const float near_plane, const float far_plane)
-		: Camera(glm::perspectiveFov(glm::radians(deg_fov), width, height, far_plane, near_plane),
-			glm::perspectiveFov(glm::radians(deg_fov), width, height, near_plane, far_plane))
+		: Camera(deg_fov, width, height, far_plane, near_plane)
 		, focal_point(0.0f)
 		, vertical_fov(glm::radians(deg_fov))
 		, near_clip(near_plane)
@@ -24,11 +23,11 @@ namespace Alabaster {
 
 	void EditorCamera::init()
 	{
-		static constexpr glm::vec3 pos = { 0, -2, -2 };
+		static constexpr glm::vec3 pos = { 0, 3, -5 };
 		distance = glm::distance(pos, focal_point);
 
-		yaw = 3.0f * glm::pi<float>() / 4.0f;
-		pitch = glm::pi<float>() / 4.0f;
+		yaw = 0;
+		pitch = glm::radians(-30.0f);
 
 		position = calculate_position();
 		const glm::quat orientation = get_orientation();
