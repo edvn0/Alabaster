@@ -109,13 +109,10 @@ namespace Alabaster {
 
 	void Application::render_imgui()
 	{
-		Renderer::submit(
-			[&layers = layers, &app_ts = app_ts] {
-				for (const auto& [key, layer] : layers) {
-					layer->ui(app_ts);
-				}
-			},
-			"[GUILayer] All layer update ");
+
+		for (const auto& [key, layer] : layers) {
+			layer->ui(app_ts);
+		}
 	}
 
 	void Application::update_layers(float ts)

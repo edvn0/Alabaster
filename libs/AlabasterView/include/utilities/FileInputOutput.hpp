@@ -18,7 +18,7 @@ namespace Alabaster::IO {
 	std::filesystem::path independent_path(const std::string& path);
 	std::filesystem::path slashed_to_fp(const std::string& slashed_string);
 
-	template <typename Output = std::filesystem::path, bool Recursive = false>
+	template <typename Output = std::string, bool Recursive = false>
 	std::vector<Output> in_directory(const std::filesystem::path& path, std::unordered_set<std::string> extensions)
 	{
 		static constexpr auto entry_to_string = [](const auto& input) { return input.path().extension().string(); };
@@ -26,13 +26,13 @@ namespace Alabaster::IO {
 		if constexpr (Recursive) {
 			for (const auto& fd : std::filesystem::recursive_directory_iterator { path }) {
 				if (extensions.count(entry_to_string(fd))) {
-					output.push_back(static_cast<Output>(fd.path()));
+					output.push_back(static_cast<Output>(fd.path().string()));
 				}
 			}
 		} else {
 			for (const auto& fd : std::filesystem::directory_iterator { path }) {
 				if (extensions.count(entry_to_string(fd))) {
-					output.push_back(static_cast<Output>(fd.path()));
+					output.push_back(static_cast<Output>(fd.path().string()));
 				}
 			}
 		}

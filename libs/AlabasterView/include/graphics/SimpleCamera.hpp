@@ -37,8 +37,8 @@ namespace Alabaster {
 
 		CameraType type = CameraType::LookAt;
 
-		float rotation_speed = 1.0f;
-		float movement_speed = 1.0f;
+		float rotation_speed = 0.05f;
+		float movement_speed = 0.05f;
 
 		bool updated = false;
 		bool should_flip_y_axis = false;

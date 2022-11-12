@@ -20,6 +20,7 @@
 #include <vulkan/vulkan.h>
 
 #define USE_CAMERA
+#define ALABASTER_USE_IMGUI
 
 namespace Alabaster {
 
@@ -420,7 +421,6 @@ namespace Alabaster {
 		Log::info("[Renderer3D] Draw calls: {}", data.draw_calls);
 
 		Renderer::end_render_pass(command_buffer);
-		command_buffer.end();
 		command_buffer.submit();
 	}
 
