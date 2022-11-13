@@ -22,7 +22,7 @@ layout(location = 1) out vec2 out_uvs;
 void main()
 {
 	// gl_Position = ubo.view_proj * RendererPushConstants.transform * locations;
-	gl_Position = ubo.view_proj * ubo.model * locations;
+	gl_Position = ubo.view_proj * RendererPushConstants.transform * locations;
 	out_colour = colour;
 	out_uvs = uvs;
 }

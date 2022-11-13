@@ -26,6 +26,10 @@
 
 namespace Alabaster {
 
+	struct RendererTransform {
+		glm::mat4 transform;
+	};
+
 	static constexpr auto default_model = glm::mat4 { 1.0f };
 
 	static void reset_data(RendererData& to_reset)
@@ -453,8 +457,8 @@ namespace Alabaster {
 
 		vkCmdBindIndexBuffer(*command_buffer, *data.mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-		vkCmdPushConstants(
-			*command_buffer, pipeline->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(*transform));
+		RendererTransform rt { *transform };
+		vkCmdPushConstants(*command_buffer, pipeline->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
 
 		vkCmdDrawIndexed(*command_buffer, static_cast<uint32_t>(data.mesh->get_index_count()), 1, 0, 0, 0);
 	}
