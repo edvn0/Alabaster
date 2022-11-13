@@ -29,6 +29,14 @@ namespace Alabaster {
 		void reset_transform() { transform.reset(); }
 		const auto& get_transform() { return transform; }
 
+		void set_colour(const glm::vec4& input) { colour = input; }
+		void reset_colour() { colour.reset(); }
+		const auto& get_colour() { return colour; }
+
+		void set_scale(const glm::mat4& input) { scale = input; }
+		void reset_scale() { scale.reset(); }
+		const auto& get_scale() { return scale; }
+
 		size_t get_index_count() const { return index_count; }
 
 		void destroy();
@@ -40,6 +48,8 @@ namespace Alabaster {
 		std::unique_ptr<IndexBuffer> index_buffer;
 
 		std::optional<glm::mat4> transform { std::nullopt };
+		std::optional<glm::vec4> colour { std::nullopt };
+		std::optional<glm::mat4> scale { std::nullopt };
 
 		size_t vertex_count { 0 };
 		size_t index_count { 0 };

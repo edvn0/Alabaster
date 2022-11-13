@@ -57,7 +57,7 @@ namespace Alabaster {
 		pipeline_layout_create_info.pSetLayouts = shader.descriptor_set_layouts().data();
 
 		if (spec.ranges) {
-			const auto used = *spec.ranges;
+			const auto& used = *spec.ranges;
 			const auto range = used.get_push_constant_range();
 
 			pipeline_layout_create_info.pushConstantRangeCount = 1;

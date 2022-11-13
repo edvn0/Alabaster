@@ -19,6 +19,7 @@ cmake -B "$build_folder" \
     -D CMAKE_BUILD_TYPE="$build_type" \
     -D CMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug \
     -D BUILD_TESTING="$build_testing" \
+    -D VMA_RECORDING_ENABLED="ON" \
     -D Random_BuildTests="OFF" \
     -D BUILD_SHARED_LIBS=OFF \
     -S "$current_dir"

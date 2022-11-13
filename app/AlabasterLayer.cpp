@@ -70,9 +70,17 @@ void AlabasterLayer::update(float ts)
 		renderer.line(axis_base, axis_base + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
 		renderer.line(axis_base, axis_base + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
 
-		// renderer.mesh(sphere_model);
+		auto sphere_rot = glm::mat4 { 1.0f };
 
-		renderer.mesh(viking_room_model, nullptr, { 0, 0, 0 }, { 1, 1, 1, 1 }, { 2, 2, 2 });
+		renderer.mesh(sphere_model, nullptr, { 0, 0, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .1, .1 });
+
+		auto rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
+		renderer.mesh(viking_room_model, nullptr, { 0, 0, 0 }, std::move(rotation), { 1, 1, 1, 1 }, { 1, 1, 1 });
+
+		auto rotation2 = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
+		renderer.mesh(viking_room_model, nullptr, { 3, 3, 0 }, std::move(rotation2), { 1, 1, 1, 1 }, { 1, 1, 1 });
+		auto rotation3 = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
+		renderer.mesh(viking_room_model, nullptr, { -3, -3, 0 }, std::move(rotation3), { 1, 1, 1, 1 }, { 1, 1, 1 });
 	}
 	renderer.end_scene();
 

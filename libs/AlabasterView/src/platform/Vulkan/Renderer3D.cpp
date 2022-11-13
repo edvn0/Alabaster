@@ -28,6 +28,7 @@ namespace Alabaster {
 
 	struct RendererTransform {
 		glm::mat4 transform;
+		glm::vec4 colour;
 	};
 
 	static constexpr auto default_model = glm::mat4 { 1.0f };
@@ -38,8 +39,7 @@ namespace Alabaster {
 		to_reset.quad_vertices_submitted = 0;
 		to_reset.line_indices_submitted = 0;
 		to_reset.line_vertices_submitted = 0;
-		to_reset.mesh_pipeline_submit = nullptr;
-		to_reset.mesh = nullptr;
+		to_reset.meshes_submitted = 0;
 	}
 
 	void Renderer3D::create_renderpass()
@@ -220,7 +220,8 @@ namespace Alabaster {
 			.depth_write = true,
 			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)) },
+			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)),
+				PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4)) },
 		};
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh_spec);
 		data.mesh_pipeline->invalidate();
@@ -305,14 +306,15 @@ namespace Alabaster {
 		data.quad_indices_submitted += 6;
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec3& pos, const glm::vec4& colour,
-		const glm::vec3& scale)
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec3& pos,
+		const glm::mat4& rotation_matrix, const glm::vec4& colour, const glm::vec3& scale)
 	{
-		auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z }) * glm::scale(glm::mat4(1.0f), scale);
+		auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z }) * glm::scale(glm::mat4(1.0f), scale) * rotation_matrix;
 		mesh->set_transform(std::move(transform));
-
-		data.mesh = mesh.get();
-		data.mesh_pipeline_submit = pipeline ? pipeline.get() : data.mesh_pipeline.get();
+		mesh->set_colour(colour);
+		data.mesh[data.meshes_submitted] = mesh.get();
+		data.mesh_pipeline_submit[data.meshes_submitted] = pipeline ? pipeline.get() : data.mesh_pipeline.get();
+		data.meshes_submitted++;
 	}
 
 	void Renderer3D::line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
@@ -368,7 +370,7 @@ namespace Alabaster {
 			data.draw_calls++;
 		}
 
-		if (data.mesh) {
+		if (data.meshes_submitted > 0) {
 
 			draw_meshes();
 
@@ -438,29 +440,39 @@ namespace Alabaster {
 
 	void Renderer3D::draw_meshes()
 	{
-		const auto& vb = data.mesh->get_vertex_buffer();
-		const auto& ib = data.mesh->get_index_buffer();
-		const auto& descriptor = data.descriptor_sets[Renderer::current_frame()];
-		const auto& pipeline = data.mesh_pipeline;
+		Pipeline* current = data.mesh_pipeline_submit[0];
+		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, current->get_vulkan_pipeline());
 
-		const auto& transform = data.mesh->get_transform();
-		update_uniform_buffers(transform);
+		const VkDescriptorSet& descriptor = data.descriptor_sets[Renderer::current_frame()];
 
-		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, data.mesh_pipeline->get_vulkan_pipeline());
+		for (uint32_t i = 0; i < data.meshes_submitted; i++) {
+			const auto& mesh = data.mesh[i];
 
-		vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, data.mesh_pipeline->get_vulkan_pipeline_layout(), 0, 1,
-			&data.descriptor_sets[Renderer::current_frame()], 0, nullptr);
+			const auto& vb = mesh->get_vertex_buffer();
+			const auto& ib = mesh->get_index_buffer();
+			auto& pipeline = data.mesh_pipeline_submit[i];
 
-		std::array<VkBuffer, 1> vbs { *data.mesh->get_vertex_buffer() };
-		VkDeviceSize offsets { 0 };
-		vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
+			if (pipeline != current) {
+				current = pipeline;
+				vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, current->get_vulkan_pipeline());
+			}
 
-		vkCmdBindIndexBuffer(*command_buffer, *data.mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
+			vkCmdBindDescriptorSets(
+				*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, current->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
 
-		RendererTransform rt { *transform };
-		vkCmdPushConstants(*command_buffer, pipeline->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
+			std::array<VkBuffer, 1> vbs { *mesh->get_vertex_buffer() };
+			VkDeviceSize offsets { 0 };
+			vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
 
-		vkCmdDrawIndexed(*command_buffer, static_cast<uint32_t>(data.mesh->get_index_count()), 1, 0, 0, 0);
+			vkCmdBindIndexBuffer(*command_buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
+
+			RendererTransform rt {};
+			rt.colour = *mesh->get_colour();
+			rt.transform = *mesh->get_transform();
+			vkCmdPushConstants(*command_buffer, current->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
+
+			vkCmdDrawIndexed(*command_buffer, static_cast<uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
+		}
 	}
 
 	void Renderer3D::update_uniform_buffers(const std::optional<glm::mat4>& model)

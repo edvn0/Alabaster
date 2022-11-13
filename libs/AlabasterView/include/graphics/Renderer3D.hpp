@@ -65,8 +65,9 @@ namespace Alabaster {
 		VkDescriptorPool descriptor_pool;
 		VkRenderPass render_pass;
 
-		Mesh* mesh;
-		Pipeline* mesh_pipeline_submit;
+		uint32_t meshes_submitted { 0 };
+		std::array<Mesh*, 50> mesh;
+		std::array<Pipeline*, 50> mesh_pipeline_submit;
 		std::unique_ptr<Pipeline> mesh_pipeline;
 	};
 
@@ -78,7 +79,7 @@ namespace Alabaster {
 		void quad(const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
 			float rotation_degrees = 0.0f);
 		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline = nullptr, const glm::vec3& pos = { 0, 0, 0 },
-			const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
+			const glm::mat4& rotation_matrix = glm::mat4 { 1.0f }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
 		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void end_scene();
 

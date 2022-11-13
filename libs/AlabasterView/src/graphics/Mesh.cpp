@@ -75,7 +75,7 @@ namespace Alabaster {
 				Vertex vertex {};
 
 				vertex.position = { attrib.vertices[3 * index.vertex_index + 0], attrib.vertices[3 * index.vertex_index + 1],
-					attrib.vertices[3 * index.vertex_index + 2], 0 };
+					attrib.vertices[3 * index.vertex_index + 2], 1 };
 
 				const auto u = attrib.texcoords[2 * index.texcoord_index + 0];
 				const auto v = 1.0f - attrib.texcoords[2 * index.texcoord_index + 1];

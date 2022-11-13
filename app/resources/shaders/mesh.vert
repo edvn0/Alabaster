@@ -13,16 +13,19 @@ layout(binding = 0) uniform UBO
 }
 ubo;
 
-layout(push_constant) uniform Renderer3D { mat4 transform; }
-RendererPushConstants;
+layout(push_constant) uniform Renderer3D
+{
+	mat4 transform;
+	vec4 mesh_colour;
+}
+pc;
 
 layout(location = 0) out vec4 out_colour;
 layout(location = 1) out vec2 out_uvs;
 
 void main()
 {
-	// gl_Position = ubo.view_proj * RendererPushConstants.transform * locations;
-	gl_Position = ubo.view_proj * RendererPushConstants.transform * locations;
-	out_colour = colour;
+	gl_Position = ubo.view_proj * pc.transform * locations;
+	out_colour = pc.mesh_colour;
 	out_uvs = uvs;
 }

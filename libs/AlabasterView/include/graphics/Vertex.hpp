@@ -8,17 +8,20 @@
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/glm.hpp>
+#include <glm/gtc/epsilon.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
 namespace Alabaster {
+
+	static constexpr auto vertex_is_same = [](auto&& a, auto&& b) -> bool { return glm::all(glm::epsilonEqual(a, b, 0.00001f)); };
 
 	struct Vertex {
 		glm::vec4 position;
 		glm::vec4 colour;
 		glm::vec2 uv;
 
-		bool operator==(const Vertex& other) const { return position == other.position && colour == other.colour && uv == other.uv; }
+		bool operator==(const Vertex& other) const { return vertex_is_same(position, other.position) && colour == other.colour && uv == other.uv; }
 	};
 
 	using Index = uint32_t;
