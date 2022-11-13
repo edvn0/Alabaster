@@ -11,7 +11,7 @@ clean_first=${3:OFF}
 build_type=${4:Debug}
 
 cmake -B "$build_folder" \
-    -G "Visual Studio 17 2022" \
+    -G Ninja \
     -D GLFW_INSTALL=OFF \
     -D GLFW_BUILD_DOCS=OFF \
     -D GLFW_BUILD_TESTS=OFF \
