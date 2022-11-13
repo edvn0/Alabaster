@@ -39,7 +39,8 @@ namespace Alabaster {
 	public:
 		inline static std::unique_ptr<VertexBuffer> create(std::vector<Vertex>&& vertices)
 		{
-			return std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
+			const uint32_t size = static_cast<uint32_t>(vertices.size() * sizeof(Vertex));
+			return std::make_unique<VertexBuffer>(vertices.data(), size);
 		}
 
 		inline static std::unique_ptr<VertexBuffer> create(const std::vector<Vertex>& vertices)

@@ -4,6 +4,7 @@
 
 #include "core/Application.hpp"
 #include "core/Common.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
 #include "graphics/Allocator.hpp"
@@ -174,6 +175,9 @@ namespace Alabaster {
 
 	void Swapchain::present()
 	{
+		if (current_image_index < 0)
+			return;
+
 		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkSubmitInfo present_submit_info = {};

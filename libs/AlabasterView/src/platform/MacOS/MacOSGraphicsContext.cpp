@@ -33,7 +33,7 @@ namespace Alabaster {
 			Log::error("[Validation] Error: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else {
-			Log::error("Message Severity: {}", message_severity);
+			Log::error("Message Severity: {}", enum_name(message_severity));
 			return VK_FALSE;
 		}
 	}

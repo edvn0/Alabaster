@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 	}
 
 	auto cwd = std::filesystem::current_path();
-	Alabaster::Log::info("Working directory: {}, root: {}", cwd, *root);
+	Alabaster::Log::info("Working directory: {}, root: {}", cwd.string(), (*root).string());
 
 	std::filesystem::path defaults_path = cwd / std::filesystem::path { "resources" } / std::filesystem::path { "cli_defaults.yml" };
 
@@ -103,9 +103,9 @@ int main(int argc, char** argv)
 		Alabaster::Log::error("{}", e.what());
 	}
 	Alabaster::Renderer::shutdown();
+	Alabaster::Allocator::shutdown();
 
 	delete app;
 
 	Alabaster::GraphicsContext::the().destroy();
-	Alabaster::Allocator::shutdown();
 }

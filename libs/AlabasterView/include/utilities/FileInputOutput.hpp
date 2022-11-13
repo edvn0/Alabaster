@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Common.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "core/OpenMode.hpp"
 
 #include <filesystem>
@@ -118,7 +119,7 @@ namespace Alabaster::IO {
 	{
 		std::ofstream output_stream(filename);
 		if (!output_stream) {
-			Log::error("Could not write output file: {}", filename);
+			Log::error("Could not write output file: {}", filename.string());
 			return false;
 		}
 
@@ -133,7 +134,7 @@ namespace Alabaster::IO {
 	{
 		std::ofstream output_stream(filename);
 		if (!output_stream) {
-			Log::error("Could not write output file: {}", filename);
+			Log::error("Could not write output file: {}", filename.string());
 			return false;
 		}
 
