@@ -74,7 +74,7 @@ int main(int argc, char** argv)
 		std::exit(1);
 	};
 
-	const auto root = sanity_checks();
+	const auto& root = sanity_checks();
 
 	auto cwd = std::filesystem::current_path();
 	Alabaster::Log::info("Working directory: {}, root: {}", cwd, root);

@@ -22,8 +22,6 @@ namespace Alabaster {
 		explicit Mesh(const std::filesystem::path& path);
 		Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
 
-		~Mesh() { destroy(); }
-
 		const VertexBuffer& get_vertex_buffer() const { return *vertex_buffer; }
 		const IndexBuffer& get_index_buffer() const { return *index_buffer; }
 

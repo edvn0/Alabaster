@@ -141,7 +141,7 @@ void AlabasterLayer::ui(float ts)
 			std::string name = "None";
 			ImGui::Text("Hovered Entity: %s", name.c_str());
 			auto frametime = Application::the().frametime();
-			ImGui::Text("Frametime: %s", std::to_string(frametime).c_str());
+			ImGui::Text("Frame time: %s", std::to_string(frametime).c_str());
 		}
 		ImGui::End();
 
@@ -171,4 +171,9 @@ void AlabasterLayer::ui(float ts)
 	ImGui::End();
 }
 
-void AlabasterLayer::destroy() { renderer.destroy(); }
+void AlabasterLayer::destroy()
+{
+	renderer.destroy();
+	viking_room_model->destroy();
+	sphere_model->destroy();
+}

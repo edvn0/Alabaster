@@ -18,12 +18,7 @@ namespace Alabaster {
 		void destroy_image(VkImage image, VmaAllocation allocation);
 		void destroy_buffer(VkBuffer buffer, VmaAllocation allocation);
 
-		template <typename T> T* map_memory(VmaAllocation allocation)
-		{
-			T* mapped_memory;
-			vmaMapMemory(Allocator::get_vma_allocator(), allocation, (void**)&mapped_memory);
-			return mapped_memory;
-		}
+		template <typename T> T* map_memory(VmaAllocation allocation);
 
 		void unmap_memory(VmaAllocation allocation);
 
@@ -34,5 +29,12 @@ namespace Alabaster {
 	private:
 		std::string tag;
 	};
+
+	template <typename T> T* Alabaster::Allocator::map_memory(VmaAllocation allocation)
+	{
+		T* mapped_memory;
+		vmaMapMemory(Allocator::get_vma_allocator(), allocation, (void**)&mapped_memory);
+		return mapped_memory;
+	}
 
 } // namespace Alabaster

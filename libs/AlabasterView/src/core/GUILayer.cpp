@@ -158,8 +158,6 @@ namespace Alabaster {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-
-		auto& io = ImGui::GetIO();
 	}
 
 	void GUILayer::end()
@@ -180,8 +178,6 @@ namespace Alabaster {
 
 		VkCommandBuffer draw_command_buffer = swapchain->get_drawbuffer(command_buffer_index);
 
-		Log::info("[GUILayer] Begin swapchain command buffer");
-
 		VkRenderPassBeginInfo render_pass_begin_info = {};
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 		render_pass_begin_info.renderPass = gui_renderpass;
@@ -194,8 +190,6 @@ namespace Alabaster {
 		render_pass_begin_info.framebuffer = swapchain->get_current_framebuffer();
 
 		vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
-
-		Log::info("[GUILayer] Begin render pass");
 
 		const auto& imgui_buffer = imgui_command_buffers[command_buffer_index];
 		{
@@ -210,8 +204,6 @@ namespace Alabaster {
 			cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
 			cbi.pInheritanceInfo = &inheritance_info;
 			vk_check(vkBeginCommandBuffer(imgui_buffer, &cbi));
-
-			Log::info("[GUILayer] Begin secondary buffer");
 
 			VkViewport viewport = {};
 			viewport.x = 0.0f;
@@ -233,21 +225,13 @@ namespace Alabaster {
 			ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_buffer);
 
 			vk_check(vkEndCommandBuffer(imgui_buffer));
-
-			Log::info("[GUILayer] End secondary buffer");
 		}
 
 		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
 
-		Log::info("[GUILayer] Execute secondary buffer");
-
 		vkCmdEndRenderPass(draw_command_buffer);
 
-		Log::info("[GUILayer] End render pass");
-
 		vkEndCommandBuffer(draw_command_buffer);
-
-		Log::info("[GUILayer] End swapchain command buffer");
 
 		ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
@@ -271,12 +255,15 @@ namespace Alabaster {
 
 	void GUILayer::destroy()
 	{
-		vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
+		const auto& device = GraphicsContext::the().device();
+		vk_check(vkDeviceWaitIdle(device));
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();
+		vk_check(vkDeviceWaitIdle(device));
 
-		vkDestroyDescriptorPool(GraphicsContext::the().device(), imgui_descriptor_pool, nullptr);
+		vkDestroyRenderPass(device, gui_renderpass, nullptr);
+		vkDestroyDescriptorPool(device, imgui_descriptor_pool, nullptr);
 		Log::info("[GUILayer] Destroyed layer.");
 	};
 

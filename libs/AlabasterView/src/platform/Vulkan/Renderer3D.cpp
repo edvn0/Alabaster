@@ -30,10 +30,8 @@ namespace Alabaster {
 
 	static void reset_data(RendererData& to_reset)
 	{
-		to_reset.quad_buffer_ptr = &to_reset.quad_buffer[0];
-		to_reset.indices_submitted = 0;
-		to_reset.vertices_submitted = 0;
-		to_reset.line_buffer_ptr = &to_reset.line_buffer[0];
+		to_reset.quad_indices_submitted = 0;
+		to_reset.quad_vertices_submitted = 0;
 		to_reset.line_indices_submitted = 0;
 		to_reset.line_vertices_submitted = 0;
 		to_reset.mesh_pipeline_submit = nullptr;
@@ -152,7 +150,7 @@ namespace Alabaster {
 
 		for (size_t i = 0; i < Application::the().swapchain().get_image_count(); i++) {
 			VkDescriptorBufferInfo buffer_info {};
-			buffer_info.buffer = data.uniform_buffers[i];
+			buffer_info.buffer = data.uniforms[i].get_buffer();
 			buffer_info.offset = 0;
 			buffer_info.range = sizeof(UBO);
 
@@ -171,98 +169,48 @@ namespace Alabaster {
 		}
 	}
 
-	uint32_t find_memory_type(uint32_t type_filter, VkMemoryPropertyFlags properties)
-	{
-		VkPhysicalDeviceMemoryProperties memory_properties;
-		vkGetPhysicalDeviceMemoryProperties(GraphicsContext::the().physical_device(), &memory_properties);
-
-		for (uint32_t i = 0; i < memory_properties.memoryTypeCount; i++) {
-			const auto filter = (type_filter & (1 << i));
-			if (filter && (memory_properties.memoryTypes[i].propertyFlags & properties) == properties) {
-				return i;
-			}
-		}
-
-		throw std::runtime_error("failed to find suitable memory type!");
-	}
-
-	void create_buffer(
-		VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& command_buffer, VkDeviceMemory& memory)
-	{
-		VkBufferCreateInfo buffer_info {};
-		buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		buffer_info.size = size;
-		buffer_info.usage = usage;
-		buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-		if (vkCreateBuffer(GraphicsContext::the().device(), &buffer_info, nullptr, &command_buffer) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create command_buffer!");
-		}
-
-		VkMemoryRequirements mem_requirements;
-		vkGetBufferMemoryRequirements(GraphicsContext::the().device(), command_buffer, &mem_requirements);
-
-		VkMemoryAllocateInfo alloc_info {};
-		alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-		alloc_info.allocationSize = mem_requirements.size;
-		alloc_info.memoryTypeIndex = find_memory_type(mem_requirements.memoryTypeBits, properties);
-
-		vk_check(vkAllocateMemory(GraphicsContext::the().device(), &alloc_info, nullptr, &memory));
-
-		vkBindBufferMemory(GraphicsContext::the().device(), command_buffer, memory, 0);
-	}
-
 	Renderer3D::Renderer3D(Camera& camera) noexcept
 		: camera(camera)
 		, command_buffer("Swapchain")
 	{
-		auto main_shader = Shader("main");
+		auto quad_shader = Shader("main");
 		auto line_shader = Shader("line");
 		auto mesh_shader = Shader("mesh");
-
-		Renderer::execute();
 
 		auto image_count = Application::the().swapchain().get_image_count();
 		create_renderpass();
 
 		VkDeviceSize uniform_buffer_size = sizeof(UBO);
 
-		data.uniform_buffers.resize(image_count);
-		data.uniform_buffers_memory.resize(image_count);
-		data.mapped_uniform_buffers.resize(image_count);
-
 		for (size_t i = 0; i < image_count; i++) {
-			create_buffer(uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, data.uniform_buffers[i], data.uniform_buffers_memory[i]);
-
-			vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[i], 0, uniform_buffer_size, 0, &data.mapped_uniform_buffers[i]);
+			data.uniforms.push_back(UniformBuffer(uniform_buffer_size, 0));
 		}
 
 		create_descriptor_set_layout();
 		create_descriptor_pool();
 		create_descriptor_sets();
 
-		PipelineSpecification spec {
-			.shader = std::move(main_shader),
+		PipelineSpecification quad_spec {
+			.shader = std::move(quad_shader),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
-			.backface_culling = true,
+			.backface_culling = false,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.depth_test = true,
 			.depth_write = true,
 			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 		};
-		data.quad_pipeline = std::make_unique<Pipeline>(spec);
+		data.quad_pipeline = std::make_unique<Pipeline>(quad_spec);
 		data.quad_pipeline->invalidate();
 
-		PipelineSpecification mesh {
+		PipelineSpecification mesh_spec {
 			.shader = std::move(mesh_shader),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
-			.backface_culling = true,
+			.backface_culling = false,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.depth_test = true,
 			.depth_write = true,
@@ -270,10 +218,10 @@ namespace Alabaster {
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)) },
 		};
-		data.mesh_pipeline = std::make_unique<Pipeline>(mesh);
+		data.mesh_pipeline = std::make_unique<Pipeline>(mesh_spec);
 		data.mesh_pipeline->invalidate();
 
-		PipelineSpecification line { .shader = std::move(line_shader),
+		PipelineSpecification line_spec { .shader = std::move(line_shader),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
@@ -284,7 +232,7 @@ namespace Alabaster {
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
 			.line_width = 2.0f };
-		data.line_pipeline = std::make_unique<Pipeline>(line);
+		data.line_pipeline = std::make_unique<Pipeline>(line_spec);
 		data.line_pipeline->invalidate();
 
 		data.quad_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(QuadVertex));
@@ -310,13 +258,6 @@ namespace Alabaster {
 			indices[i] = i;
 		}
 		data.line_index_buffer = IndexBuffer::create(indices);
-
-		data.quad_positions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };
-		data.quad_positions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
-		data.quad_positions[2] = { 0.5f, 0.5f, 0.0f, 1.0f };
-		data.quad_positions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };
-
-		// Renderer::execute();
 	};
 
 	void Renderer3D::begin_scene()
@@ -335,12 +276,14 @@ namespace Alabaster {
 	{
 		static constexpr size_t quad_vertex_count = 4;
 		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		static constexpr glm::vec4 quad_positions[]
+			= { { -0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { -0.5f, 0.5f, 0.0f, 1.0f } };
 
-		if (data.indices_submitted >= RendererData::max_indices) {
+		if (data.quad_indices_submitted >= RendererData::max_indices) {
 			flush();
 		}
 
-		if (data.vertices_submitted >= RendererData::max_vertices) {
+		if (data.quad_vertices_submitted >= RendererData::max_vertices) {
 			flush();
 		}
 
@@ -348,14 +291,14 @@ namespace Alabaster {
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3 { 1, 0, 0 }) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
 
 		for (size_t i = 0; i < quad_vertex_count; i++) {
-			auto& vertex = data.quad_buffer[data.vertices_submitted];
-			vertex.position = transform * data.quad_positions[i];
+			auto& vertex = data.quad_buffer[data.quad_vertices_submitted];
+			vertex.position = transform * quad_positions[i];
 			vertex.colour = colour;
 			vertex.uvs = texture_coordinates[i];
-			data.vertices_submitted++;
+			data.quad_vertices_submitted++;
 		}
 
-		data.indices_submitted += 6;
+		data.quad_indices_submitted += 6;
 	}
 
 	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec3& pos, const glm::vec4& colour,
@@ -399,8 +342,8 @@ namespace Alabaster {
 		command_buffer.begin();
 		Renderer::begin_render_pass(command_buffer, data.render_pass);
 
-		if (data.indices_submitted > 0) {
-			uint32_t vertex_count = static_cast<uint32_t>(data.vertices_submitted);
+		if (data.quad_indices_submitted > 0) {
+			uint32_t vertex_count = static_cast<uint32_t>(data.quad_vertices_submitted);
 
 			uint32_t size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer.reset(new VertexBuffer(data.quad_buffer.data(), size));
@@ -440,7 +383,7 @@ namespace Alabaster {
 		const auto& ib = data.quad_index_buffer;
 		const auto& descriptor = data.descriptor_sets[Renderer::current_frame()];
 		const auto& pipeline = data.quad_pipeline;
-		const auto index_count = data.indices_submitted;
+		const auto index_count = data.quad_indices_submitted;
 
 		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
@@ -530,9 +473,27 @@ namespace Alabaster {
 		}
 		ubo.view_projection = camera.get_view_projection();
 
-		std::memcpy(data.mapped_uniform_buffers[image_index], &ubo, sizeof(ubo));
+		data.uniforms[image_index].set_data(&ubo, sizeof(ubo), 0);
 	}
 
-	void Renderer3D::destroy() { vkDestroyCommandPool(GraphicsContext::the().device(), command_buffer.get_command_pool(), nullptr); }
+	void Renderer3D::destroy()
+	{
+		auto device = GraphicsContext::the().device();
+
+		vkDestroyRenderPass(device, data.render_pass, nullptr);
+
+		for (size_t i = 0; i < Application::the().swapchain().get_image_count(); i++) {
+			data.uniforms[i].destroy();
+		}
+
+		vkDestroyDescriptorPool(device, data.descriptor_pool, nullptr);
+		vkDestroyDescriptorSetLayout(device, data.descriptor_set_layout, nullptr);
+		vkDestroyCommandPool(device, command_buffer.get_command_pool(), nullptr);
+
+		data.line_vertex_buffer->destroy();
+		data.quad_vertex_buffer->destroy();
+		data.line_index_buffer->destroy();
+		data.quad_index_buffer->destroy();
+	}
 
 } // namespace Alabaster

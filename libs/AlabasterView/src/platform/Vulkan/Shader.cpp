@@ -113,6 +113,10 @@ namespace Alabaster {
 		for (auto& stage : shader_stages)
 			vkDestroyShaderModule(GraphicsContext::the().device(), stage.module, nullptr);
 
+		for (auto& layout : layouts) {
+			vkDestroyDescriptorSetLayout(GraphicsContext::the().device(), layout, nullptr);
+		}
+
 		Log::info("[Shader] Shader stages deleted.");
 	}
 

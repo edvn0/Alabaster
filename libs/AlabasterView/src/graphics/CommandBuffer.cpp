@@ -13,6 +13,9 @@ namespace Alabaster {
 
 	void CommandBuffer::init(uint32_t count)
 	{
+		if (owned_by_swapchain)
+			return;
+
 		uint32_t frames = count;
 		VkCommandPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -42,8 +45,9 @@ namespace Alabaster {
 	CommandBuffer::CommandBuffer(std::string_view n)
 	{
 		std::string name = std::string { n };
-		init(3);
 		owned_by_swapchain = true;
+
+		init(3);
 	}
 
 	CommandBuffer::CommandBuffer(uint32_t count, std::string_view debug_name) { init(count); }

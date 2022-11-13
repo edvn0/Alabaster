@@ -164,6 +164,13 @@ namespace Alabaster {
 		return false;
 	}
 
-	bool Application::on_window_change(WindowCloseEvent& e) { return false; }
+	bool Application::on_window_change(WindowCloseEvent& e)
+	{
+		Log::info("[Application] Window close event registered. {}", e.get_name());
+
+		is_running = false;
+
+		return true;
+	}
 
 } // namespace Alabaster

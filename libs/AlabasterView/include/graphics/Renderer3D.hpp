@@ -2,11 +2,13 @@
 
 #include "graphics/Camera.hpp"
 #include "graphics/CommandBuffer.hpp"
+#include "graphics/UniformBuffer.hpp"
 #include "SimpleCamera.hpp"
 
 #include <array>
 #include <glm/gtx/transform.hpp>
 #include <memory>
+#include <optional>
 #include <vector>
 #include <vulkan/vulkan.h>
 
@@ -18,12 +20,6 @@ namespace Alabaster {
 	class Pipeline;
 	class VertexBuffer;
 	class IndexBuffer;
-
-	struct RenderProps {
-		glm::vec3 pos;
-		glm::vec4 colour;
-		glm::vec3 scale;
-	};
 
 	struct QuadVertex {
 		glm::vec4 position;
@@ -44,36 +40,29 @@ namespace Alabaster {
 	};
 
 	struct RendererData {
-		static constexpr size_t max_vertices = 20000;
-		static constexpr size_t max_indices = 6 * max_vertices;
+		static constexpr uint32_t max_vertices = 20000;
+		static constexpr uint32_t max_indices = 6 * max_vertices;
+		uint32_t draw_calls { 0 };
 
-		size_t indices_submitted { 0 };
-		size_t vertices_submitted { 0 };
-		size_t draw_calls { 0 };
-
+		uint32_t quad_indices_submitted { 0 };
+		uint32_t quad_vertices_submitted { 0 };
 		std::unique_ptr<Pipeline> quad_pipeline;
 		std::array<QuadVertex, max_vertices> quad_buffer;
-		QuadVertex* quad_buffer_ptr;
-		std::array<glm::vec4, 4> quad_positions;
 		std::unique_ptr<VertexBuffer> quad_vertex_buffer;
 		std::unique_ptr<IndexBuffer> quad_index_buffer;
 
+		uint32_t line_indices_submitted { 0 };
+		uint32_t line_vertices_submitted { 0 };
 		std::unique_ptr<Pipeline> line_pipeline;
 		std::array<LineVertex, max_vertices> line_buffer;
-		LineVertex* line_buffer_ptr;
 		std::unique_ptr<VertexBuffer> line_vertex_buffer;
 		std::unique_ptr<IndexBuffer> line_index_buffer;
-		size_t line_indices_submitted { 0 };
-		size_t line_vertices_submitted { 0 };
 
-		std::vector<VkBuffer> uniform_buffers;
-		std::vector<void*> mapped_uniform_buffers;
-		std::vector<VkDeviceMemory> uniform_buffers_memory;
+		std::vector<UniformBuffer> uniforms;
 
 		std::vector<VkDescriptorSet> descriptor_sets;
 		VkDescriptorSetLayout descriptor_set_layout;
 		VkDescriptorPool descriptor_pool;
-
 		VkRenderPass render_pass;
 
 		Mesh* mesh;
@@ -102,6 +91,7 @@ namespace Alabaster {
 	private:
 		void draw_quads();
 		void draw_lines();
+		void draw_meshes();
 
 	private:
 		void flush();
@@ -115,7 +105,6 @@ namespace Alabaster {
 		Camera& camera;
 		RendererData data;
 		CommandBuffer command_buffer;
-		void draw_meshes();
 	};
 
 } // namespace Alabaster

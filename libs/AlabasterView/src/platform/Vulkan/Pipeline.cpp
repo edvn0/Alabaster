@@ -209,6 +209,8 @@ namespace Alabaster {
 		vk_check(vkCreateGraphicsPipelines(device, pipeline_cache, 1, &pipeline_create_info, nullptr, &pipeline));
 
 		Log::info("[Pipeline] Created pipeline with name {}.", spec.debug_name);
+
+		spec.shader.destroy();
 	}
 
 	void Pipeline::destroy()

@@ -36,6 +36,10 @@ elseif(APPLE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
 endif()
 
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
+endif()
+
 add_custom_command(
     TARGET AlabasterApp
     POST_BUILD

@@ -15,7 +15,11 @@ namespace Alabaster {
 		invalidate();
 	}
 
-	UniformBuffer::~UniformBuffer() { release(); }
+	void UniformBuffer::destroy()
+	{
+		destroyed = true;
+		release();
+	}
 
 	void UniformBuffer::release()
 	{
@@ -31,7 +35,8 @@ namespace Alabaster {
 
 	void UniformBuffer::invalidate()
 	{
-		release();
+		if (allocation)
+			release();
 
 		const auto& device = GraphicsContext::the().device();
 

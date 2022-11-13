@@ -26,12 +26,6 @@ namespace Alabaster {
 
 	RenderQueue& Renderer::resource_release_queue(uint32_t index) { return global_release_queues[index]; }
 
-	void Renderer::execute()
-	{
-		verify(renderer_is_initialized, "Renderer should be initialized.");
-		render_queue().execute();
-	}
-
 	void Renderer::begin()
 	{
 		verify(!frame_started);

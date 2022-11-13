@@ -217,12 +217,20 @@ namespace Alabaster {
 				vk_check(result);
 			}
 		}
-		current_frame = (frame() + 1) % image_count;
+
 		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence, VK_TRUE, default_fence_timeout));
+		current_frame = (frame() + 1) % image_count;
 	}
 
 	void Swapchain::on_resize(uint32_t w, uint32_t h)
 	{
+		int test_w = 0, test_h = 0;
+		glfwGetFramebufferSize(sc_handle, &test_w, &test_h);
+		while (test_w == 0 || test_h == 0) {
+			glfwGetFramebufferSize(sc_handle, &test_w, &test_h);
+			glfwWaitEvents();
+		}
+
 		vkDeviceWaitIdle(GraphicsContext::the().device());
 		construct(w, h);
 		Application::the().get_window()->reset_resize_status();
@@ -480,12 +488,12 @@ namespace Alabaster {
 		}
 	}
 
-	Swapchain::~Swapchain() = default;
-
 	void Swapchain::destroy()
 	{
 		auto vk_device = GraphicsContext::the().device();
 		vkDeviceWaitIdle(vk_device);
+
+		depth_image.destroy(vk_device);
 
 		if (vk_swapchain)
 			vkDestroySwapchainKHR(vk_device, vk_swapchain, nullptr);
