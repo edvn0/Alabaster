@@ -13,6 +13,7 @@
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 namespace Alabaster {
 
@@ -336,7 +337,7 @@ namespace Alabaster {
 
 		image_count = capabilities.minImageCount + 1;
 
-		static constexpr auto preferred = 4;
+		static constexpr auto preferred = 3;
 		if (image_count < preferred && preferred < capabilities.maxImageCount) {
 			image_count = preferred;
 		}
@@ -488,6 +489,10 @@ namespace Alabaster {
 
 		if (vk_swapchain)
 			vkDestroySwapchainKHR(vk_device, vk_swapchain, nullptr);
+
+		for (auto& buffer : command_buffers) {
+			vkDestroyCommandPool(vk_device, buffer.pool, nullptr);
+		}
 
 		for (auto& view : images.views)
 			vkDestroyImageView(vk_device, view, nullptr);

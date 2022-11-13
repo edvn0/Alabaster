@@ -77,8 +77,8 @@ namespace Alabaster {
 
 	void Allocator::destroy_buffer(VkBuffer buffer, VmaAllocation allocation)
 	{
-		verify(buffer);
-		verify(allocation);
+		verify(buffer, "Buffer is not allocated");
+		verify(allocation, "Allocation does not exist");
 		vmaDestroyBuffer(vma_data().allocator, buffer, allocation);
 	}
 

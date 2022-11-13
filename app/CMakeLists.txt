@@ -7,33 +7,39 @@ file(GLOB_RECURSE sources main.cpp Alabaster.hpp AlabasterLayer.hpp AlabasterLay
 find_program(CLANG_FORMAT "clang-format")
 
 if(CLANG_FORMAT)
-  file(GLOB_RECURSE shaders resources/shaders/**.vert resources/shaders/**.frag)
+    file(GLOB_RECURSE shaders resources/shaders/**.vert resources/shaders/**.frag)
 
-  set(formattable_files ${sources})
-  list(APPEND formattable_files ${shaders})
+    set(formattable_files ${sources})
+    list(APPEND formattable_files ${shaders})
 
-  add_custom_target(clang-format-app COMMAND ${CLANG_FORMAT} -i -style=file
-                                             ${formattable_files})
+    add_custom_target(clang-format-app COMMAND ${CLANG_FORMAT} -i -style=file
+        ${formattable_files})
 endif()
 
 add_executable(${PROJECT_NAME} ${sources})
 
 target_include_directories(
-  ${PROJECT_NAME}
-  PRIVATE ../third_party/spdlog/include
-          ../third_party/imgui
-          ../third_party/debugbreak
-          ../third_party/magic_enum/include
-          ../third_party/VulkanMemoryAllocator/include
-          ../third_party/glm
-          ../third_party/random/include)
+    ${PROJECT_NAME}
+    PRIVATE ../third_party/spdlog/include
+    ../third_party/imgui
+    ../third_party/debugbreak
+    ../third_party/magic_enum/include
+    ../third_party/VulkanMemoryAllocator/include
+    ../third_party/glm
+    ../third_party/random/include)
 target_link_libraries(${PROJECT_NAME} PRIVATE Alabaster::AlabasterView spdlog
-                                              imgui)
+    imgui)
+
+if(WIN32)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
+elseif(APPLE)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
+endif()
 
 add_custom_command(
-  TARGET AlabasterApp
-  POST_BUILD
-  COMMAND
+    TARGET AlabasterApp
+    POST_BUILD
+    COMMAND
     ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/resources
     $<TARGET_FILE_DIR:AlabasterApp>/resources)
 

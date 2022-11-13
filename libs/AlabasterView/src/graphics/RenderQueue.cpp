@@ -19,7 +19,7 @@ namespace Alabaster {
 
 	RenderQueue::~RenderQueue() { delete[] command_buffer; }
 
-	void* RenderQueue::allocate(RenderFunction&& func, BufferCount size)
+	void* RenderQueue::allocate(RenderFunction func, BufferCount size)
 	{
 		*(RenderFunction*)command_buffer_ptr = func;
 		command_buffer_ptr += sizeof(RenderFunction);
@@ -38,7 +38,7 @@ namespace Alabaster {
 	{
 		Log::debug("[RenderQueue] -- [{0} command(s): {1} bytes]", command_count, (command_buffer_ptr - command_buffer));
 
-		CPUProfiler<double> profiler("RenderQueue-execute");
+		CPUProfiler profiler("RenderQueue-execute");
 		byte* buffer = command_buffer;
 
 		for (uint32_t i = 0; i < command_count; i++) {

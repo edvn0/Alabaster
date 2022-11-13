@@ -26,6 +26,8 @@
 
 namespace Alabaster {
 
+	static constexpr auto default_model = glm::mat4 { 1.0f };
+
 	static void reset_data(RendererData& to_reset)
 	{
 		to_reset.quad_buffer_ptr = &to_reset.quad_buffer[0];
@@ -184,7 +186,8 @@ namespace Alabaster {
 		throw std::runtime_error("failed to find suitable memory type!");
 	}
 
-	void create_buffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& memory)
+	void create_buffer(
+		VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& command_buffer, VkDeviceMemory& memory)
 	{
 		VkBufferCreateInfo buffer_info {};
 		buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -192,12 +195,12 @@ namespace Alabaster {
 		buffer_info.usage = usage;
 		buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-		if (vkCreateBuffer(GraphicsContext::the().device(), &buffer_info, nullptr, &buffer) != VK_SUCCESS) {
-			throw std::runtime_error("failed to create buffer!");
+		if (vkCreateBuffer(GraphicsContext::the().device(), &buffer_info, nullptr, &command_buffer) != VK_SUCCESS) {
+			throw std::runtime_error("failed to create command_buffer!");
 		}
 
 		VkMemoryRequirements mem_requirements;
-		vkGetBufferMemoryRequirements(GraphicsContext::the().device(), buffer, &mem_requirements);
+		vkGetBufferMemoryRequirements(GraphicsContext::the().device(), command_buffer, &mem_requirements);
 
 		VkMemoryAllocateInfo alloc_info {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -206,13 +209,19 @@ namespace Alabaster {
 
 		vk_check(vkAllocateMemory(GraphicsContext::the().device(), &alloc_info, nullptr, &memory));
 
-		vkBindBufferMemory(GraphicsContext::the().device(), buffer, memory, 0);
+		vkBindBufferMemory(GraphicsContext::the().device(), command_buffer, memory, 0);
 	}
 
 	Renderer3D::Renderer3D(Camera& camera) noexcept
 		: camera(camera)
 		, command_buffer("Swapchain")
 	{
+		auto main_shader = Shader("main");
+		auto line_shader = Shader("line");
+		auto mesh_shader = Shader("mesh");
+
+		Renderer::execute();
+
 		auto image_count = Application::the().swapchain().get_image_count();
 		create_renderpass();
 
@@ -220,10 +229,13 @@ namespace Alabaster {
 
 		data.uniform_buffers.resize(image_count);
 		data.uniform_buffers_memory.resize(image_count);
+		data.mapped_uniform_buffers.resize(image_count);
 
 		for (size_t i = 0; i < image_count; i++) {
 			create_buffer(uniform_buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
 				VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, data.uniform_buffers[i], data.uniform_buffers_memory[i]);
+
+			vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[i], 0, uniform_buffer_size, 0, &data.mapped_uniform_buffers[i]);
 		}
 
 		create_descriptor_set_layout();
@@ -231,7 +243,7 @@ namespace Alabaster {
 		create_descriptor_sets();
 
 		PipelineSpecification spec {
-			.shader = Shader("main"),
+			.shader = std::move(main_shader),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
@@ -246,7 +258,7 @@ namespace Alabaster {
 		data.quad_pipeline->invalidate();
 
 		PipelineSpecification mesh {
-			.shader = Shader("mesh"),
+			.shader = std::move(mesh_shader),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
@@ -261,7 +273,7 @@ namespace Alabaster {
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh);
 		data.mesh_pipeline->invalidate();
 
-		PipelineSpecification line { .shader = Shader("line"),
+		PipelineSpecification line { .shader = std::move(line_shader),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.render_pass,
 			.wireframe = false,
@@ -303,25 +315,23 @@ namespace Alabaster {
 		data.quad_positions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };
 		data.quad_positions[2] = { 0.5f, 0.5f, 0.0f, 1.0f };
 		data.quad_positions[3] = { -0.5f, 0.5f, 0.0f, 1.0f };
+
+		// Renderer::execute();
 	};
 
 	void Renderer3D::begin_scene()
 	{
-		Renderer::submit([this] {
-			reset_data(data);
-			update_uniform_buffers();
-		});
+		reset_data(data);
+		update_uniform_buffers();
 	}
 
 	void Renderer3D::reset_stats()
 	{
-		Renderer::submit([this] {
-			reset_data(data);
-			data.draw_calls = 0;
-		});
+		reset_data(data);
+		data.draw_calls = 0;
 	}
 
-	void Renderer3D::quad(const glm::vec4& pos, const glm::vec4& colour, const glm::vec3& scale, float rotation)
+	void Renderer3D::quad(const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale, float rotation)
 	{
 		static constexpr size_t quad_vertex_count = 4;
 		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
@@ -348,13 +358,14 @@ namespace Alabaster {
 		data.indices_submitted += 6;
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipe, const glm::vec4& pos, const glm::vec4& colour,
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec3& pos, const glm::vec4& colour,
 		const glm::vec3& scale)
 	{
 		auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z }) * glm::scale(glm::mat4(1.0f), scale);
 		mesh->set_transform(std::move(transform));
+
 		data.mesh = mesh.get();
-		data.mesh_pipeline_submit = pipe ? pipe.get() : data.mesh_pipeline.get();
+		data.mesh_pipeline_submit = pipeline ? pipeline.get() : data.mesh_pipeline.get();
 	}
 
 	void Renderer3D::line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
@@ -425,100 +436,103 @@ namespace Alabaster {
 
 	void Renderer3D::draw_quads()
 	{
-		Renderer::submit(
-			[&buffer = command_buffer, index_count = data.indices_submitted, &pipeline = data.quad_pipeline, &vb = data.quad_vertex_buffer,
-				&ib = data.quad_index_buffer, &descriptor = data.descriptor_sets] {
-				vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
+		const auto& vb = data.quad_vertex_buffer;
+		const auto& ib = data.quad_index_buffer;
+		const auto& descriptor = data.descriptor_sets[Renderer::current_frame()];
+		const auto& pipeline = data.quad_pipeline;
+		const auto index_count = data.indices_submitted;
 
-				std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
-				VkDeviceSize offsets { 0 };
-				vkCmdBindVertexBuffers(*buffer, 0, 1, vbs.data(), &offsets);
+		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-				vkCmdBindIndexBuffer(*buffer, ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
+		VkDeviceSize offsets { 0 };
+		vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
 
-				if (pipeline->get_vulkan_pipeline_layout()) {
-					vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
-						&descriptor[Renderer::current_frame()], 0, nullptr);
-				}
+		vkCmdBindIndexBuffer(*command_buffer, ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-				const auto count = static_cast<uint32_t>(index_count);
-				const auto instances = static_cast<uint32_t>(index_count / 6);
-				vkCmdDrawIndexed(*buffer, count, instances, 0, 0, 0);
-			},
-			"Draw quads");
+		if (pipeline->get_vulkan_pipeline_layout()) {
+			vkCmdBindDescriptorSets(
+				*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
+		}
+
+		const auto count = static_cast<uint32_t>(index_count);
+		const auto instances = static_cast<uint32_t>(index_count / 6);
+		vkCmdDrawIndexed(*command_buffer, count, instances, 0, 0, 0);
 	}
 
 	void Renderer3D::draw_lines()
 	{
-		Renderer::submit(
-			[&buffer = command_buffer, index_count = data.line_indices_submitted, &pipeline = data.line_pipeline, &vb = data.line_vertex_buffer,
-				&ib = data.line_index_buffer, &descriptor = data.descriptor_sets] {
-				vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
+		const auto& vb = data.line_vertex_buffer;
+		const auto& ib = data.line_index_buffer;
+		const auto& descriptor = data.descriptor_sets[Renderer::current_frame()];
+		const auto& pipeline = data.line_pipeline;
+		const auto index_count = data.line_indices_submitted;
 
-				std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
-				VkDeviceSize offsets { 0 };
-				vkCmdBindVertexBuffers(*buffer, 0, 1, vbs.data(), &offsets);
+		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-				vkCmdBindIndexBuffer(*buffer, ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
+		VkDeviceSize offsets { 0 };
+		vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
 
-				if (pipeline->get_vulkan_pipeline_layout()) {
-					vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1,
-						&descriptor[Renderer::current_frame()], 0, nullptr);
-				}
+		vkCmdBindIndexBuffer(*command_buffer, ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
-				const auto line_width = pipeline->get_specification().line_width;
-				vkCmdSetLineWidth(*buffer, line_width);
+		if (pipeline->get_vulkan_pipeline_layout()) {
+			vkCmdBindDescriptorSets(
+				*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
+		}
 
-				const auto count = static_cast<uint32_t>(index_count);
-				const auto instances = static_cast<uint32_t>(index_count / 2);
-				vkCmdDrawIndexed(*buffer, count, instances, 0, 0, 0);
-			},
-			"Draw lines");
+		const auto line_width = pipeline->get_specification().line_width;
+		vkCmdSetLineWidth(*command_buffer, line_width);
+
+		const auto count = static_cast<uint32_t>(index_count);
+		const auto instances = static_cast<uint32_t>(index_count / 2);
+		vkCmdDrawIndexed(*command_buffer, count, instances, 0, 0, 0);
 	}
 
 	void Renderer3D::draw_meshes()
 	{
-		Renderer::submit(
-			[&buffer = command_buffer, mesh = data.mesh, pipe = data.mesh_pipeline_submit,
-				&descriptor = data.descriptor_sets[Renderer::current_frame()]] {
-				vkCmdBindPipeline(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe->get_vulkan_pipeline());
+		const auto& vb = data.mesh->get_vertex_buffer();
+		const auto& ib = data.mesh->get_index_buffer();
+		const auto& descriptor = data.descriptor_sets[Renderer::current_frame()];
+		const auto& pipeline = data.mesh_pipeline;
 
-				vkCmdBindDescriptorSets(*buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
+		const auto& transform = data.mesh->get_transform();
+		update_uniform_buffers(transform);
 
-				std::array<VkBuffer, 1> vbs { *mesh->get_vertex_buffer() };
-				VkDeviceSize offsets { 0 };
-				vkCmdBindVertexBuffers(*buffer, 0, 1, vbs.data(), &offsets);
+		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, data.mesh_pipeline->get_vulkan_pipeline());
 
-				vkCmdBindIndexBuffer(*buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, data.mesh_pipeline->get_vulkan_pipeline_layout(), 0, 1,
+			&data.descriptor_sets[Renderer::current_frame()], 0, nullptr);
 
-				const auto& transform = mesh->get_transform();
-				if (transform) {
-					const auto transform_matrix = *transform;
-					vkCmdPushConstants(*buffer, pipe->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4),
-						glm::value_ptr(transform_matrix));
-				}
+		std::array<VkBuffer, 1> vbs { *data.mesh->get_vertex_buffer() };
+		VkDeviceSize offsets { 0 };
+		vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
 
-				vkCmdDrawIndexed(*buffer, static_cast<uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
-			},
-			"Draw meshes");
+		vkCmdBindIndexBuffer(*command_buffer, *data.mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
+
+		vkCmdPushConstants(
+			*command_buffer, pipeline->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), glm::value_ptr(*transform));
+
+		vkCmdDrawIndexed(*command_buffer, static_cast<uint32_t>(data.mesh->get_index_count()), 1, 0, 0, 0);
 	}
 
-	void Renderer3D::update_uniform_buffers()
+	void Renderer3D::update_uniform_buffers(const std::optional<glm::mat4>& model)
 	{
-		Renderer::submit([this] {
-			const auto image_index = Application::the().swapchain().frame();
+		const auto image_index = Application::the().swapchain().frame();
 
-			UBO ubo {};
-			ubo.projection = camera.get_projection_matrix();
-			ubo.view = camera.get_view_matrix();
-			ubo.model = glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-			ubo.view_projection = camera.get_view_projection();
+		UBO ubo {};
+		ubo.projection = camera.get_projection_matrix();
+		ubo.view = camera.get_view_matrix();
+		if (model) {
+			ubo.model = *model;
+		} else {
+			ubo.model = default_model;
+		}
+		ubo.view_projection = camera.get_view_projection();
 
-			void* mapped;
-			vkMapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index], 0, sizeof(ubo), 0, &mapped);
-			std::memcpy(mapped, &ubo, sizeof(ubo));
-			vkUnmapMemory(GraphicsContext::the().device(), data.uniform_buffers_memory[image_index]);
-		});
+		std::memcpy(data.mapped_uniform_buffers[image_index], &ubo, sizeof(ubo));
 	}
+
+	void Renderer3D::destroy() { vkDestroyCommandPool(GraphicsContext::the().device(), command_buffer.get_command_pool(), nullptr); }
 
 } // namespace Alabaster

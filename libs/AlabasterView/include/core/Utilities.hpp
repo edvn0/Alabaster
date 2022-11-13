@@ -10,7 +10,7 @@ namespace Utilities {
 	enum class OutputSize : uint8_t { B = 0, KB = 1, MB = 2, GB = 3, TB = 4 };
 
 #ifdef ALABASTER_MACOS
-	template <OutputSize output_size = OutputSize::KB> auto inline human_readable_size(auto size_bytes)
+	template <OutputSize output_size = OutputSize::KB> auto human_readable_size(auto size_bytes)
 	{
 		const auto to_float = static_cast<float>(size_bytes);
 

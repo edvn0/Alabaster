@@ -4,6 +4,7 @@
 #include "core/Logger.hpp"
 #include "graphics/Allocator.hpp"
 #include "graphics/GraphicsContext.hpp"
+#include "graphics/Renderer.hpp"
 #include "utilities/FileInputOutput.hpp"
 
 extern Alabaster::Application* Alabaster::create(const Alabaster::ApplicationArguments& props);
@@ -76,7 +77,7 @@ int main(int argc, char** argv)
 	const auto root = sanity_checks();
 
 	auto cwd = std::filesystem::current_path();
-	Alabaster::Log::info("{}", cwd);
+	Alabaster::Log::info("Working directory: {}, root: {}", cwd, root);
 
 	std::filesystem::path defaults_path = cwd / std::filesystem::path { "resources" } / std::filesystem::path { "cli_defaults.yml" };
 
@@ -84,8 +85,8 @@ int main(int argc, char** argv)
 	// clang-format off
 	desc.add_options()
 		("help", "Show help message")
-		("width", boost::program_options::value<uint32_t>()->default_value(1920), "Width of window")
-		("height", boost::program_options::value<uint32_t>()->default_value(1280), "Height of window")
+		("width", boost::program_options::value<uint32_t>()->default_value(1600), "Width of window")
+		("height", boost::program_options::value<uint32_t>()->default_value(900), "Height of window")
 		("name", boost::program_options::value<std::string>()->default_value(std::string { "Alabaster" }), "Title of window")
 		("vsync", boost::program_options::value<bool>()->default_value(true), "Window vsync");
 	// clang-format on
@@ -145,8 +146,10 @@ int main(int argc, char** argv)
 	} catch (const std::system_error& e) {
 		Alabaster::Log::error("{}", e.what());
 	}
+	Alabaster::Renderer::shutdown();
 
 	delete app;
+
 	Alabaster::GraphicsContext::the().destroy();
 	Alabaster::Allocator::shutdown();
 }

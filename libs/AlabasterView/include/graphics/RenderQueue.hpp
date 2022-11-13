@@ -15,7 +15,7 @@ namespace Alabaster {
 		RenderQueue();
 		~RenderQueue();
 
-		void* allocate(RenderFunction&& func, uint32_t size);
+		void* allocate(RenderFunction func, uint32_t size);
 		void execute();
 
 		BufferCount count() const { return command_count; }

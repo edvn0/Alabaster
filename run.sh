@@ -36,7 +36,9 @@ run_tests() {
 }
 
 run_app() {
-    exec "./$build_folder/app/AlabasterApp" "$@"
+    pushd "$build_folder/app" || exit
+    "./AlabasterApp" "$@"
+    popd || exit
 }
 
 run_tests

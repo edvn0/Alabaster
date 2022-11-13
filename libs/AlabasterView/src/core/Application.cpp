@@ -46,10 +46,13 @@ namespace Alabaster {
 
 	void Application::stop()
 	{
-		for (const auto& [key, layer] : layers) {
-			pop_layer(key);
+		using Map = std::map<std::string, Layer*>;
+		// Erase members that satisfy needs_removing(itr)
+		for (Map::const_iterator itr = layers.cbegin(); itr != layers.cend();) {
+			itr->second->destroy();
+			itr->second->~Layer();
+			itr = layers.erase(itr);
 		}
-
 		Log::info("[Application] Stopping.");
 
 		window->destroy();
@@ -74,19 +77,17 @@ namespace Alabaster {
 
 			window->update();
 
-			Renderer::begin();
-			update_layers(app_ts);
-
-#ifdef ALABASTER_USE_IMGUI
-			Renderer::submit([this] { gui_layer().begin(); }, "Begin ImGui");
-			Renderer::submit([this] { render_imgui(); }, "Update Imgui");
-			Renderer::submit([this] { gui_layer().end(); }, "End Scene ImGui");
-#endif
-			Renderer::end();
-
 			swapchain().begin_frame();
 			{
-				Renderer::execute();
+				Renderer::begin();
+
+				update_layers(app_ts);
+				gui_layer().begin();
+				render_imgui();
+				gui_layer().end();
+
+				Renderer::end();
+
 				cpu_time = on_cpu.elapsed();
 				float time = Clock::get_ms<float>();
 				frame_time = time - last_frametime;
@@ -115,7 +116,9 @@ namespace Alabaster {
 
 	void Application::update_layers(float ts)
 	{
-		layer_forward([&ts](Layer* layer) { layer->update(ts); });
+		for (const auto& [key, layer] : layers) {
+			layer->update(ts);
+		}
 	}
 
 	double Application::frametime() { return app_ts; }

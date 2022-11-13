@@ -25,6 +25,8 @@ namespace Alabaster {
 
 		void destroy();
 
+		void set_data(const void* buffer, uint32_t size, uint32_t offset);
+
 		uint32_t count() const { return buffer_count; };
 
 		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
@@ -54,6 +56,9 @@ namespace Alabaster {
 		VkBuffer vulkan_buffer { nullptr };
 
 		bool destroyed { false };
+
+	private:
+		void offline_set_data(const void* buffer, uint32_t size, uint32_t offset);
 	};
 
 } // namespace Alabaster

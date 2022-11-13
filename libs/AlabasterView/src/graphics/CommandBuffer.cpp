@@ -59,34 +59,26 @@ namespace Alabaster {
 
 	void CommandBuffer::begin()
 	{
-		Renderer::submit(
-			[this] {
-				uint32_t frame_index = Renderer::current_frame();
+		uint32_t frame_index = Renderer::current_frame();
 
-				VkCommandBufferBeginInfo begin_info = {};
-				begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-				begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-				begin_info.pNext = nullptr;
+		VkCommandBufferBeginInfo begin_info = {};
+		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		begin_info.pNext = nullptr;
 
-				if (owned_by_swapchain) {
-					active = Application::the().swapchain().get_drawbuffer(frame_index);
-				} else {
-					active = buffers[frame_index];
-				}
+		if (owned_by_swapchain) {
+			active = Application::the().swapchain().get_drawbuffer(frame_index);
+		} else {
+			active = buffers[frame_index];
+		}
 
-				vk_check(vkBeginCommandBuffer(active, &begin_info));
-			},
-			"Begin Command Buffer");
+		vk_check(vkBeginCommandBuffer(active, &begin_info));
 	}
 
 	void CommandBuffer::end()
 	{
-		Renderer::submit(
-			[this] {
-				vk_check(vkEndCommandBuffer(active));
-				active = nullptr;
-			},
-			"End Command Buffer");
+		vk_check(vkEndCommandBuffer(active));
+		active = nullptr;
 	}
 
 	void CommandBuffer::submit()
@@ -94,19 +86,17 @@ namespace Alabaster {
 		if (owned_by_swapchain)
 			return;
 
-		Renderer::submit([this] {
-			uint32_t frame_index = Renderer::current_frame();
+		uint32_t frame_index = Renderer::current_frame();
 
-			VkSubmitInfo submitInfo {};
-			submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-			submitInfo.commandBufferCount = 1;
-			VkCommandBuffer commandBuffer = buffers[frame_index];
-			submitInfo.pCommandBuffers = &commandBuffer;
+		VkSubmitInfo submit_info {};
+		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submit_info.commandBufferCount = 1;
+		VkCommandBuffer command_buffer = buffers[frame_index];
+		submit_info.pCommandBuffers = &command_buffer;
 
-			vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frame_index], VK_TRUE, UINT64_MAX));
-			vk_check(vkResetFences(GraphicsContext::the().device(), 1, &fences[frame_index]));
-			vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &submitInfo, fences[frame_index]));
-		});
+		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frame_index], VK_TRUE, UINT64_MAX));
+		vk_check(vkResetFences(GraphicsContext::the().device(), 1, &fences[frame_index]));
+		vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &submit_info, fences[frame_index]));
 	}
 
 } // namespace Alabaster

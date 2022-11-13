@@ -27,11 +27,14 @@ namespace Alabaster {
 
 		void destroy();
 
-		void set_data(const void* data, size_t size);
+		void set_data(const void* data, uint32_t size, uint32_t offset);
 
 		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
 
 		VkBuffer operator*() const { return vulkan_buffer; }
+
+	private:
+		void offline_set_data(const void* buffer, uint32_t size, uint32_t offset);
 
 	public:
 		inline static std::unique_ptr<VertexBuffer> create(std::vector<Vertex>&& vertices)

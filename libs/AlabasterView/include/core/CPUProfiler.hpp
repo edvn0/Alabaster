@@ -5,7 +5,7 @@
 
 namespace Alabaster {
 
-	template <typename FloatLike> class CPUProfiler {
+	template <typename FloatLike = double> class CPUProfiler {
 	public:
 		CPUProfiler(std::string_view tag, std::string_view dir = "reports");
 		~CPUProfiler();

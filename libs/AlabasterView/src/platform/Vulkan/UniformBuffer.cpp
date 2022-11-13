@@ -12,7 +12,7 @@ namespace Alabaster {
 		: size(size)
 		, binding(binding)
 	{
-		Renderer::submit([this]() { invalidate(); });
+		invalidate();
 	}
 
 	UniformBuffer::~UniformBuffer() { release(); }
@@ -22,10 +22,8 @@ namespace Alabaster {
 		if (!allocation)
 			return;
 
-		Renderer::free_resource([&buffer = buffer, &allocation = allocation] {
-			Allocator allocator("UniformBuffer");
-			allocator.destroy_buffer(buffer, allocation);
-		});
+		Allocator allocator("UniformBuffer");
+		allocator.destroy_buffer(buffer, allocation);
 
 		buffer = nullptr;
 		allocation = nullptr;
@@ -48,12 +46,10 @@ namespace Alabaster {
 
 	void UniformBuffer::set_data(const void* data, uint32_t input_size, uint32_t offset)
 	{
-		Renderer::submit([this, &data, &offset] {
-			Allocator allocator("UniformBuffer");
-			uint8_t* mapped = allocator.map_memory<uint8_t>(allocation);
-			std::memcpy(mapped, (const uint8_t*)data + offset, size);
-			allocator.unmap_memory(allocation);
-		});
+		Allocator allocator("UniformBuffer");
+		uint8_t* mapped = allocator.map_memory<uint8_t>(allocation);
+		std::memcpy(mapped, (const uint8_t*)data + offset, size);
+		allocator.unmap_memory(allocation);
 	}
 
 } // namespace Alabaster

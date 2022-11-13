@@ -43,12 +43,12 @@ namespace Alabaster {
 
 	void Pipeline::invalidate()
 	{
-		VkDevice device = GraphicsContext::the().device();
-		const auto& shader = spec.shader;
-
 #ifdef ALABASTER_MACOS
 		spec.line_width = 1.0f;
 #endif
+
+		VkDevice device = GraphicsContext::the().device();
+		const auto& shader = spec.shader;
 
 		VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
 		pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -59,8 +59,6 @@ namespace Alabaster {
 		if (spec.ranges) {
 			const auto used = *spec.ranges;
 			const auto range = used.get_push_constant_range();
-
-			Log::info("[Pipeline - Push Constant] Size: {}, Flags: {}, Offset: {}", range.size, range.stageFlags, range.offset);
 
 			pipeline_layout_create_info.pushConstantRangeCount = 1;
 			pipeline_layout_create_info.pPushConstantRanges = &range;
@@ -83,9 +81,10 @@ namespace Alabaster {
 		rasterisation_state.depthClampEnable = VK_FALSE;
 		rasterisation_state.rasterizerDiscardEnable = VK_FALSE;
 		rasterisation_state.polygonMode = VK_POLYGON_MODE_FILL;
+
 		rasterisation_state.lineWidth = spec.line_width;
 		rasterisation_state.cullMode = VK_CULL_MODE_NONE; // spec.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
-		rasterisation_state.frontFace = VK_FRONT_FACE_CLOCKWISE;
+		rasterisation_state.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterisation_state.depthBiasEnable = VK_FALSE;
 
 		VkPipelineColorBlendAttachmentState color_blend_attachment {};
@@ -214,12 +213,11 @@ namespace Alabaster {
 
 	void Pipeline::destroy()
 	{
-		Renderer::free_resource([this] {
-			vkDestroyPipelineCache(GraphicsContext::the().device(), pipeline_cache, nullptr);
-			vkDestroyPipelineLayout(GraphicsContext::the().device(), pipeline_layout, nullptr);
-			vkDestroyPipeline(GraphicsContext::the().device(), pipeline, nullptr);
-			Log::info("[Pipeline] Destroyed pipeline {} and its dependents.", spec.debug_name);
-		});
+
+		vkDestroyPipelineCache(GraphicsContext::the().device(), pipeline_cache, nullptr);
+		vkDestroyPipelineLayout(GraphicsContext::the().device(), pipeline_layout, nullptr);
+		vkDestroyPipeline(GraphicsContext::the().device(), pipeline, nullptr);
+		Log::info("[Pipeline] Destroyed pipeline {} and its dependents.", spec.debug_name);
 	}
 
 } // namespace Alabaster

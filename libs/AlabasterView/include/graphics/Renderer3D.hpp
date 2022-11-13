@@ -5,11 +5,14 @@
 #include "SimpleCamera.hpp"
 
 #include <array>
+#include <glm/gtx/transform.hpp>
 #include <memory>
 #include <vector>
 #include <vulkan/vulkan.h>
 
 namespace Alabaster {
+
+	// static constexpr auto default_model =glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
 
 	class Mesh;
 	class Pipeline;
@@ -64,6 +67,7 @@ namespace Alabaster {
 		size_t line_vertices_submitted { 0 };
 
 		std::vector<VkBuffer> uniform_buffers;
+		std::vector<void*> mapped_uniform_buffers;
 		std::vector<VkDeviceMemory> uniform_buffers_memory;
 
 		std::vector<VkDescriptorSet> descriptor_sets;
@@ -82,12 +86,14 @@ namespace Alabaster {
 		explicit Renderer3D(Camera& camera) noexcept;
 
 		void begin_scene();
-		void quad(const glm::vec4& pos = { 0, 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
+		void quad(const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
 			float rotation_degrees = 0.0f);
-		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline = nullptr, const glm::vec4& pos = { 0, 0, 0, 0 },
+		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline = nullptr, const glm::vec3& pos = { 0, 0, 0 },
 			const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
 		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void end_scene();
+
+		void destroy();
 
 		void reset_stats();
 
@@ -99,7 +105,7 @@ namespace Alabaster {
 
 	private:
 		void flush();
-		void update_uniform_buffers();
+		void update_uniform_buffers(const std::optional<glm::mat4>& model = {});
 		void create_descriptor_set_layout();
 		void create_descriptor_pool();
 		void create_descriptor_sets();

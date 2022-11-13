@@ -59,8 +59,9 @@ namespace Alabaster {
 			auto found_it = layers.find(name);
 			verify(found_it != layers.end());
 
-			(*found_it).second->destroy();
-			layers.erase(name);
+			auto& [key, layer] = *found_it;
+			layer->destroy();
+			layers.erase(key);
 		}
 
 		static Application& the();

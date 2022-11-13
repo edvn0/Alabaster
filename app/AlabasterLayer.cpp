@@ -63,16 +63,16 @@ void AlabasterLayer::update(float ts)
 			}
 		}*/
 
-		renderer.quad({ 0, 0, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 0, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 
 		glm::vec3 axis_base { 0, -0.1, 0 };
 		renderer.line(axis_base, axis_base + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
 		renderer.line(axis_base, axis_base + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
 		renderer.line(axis_base, axis_base + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
 
-		renderer.mesh(sphere_model);
+		// renderer.mesh(sphere_model);
 
-		// renderer.mesh(viking_room_model, nullptr, { 0, 0, 0, 1 }, { 1, 1, 1, 1 }, { 2, 2, 2 });
+		renderer.mesh(viking_room_model, nullptr, { 0, 0, 0 }, { 1, 1, 1, 1 }, { 2, 2, 2 });
 	}
 	renderer.end_scene();
 
@@ -171,4 +171,4 @@ void AlabasterLayer::ui(float ts)
 	ImGui::End();
 }
 
-void AlabasterLayer::destroy() { }
+void AlabasterLayer::destroy() { renderer.destroy(); }
