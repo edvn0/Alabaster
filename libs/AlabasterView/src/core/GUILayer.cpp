@@ -158,6 +158,22 @@ namespace Alabaster {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		ImGuiIO& io = ImGui::GetIO();
+
+		int w, h;
+		int display_w, display_h;
+		glfwGetWindowSize(Application::the().get_window()->native(), &w, &h);
+		glfwGetFramebufferSize(Application::the().get_window()->native(), &display_w, &display_h);
+		io.DisplaySize = ImVec2((float)w, (float)h);
+		if (w > 0 && h > 0)
+			io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
+
+		ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+		if (!platform_io.Monitors.empty() && platform_io.Monitors[0].DpiScale > 1.0f) {
+			io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
+			io.DisplaySize = ImVec2((float)display_w, (float)display_h);
+		}
 	}
 
 	void GUILayer::end()
