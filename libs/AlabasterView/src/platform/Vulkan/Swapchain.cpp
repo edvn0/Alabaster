@@ -163,12 +163,6 @@ namespace Alabaster {
 
 	void Swapchain::begin_frame()
 	{
-		const auto [w, h] = Application::the().get_window()->framebuffer_extent();
-		const auto [x_s, y_s] = Application::the().get_window()->framebuffer_scale();
-		if (w != sc_width || h != sc_height) {
-			on_resize(static_cast<uint32_t>(sc_width * x_s), static_cast<uint32_t>(h * y_s));
-		}
-
 		auto& queue = Renderer::resource_release_queue(frame());
 		queue.execute();
 

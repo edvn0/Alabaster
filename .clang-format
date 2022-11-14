@@ -6,6 +6,8 @@ IncludeBlocks: Regroup
 IncludeCategories:
     - Regex: "av_pch.hpp"
       Priority: -1
+    - Regex: "asc_pch.hpp"
+      Priority: -1
     - Regex: '^"'
       Priority: 1
     - Regex: "(projectDir1|projectDir2|projectDir3)"

@@ -28,3 +28,6 @@ url = https://github.com/edvn0/imgui
 [submodule "third_party/random"]
 	path = third_party/random
 	url = https://github.com/effolkronium/random
+[submodule "third_party/shaderc"]
+	path = third_party/shaderc
+	url = https://github.com/edvn0/shaderc

@@ -1,10 +1,11 @@
 #include "AlabasterLayer.hpp"
 
 #include "Alabaster.hpp"
+#include "AlabasterShaderCompiler.hpp"
 #include "graphics/Renderer.hpp"
-#include "vulkan/vulkan_core.h"
 
 #include <imgui.h>
+#include <vulkan/vulkan.h>
 
 using namespace Alabaster;
 
@@ -12,6 +13,9 @@ static uint32_t quads { 1 };
 
 bool AlabasterLayer::initialise()
 {
+
+	AlabasterShaderCompiler::ShaderCompiler compiler(IO::resources() / std::filesystem::path { "shaders" });
+
 	viking_room_model = Mesh::from_file("viking_room.obj");
 	sphere_model = Mesh::from_file("sphere.obj");
 

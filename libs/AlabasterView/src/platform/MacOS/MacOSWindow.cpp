@@ -36,7 +36,7 @@ namespace Alabaster {
 		}
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, true);
+		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
 		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
 		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name, nullptr, nullptr);

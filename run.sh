@@ -18,6 +18,8 @@ cmake -B "$build_folder" \
     -D GLFW_BUILD_EXAMPLES=OFF \
     -D CMAKE_BUILD_TYPE="$build_type" \
     -D BUILD_TESTING="$build_testing" \
+    -D ENABLE_HLSL=ON \
+    -D ENABLE_CTEST=OFF \
     -D Random_BuildTests=OFF \
     -D BUILD_SHARED_LIBS=OFF \
     -S "$current_dir"

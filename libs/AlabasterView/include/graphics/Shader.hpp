@@ -2,6 +2,7 @@
 
 #include <array>
 #include <filesystem>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace Alabaster {
@@ -14,10 +15,11 @@ namespace Alabaster {
 		/// @param path_and_filename
 		explicit Shader(const std::filesystem::path& path_and_filename);
 		Shader(const std::string& vertex_path, const std::string& fragment_path);
+		Shader(std::vector<uint32_t>&& vertex_shader_spirv, std::vector<uint32_t>&& fragment_shader_spirv);
 
 		const std::array<VkPipelineShaderStageCreateInfo, 2>& stages() const { return shader_stages; };
 
-		void destroy();
+		void destroy() const;
 
 		const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts() const { return layouts; }
 
