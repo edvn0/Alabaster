@@ -15,6 +15,24 @@ bool AlabasterLayer::initialise()
 	viking_room_model = Mesh::from_file("viking_room.obj");
 	sphere_model = Mesh::from_file("sphere.obj");
 
+	for (size_t i = 0; i < 3; i++) {
+		PipelineSpecification mesh_spec {
+			.shader = Shader("mesh"),
+			.debug_name = "Mesh Pipeline",
+			.render_pass = renderer.get_render_pass(),
+			.wireframe = false,
+			.backface_culling = false,
+			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.depth_test = true,
+			.depth_write = true,
+			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
+				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)),
+				PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4)) },
+		};
+		test_pipelines[i] = Pipeline::create(mesh_spec);
+	}
+
 	return true;
 }
 
@@ -75,12 +93,12 @@ void AlabasterLayer::update(float ts)
 		renderer.mesh(sphere_model, nullptr, { 0, 0, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .1, .1 });
 
 		auto rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, nullptr, { 0, 0, 0 }, std::move(rotation), { 1, 1, 1, 1 }, { 1, 1, 1 });
+		renderer.mesh(viking_room_model, test_pipelines[0], { 0, 0, 0 }, std::move(rotation), { 1, 1, 1, 1 }, { 1, 1, 1 });
 
 		auto rotation2 = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, nullptr, { 3, 3, 0 }, std::move(rotation2), { 1, 1, 1, 1 }, { 1, 1, 1 });
+		renderer.mesh(viking_room_model, test_pipelines[1], { 3, 3, 0 }, std::move(rotation2), { 1, 1, 1, 1 }, { 1, 1, 1 });
 		auto rotation3 = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, nullptr, { -3, -3, 0 }, std::move(rotation3), { 1, 1, 1, 1 }, { 1, 1, 1 });
+		renderer.mesh(viking_room_model, test_pipelines[2], { -3, -3, 0 }, std::move(rotation3), { 1, 1, 1, 1 }, { 1, 1, 1 });
 	}
 	renderer.end_scene();
 
@@ -184,4 +202,8 @@ void AlabasterLayer::destroy()
 	renderer.destroy();
 	viking_room_model->destroy();
 	sphere_model->destroy();
+
+	for (auto& pipe : test_pipelines) {
+		pipe->destroy();
+	}
 }

@@ -83,11 +83,15 @@ namespace Alabaster {
 		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void end_scene();
 
+	public:
 		void destroy();
-
 		void reset_stats();
 
+	public:
 		void set_camera(Camera& cam) { camera = cam; }
+
+	public:
+		const VkRenderPass& get_render_pass() const;
 
 	private:
 		void draw_quads();

@@ -161,18 +161,33 @@ namespace Alabaster {
 
 		ImGuiIO& io = ImGui::GetIO();
 
+		ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+		if (platform_io.Monitors.empty())
+			return;
+
+		// Framebuffer hack
 		int w, h;
 		int display_w, display_h;
 		glfwGetWindowSize(Application::the().get_window()->native(), &w, &h);
 		glfwGetFramebufferSize(Application::the().get_window()->native(), &display_w, &display_h);
 		io.DisplaySize = ImVec2((float)w, (float)h);
-		if (w > 0 && h > 0)
-			io.DisplayFramebufferScale = ImVec2((float)display_w / w, (float)display_h / h);
+		if (w > 0 && h > 0) {
+			const auto width_ratio = static_cast<float>(display_w) / static_cast<float>(w);
+			const auto height_ratio = static_cast<float>(display_h) / static_cast<float>(h);
+			io.DisplayFramebufferScale = ImVec2(width_ratio, height_ratio);
+		}
 
-		ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
-		if (!platform_io.Monitors.empty() && platform_io.Monitors[0].DpiScale > 1.0f) {
+		const auto& monitor = platform_io.Monitors[0];
+		if (monitor.DpiScale > 1.0f && display_h != h) {
 			io.DisplayFramebufferScale = ImVec2(1.0f, 1.0f);
 			io.DisplaySize = ImVec2((float)display_w, (float)display_h);
+		}
+
+		if (monitor.DpiScale > 1.0f) {
+			// The Framebuffer is scaled by an integer ceiling of the actual ratio, so 2.0 not 1.685 on Mac!
+			const auto scale = std::ceil(platform_io.Monitors[0].DpiScale);
+			io.MousePos.x *= scale;
+			io.MousePos.y *= scale;
 		}
 	}
 

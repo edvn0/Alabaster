@@ -108,4 +108,6 @@ int main(int argc, char** argv)
 	delete app;
 
 	Alabaster::GraphicsContext::the().destroy();
+
+	Alabaster::Log::critical("Exiting application.");
 }

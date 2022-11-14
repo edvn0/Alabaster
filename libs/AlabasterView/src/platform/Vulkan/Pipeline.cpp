@@ -215,11 +215,11 @@ namespace Alabaster {
 
 	void Pipeline::destroy()
 	{
-
 		vkDestroyPipelineCache(GraphicsContext::the().device(), pipeline_cache, nullptr);
 		vkDestroyPipelineLayout(GraphicsContext::the().device(), pipeline_layout, nullptr);
 		vkDestroyPipeline(GraphicsContext::the().device(), pipeline, nullptr);
 		Log::info("[Pipeline] Destroyed pipeline {} and its dependents.", spec.debug_name);
+		destroyed = true;
 	}
 
 } // namespace Alabaster

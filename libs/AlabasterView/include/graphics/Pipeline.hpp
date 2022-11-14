@@ -64,7 +64,11 @@ namespace Alabaster {
 	public:
 		explicit Pipeline(PipelineSpecification spec)
 			: spec(std::move(spec)) {};
-		~Pipeline() { destroy(); };
+		~Pipeline()
+		{
+			if (!destroyed)
+				destroy();
+		};
 
 		void destroy();
 
@@ -83,10 +87,11 @@ namespace Alabaster {
 		{
 			auto pipeline = std::make_unique<Pipeline>(spec);
 			pipeline->invalidate();
-			return pipeline;
+			return std::move(pipeline);
 		}
 
 	private:
+		bool destroyed { false };
 		PipelineSpecification spec;
 		VkPipelineLayout pipeline_layout {};
 		VkPipeline pipeline {};

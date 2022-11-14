@@ -12,7 +12,7 @@
 using namespace Alabaster;
 
 struct AlabasterLayer final : public Layer {
-	~AlabasterLayer() override = default;
+	~AlabasterLayer() override {};
 	AlabasterLayer()
 		: camera(CameraType::FirstPerson, 1600 / 900.0f, 0.1, 20, 45.0f)
 		, editor(45.0f, 1600, 900, 0.1, 20)
@@ -38,4 +38,6 @@ private:
 
 	std::unique_ptr<Mesh> viking_room_model;
 	std::unique_ptr<Mesh> sphere_model;
+
+	std::array<std::unique_ptr<Pipeline>, 3> test_pipelines;
 };

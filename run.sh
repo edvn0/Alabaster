@@ -18,7 +18,6 @@ cmake -B "$build_folder" \
     -D GLFW_BUILD_EXAMPLES=OFF \
     -D CMAKE_BUILD_TYPE="$build_type" \
     -D BUILD_TESTING="$build_testing" \
-    -D VMA_RECORDING_ENABLED=ON \
     -D Random_BuildTests=OFF \
     -D BUILD_SHARED_LIBS=OFF \
     -S "$current_dir"

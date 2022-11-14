@@ -144,6 +144,7 @@ namespace Alabaster {
 		VkFramebufferCreateInfo framebuffer_create_info = {};
 		framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebuffer_create_info.renderPass = vk_render_pass;
+
 		framebuffer_create_info.width = sc_width;
 		framebuffer_create_info.height = sc_height;
 		framebuffer_create_info.layers = 1;
@@ -162,6 +163,12 @@ namespace Alabaster {
 
 	void Swapchain::begin_frame()
 	{
+		const auto [w, h] = Application::the().get_window()->framebuffer_extent();
+		const auto [x_s, y_s] = Application::the().get_window()->framebuffer_scale();
+		if (w != sc_width || h != sc_height) {
+			on_resize(static_cast<uint32_t>(sc_width * x_s), static_cast<uint32_t>(h * y_s));
+		}
+
 		auto& queue = Renderer::resource_release_queue(frame());
 		queue.execute();
 
@@ -587,6 +594,7 @@ namespace Alabaster {
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submit_info.waitSemaphoreCount = 1;
 		submit_info.pWaitSemaphores = &present_complete;
+		submit_info.pWaitDstStageMask = &psw;
 
 		vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &submit_info, VK_NULL_HANDLE);
 	}

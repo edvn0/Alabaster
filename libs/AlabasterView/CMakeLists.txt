@@ -78,10 +78,6 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
   target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_RELEASE)
 endif()
 
-if(${VMA_RECORDING_ENABLED} STREQUAL "ON")
-  target_compile_definitions(${PROJECT_NAME} PUBLIC VMA_RECORDING_ENABLED)
-endif()
-
 if(WIN32)
   target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
 elseif(APPLE)

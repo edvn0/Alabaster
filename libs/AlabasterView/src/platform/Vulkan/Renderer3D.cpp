@@ -11,24 +11,19 @@
 #include "graphics/Pipeline.hpp"
 #include "graphics/Renderer.hpp"
 #include "graphics/Shader.hpp"
-#include "graphics/Swapchain.hpp"
 #include "graphics/UniformBuffer.hpp"
 #include "graphics/VertexBuffer.hpp"
 #include "utilities/FileInputOutput.hpp"
-#include "vulkan/vulkan_core.h"
 
-#include <glm/gtc/type_ptr.hpp>
-#include <imgui.h>
 #include <vulkan/vulkan.h>
 
-#define USE_CAMERA
 #define ALABASTER_USE_IMGUI
 
 namespace Alabaster {
 
 	struct RendererTransform {
-		glm::mat4 transform;
-		glm::vec4 colour;
+		alignas(16) glm::mat4 transform;
+		alignas(16) glm::vec4 colour;
 	};
 
 	static constexpr auto default_model = glm::mat4 { 1.0f };
@@ -64,9 +59,9 @@ namespace Alabaster {
 		depth_attachment_desc.format = depth;
 		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
@@ -352,7 +347,7 @@ namespace Alabaster {
 			uint32_t vertex_count = static_cast<uint32_t>(data.quad_vertices_submitted);
 
 			uint32_t size = vertex_count * sizeof(QuadVertex);
-			data.quad_vertex_buffer.reset(new VertexBuffer(data.quad_buffer.data(), size));
+			data.quad_vertex_buffer->set_data(data.quad_buffer.data(), size, 0);
 
 			draw_quads();
 
@@ -363,7 +358,7 @@ namespace Alabaster {
 			uint32_t vertex_count = static_cast<uint32_t>(data.line_vertices_submitted);
 
 			uint32_t size = vertex_count * sizeof(LineVertex);
-			data.line_vertex_buffer.reset(new VertexBuffer(data.line_buffer.data(), size));
+			data.line_vertex_buffer->set_data(data.line_buffer.data(), size, 0);
 
 			draw_lines();
 
@@ -440,9 +435,6 @@ namespace Alabaster {
 
 	void Renderer3D::draw_meshes()
 	{
-		Pipeline* current = data.mesh_pipeline_submit[0];
-		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, current->get_vulkan_pipeline());
-
 		const VkDescriptorSet& descriptor = data.descriptor_sets[Renderer::current_frame()];
 
 		for (uint32_t i = 0; i < data.meshes_submitted; i++) {
@@ -450,15 +442,13 @@ namespace Alabaster {
 
 			const auto& vb = mesh->get_vertex_buffer();
 			const auto& ib = mesh->get_index_buffer();
-			auto& pipeline = data.mesh_pipeline_submit[i];
+			const auto& pipeline = data.mesh_pipeline_submit[i];
+			const auto& layout = pipeline->get_vulkan_pipeline_layout();
+			const auto& vk_pipeline = pipeline->get_vulkan_pipeline();
 
-			if (pipeline != current) {
-				current = pipeline;
-				vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, current->get_vulkan_pipeline());
-			}
+			vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
 
-			vkCmdBindDescriptorSets(
-				*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, current->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
+			vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor, 0, nullptr);
 
 			std::array<VkBuffer, 1> vbs { *mesh->get_vertex_buffer() };
 			VkDeviceSize offsets { 0 };
@@ -469,7 +459,8 @@ namespace Alabaster {
 			RendererTransform rt {};
 			rt.colour = *mesh->get_colour();
 			rt.transform = *mesh->get_transform();
-			vkCmdPushConstants(*command_buffer, current->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
+
+			vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
 
 			vkCmdDrawIndexed(*command_buffer, static_cast<uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 		}
@@ -510,6 +501,12 @@ namespace Alabaster {
 		data.quad_vertex_buffer->destroy();
 		data.line_index_buffer->destroy();
 		data.quad_index_buffer->destroy();
+
+		data.quad_pipeline->destroy();
+		data.line_pipeline->destroy();
+		data.mesh_pipeline->destroy();
 	}
+
+	const VkRenderPass& Renderer3D::get_render_pass() const { return data.render_pass; }
 
 } // namespace Alabaster
