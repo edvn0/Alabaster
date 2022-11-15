@@ -1,5 +1,6 @@
 #pragma once
 
+#include "cache/ShaderCache.hpp"
 #include "core/Application.hpp"
 #include "core/Logger.hpp"
 #include "graphics/Allocator.hpp"
@@ -90,6 +91,7 @@ int main(int argc, char** argv)
 	Alabaster::Log::trace("{}, {}, {}", props.width, props.height, props.name);
 
 	Alabaster::IO::init_with_cwd(*root);
+	// AlabasterShaderCompiler::ShaderCache::initialise();
 
 	try {
 		app = Alabaster::create(props);
@@ -110,4 +112,5 @@ int main(int argc, char** argv)
 	Alabaster::GraphicsContext::the().destroy();
 
 	Alabaster::Log::critical("Exiting application.");
+	AlabasterShaderCompiler::ShaderCache::shutdown();
 }

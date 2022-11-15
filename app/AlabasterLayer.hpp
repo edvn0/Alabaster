@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Alabaster.hpp"
+#include "AlabasterShaderCompiler.hpp"
 #include "graphics/Camera.hpp"
 
 #include <glm/glm.hpp>
@@ -15,7 +16,7 @@ struct AlabasterLayer final : public Layer {
 	~AlabasterLayer() override {};
 	AlabasterLayer()
 		: camera(CameraType::FirstPerson, 1600 / 900.0f, 0.1, 20, 45.0f)
-		, editor(45.0f, 1600, 900, 0.1, 20)
+		, editor(45.0f, 1600, 900, 0.1, 100)
 		, renderer(editor) {};
 
 	void update(float ts) final;
@@ -38,6 +39,7 @@ private:
 
 	std::unique_ptr<Mesh> viking_room_model;
 	std::unique_ptr<Mesh> sphere_model;
+	std::unique_ptr<Mesh> sponza_model;
 
 	std::array<std::unique_ptr<Pipeline>, 3> test_pipelines;
 };

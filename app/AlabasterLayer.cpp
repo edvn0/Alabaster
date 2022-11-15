@@ -13,11 +13,10 @@ static uint32_t quads { 1 };
 
 bool AlabasterLayer::initialise()
 {
-
-	AlabasterShaderCompiler::ShaderCompiler compiler(IO::resources() / std::filesystem::path { "shaders" });
-
 	viking_room_model = Mesh::from_file("viking_room.obj");
 	sphere_model = Mesh::from_file("sphere.obj");
+
+	sponza_model = Mesh::from_file("sponza.obj");
 
 	for (size_t i = 0; i < 3; i++) {
 		PipelineSpecification mesh_spec {
@@ -36,6 +35,8 @@ bool AlabasterLayer::initialise()
 		};
 		test_pipelines[i] = Pipeline::create(mesh_spec);
 	}
+
+	// auto shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("mesh");
 
 	return true;
 }
@@ -92,7 +93,7 @@ void AlabasterLayer::update(float ts)
 		renderer.line(axis_base, axis_base + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
 		renderer.line(axis_base, axis_base + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
 
-		auto sphere_rot = glm::mat4 { 1.0f };
+		/*auto sphere_rot = glm::mat4 { 1.0f };
 
 		renderer.mesh(sphere_model, nullptr, { 0, 0, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .1, .1 });
 
@@ -103,6 +104,9 @@ void AlabasterLayer::update(float ts)
 		renderer.mesh(viking_room_model, test_pipelines[1], { 3, 3, 0 }, std::move(rotation2), { 1, 1, 1, 1 }, { 1, 1, 1 });
 		auto rotation3 = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
 		renderer.mesh(viking_room_model, test_pipelines[2], { -3, -3, 0 }, std::move(rotation3), { 1, 1, 1, 1 }, { 1, 1, 1 });
+	*/
+
+		renderer.mesh(sponza_model, nullptr, { 0, 0, 0 }, glm::mat4 { 1.0f }, { 1, 0, 0, 1 }, { 0.01, 0.01, 0.01 });
 	}
 	renderer.end_scene();
 
@@ -206,6 +210,7 @@ void AlabasterLayer::destroy()
 	renderer.destroy();
 	viking_room_model->destroy();
 	sphere_model->destroy();
+	sponza_model->destroy();
 
 	for (auto& pipe : test_pipelines) {
 		pipe->destroy();

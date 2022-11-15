@@ -42,6 +42,24 @@ namespace Alabaster {
 		}
 	};
 
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&& happy) -> void
+	{
+		auto result = static_cast<bool>(happy);
+		if (not result) {
+			Log::error("Assertion failed.");
+			debug_break();
+		}
+	};
+
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&& happy, std::string_view message) -> void
+	{
+		auto result = static_cast<bool>(happy);
+		if (not result) {
+			Log::error("Assertion failed. Message: {}", message);
+			debug_break();
+		}
+	};
+
 #else
 
 	template <typename VkResult> static constexpr auto vk_check(VkResult result) -> void {};
@@ -49,6 +67,10 @@ namespace Alabaster {
 	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&& happy) -> void {};
 
 	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&& happy, std::string_view message) -> void {};
+
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&& happy) -> void {};
+
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&& happy, std::string_view message) -> void {};
 
 #endif
 
