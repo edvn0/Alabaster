@@ -213,8 +213,9 @@ namespace Alabaster {
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.depth_test = true,
 			.depth_write = true,
-			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
-				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+			.vertex_layout
+			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
+				VertexBufferElement(ShaderDataType::Float2, "normal"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)),
 				PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4)) },
 		};
@@ -459,7 +460,7 @@ namespace Alabaster {
 			RendererTransform rt {};
 			rt.colour = *mesh->get_colour();
 			rt.transform = *mesh->get_transform();
-
+			update_uniform_buffers(rt.transform);
 			vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
 
 			vkCmdDrawIndexed(*command_buffer, static_cast<uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);

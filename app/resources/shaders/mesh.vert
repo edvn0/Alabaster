@@ -2,7 +2,8 @@
 
 layout(location = 0) in vec4 locations;
 layout(location = 1) in vec4 colour;
-layout(location = 2) in vec2 uvs;
+layout(location = 2) in vec2 normal;
+layout(location = 3) in vec2 uvs;
 
 layout(binding = 0) uniform UBO
 {
@@ -26,6 +27,9 @@ layout(location = 1) out vec2 out_uvs;
 void main()
 {
 	gl_Position = ubo.view_proj * pc.transform * locations;
-	out_colour = pc.mesh_colour;
+	vec4 out_c = pc.mesh_colour;
+	out_c.x *= normal.x;
+	out_c.y *= normal.y;
+	out_colour = out_c;
 	out_uvs = uvs;
 }

@@ -81,6 +81,8 @@ namespace Alabaster {
 				const auto v = 1.0f - attrib.texcoords[2 * index.texcoord_index + 1];
 				vertex.uv = { u, v };
 
+				vertex.normal = { attrib.normals[2 * index.texcoord_index + 0], attrib.normals[2 * index.texcoord_index + 1] };
+
 				vertex.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 				if (!unique_vertices.contains(vertex)) {

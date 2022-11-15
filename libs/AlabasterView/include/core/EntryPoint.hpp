@@ -112,5 +112,5 @@ int main(int argc, char** argv)
 	Alabaster::GraphicsContext::the().destroy();
 
 	Alabaster::Log::critical("Exiting application.");
-	AlabasterShaderCompiler::ShaderCache::shutdown();
+	// AlabasterShaderCompiler::ShaderCache::shutdown();
 }

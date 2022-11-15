@@ -19,9 +19,13 @@ namespace Alabaster {
 	struct Vertex {
 		glm::vec4 position;
 		glm::vec4 colour;
+		glm::vec2 normal;
 		glm::vec2 uv;
 
-		bool operator==(const Vertex& other) const { return vertex_is_same(position, other.position) && colour == other.colour && uv == other.uv; }
+		bool operator==(const Vertex& other) const
+		{
+			return vertex_is_same(position, other.position) && colour == other.colour && uv == other.uv && normal == other.normal;
+		}
 	};
 
 	using Index = uint32_t;
