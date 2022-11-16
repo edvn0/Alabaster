@@ -47,8 +47,7 @@ namespace Alabaster {
 	void Application::stop()
 	{
 		using Map = std::map<std::string, Layer*>;
-		// Erase members that satisfy needs_removing(itr)
-		for (Map::const_iterator itr = layers.cbegin(); itr != layers.cend();) {
+		for (Map::iterator itr = layers.begin(); itr != layers.end();) {
 			itr->second->destroy();
 			itr->second->~Layer();
 			itr = layers.erase(itr);
@@ -87,14 +86,13 @@ namespace Alabaster {
 				gui_layer().end();
 
 				Renderer::end();
-
-				cpu_time = on_cpu.elapsed();
-				float time = Clock::get_ms<float>();
-				frame_time = time - last_frametime;
-				app_ts = frame_time;
-				last_frametime = time;
 			}
 			swapchain().end_frame();
+			cpu_time = on_cpu.elapsed();
+			float time = Clock::get_ms<float>();
+			frame_time = time - last_frametime;
+			app_ts = frame_time;
+			last_frametime = time;
 
 			Log::info("[Application] CPU time: \t{}ms", cpu_time);
 		}

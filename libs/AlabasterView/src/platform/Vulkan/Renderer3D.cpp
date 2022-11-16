@@ -9,9 +9,11 @@
 #include "graphics/IndexBuffer.hpp"
 #include "graphics/Mesh.hpp"
 #include "graphics/Pipeline.hpp"
+#include "graphics/PushConstantRange.hpp"
 #include "graphics/Renderer.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/UniformBuffer.hpp"
+#include "graphics/Vertex.hpp"
 #include "graphics/VertexBuffer.hpp"
 #include "utilities/FileInputOutput.hpp"
 
@@ -193,11 +195,7 @@ namespace Alabaster {
 			.shader = std::move(quad_shader),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.render_pass,
-			.wireframe = false,
-			.backface_culling = false,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.depth_test = true,
-			.depth_write = true,
 			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 		};
@@ -208,16 +206,9 @@ namespace Alabaster {
 			.shader = std::move(mesh_shader),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.render_pass,
-			.wireframe = false,
-			.backface_culling = false,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.depth_test = true,
-			.depth_write = true,
-			.vertex_layout
-			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
-				VertexBufferElement(ShaderDataType::Float2, "normal"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)),
-				PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4)) },
+			.vertex_layout = Layout::Default::vertex_attributes(),
+			.ranges = Layout::Defaults::push_constants(),
 		};
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh_spec);
 		data.mesh_pipeline->invalidate();
@@ -225,11 +216,7 @@ namespace Alabaster {
 		PipelineSpecification line_spec { .shader = std::move(line_shader),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.render_pass,
-			.wireframe = false,
-			.backface_culling = false,
 			.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
-			.depth_test = true,
-			.depth_write = true,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
 			.line_width = 2.0f };
@@ -458,8 +445,16 @@ namespace Alabaster {
 			vkCmdBindIndexBuffer(*command_buffer, *mesh->get_index_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
 			RendererTransform rt {};
-			rt.colour = *mesh->get_colour();
-			rt.transform = *mesh->get_transform();
+			const auto mesh_transform = mesh->get_transform();
+			const auto mesh_colour = mesh->get_colour();
+
+			if (mesh_transform) {
+				rt.transform = *mesh_transform;
+			}
+			if (mesh_colour) {
+				rt.colour = *mesh_colour;
+			}
+
 			update_uniform_buffers(rt.transform);
 			vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
 

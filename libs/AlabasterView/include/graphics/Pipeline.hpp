@@ -1,5 +1,6 @@
 #pragma once
 
+#include "graphics/PushConstantRange.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 #include "vulkan/vulkan_core.h"
@@ -9,48 +10,12 @@
 #include <vulkan/vulkan.h>
 
 namespace Alabaster {
-
-	struct PushConstantRange {
-		VkShaderStageFlags flags;
-		uint32_t size;
-
-		PushConstantRange(VkShaderStageFlags flags, uint32_t size)
-			: flags(flags)
-			, size(size) {};
-	};
-
-	struct PushConstantRanges {
-		explicit PushConstantRanges(const std::initializer_list<PushConstantRange>& in)
-			: ranges(in) {};
-
-	public:
-		VkPushConstantRange get_push_constant_range() const
-		{
-			VkPushConstantRange out {};
-			uint32_t current_size { 0 };
-			auto f = VK_SHADER_STAGE_VERTEX_BIT;
-			VkShaderStageFlags flags {};
-			for (const auto& range : ranges) {
-				current_size += range.size;
-				flags |= range.flags;
-			}
-
-			out.size = current_size;
-			out.stageFlags = flags;
-			out.offset = 0;
-			return out;
-		}
-
-	private:
-		std::vector<PushConstantRange> ranges;
-	};
-
 	struct PipelineSpecification {
 		Shader shader;
 		std::string debug_name;
 		VkRenderPass render_pass { nullptr };
 		bool wireframe { false };
-		bool backface_culling { true };
+		bool backface_culling { false };
 		VkPrimitiveTopology topology;
 		bool depth_test { true };
 		bool depth_write { true };

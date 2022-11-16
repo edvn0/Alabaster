@@ -4,6 +4,7 @@
 #include "graphics/IndexBuffer.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBuffer.hpp"
+#include "utilities/FileInputOutput.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -58,8 +59,11 @@ namespace Alabaster {
 		std::tuple<Vertices, Indices> load_model();
 
 	public:
-		static std::unique_ptr<Mesh> from_file(std::string args);
-		static std::unique_ptr<Mesh> from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
+		static std::unique_ptr<Mesh> from_file(const std::filesystem::path& args) { return std::make_unique<Mesh>(IO::model(std::move(args))); };
+		static std::unique_ptr<Mesh> from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)
+		{
+			return std::make_unique<Mesh>(vertices, indices);
+		};
 	};
 
 } // namespace Alabaster

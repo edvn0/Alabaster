@@ -18,25 +18,6 @@ bool AlabasterLayer::initialise()
 
 	sponza_model = Mesh::from_file("sponza.obj");
 
-	for (size_t i = 0; i < 3; i++) {
-		PipelineSpecification mesh_spec {
-			.shader = Shader("mesh"),
-			.debug_name = "Mesh Pipeline",
-			.render_pass = renderer.get_render_pass(),
-			.wireframe = false,
-			.backface_culling = false,
-			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.depth_test = true,
-			.depth_write = true,
-			.vertex_layout
-			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
-				VertexBufferElement(ShaderDataType::Float2, "normal"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)),
-				PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4)) },
-		};
-		test_pipelines[i] = Pipeline::create(mesh_spec);
-	}
-
 	// auto shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("mesh");
 
 	return true;
@@ -77,20 +58,17 @@ void AlabasterLayer::update(float ts)
 	{
 		editor.on_update(ts);
 
-		for (int x = -10; x <= 10; x++) {
-			for (int y = -10; y <= 10; y++) {
-				auto xf = static_cast<float>(x) / 10;
-				auto yf = static_cast<float>(y) / 10;
-
-				renderer.quad(glm::vec4 { xf, yf, sin(xf + yf) * cos(xf + yf), 0 }, glm::vec4 { 0.1, 0.9, 0.1, 1.0f }, glm::vec3 { 0.2, 0.2, 0.2 },
-					frame_number % 360);
-			}
-		}
-
-		renderer.quad({ 0, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 		renderer.quad({ 0, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 		renderer.quad({ 30, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 		renderer.quad({ -30, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+
+		renderer.quad({ 0, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 30, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ -30, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+
+		renderer.quad({ 0, 0, 30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 30, 0, 30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ -30, 0, 30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 
 		glm::vec3 axis_base { 0, -0.1, 0 };
 		renderer.line(axis_base, axis_base + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
@@ -99,15 +77,12 @@ void AlabasterLayer::update(float ts)
 
 		auto sphere_rot = glm::mat4 { 1.0f };
 
-		renderer.mesh(sphere_model, nullptr, { 0, 0, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .1, .1 });
+		/*renderer.mesh(sphere_model, nullptr, { 0, 0, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 });
+		renderer.mesh(sphere_model, nullptr, { 0, 1, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 });
+		renderer.mesh(sphere_model, nullptr, { 0, 0, 1 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 }); */
 
-		auto rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, test_pipelines[0], { 0, 0, 0 }, std::move(rotation), { 1, 1, 1, 1 }, { 1, 1, 1 });
-
-		auto rotation2 = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, test_pipelines[1], { 3, 3, 0 }, std::move(rotation2), { 1, 1, 1, 1 }, { 1, 1, 1 });
-		auto rotation3 = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, test_pipelines[2], { -3, -3, 0 }, std::move(rotation3), { 1, 1, 1, 1 }, { 1, 1, 1 });
+		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(180.0f), glm::vec3 { 0, 0, 1 });
+		renderer.mesh(sponza_model, nullptr, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 0.1, 0.1, 0.1 });
 	}
 	renderer.end_scene();
 
@@ -212,8 +187,4 @@ void AlabasterLayer::destroy()
 	viking_room_model->destroy();
 	sphere_model->destroy();
 	sponza_model->destroy();
-
-	for (auto& pipe : test_pipelines) {
-		pipe->destroy();
-	}
 }

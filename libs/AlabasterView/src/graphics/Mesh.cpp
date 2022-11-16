@@ -15,6 +15,47 @@
 
 namespace Alabaster {
 
+	auto handle_vertices(const auto& attrib, const auto& shapes, const auto& materials)
+	{
+		std::unordered_map<Vertex, uint32_t> unique_vertices {};
+		std::vector<Vertex> vertices;
+		vertices.reserve(attrib.vertices.size());
+
+		// Decent metric
+		std::vector<Index> indices;
+		indices.reserve(shapes.size() * shapes[0].mesh.indices.size());
+
+		for (const auto& shape : shapes) {
+			for (const auto& index : shape.mesh.indices) {
+				Vertex vertex {};
+
+				vertex.position = { attrib.vertices[3 * index.vertex_index + 0], attrib.vertices[3 * index.vertex_index + 1],
+					attrib.vertices[3 * index.vertex_index + 2] };
+
+				const auto u = attrib.texcoords[2 * index.texcoord_index + 0];
+				const auto v = 1.0f - attrib.texcoords[2 * index.texcoord_index + 1];
+				vertex.uv = { u, v };
+
+				vertex.normal = { attrib.normals[3 * index.texcoord_index + 0], attrib.normals[3 * index.texcoord_index + 1],
+					attrib.normals[3 * index.normal_index + 1] };
+
+				vertex.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+				if (!unique_vertices.contains(vertex)) {
+					unique_vertices[vertex] = static_cast<uint32_t>(vertices.size());
+					vertices.push_back(vertex);
+				}
+
+				indices.push_back(unique_vertices[vertex]);
+			}
+		}
+
+		vertices.shrink_to_fit();
+		indices.shrink_to_fit();
+
+		return std::make_tuple(vertices, indices);
+	}
+
 	Mesh::Mesh(const std::filesystem::path& path)
 		: path(path)
 	{
@@ -61,49 +102,7 @@ namespace Alabaster {
 		const auto& shapes = reader.GetShapes();
 		const auto& materials = reader.GetMaterials();
 
-		std::unordered_map<Vertex, uint32_t> unique_vertices {};
-
-		std::vector<Vertex> vertices;
-		vertices.reserve(attrib.vertices.size());
-
-		// Decent metric
-		std::vector<Index> indices;
-		indices.reserve(shapes.size() * shapes[0].mesh.indices.size());
-
-		for (const auto& shape : shapes) {
-			for (const auto& index : shape.mesh.indices) {
-				Vertex vertex {};
-
-				vertex.position = { attrib.vertices[3 * index.vertex_index + 0], attrib.vertices[3 * index.vertex_index + 1],
-					attrib.vertices[3 * index.vertex_index + 2], 1 };
-
-				const auto u = attrib.texcoords[2 * index.texcoord_index + 0];
-				const auto v = 1.0f - attrib.texcoords[2 * index.texcoord_index + 1];
-				vertex.uv = { u, v };
-
-				vertex.normal = { attrib.normals[2 * index.texcoord_index + 0], attrib.normals[2 * index.texcoord_index + 1] };
-
-				vertex.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-				if (!unique_vertices.contains(vertex)) {
-					unique_vertices[vertex] = static_cast<uint32_t>(vertices.size());
-					vertices.push_back(vertex);
-				}
-
-				indices.push_back(unique_vertices[vertex]);
-			}
-		}
-
-		vertices.shrink_to_fit();
-		indices.shrink_to_fit();
-
-		return { vertices, indices };
-	}
-
-	std::unique_ptr<Mesh> Mesh::from_file(std::string path) { return std::make_unique<Mesh>(IO::model(std::move(path))); }
-	std::unique_ptr<Mesh> Mesh::from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)
-	{
-		return std::make_unique<Mesh>(vertices, indices);
+		return handle_vertices(attrib, shapes, materials);
 	}
 
 	void Mesh::destroy()
