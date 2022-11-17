@@ -40,4 +40,6 @@ private:
 	std::unique_ptr<Mesh> viking_room_model;
 	std::unique_ptr<Mesh> sphere_model;
 	std::unique_ptr<Mesh> sponza_model;
+
+	std::unique_ptr<Pipeline> viking_pipeline;
 };

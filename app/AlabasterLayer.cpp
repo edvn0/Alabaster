@@ -17,8 +17,17 @@ bool AlabasterLayer::initialise()
 	sphere_model = Mesh::from_file("sphere.obj");
 
 	sponza_model = Mesh::from_file("sponza.obj");
-
 	// auto shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("mesh");
+
+	PipelineSpecification mesh_spec {
+		.shader = Shader("viking"),
+		.debug_name = "Mesh Pipeline",
+		.render_pass = renderer.get_render_pass(),
+		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		.vertex_layout = Layout::Default::vertex_attributes(),
+		.ranges = Layout::Defaults::push_constants(),
+	};
+	viking_pipeline = Pipeline::create(mesh_spec);
 
 	return true;
 }
@@ -81,8 +90,9 @@ void AlabasterLayer::update(float ts)
 		renderer.mesh(sphere_model, nullptr, { 0, 1, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 });
 		renderer.mesh(sphere_model, nullptr, { 0, 0, 1 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 }); */
 
-		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(180.0f), glm::vec3 { 0, 0, 1 });
-		renderer.mesh(sponza_model, nullptr, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 0.1, 0.1, 0.1 });
+		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
+		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
+		// renderer.mesh(sponza_model, nullptr, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 0.1, 0.1, 0.1 });
 	}
 	renderer.end_scene();
 

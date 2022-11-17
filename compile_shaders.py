@@ -122,6 +122,10 @@ def main(parsed: Namespace):
         record = compile_to_spirv(parsed, uncompiled_file)
         compiled_file_cache.append(record)
 
+    for file in compiled_file_cache:
+        if file.compiled_name == "Failure":
+            return 1
+
     write_cache(parsed, compiled_file_cache)
 
 

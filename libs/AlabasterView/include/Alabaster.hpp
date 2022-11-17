@@ -10,6 +10,7 @@
 #include "core/Window.hpp"
 #include "graphics/Camera.hpp"
 #include "graphics/GraphicsContext.hpp"
+#include "graphics/Image.hpp"
 #include "graphics/IndexBuffer.hpp"
 #include "graphics/Mesh.hpp"
 #include "graphics/Pipeline.hpp"

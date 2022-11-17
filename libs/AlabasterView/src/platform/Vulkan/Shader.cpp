@@ -7,10 +7,28 @@
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
 #include "utilities/FileInputOutput.hpp"
+#include "vulkan/vulkan_core.h"
 
 #include <platform/Vulkan/CreateInfoStructures.hpp>
 
 namespace Alabaster {
+
+	auto create_default_bindings()
+	{
+		std::array<VkDescriptorSetLayoutBinding, 2> bindings;
+		bindings[0].binding = 0;
+		bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
+		bindings[0].pImmutableSamplers = nullptr; // Optional
+		bindings[0].descriptorCount = 1;
+		bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+
+		bindings[1].binding = 1;
+		bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		bindings[1].descriptorCount = 1;
+		bindings[1].pImmutableSamplers = nullptr;
+		bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		return std::move(bindings);
+	}
 
 	std::pair<std::filesystem::path, std::filesystem::path> to_path(const auto& path)
 	{
@@ -60,21 +78,7 @@ namespace Alabaster {
 		fragment_stage.pName = "main";
 
 		shader_stages = { vertex_stage, fragment_stage };
-
-		// TODO: This should obviously be generated from the shader compilation.
-		std::array<VkDescriptorSetLayoutBinding, 1> bindings;
-		bindings[0].binding = 0;
-		bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
-		bindings[0].descriptorCount = 1;
-		bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-
-		VkDescriptorSetLayoutCreateInfo create_info {};
-		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		create_info.bindingCount = bindings.size();
-		create_info.pBindings = bindings.data();
-
-		layouts.resize(1);
-		vk_check(vkCreateDescriptorSetLayout(GraphicsContext::the().device(), &create_info, nullptr, layouts.data()));
+		create_layout();
 	}
 
 	Shader::Shader(const std::filesystem::path& p)
@@ -100,21 +104,7 @@ namespace Alabaster {
 		fragment_stage.pName = "main";
 
 		shader_stages = { vertex_stage, fragment_stage };
-
-		// TODO: This should obviously be generated from the shader compilation.
-		std::array<VkDescriptorSetLayoutBinding, 1> bindings;
-		bindings[0].binding = 0;
-		bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
-		bindings[0].descriptorCount = 1;
-		bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-
-		VkDescriptorSetLayoutCreateInfo create_info {};
-		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		create_info.bindingCount = bindings.size();
-		create_info.pBindings = bindings.data();
-
-		layouts.resize(1);
-		vk_check(vkCreateDescriptorSetLayout(GraphicsContext::the().device(), &create_info, nullptr, layouts.data()));
+		create_layout();
 	}
 
 	Shader::Shader(std::vector<uint32_t>&& vert_spirv, std::vector<uint32_t>&& frag_spirv)
@@ -135,24 +125,26 @@ namespace Alabaster {
 		fragment_stage.pName = "main";
 
 		shader_stages = { vertex_stage, fragment_stage };
+		create_layout();
+	}
 
+	void Shader::create_layout()
+	{
 		// TODO: This should obviously be generated from the shader compilation.
-		std::array<VkDescriptorSetLayoutBinding, 1> bindings;
-		bindings[0].binding = 0;
-		bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
-		bindings[0].descriptorCount = 1;
-		bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		auto bindings = create_default_bindings();
 
 		VkDescriptorSetLayoutCreateInfo create_info {};
 		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		create_info.bindingCount = bindings.size();
 		create_info.pBindings = bindings.data();
 
-		layouts.resize(1);
-		vk_check(vkCreateDescriptorSetLayout(GraphicsContext::the().device(), &create_info, nullptr, layouts.data()));
+		layouts.resize(bindings.size());
+		for (uint32_t i = 0; i < bindings.size(); i++) {
+			vk_check(vkCreateDescriptorSetLayout(GraphicsContext::the().device(), &create_info, nullptr, &layouts[i]));
+		}
 	}
 
-	void Shader::destroy() const
+	void Shader::destroy()
 	{
 		for (const auto& stage : shader_stages)
 			vkDestroyShaderModule(GraphicsContext::the().device(), stage.module, nullptr);

@@ -6,6 +6,7 @@
 #include "core/Window.hpp"
 #include "graphics/Camera.hpp"
 #include "graphics/GraphicsContext.hpp"
+#include "graphics/Image.hpp"
 #include "graphics/IndexBuffer.hpp"
 #include "graphics/Mesh.hpp"
 #include "graphics/Pipeline.hpp"
@@ -16,6 +17,7 @@
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBuffer.hpp"
 #include "utilities/FileInputOutput.hpp"
+#include "vulkan/vulkan_core.h"
 
 #include <vulkan/vulkan.h>
 
@@ -111,7 +113,14 @@ namespace Alabaster {
 		ubo_layout_binding.pImmutableSamplers = nullptr;
 		ubo_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
 
-		std::array<VkDescriptorSetLayoutBinding, 1> bindings = { ubo_layout_binding };
+		VkDescriptorSetLayoutBinding combined_image_sampler {};
+		combined_image_sampler.binding = 1;
+		combined_image_sampler.descriptorCount = 1;
+		combined_image_sampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		combined_image_sampler.pImmutableSamplers = nullptr;
+		combined_image_sampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, combined_image_sampler };
 		VkDescriptorSetLayoutCreateInfo layout_info {};
 		layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
@@ -122,9 +131,12 @@ namespace Alabaster {
 
 	void Renderer3D::create_descriptor_pool()
 	{
-		std::array<VkDescriptorPoolSize, 1> pool_sizes {};
+		std::array<VkDescriptorPoolSize, 2> pool_sizes {};
 		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		pool_sizes[0].descriptorCount = static_cast<uint32_t>(Application::the().swapchain().get_image_count());
+
+		pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		pool_sizes[1].descriptorCount = static_cast<uint32_t>(Application::the().swapchain().get_image_count());
 
 		VkDescriptorPoolCreateInfo pool_info {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -139,31 +151,44 @@ namespace Alabaster {
 
 	void Renderer3D::create_descriptor_sets()
 	{
-		std::vector<VkDescriptorSetLayout> layouts(Application::the().swapchain().get_image_count(), data.descriptor_set_layout);
+		const auto image_count = Application::the().swapchain().get_image_count();
+
+		std::vector<VkDescriptorSetLayout> layouts(image_count, data.descriptor_set_layout);
 		VkDescriptorSetAllocateInfo alloc_info {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		alloc_info.descriptorPool = data.descriptor_pool;
-		alloc_info.descriptorSetCount = static_cast<uint32_t>(Application::the().swapchain().get_image_count());
+		alloc_info.descriptorSetCount = static_cast<uint32_t>(image_count);
 		alloc_info.pSetLayouts = layouts.data();
 
-		data.descriptor_sets.resize(Application::the().swapchain().get_image_count());
+		data.descriptor_sets.resize(image_count);
 		vk_check(vkAllocateDescriptorSets(GraphicsContext::the().device(), &alloc_info, data.descriptor_sets.data()));
 
-		for (size_t i = 0; i < Application::the().swapchain().get_image_count(); i++) {
+		const auto image_info = data.viking_room_texture->vulkan_image_info();
+		for (size_t i = 0; i < image_count; i++) {
 			VkDescriptorBufferInfo buffer_info {};
 			buffer_info.buffer = data.uniforms[i].get_buffer();
 			buffer_info.offset = 0;
 			buffer_info.range = sizeof(UBO);
 
-			std::array<VkWriteDescriptorSet, 1> descriptor_writes {};
+			std::array<VkWriteDescriptorSet, 2> descriptor_writes {};
+			auto& ubo = descriptor_writes[0];
+			auto& combined_sampler = descriptor_writes[1];
 
-			descriptor_writes[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			descriptor_writes[0].dstSet = data.descriptor_sets[i];
-			descriptor_writes[0].dstBinding = 0;
-			descriptor_writes[0].dstArrayElement = 0;
-			descriptor_writes[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			descriptor_writes[0].descriptorCount = 1;
-			descriptor_writes[0].pBufferInfo = &buffer_info;
+			ubo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			ubo.dstSet = data.descriptor_sets[i];
+			ubo.dstBinding = 0;
+			ubo.dstArrayElement = 0;
+			ubo.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+			ubo.descriptorCount = 1;
+			ubo.pBufferInfo = &buffer_info;
+
+			combined_sampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			combined_sampler.dstSet = data.descriptor_sets[i];
+			combined_sampler.dstBinding = 1;
+			combined_sampler.dstArrayElement = 0;
+			combined_sampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+			combined_sampler.descriptorCount = 1;
+			combined_sampler.pImageInfo = &image_info;
 
 			vkUpdateDescriptorSets(
 				GraphicsContext::the().device(), static_cast<uint32_t>(descriptor_writes.size()), descriptor_writes.data(), 0, nullptr);
@@ -187,6 +212,7 @@ namespace Alabaster {
 			data.uniforms.push_back(UniformBuffer(uniform_buffer_size, 0));
 		}
 
+		data.viking_room_texture = Image::create("viking_room.png");
 		create_descriptor_set_layout();
 		create_descriptor_pool();
 		create_descriptor_sets();
@@ -501,6 +527,8 @@ namespace Alabaster {
 		data.quad_pipeline->destroy();
 		data.line_pipeline->destroy();
 		data.mesh_pipeline->destroy();
+
+		data.viking_room_texture->destroy();
 	}
 
 	const VkRenderPass& Renderer3D::get_render_pass() const { return data.render_pass; }

@@ -20,6 +20,7 @@ namespace Alabaster {
 	class Pipeline;
 	class VertexBuffer;
 	class IndexBuffer;
+	class Image;
 
 	struct QuadVertex {
 		glm::vec4 position;
@@ -69,6 +70,8 @@ namespace Alabaster {
 		std::array<Mesh*, 50> mesh;
 		std::array<Pipeline*, 50> mesh_pipeline_submit;
 		std::unique_ptr<Pipeline> mesh_pipeline;
+
+		std::unique_ptr<Image> viking_room_texture;
 	};
 
 	class Renderer3D {

@@ -22,7 +22,7 @@ namespace Alabaster {
 		uint32_t width { 0 };
 		uint32_t height { 0 };
 		Buffer image_data;
-		std::unique_ptr<Image2D> image;
+		std::unique_ptr<Image> image;
 		ImageFormat format = ImageFormat::RBGA;
 	};
 
