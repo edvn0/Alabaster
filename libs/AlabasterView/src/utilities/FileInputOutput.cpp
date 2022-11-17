@@ -15,6 +15,8 @@ namespace Alabaster::IO {
 
 	std::filesystem::path resources() { return root; }
 
+	std::filesystem::path textures() { return root / std::filesystem::path { "textures" }; }
+
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{
 		std::ifstream stream(filename, static_cast<unsigned int>(mode));

@@ -29,9 +29,9 @@ namespace Alabaster {
 
 		global_app = this;
 		window = std::make_unique<Window>(args);
-		push_layer(new GUILayer());
-
 		window->set_event_callback([this](Event& e) { on_event(e); });
+
+		push_layer(new GUILayer());
 
 		Renderer::init();
 	}

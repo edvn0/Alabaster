@@ -11,6 +11,12 @@ using namespace Alabaster;
 
 static uint32_t quads { 1 };
 
+static constexpr auto axes = [](auto& renderer, auto&& pos, float size = 2.0f) {
+	renderer.line(pos, pos + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
+	renderer.line(pos, pos + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
+	renderer.line(pos, pos + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
+};
+
 bool AlabasterLayer::initialise()
 {
 	viking_room_model = Mesh::from_file("viking_room.obj");
@@ -21,13 +27,21 @@ bool AlabasterLayer::initialise()
 
 	PipelineSpecification mesh_spec {
 		.shader = Shader("viking"),
-		.debug_name = "Mesh Pipeline",
+		.debug_name = "Viking Pipeline",
 		.render_pass = renderer.get_render_pass(),
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 		.vertex_layout = Layout::Default::vertex_attributes(),
 		.ranges = Layout::Defaults::push_constants(),
 	};
 	viking_pipeline = Pipeline::create(mesh_spec);
+
+	for (const auto& entry : std::filesystem::directory_iterator(IO::textures())) {
+		const auto ext = entry.path().extension();
+		if (ext == ".tga") {
+			const auto img = Image::create(entry);
+			img->destroy();
+		}
+	}
 
 	return true;
 }
@@ -79,13 +93,9 @@ void AlabasterLayer::update(float ts)
 		renderer.quad({ 30, 0, 30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 		renderer.quad({ -30, 0, 30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 
-		glm::vec3 axis_base { 0, -0.1, 0 };
-		renderer.line(axis_base, axis_base + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
-		renderer.line(axis_base, axis_base + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
-		renderer.line(axis_base, axis_base + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
+		axes(renderer, glm::vec3 { 0, -0.1, 0 });
 
-		auto sphere_rot = glm::mat4 { 1.0f };
-
+		renderer.line(4, { 0, 0, 0 }, { 3, 3, 3 }, { 1, 0, 0, 1 });
 		/*renderer.mesh(sphere_model, nullptr, { 0, 0, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 });
 		renderer.mesh(sphere_model, nullptr, { 0, 1, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 });
 		renderer.mesh(sphere_model, nullptr, { 0, 0, 1 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 }); */

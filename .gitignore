@@ -1,6 +1,9 @@
 # Prerequisites
 *.d
 
+Thumbs.db
+*.tga
+
 .idea
 cmake-*
 

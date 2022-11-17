@@ -84,7 +84,7 @@ namespace Alabaster {
 	std::tuple<Mesh::Vertices, Mesh::Indices> Mesh::load_model()
 	{
 		tinyobj::ObjReaderConfig reader_config;
-		reader_config.mtl_search_path = path.parent_path().string().c_str();
+		reader_config.mtl_search_path = IO::textures();
 
 		tinyobj::ObjReader reader;
 

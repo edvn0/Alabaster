@@ -69,7 +69,7 @@ namespace Alabaster {
 		bool destroyed { false };
 
 	public:
-		static std::unique_ptr<Image> create(const std::filesystem::path& filename) { return std::make_unique<Image>(IO::texture(filename)); }
+		static std::unique_ptr<Image> create(const std::filesystem::path& filename) { return std::make_unique<Image>(filename); }
 	};
 
 } // namespace Alabaster

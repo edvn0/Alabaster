@@ -1,20 +1,13 @@
 #pragma once
 
-#include "core/Logger.hpp"
-#include "core/Utilities.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/RenderQueue.hpp"
-
-#include <concepts>
-#include <glm/glm.hpp>
 
 typedef struct VkPipeline_T* VkPipeline;
 typedef struct VkRenderPass_T* VkRenderPass;
 typedef struct VkPipelineLayout_T* VkPipelineLayout;
 
 namespace Alabaster {
-
-	template <typename T> using ConstUnique = const std::unique_ptr<T>&;
 
 	class SceneRenderer;
 	class Mesh;

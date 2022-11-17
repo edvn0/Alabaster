@@ -212,7 +212,7 @@ namespace Alabaster {
 			data.uniforms.push_back(UniformBuffer(uniform_buffer_size, 0));
 		}
 
-		data.viking_room_texture = Image::create("viking_room.png");
+		data.viking_room_texture = Image::create(IO::texture("viking_room.png"));
 		create_descriptor_set_layout();
 		create_descriptor_pool();
 		create_descriptor_sets();
@@ -345,6 +345,23 @@ namespace Alabaster {
 		second_line_vertex.colour = color;
 
 		data.line_indices_submitted += 2;
+	}
+
+	void Renderer3D::line(float size, const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
+	{
+		if (data.line_indices_submitted >= RendererData::max_indices) {
+			flush();
+		}
+
+		if (data.line_vertices_submitted >= RendererData::max_vertices) {
+			flush();
+		}
+
+		if (glm::epsilonEqual(size, 1.0f, 0.0001f)) {
+			line(p0, p1, color);
+		} else {
+			// TODO: quad between two points here.
+		}
 	}
 
 	void Renderer3D::flush()

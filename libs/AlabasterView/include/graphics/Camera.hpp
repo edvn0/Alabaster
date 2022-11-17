@@ -154,7 +154,8 @@ namespace Alabaster {
 
 		uint32_t viewport_width { 1280 }, viewport_height { 720 };
 
-		constexpr static float min_speed { 0.0005f }, max_speed { 2.0f };
+		constexpr static float min_speed { 0.0005f };
+		constexpr static float max_speed { 2.0f };
 	};
 
 } // namespace Alabaster

@@ -85,6 +85,7 @@ namespace Alabaster {
 		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline = nullptr, const glm::vec3& pos = { 0, 0, 0 },
 			const glm::mat4& rotation_matrix = glm::mat4 { 1.0f }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
 		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
+		void line(float size, const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void end_scene();
 
 	public:

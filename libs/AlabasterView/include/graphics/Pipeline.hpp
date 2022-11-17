@@ -46,6 +46,7 @@ namespace Alabaster {
 		VkPipeline get_vulkan_pipeline() const { return pipeline; }
 
 		bool operator!=(const Pipeline& other) const { return pipeline != other.pipeline; }
+		bool operator()(const Pipeline* other) const { return spec.debug_name < other->spec.debug_name; }
 
 	public:
 		inline static std::unique_ptr<Pipeline> create(PipelineSpecification spec)

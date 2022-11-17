@@ -14,6 +14,7 @@ namespace Alabaster::IO {
 	void init_with_cwd(const std::filesystem::path& path);
 
 	std::filesystem::path resources();
+	std::filesystem::path textures();
 	template <typename Path = std::filesystem::path> std::filesystem::path shader(const Path& path)
 	{
 		return IO::resources() / std::filesystem::path { "shaders" } / std::filesystem::path { path };

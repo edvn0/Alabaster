@@ -48,10 +48,12 @@ namespace Alabaster {
 
 		stbi_image_free(data);
 
+		auto chosen_format = VK_FORMAT_R8G8B8A8_SRGB;
+
 		VkImageCreateInfo image_create_info = {};
 		image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		image_create_info.imageType = VK_IMAGE_TYPE_2D;
-		image_create_info.format = VK_FORMAT_B8G8R8A8_SRGB;
+		image_create_info.format = chosen_format;
 		image_create_info.extent.width = image_props.width;
 		image_create_info.extent.height = image_props.height;
 		image_create_info.extent.depth = 1;
@@ -63,11 +65,10 @@ namespace Alabaster {
 		image_create_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		image_info.allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_HOST, image_info.image);
 
-		Utilities::transition_image_layout(
-			image_info.image, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		Utilities::transition_image_layout(image_info.image, chosen_format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		Utilities::copy_buffer_to_image(staging_buffer, image_info, image_props.width, image_props.height);
 		Utilities::transition_image_layout(
-			image_info.image, VK_FORMAT_B8G8R8A8_SRGB, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+			image_info.image, chosen_format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
 
@@ -78,7 +79,7 @@ namespace Alabaster {
 		VkImageViewCreateInfo view_info = {};
 		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 		view_info.viewType = image_props.layers > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
-		view_info.format = VK_FORMAT_B8G8R8A8_SRGB;
+		view_info.format = chosen_format;
 		view_info.flags = 0;
 		view_info.subresourceRange = {};
 		view_info.subresourceRange.aspectMask = aspect_mask;
