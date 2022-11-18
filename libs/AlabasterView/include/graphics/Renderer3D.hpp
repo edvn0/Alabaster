@@ -72,6 +72,7 @@ namespace Alabaster {
 		std::unique_ptr<Pipeline> mesh_pipeline;
 
 		std::unique_ptr<Image> viking_room_texture;
+		std::unique_ptr<Mesh> sphere_model;
 	};
 
 	class Renderer3D {

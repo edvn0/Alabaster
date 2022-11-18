@@ -5,6 +5,8 @@
 
 #include "utilities/FileInputOutput.hpp"
 
+#include <filesystem>
+
 namespace AlabasterShaderCompiler {
 
 	static ShaderCache* cache;

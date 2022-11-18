@@ -21,6 +21,8 @@ namespace Alabaster {
 		float get_near_clip() const;
 		float get_far_clip() const;
 
+		const glm::vec3& get_position() const override { return position; };
+
 		void set_perspective(float field_of_view_degrees, float aspect_ratio, float in_near_plane, float in_far_plane);
 
 		void update_aspect_ratio(float aspect_ratio);

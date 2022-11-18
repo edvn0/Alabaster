@@ -1,12 +1,9 @@
 #pragma once
 
-#include "cache/ShaderCache.hpp"
-#include "core/Application.hpp"
-#include "core/Logger.hpp"
-#include "graphics/Allocator.hpp"
-#include "graphics/GraphicsContext.hpp"
+#include "Alabaster.hpp"
+#include "AlabasterShaderCompiler.hpp"
 #include "graphics/Renderer.hpp"
-#include "utilities/FileInputOutput.hpp"
+#include "graphics/Renderer3D.hpp"
 
 extern Alabaster::Application* Alabaster::create(const Alabaster::ApplicationArguments& props);
 
@@ -26,10 +23,10 @@ int main(int argc, char** argv)
 	Alabaster::Application* app { nullptr };
 	Alabaster::Logger::init();
 
-	const auto root = IO::get_resource_root();
+	const auto root = Alabaster::IO::get_resource_root();
 
 	if (!root) {
-		Log::error("Could not determine a suitable root of this project, wherein the folder 'resources' exists.");
+		Alabaster::Log::error("Could not determine a suitable root of this project, wherein the folder 'resources' exists.");
 		std::exit(1);
 	}
 
@@ -91,13 +88,14 @@ int main(int argc, char** argv)
 	Alabaster::Log::trace("{}, {}, {}", props.width, props.height, props.name);
 
 	Alabaster::IO::init_with_cwd(*root);
-	// AlabasterShaderCompiler::ShaderCache::initialise();
 
 	try {
 		app = Alabaster::create(props);
 	} catch (const std::system_error& e) {
 		Alabaster::Log::error("Error in app creation: {}", e.what());
 	}
+
+	AlabasterShaderCompiler::ShaderCache::initialise();
 
 	try {
 		app->run();
@@ -109,8 +107,8 @@ int main(int argc, char** argv)
 
 	delete app;
 
-	Alabaster::GraphicsContext::the().destroy();
+	AlabasterShaderCompiler::ShaderCache::shutdown();
 
+	Alabaster::GraphicsContext::the().destroy();
 	Alabaster::Log::critical("Exiting application.");
-	// AlabasterShaderCompiler::ShaderCache::shutdown();
 }

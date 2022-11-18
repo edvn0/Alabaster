@@ -2,12 +2,19 @@
 
 #include "compiler/ShaderCompiler.hpp"
 
+#include "debug_break.h"
 #include "utilities/FileInputOutput.hpp"
 
 #include <future>
 #include <shaderc/shaderc.hpp>
 
 namespace AlabasterShaderCompiler {
+
+	struct ShaderCodeAndName {
+		std::string name;
+		std::vector<uint32_t> vertex_code;
+		std::vector<uint32_t> fragment_code;
+	};
 
 	template <typename T>
 	static constexpr auto remove_extension = [](const T& path, uint32_t count = 2) {
@@ -57,7 +64,8 @@ namespace AlabasterShaderCompiler {
 		shaderc::PreprocessedSourceCompilationResult result = compiler.PreprocessGlsl(source, kind, source_name.c_str(), options);
 
 		if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
-			std::cerr << result.GetErrorMessage();
+			Alabaster::Log::error("[AlabasterShaderCompiler] {}", result.GetErrorMessage());
+			debug_break();
 			return "";
 		}
 
@@ -96,7 +104,7 @@ namespace AlabasterShaderCompiler {
 
 		const auto shader_pairs = extract_into_pairs_of_shaders(all_files_in_shaders);
 
-		std::vector<std::future<Alabaster::Shader>> results;
+		std::vector<std::future<ShaderCodeAndName>> results;
 
 		Alabaster::assert_that(shader_pairs.size() == all_files_in_shaders.size() / 2);
 
@@ -109,12 +117,22 @@ namespace AlabasterShaderCompiler {
 			const auto vertex_path = vert;
 			const auto fragment_path = frag;
 
-			const auto task = [=]() -> Alabaster::Shader {
+			const auto task = [=]() -> ShaderCodeAndName {
 				auto&& [v, f] = compile(shader_name, vertex_path, fragment_path);
-				return { std::move(f), std::move(f) };
+				return { shader_name, std::move(v), std::move(f) };
 			};
 
 			results.push_back(std::async(std::launch::async, task));
+		}
+
+		for (auto& res : results) {
+			res.wait();
+		}
+
+		for (auto& res : results) {
+			auto&& code = res.get();
+
+			shaders.try_emplace(code.name, std::move(code.vertex_code), std::move(code.fragment_code));
 		}
 	}
 
@@ -137,10 +155,10 @@ namespace AlabasterShaderCompiler {
 		return { std::move(vertex_spirv), std::move(fragment_spirv) };
 	}
 
-	const Alabaster::Shader& ShaderCompiler::get_by_name(const std::string& basic_string)
+	const Alabaster::Shader& ShaderCompiler::get_by_name(const std::string& shader_name)
 	{
-		Alabaster::verify(shaders.count(basic_string) != 0, "Futures (shaders) did not contain this shader name");
-		Alabaster::assert_that(false);
+		Alabaster::verify(shaders.count(shader_name) != 0, "Futures (shaders) did not contain this shader name");
+		return shaders.at(shader_name);
 	}
 
 	std::vector<std::pair<std::filesystem::path, std::filesystem::path>> ShaderCompiler::extract_into_pairs_of_shaders(

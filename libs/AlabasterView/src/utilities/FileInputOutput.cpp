@@ -17,6 +17,8 @@ namespace Alabaster::IO {
 
 	std::filesystem::path textures() { return root / std::filesystem::path { "textures" }; }
 
+	std::filesystem::path shaders() { return root / std::filesystem::path { "shaders" }; }
+
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{
 		std::ifstream stream(filename, static_cast<unsigned int>(mode));

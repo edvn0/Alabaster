@@ -2,6 +2,7 @@
 
 #include "graphics/Renderer3D.hpp"
 
+#include "AlabasterShaderCompiler.hpp"
 #include "core/Application.hpp"
 #include "core/Window.hpp"
 #include "graphics/Camera.hpp"
@@ -199,9 +200,7 @@ namespace Alabaster {
 		: camera(camera)
 		, command_buffer("Swapchain")
 	{
-		auto quad_shader = Shader("main");
-		auto line_shader = Shader("line");
-		auto mesh_shader = Shader("mesh");
+		data.sphere_model = Mesh::from_file("sphere.obj");
 
 		auto image_count = Application::the().swapchain().get_image_count();
 		create_renderpass();
@@ -218,7 +217,7 @@ namespace Alabaster {
 		create_descriptor_sets();
 
 		PipelineSpecification quad_spec {
-			.shader = std::move(quad_shader),
+			.shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("main"),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.render_pass,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -229,7 +228,7 @@ namespace Alabaster {
 		data.quad_pipeline->invalidate();
 
 		PipelineSpecification mesh_spec {
-			.shader = std::move(mesh_shader),
+			.shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("mesh"),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.render_pass,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -239,7 +238,7 @@ namespace Alabaster {
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh_spec);
 		data.mesh_pipeline->invalidate();
 
-		PipelineSpecification line_spec { .shader = std::move(line_shader),
+		PipelineSpecification line_spec { .shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("line"),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.render_pass,
 			.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
@@ -546,6 +545,7 @@ namespace Alabaster {
 		data.mesh_pipeline->destroy();
 
 		data.viking_room_texture->destroy();
+		data.sphere_model->destroy();
 	}
 
 	const VkRenderPass& Renderer3D::get_render_pass() const { return data.render_pass; }

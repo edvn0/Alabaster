@@ -25,15 +25,15 @@ bool AlabasterLayer::initialise()
 	sponza_model = Mesh::from_file("sponza.obj");
 	// auto shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("mesh");
 
-	PipelineSpecification mesh_spec {
-		.shader = Shader("viking"),
+	PipelineSpecification viking_spec {
+		.shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("viking"),
 		.debug_name = "Viking Pipeline",
 		.render_pass = renderer.get_render_pass(),
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 		.vertex_layout = Layout::Default::vertex_attributes(),
 		.ranges = Layout::Defaults::push_constants(),
 	};
-	viking_pipeline = Pipeline::create(mesh_spec);
+	viking_pipeline = Pipeline::create(viking_spec);
 
 	for (const auto& entry : std::filesystem::directory_iterator(IO::textures())) {
 		const auto ext = entry.path().extension();

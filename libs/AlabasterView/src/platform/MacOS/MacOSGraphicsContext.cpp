@@ -154,6 +154,10 @@ namespace Alabaster {
 		glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
 		std::vector<const char*> extensions(glfw_extensions, glfw_extensions + glfw_ext_count);
 
+		for (const auto& ext : extensions) {
+			Log::info("Extension required: {}", ext);
+		}
+
 		if (enable_layers) {
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}

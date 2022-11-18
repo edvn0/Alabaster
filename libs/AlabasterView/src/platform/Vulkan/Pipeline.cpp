@@ -210,7 +210,9 @@ namespace Alabaster {
 
 		Log::info("[Pipeline] Created pipeline with name {}.", spec.debug_name);
 
-		spec.shader.destroy();
+		if (spec.shader_owned_by_pipeline) {
+			spec.shader.destroy();
+		}
 	}
 
 	void Pipeline::destroy()
