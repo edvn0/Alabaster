@@ -6,6 +6,7 @@ find_package(Vulkan REQUIRED)
 
 file(GLOB_RECURSE sources am_pch.hpp AssetManager.hpp
 	include/**.hpp src/**.cpp)
+find_package(Boost REQUIRED COMPONENTS thread)
 
 find_program(CLANG_FORMAT "clang-format")
 
@@ -35,7 +36,7 @@ target_include_directories(
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include /usr/local/include)
 
 target_link_libraries(
-	${PROJECT_NAME} PRIVATE Vulkan::Vulkan spdlog magic_enum effolkronium_random
+	${PROJECT_NAME} PRIVATE Vulkan::Vulkan spdlog magic_enum effolkronium_random Boost::thread
 	Alabaster::Core shaderc)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/am_pch.hpp)
@@ -63,8 +64,8 @@ if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
 
-if(BUILD_TESTING)
-	add_subdirectory(tests)
-endif()
+# #if(BUILD_TESTING)
+add_subdirectory(tests)
 
+# #endif()
 add_dependencies(${PROJECT_NAME} clang-format-shader-compiler)

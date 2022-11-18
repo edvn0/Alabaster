@@ -1,2 +1,2 @@
-#include "cache/ShaderCache.hpp"
+#include "cache/ResourceCache.hpp"
 #include "compiler/ShaderCompiler.hpp"

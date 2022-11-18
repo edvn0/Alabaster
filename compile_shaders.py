@@ -112,8 +112,6 @@ def main(parsed: Namespace):
     if not find_compiler(parsed.compiler):
         print("Could not find compiler.")
         exit(1)
-
-    print(parsed.dir)
     
     cached_records = load_cache(parsed)
 

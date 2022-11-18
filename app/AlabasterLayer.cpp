@@ -2,6 +2,7 @@
 
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
+#include "cache/ResourceCache.hpp"
 #include "graphics/Renderer.hpp"
 
 #include <imgui.h>
@@ -26,7 +27,7 @@ bool AlabasterLayer::initialise()
 	// auto shader = AssetManager::ShaderCache::the().get_from_cache("mesh");
 
 	PipelineSpecification viking_spec {
-		.shader = AssetManager::ShaderCache::the().get_from_cache("viking"),
+		.shader = *AssetManager::ResourceCache::the().shader("viking").value(),
 		.debug_name = "Viking Pipeline",
 		.render_pass = renderer.get_render_pass(),
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,

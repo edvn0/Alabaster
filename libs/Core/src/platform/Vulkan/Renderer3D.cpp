@@ -218,7 +218,7 @@ namespace Alabaster {
 		create_descriptor_sets();
 
 		PipelineSpecification quad_spec {
-			.shader = AssetManager::ShaderCache::the().get_from_cache("main"),
+			.shader = *AssetManager::ResourceCache::the().shader("main").value(),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.render_pass,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -229,7 +229,7 @@ namespace Alabaster {
 		data.quad_pipeline->invalidate();
 
 		PipelineSpecification mesh_spec {
-			.shader = AssetManager::ShaderCache::the().get_from_cache("mesh"),
+			.shader = *AssetManager::ResourceCache::the().shader("mesh").value(),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.render_pass,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -239,7 +239,7 @@ namespace Alabaster {
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh_spec);
 		data.mesh_pipeline->invalidate();
 
-		PipelineSpecification line_spec { .shader = AssetManager::ShaderCache::the().get_from_cache("line"),
+		PipelineSpecification line_spec { .shader = *AssetManager::ResourceCache::the().shader("line").value(),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.render_pass,
 			.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,

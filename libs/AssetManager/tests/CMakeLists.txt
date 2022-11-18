@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.14)
-project(AlabasterShaderCompilerTests)
+project(AssetManagerTests)
 
 set(CMAKE_CXX_STANDARD 20)
 
 enable_testing()
 
-file(GLOB_RECURSE sources main.cpp compiler/main.cpp)
+file(GLOB_RECURSE sources main.cpp compiler/**.cpp)
 
-add_executable(${PROJECT_NAME} ${sources})
-target_link_libraries(${PROJECT_NAME} GTest::gtest_main AssetManager)
+add_executable(AssetManagerTests ${sources})
+target_link_libraries(AssetManagerTests gmock_main GTest::gtest_main Alabaster::AssetManager Alabaster::Core)
 
 include(GoogleTest)
-gtest_discover_tests(${PROJECT_NAME})
+gtest_discover_tests(AssetManagerTests)

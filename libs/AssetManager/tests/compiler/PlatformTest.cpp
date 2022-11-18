@@ -1,10 +1,13 @@
+#include "cache/ImageCache.hpp"
+#include "cache/ShaderCache.hpp"
+#include "graphics/Shader.hpp"
+
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-// Demonstrate some basic assertions.
-TEST(PlatformTests, ActualTests)
-{
-	// Expect two strings not to be equal.
-	EXPECT_STRNE("hello", "world");
-	// Expect equality.
-	EXPECT_EQ(7 * 6, 42);
-};
+#define EXPECT_HAS_VALUE(x) EXPECT_TRUE(x.has_value())
+#define EXPECT_NO_VALUE(x) EXPECT_FALSE(x.has_value())
+
+TEST(AssetManagerTest, NoItemInImageCache) { EXPECT_TRUE(true); };
+
+TEST(AssetManagerTest, NoItemInShaderCache) { EXPECT_TRUE(true); };

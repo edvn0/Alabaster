@@ -95,7 +95,7 @@ int main(int argc, char** argv)
 		Alabaster::Log::error("Error in app creation: {}", e.what());
 	}
 
-	AssetManager::ShaderCache::initialise();
+	AssetManager::ResourceCache::the().initialise();
 
 	try {
 		app->run();
@@ -103,11 +103,12 @@ int main(int argc, char** argv)
 		Alabaster::Log::error("{}", e.what());
 	}
 	Alabaster::Renderer::shutdown();
+
+	AssetManager::ResourceCache::the().shutdown();
+
 	Alabaster::Allocator::shutdown();
 
 	delete app;
-
-	AssetManager::ShaderCache::shutdown();
 
 	Alabaster::GraphicsContext::the().destroy();
 	Alabaster::Log::critical("Exiting application.");

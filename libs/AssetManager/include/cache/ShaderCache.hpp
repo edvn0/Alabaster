@@ -1,35 +1,51 @@
-//
-// Created by Edwin Carlsson on 2022-11-15.
-//
-
 #pragma once
 
+#include "cache/BaseCache.hpp"
 #include "compiler/ShaderCompiler.hpp"
+#include "graphics/Shader.hpp"
 
-#include <filesystem>
+#include <unordered_map>
 
 namespace AssetManager {
 
-	class ShaderCache {
+	template <class T> class ShaderCache : public BaseCache<ShaderCache, Alabaster::Shader> {
 	public:
-		ShaderCache(const ShaderCache&) = delete;
-		void operator=(const ShaderCache&) = delete;
-		ShaderCache(ShaderCache&&) = delete;
+		ShaderCache(std::unique_ptr<CacheCreateRead<T>> cache_crud = std::make_unique<DefaultShaderCrud>())
+			: cache_crud(std::move(cache_crud)) {};
 
-		static ShaderCache& the();
-
-		static void initialise();
-		static void shutdown();
+		void load_from_directory(const std::filesystem::path& shader_directory_path);
 
 	public:
-		const auto& get_from_cache(const std::string& shader_name) { return compiler.get_by_name(shader_name); }
+		void destroy_impl()
+		{
+			for (auto& [key, shader] : shaders) {
+				shader.destroy();
+			}
+		}
+
+		[[nodiscard]] virtual std::optional<const Alabaster::Shader*> get_from_cache_impl(const std::string& name)
+		{
+			if (shaders.contains(name))
+				return cache_crud->get(name, shaders);
+			return {};
+		}
+
+		[[nodiscard]] virtual bool add_to_cache_impl(const std::string& name, Alabaster::Shader* input)
+		{
+			if (shaders.contains(name)) {
+				return false;
+			}
+			cache_crud->create(name, input, shaders);
+			return true;
+		};
 
 	private:
-		explicit ShaderCache(const std::filesystem::path&);
-		~ShaderCache() = default;
+		std::vector<std::pair<std::filesystem::path, std::filesystem::path>> extract_into_pairs_of_shaders(
+			const std::vector<std::string>& sorted_shaders_in_directory);
 
 	private:
-		ShaderCompiler compiler;
+		std::unordered_map<std::string, Alabaster::Shader> shaders;
+		std::unique_ptr<CacheCreateRead<T>> cache_crud;
 	};
 
 } // namespace AssetManager

@@ -107,7 +107,7 @@ namespace Alabaster {
 		create_layout();
 	}
 
-	Shader::Shader(std::vector<uint32_t>&& vert_spirv, std::vector<uint32_t>&& frag_spirv)
+	Shader::Shader(std::vector<uint32_t> vert_spirv, std::vector<uint32_t> frag_spirv)
 	{
 		auto vertex_shader_module = create(vert_spirv.data(), vert_spirv.size() * sizeof(uint32_t));
 		auto fragment_shader_module = create(frag_spirv.data(), frag_spirv.size() * sizeof(uint32_t));
