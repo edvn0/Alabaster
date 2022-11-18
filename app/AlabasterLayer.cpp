@@ -1,7 +1,7 @@
 #include "AlabasterLayer.hpp"
 
 #include "Alabaster.hpp"
-#include "AlabasterShaderCompiler.hpp"
+#include "AssetManager.hpp"
 #include "graphics/Renderer.hpp"
 
 #include <imgui.h>
@@ -23,10 +23,10 @@ bool AlabasterLayer::initialise()
 	sphere_model = Mesh::from_file("sphere.obj");
 
 	sponza_model = Mesh::from_file("sponza.obj");
-	// auto shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("mesh");
+	// auto shader = AssetManager::ShaderCache::the().get_from_cache("mesh");
 
 	PipelineSpecification viking_spec {
-		.shader = AlabasterShaderCompiler::ShaderCache::the().get_from_cache("viking"),
+		.shader = AssetManager::ShaderCache::the().get_from_cache("viking"),
 		.debug_name = "Viking Pipeline",
 		.render_pass = renderer.get_render_pass(),
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -35,9 +35,9 @@ bool AlabasterLayer::initialise()
 	};
 	viking_pipeline = Pipeline::create(viking_spec);
 
-	for (const auto& entry : std::filesystem::directory_iterator(IO::textures())) {
-		const auto ext = entry.path().extension();
-		if (ext == ".tga") {
+	for (const auto& entry : IO::in_directory<std::filesystem::path>(IO::textures(), { ".tga" })) {
+		const auto ext = entry.extension();
+		if (ext.string() == ".tga") {
 			const auto img = Image::create(entry);
 			img->destroy();
 		}

@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.21)
 
-add_subdirectory(AlabasterShaderCompiler)
-add_subdirectory(AlabasterView)
+add_subdirectory(AssetManager)
+add_subdirectory(Core)

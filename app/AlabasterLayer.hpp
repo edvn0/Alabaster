@@ -5,7 +5,7 @@
 #pragma once
 
 #include "Alabaster.hpp"
-#include "AlabasterShaderCompiler.hpp"
+#include "AssetManager.hpp"
 #include "graphics/Camera.hpp"
 
 #include <glm/glm.hpp>
