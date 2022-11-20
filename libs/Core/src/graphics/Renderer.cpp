@@ -112,7 +112,7 @@ namespace Alabaster {
 		std::vector<std::string> all_files_in_shaders = IO::in_directory<std::string>(IO::resources(), { ".spv" });
 		std::sort(all_files_in_shaders.begin(), all_files_in_shaders.end());
 		verify(all_files_in_shaders.size() % 2 == 0, "2N shaders, hopefully matching by name");
-		for (size_t i = 0; i < all_files_in_shaders.size(); i += 2) {
+		for (std::size_t i = 0; i < all_files_in_shaders.size(); i += 2) {
 			auto fragment = all_files_in_shaders[i];
 			auto vertex = all_files_in_shaders[i + 1];
 			const auto path = std::filesystem::path { vertex };

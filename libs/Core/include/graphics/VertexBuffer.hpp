@@ -17,7 +17,7 @@ namespace Alabaster {
 		explicit VertexBuffer(uint32_t size);
 
 		VertexBuffer(const void* data, uint32_t size);
-		VertexBuffer(const void* data, size_t size);
+		VertexBuffer(const void* data, std::size_t size);
 
 		~VertexBuffer()
 		{
@@ -48,7 +48,7 @@ namespace Alabaster {
 			return std::make_unique<VertexBuffer>(vertices.data(), vertices.size() * sizeof(Vertex));
 		}
 
-		inline static std::unique_ptr<VertexBuffer> create(size_t size) { return std::make_unique<VertexBuffer>(static_cast<uint32_t>(size)); }
+		inline static std::unique_ptr<VertexBuffer> create(std::size_t size) { return std::make_unique<VertexBuffer>(static_cast<uint32_t>(size)); }
 
 	private:
 		Buffer vertex_data;

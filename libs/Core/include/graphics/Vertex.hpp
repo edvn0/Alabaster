@@ -51,7 +51,7 @@ namespace Alabaster {
 } // namespace Alabaster
 
 template <> struct std::hash<Alabaster::Vertex> {
-	size_t operator()(const Alabaster::Vertex& vertex) const
+	std::size_t operator()(const Alabaster::Vertex& vertex) const
 	{
 		return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec4>()(vertex.colour) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.uv) << 1)
 			^ (hash<glm::vec3>()(vertex.normal) << 1) ^ (hash<glm::vec3>()(vertex.tangent) << 1) ^ (hash<glm::vec3>()(vertex.bitangent) << 1);

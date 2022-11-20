@@ -4,7 +4,7 @@
 
 namespace std {
 	template <> struct hash<Alabaster::Pipeline> {
-		std::size_t operator()(Alabaster::Pipeline pipeline) const { return std::hash<VkPipeline> {}(pipeline.get_vulkan_pipeline()); }
+		std::std::size_t operator()(Alabaster::Pipeline pipeline) const { return std::hash<VkPipeline> {}(pipeline.get_vulkan_pipeline()); }
 	};
 } // namespace std
 
@@ -19,7 +19,7 @@ namespace Alabaster {
 
 		auto get_pipeline() const { return pipeline.get_vulkan_pipeline(); };
 		auto get_layout() const { return pipeline.get_vulkan_pipeline_layout(); };
-		size_t identifier() const { return std::hash<VkPipeline>(pipeline); }
+		std::size_t identifier() const { return std::hash<VkPipeline>(pipeline); }
 
 	private:
 		Pipeline pipeline;

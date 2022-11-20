@@ -38,7 +38,7 @@ namespace Alabaster {
 		void reset_scale() { scale.reset(); }
 		const auto& get_scale() { return scale; }
 
-		size_t get_index_count() const { return index_count; }
+		std::size_t get_index_count() const { return index_count; }
 
 		void destroy();
 
@@ -52,8 +52,8 @@ namespace Alabaster {
 		std::optional<glm::vec4> colour { std::nullopt };
 		std::optional<glm::mat4> scale { std::nullopt };
 
-		size_t vertex_count { 0 };
-		size_t index_count { 0 };
+		std::size_t vertex_count { 0 };
+		std::size_t index_count { 0 };
 
 	private:
 		std::tuple<Vertices, Indices> load_model();

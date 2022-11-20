@@ -45,7 +45,7 @@ namespace AssetManager {
 			return true;
 		}
 
-		for (size_t i = 0; i < a.size() - 1; i++) {
+		for (std::size_t i = 0; i < a.size() - 1; i++) {
 			const auto current = a[i];
 			const auto next = a[i + 1];
 			if (!true_if_next_is_after_current_function(current, next)) {
@@ -101,7 +101,7 @@ namespace AssetManager {
 		std::vector<std::pair<std::filesystem::path, std::filesystem::path>> shader_pairs;
 		std::unordered_set<std::string> found;
 
-		for (size_t i = 0; i < sorted_shaders_in_directory.size(); i++) {
+		for (std::size_t i = 0; i < sorted_shaders_in_directory.size(); i++) {
 			auto first_shader = sorted_shaders_in_directory[i];
 			auto name = remove_extension<std::string>(first_shader, 1);
 
@@ -109,7 +109,7 @@ namespace AssetManager {
 				continue;
 			}
 
-			for (size_t j = i + 1; j < sorted_shaders_in_directory.size(); j++) {
+			for (std::size_t j = i + 1; j < sorted_shaders_in_directory.size(); j++) {
 
 				auto matching_shader = sorted_shaders_in_directory[j];
 				auto match = remove_extension<std::string>(matching_shader, 1);

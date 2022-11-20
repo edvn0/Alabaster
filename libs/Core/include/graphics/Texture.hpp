@@ -15,7 +15,7 @@ namespace Alabaster {
 	class Texture {
 	public:
 		explicit Texture(std::string file_path);
-		explicit Texture(void* data, size_t size);
+		explicit Texture(void* data, std::size_t size);
 
 	private:
 		std::filesystem::path path;
@@ -30,7 +30,7 @@ namespace Alabaster {
 	public:
 		explicit Texture2D(std::string file_path)
 			: Texture(std::move(file_path)) {};
-		explicit Texture2D(void* data, size_t size)
+		explicit Texture2D(void* data, std::size_t size)
 			: Texture(data, size) {};
 	};
 

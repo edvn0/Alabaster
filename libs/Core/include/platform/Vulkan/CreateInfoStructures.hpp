@@ -14,7 +14,7 @@ namespace Alabaster::Vulkan {
 	};
 
 	namespace Shader {
-		const VkShaderModuleCreateInfo module(size_t size, const uint32_t* code);
+		const VkShaderModuleCreateInfo module(std::size_t size, const uint32_t* code);
 		const VkPipelineShaderStageCreateInfo pipeline_stage(ShaderType which, VkShaderModule module, std::string_view entry_point = "main");
 	} // namespace Shader
 } // namespace Alabaster::Vulkan

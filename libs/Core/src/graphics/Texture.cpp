@@ -11,7 +11,7 @@
 
 namespace Alabaster {
 
-	Texture::Texture(void* data, size_t size)
+	Texture::Texture(void* data, std::size_t size)
 	{
 		Allocator allocator("Texture");
 		Buffer buffer(data, static_cast<uint32_t>(size));

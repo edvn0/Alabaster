@@ -3,6 +3,8 @@
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
 #include "cache/ResourceCache.hpp"
+#include "core/events/MouseEvent.hpp"
+#include "glm/geometric.hpp"
 #include "graphics/Renderer.hpp"
 
 #include <imgui.h>
@@ -66,7 +68,7 @@ void AlabasterLayer::on_event(Event& e)
 
 void AlabasterLayer::update(float ts)
 {
-	static size_t frame_number { 0 };
+	static std::size_t frame_number { 0 };
 
 	renderer.reset_stats();
 	renderer.begin_scene();
@@ -93,8 +95,8 @@ void AlabasterLayer::update(float ts)
 		renderer.mesh(sphere_model, nullptr, { 0, 0, 1 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 }); */
 
 		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0 }, std::move(rot), glm::vec4 { 1 }, { 2, 2, 2 });
-		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 1, 0, 1 }, std::move(rot), glm::vec4 { 1 }, { 2, 2, 2 });
+		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
+		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 1, 0, 1 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
 
 		// renderer.mesh(sponza_model, nullptr, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 0.1, 0.1, 0.1 });
 	}

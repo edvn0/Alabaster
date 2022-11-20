@@ -166,7 +166,7 @@ namespace Alabaster {
 		vk_check(vkAllocateDescriptorSets(GraphicsContext::the().device(), &alloc_info, data.descriptor_sets.data()));
 
 		const auto image_info = data.viking_room_texture->vulkan_image_info();
-		for (size_t i = 0; i < image_count; i++) {
+		for (std::size_t i = 0; i < image_count; i++) {
 			VkDescriptorBufferInfo buffer_info {};
 			buffer_info.buffer = data.uniforms[i].get_buffer();
 			buffer_info.offset = 0;
@@ -209,7 +209,7 @@ namespace Alabaster {
 
 		VkDeviceSize uniform_buffer_size = sizeof(UBO);
 
-		for (size_t i = 0; i < image_count; i++) {
+		for (std::size_t i = 0; i < image_count; i++) {
 			data.uniforms.push_back(UniformBuffer(uniform_buffer_size, 0));
 		}
 
@@ -256,7 +256,7 @@ namespace Alabaster {
 		std::vector<uint32_t> indices;
 		indices.resize(RendererData::max_indices);
 		uint32_t offset = 0;
-		for (size_t i = 0; i < RendererData::max_indices; i += 6) {
+		for (std::size_t i = 0; i < RendererData::max_indices; i += 6) {
 			indices[i + 0] = 0 + offset;
 			indices[i + 1] = 1 + offset;
 			indices[i + 2] = 2 + offset;
@@ -289,7 +289,7 @@ namespace Alabaster {
 
 	void Renderer3D::quad(const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale, float rotation)
 	{
-		static constexpr size_t quad_vertex_count = 4;
+		static constexpr std::size_t quad_vertex_count = 4;
 		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 		static constexpr glm::vec4 quad_positions[]
 			= { { -0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { -0.5f, 0.5f, 0.0f, 1.0f } };
@@ -305,7 +305,7 @@ namespace Alabaster {
 		const auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z })
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3 { 1, 0, 0 }) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
 
-		for (size_t i = 0; i < quad_vertex_count; i++) {
+		for (std::size_t i = 0; i < quad_vertex_count; i++) {
 			auto& vertex = data.quad_buffer[data.quad_vertices_submitted];
 			vertex.position = transform * quad_positions[i];
 			vertex.colour = colour;
@@ -319,7 +319,7 @@ namespace Alabaster {
 	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec3& pos,
 		const glm::mat4& rotation_matrix, const glm::vec4& colour, const glm::vec3& scale)
 	{
-		auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z }) * glm::scale(glm::mat4(1.0f), scale) * rotation_matrix;
+		auto transform = glm::translate(glm::mat4(1.0f), pos) * glm::scale(glm::mat4(1.0f), scale) * rotation_matrix;
 		mesh->set_transform(std::move(transform));
 		mesh->set_colour(colour);
 		data.mesh[data.meshes_submitted] = mesh.get();
@@ -532,7 +532,7 @@ namespace Alabaster {
 
 		vkDestroyRenderPass(device, data.render_pass, nullptr);
 
-		for (size_t i = 0; i < Application::the().swapchain().get_image_count(); i++) {
+		for (std::size_t i = 0; i < Application::the().swapchain().get_image_count(); i++) {
 			data.uniforms[i].destroy();
 		}
 

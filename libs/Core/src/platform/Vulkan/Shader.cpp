@@ -51,7 +51,7 @@ namespace Alabaster {
 		return shader_module;
 	}
 
-	static VkShaderModule create(const uint32_t* code, size_t size)
+	static VkShaderModule create(const uint32_t* code, std::size_t size)
 	{
 		auto create_info = Vulkan::Shader::module(size, code);
 		VkShaderModule shader_module;

@@ -144,7 +144,7 @@ namespace Alabaster::IO {
 		return false;
 	}
 
-	template <typename Printable> static inline bool write_file(const std::filesystem::path& filename, const char* buffer, size_t size)
+	template <typename Printable> static inline bool write_file(const std::filesystem::path& filename, const char* buffer, std::size_t size)
 	{
 		std::ofstream output_stream(filename);
 		if (!output_stream) {

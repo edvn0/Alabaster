@@ -244,11 +244,11 @@ namespace Alabaster {
 
 	void Swapchain::cleanup_swapchain()
 	{
-		for (size_t i = 0; i < frame_buffers.size(); i++) {
+		for (std::size_t i = 0; i < frame_buffers.size(); i++) {
 			vkDestroyFramebuffer(GraphicsContext::the().device(), frame_buffers[i], nullptr);
 		}
 
-		for (size_t i = 0; i < images.views.size(); i++) {
+		for (std::size_t i = 0; i < images.views.size(); i++) {
 			vkDestroyImageView(GraphicsContext::the().device(), images.views[i], nullptr);
 		}
 
@@ -421,7 +421,7 @@ namespace Alabaster {
 		vkGetSwapchainImagesKHR(GraphicsContext::the().device(), vk_swapchain, &image_count, imgs.data());
 
 		views.resize(image_count);
-		for (size_t i = 0; i < image_count; i++) {
+		for (std::size_t i = 0; i < image_count; i++) {
 			VkImageViewCreateInfo view_create_info {};
 			view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			view_create_info.image = imgs[i];
@@ -462,7 +462,7 @@ namespace Alabaster {
 
 		const auto& device = GraphicsContext::the().device();
 
-		for (size_t i = 0; i < image_count; i++) {
+		for (std::size_t i = 0; i < image_count; i++) {
 			vk_check(vkCreateFence(device, &fence_info, nullptr, &sync_objects[i].in_flight_fence));
 		}
 	}

@@ -44,7 +44,7 @@ namespace Alabaster {
 			return std::make_unique<IndexBuffer>(indices.data(), static_cast<uint32_t>(indices.size()));
 		}
 
-		inline static std::unique_ptr<IndexBuffer> create(size_t count) { return std::make_unique<IndexBuffer>(static_cast<uint32_t>(count)); }
+		inline static std::unique_ptr<IndexBuffer> create(std::size_t count) { return std::make_unique<IndexBuffer>(static_cast<uint32_t>(count)); }
 
 	private:
 		Buffer index_data;
