@@ -1,9 +1,8 @@
 #! /usr/bin/env python3
 
 import dataclasses
+import hashlib
 import json
-import stat
-import sys
 from dataclasses import dataclass
 from argparse import ArgumentParser, Namespace
 from subprocess import call, DEVNULL
@@ -27,6 +26,7 @@ class CacheRecord:
     compiled_name: str
     file_name: str
     timestamp: str
+    hash: str
 
 
 def __shader_file_filter(path: Path) -> bool:
@@ -58,7 +58,7 @@ def find_compiler(compiler: str):
         return False
 
 
-def load_cache(parsed: Namespace) -> List[CacheRecord]:
+def load_cache(parsed: Namespace) -> dict[str, CacheRecord]:
     cache_name = str(parsed.cache_name)
     if cache_name.endswith(".cache"):
         cache_name = cache_name.split(".cache")[0]
@@ -68,16 +68,22 @@ def load_cache(parsed: Namespace) -> List[CacheRecord]:
     try:
         with open(f'{cache_path}', 'r') as cache_file:
             cache = json.load(cache_file)
-            records = map(lambda x: CacheRecord(compiled_name=x['compiled_name'], file_name=x['file_name'],
-                                                timestamp=x['timestamp']), cache)
-            return list(records)
-    except FileNotFoundError:
-        return []
+            loaded_records = []
+            for key in cache:
+                cached_record = cache[key]
+                loaded_records.append(CacheRecord(compiled_name=cached_record['compiled_name'], file_name=cached_record['file_name'],
+                                                  timestamp=cached_record['timestamp'], hash=cached_record['hash']))
+            out = {}
+            for record in loaded_records:
+                out[record.file_name] = record
+            return out
+    except OSError:
+        return {}
     except ValueError:
-        return []
+        return {}
 
 
-def write_cache(parsed: Namespace, records: List[CacheRecord]) -> None:
+def write_cache(parsed: Namespace, records: dict[str, CacheRecord]) -> None:
     cache_name = str(parsed.cache_name)
     if cache_name.endswith(".cache"):
         cache_name = cache_name.split(".cache")[0]
@@ -96,15 +102,23 @@ def compile_to_spirv(parsed: Namespace, uncompiled_file: Path) -> CacheRecord:
     try:
         compile_call = f"{parsed.compiler} {uncompiled_file} -o {parsed.output_dir}/{uncompiled_file.name}.spv"
         check_call(compile_call.split(" "))
-        out = CacheRecord(file_name=uncompiled_file.as_posix(),
-                          compiled_name=f"{parsed.dir}/{uncompiled_file.name}.spv",
-                          timestamp=datetime.datetime.now().isoformat())
-        print(f"Successfully compiled file {uncompiled_file}.")
-        return out
+
+        with open(f'{parsed.output_dir}/{uncompiled_file.name}', 'r') as compiled_file:
+            as_text = hashlib.sha256(compiled_file.read().encode("utf-8")).hexdigest()
+
+        return CacheRecord(file_name=uncompiled_file.as_posix(),
+                           compiled_name=f"{parsed.dir}/{uncompiled_file.name}.spv",
+                           timestamp=datetime.datetime.now().isoformat(),
+                           hash=str(as_text))
     except CalledProcessError as e:
         print(
             f"Could not compile shader {uncompiled_file.name}. Message: {e.output}")
-        return CacheRecord(file_name=uncompiled_file.as_posix(), compiled_name="Failure", timestamp=datetime.datetime.now().isoformat())
+        return CacheRecord(file_name=uncompiled_file.as_posix(), compiled_name="Failure",
+                           timestamp=datetime.datetime.now().isoformat(), hash=str("Failure"))
+
+
+def has_same_hash(in_cache: CacheRecord, record_cache: CacheRecord):
+    return in_cache.hash == record_cache.hash
 
 
 def main(parsed: Namespace):
@@ -112,15 +126,38 @@ def main(parsed: Namespace):
     if not find_compiler(parsed.compiler):
         print("Could not find compiler.")
         exit(1)
-    
+
     cached_records = load_cache(parsed)
 
-    compiled_file_cache: List[CacheRecord] = []
-    for uncompiled_file in all_uncompiled_files:
-        record = compile_to_spirv(parsed, uncompiled_file)
-        compiled_file_cache.append(record)
+    def get_hashed():
+        out = {}
+        for f in all_uncompiled_files:
+            with open(f, 'r') as shader:
+                out[str(f)] = hashlib.sha256(shader.read().encode("utf-8")).hexdigest()
 
-    for file in compiled_file_cache:
+        return out
+
+    hashed_records = get_hashed()
+
+    compiled_file_cache = cached_records
+
+    for uncompiled_file in all_uncompiled_files:
+        cache_key = str(uncompiled_file)
+        uncompiled_hash = hashed_records[cache_key]
+
+        if cache_key in cached_records:
+            hashed_in_cache = cached_records[cache_key].hash
+
+            if hashed_in_cache == uncompiled_hash:
+                continue
+
+            record = compile_to_spirv(parsed, uncompiled_file)
+            compiled_file_cache[cache_key] = record
+        else:
+            record = compile_to_spirv(parsed, uncompiled_file)
+            compiled_file_cache[cache_key] = record
+
+    for key, file in compiled_file_cache.items():
         if file.compiled_name == "Failure":
             return 1
 
@@ -141,5 +178,5 @@ if __name__ == "__main__":
                         default="shaders.cache")
     parser.add_argument("--force-reload", type=bool, default=False, metavar='F',
                         help="Recompile shader regardless of their cache status.")
- 
+
     main(parser.parse_args())

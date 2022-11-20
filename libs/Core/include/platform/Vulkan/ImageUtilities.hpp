@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/exceptions/AlabasterException.hpp"
+#include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Image.hpp"
 
@@ -8,9 +9,10 @@
 
 namespace Alabaster::Utilities {
 
-	static inline void transition_image_layout(VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout)
+	static inline void transition_image_layout(
+		VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer = nullptr)
 	{
-		const auto command_buffer = GraphicsContext::the().get_command_buffer();
+		const auto& command_buffer = buffer ? buffer->get_buffer() : GraphicsContext::the().get_command_buffer();
 
 		VkImageMemoryBarrier barrier {};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -46,12 +48,15 @@ namespace Alabaster::Utilities {
 
 		vkCmdPipelineBarrier(command_buffer, source_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-		GraphicsContext::the().flush_command_buffer(command_buffer);
+		if (!buffer) {
+			GraphicsContext::the().flush_command_buffer(command_buffer);
+		}
 	}
 
-	void copy_buffer_to_image(VkBuffer buffer, const ImageInfo& image_info, uint32_t w, uint32_t h)
+	void copy_buffer_to_image(
+		VkBuffer buffer, const ImageInfo& image_info, uint32_t w, uint32_t h, const std::unique_ptr<CommandBuffer>& cmd_buffer = nullptr)
 	{
-		const auto command_buffer = GraphicsContext::the().get_command_buffer();
+		const auto command_buffer = cmd_buffer ? cmd_buffer->get_buffer() : GraphicsContext::the().get_command_buffer();
 
 		VkBufferImageCopy region {};
 		region.bufferOffset = 0;
@@ -66,7 +71,9 @@ namespace Alabaster::Utilities {
 
 		vkCmdCopyBufferToImage(command_buffer, buffer, image_info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-		GraphicsContext::the().flush_command_buffer(command_buffer);
+		if (!buffer) {
+			GraphicsContext::the().flush_command_buffer(command_buffer);
+		}
 	}
 
 } // namespace Alabaster::Utilities

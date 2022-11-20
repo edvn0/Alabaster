@@ -57,19 +57,16 @@ namespace AssetManager {
 
 	template <class T> void ShaderCache<T>::load_from_directory(const std::filesystem::path& shader_directory)
 	{
-		std::vector<std::string> all_files_in_shaders = Alabaster::IO::in_directory<std::string>(shader_directory, { ".vert", ".frag" });
-		std::sort(all_files_in_shaders.begin(), all_files_in_shaders.end());
+		using namespace Alabaster::IO;
+		auto all_files_in_shaders = in_directory<std::string>(shader_directory, { ".vert", ".frag" }, true);
 
 		const auto shader_pairs = extract_into_pairs_of_shaders(all_files_in_shaders);
 
 		std::vector<std::future<ShaderCodeAndName>> results;
-
 		Alabaster::assert_that(shader_pairs.size() == all_files_in_shaders.size() / 2);
 
 		ShaderCompiler compiler;
 		for (const auto& [vert, frag] : shader_pairs) {
-			Alabaster::assert_that(vert.filename().extension() == ".vert", "Vertex shader file must end with '.vert'.");
-			Alabaster::assert_that(frag.filename().extension() == ".frag", "Vertex shader file must end with '.frag'.");
 
 			const auto shader_name = remove_extension<std::filesystem::path>(vert);
 

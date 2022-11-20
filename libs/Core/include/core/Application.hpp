@@ -21,11 +21,6 @@ namespace Alabaster {
 	};
 
 	class Application {
-		using rev_it = std::map<std::string, Layer*>::reverse_iterator;
-		using it = std::map<std::string, Layer*>::iterator;
-		using LayerFunction = std::function<void(Layer*)>;
-		using LayerTimestepFunction = void(Layer*, float);
-
 	public:
 		void run();
 		void exit();
@@ -81,38 +76,6 @@ namespace Alabaster {
 	private:
 		void stop();
 
-		inline void layer_forward(LayerFunction&& func)
-		{
-			for (it layer = layers.begin(); layer != layers.end(); ++layer) {
-				auto&& [k, l] = *layer;
-				func(l);
-			}
-		}
-
-		inline void layer_backward(LayerFunction&& func)
-		{
-			for (rev_it layer = layers.rbegin(); layer != layers.rend(); ++layer) {
-				auto&& [k, l] = *layer;
-				func(l);
-			}
-		}
-
-		inline void layer_forward(float ts, LayerTimestepFunction&& func)
-		{
-			for (it layer = layers.begin(); layer != layers.end(); ++layer) {
-				auto&& [k, l] = *layer;
-				func(l, ts);
-			}
-		}
-
-		inline void layer_backward(float ts, LayerTimestepFunction&& func)
-		{
-			for (rev_it layer = layers.rbegin(); layer != layers.rend(); ++layer) {
-				auto&& [k, l] = *layer;
-				func(l, ts);
-			}
-		}
-
 	private:
 		std::map<std::string, Layer*> layers;
 		std::unique_ptr<Window> window;
@@ -121,6 +84,8 @@ namespace Alabaster {
 		float cpu_time;
 		float frame_time;
 		float last_frametime;
+
+		std::array<double, 144> frametime_queue;
 
 		bool is_running { true };
 		GUILayer* ui_layer { nullptr };

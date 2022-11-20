@@ -35,15 +35,6 @@ bool AlabasterLayer::initialise()
 		.ranges = Layout::Defaults::push_constants(),
 	};
 	viking_pipeline = Pipeline::create(viking_spec);
-
-	for (const auto& entry : IO::in_directory<std::filesystem::path>(IO::textures(), { ".tga" })) {
-		const auto ext = entry.extension();
-		if (ext.string() == ".tga") {
-			const auto img = Image::create(entry);
-			img->destroy();
-		}
-	}
-
 	return true;
 }
 
@@ -102,7 +93,9 @@ void AlabasterLayer::update(float ts)
 		renderer.mesh(sphere_model, nullptr, { 0, 0, 1 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 }); */
 
 		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
+		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0 }, std::move(rot), glm::vec4 { 1 }, { 2, 2, 2 });
+		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 1, 0, 1 }, std::move(rot), glm::vec4 { 1 }, { 2, 2, 2 });
+
 		// renderer.mesh(sponza_model, nullptr, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 0.1, 0.1, 0.1 });
 	}
 	renderer.end_scene();

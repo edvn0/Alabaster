@@ -4,6 +4,7 @@
 #include "core/exceptions/AlabasterException.hpp"
 #include "core/OpenMode.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -103,7 +104,7 @@ namespace Alabaster::IO {
 	}
 
 	template <typename Output = std::string, bool Recursive = false>
-	std::vector<Output> in_directory(const std::filesystem::path& path, std::unordered_set<std::string> extensions)
+	std::vector<Output> in_directory(const std::filesystem::path& path, std::unordered_set<std::string> extensions, bool sorted = false)
 	{
 		static constexpr auto entry_to_string = [](const auto& input) { return input.path().extension().string(); };
 		std::vector<Output> output;
@@ -120,6 +121,11 @@ namespace Alabaster::IO {
 				}
 			}
 		}
+
+		if (sorted) {
+			std::sort(output.begin(), output.end());
+		}
+
 		return output;
 	}
 

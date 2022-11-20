@@ -2,18 +2,11 @@
 
 #include "cache/ImageCache.hpp"
 
+#include "graphics/CommandBuffer.hpp"
 #include "utilities/FileInputOutput.hpp"
 #include "utilities/ThreadPool.hpp"
 
-#include <debug_break.h>
-#include <future>
-
 namespace AssetManager {
-
-	struct ImageAndName {
-		std::string name;
-		Alabaster::Image image;
-	};
 
 	template <typename T>
 	static constexpr auto remove_extension = [](const T& path, uint32_t count = 2) {
@@ -42,31 +35,43 @@ namespace AssetManager {
 
 	template <class T> void ImageCache<T>::load_from_directory(const std::filesystem::path& shader_directory)
 	{
-		std::vector<std::string> images_in_directory
-			= Alabaster::IO::in_directory<std::string>(shader_directory, { ".tga", ".png", ".jpeg", ".jpg" });
-		std::sort(images_in_directory.begin(), images_in_directory.end());
+		using namespace Alabaster;
+		auto sorted_images_in_directory = IO::in_directory<std::string>(shader_directory, { ".tga", ".png", ".jpeg", ".jpg" }, true);
 
-		std::vector<std::future<ImageAndName>> results;
-
-		ThreadPool thread_pool { 8 };
-		for (const auto& entry : images_in_directory) {
+		ThreadPool pool { 8 };
+		std::mutex mutex;
+		buffer->begin();
+		for (const auto& entry : sorted_images_in_directory) {
 			const auto image_name = remove_extension<std::filesystem::path>(entry);
+			ImageProps props { .path = entry };
+			// Load all images and obtain pixels from image data (png, jpg etc)
+			Image image = Image(props);
+			// Push a function into the thread pool which should:
+			pool.push([&images = images, &buffer = buffer, image_name, &image, &mutex](int) {
+				std::unique_lock lock(mutex); // Lock the mutex
 
-			results.push_back(thread_pool.push([&](int) {
-				const Alabaster::Image image = Alabaster::Image(entry);
-				return ImageAndName { image_name, std::move(image) };
-			}));
+				// This is the work horse:
+				// Submit into the common (for all images) VkCommandBuffer
+				// 1) Move pixel data of image to staging buffer,
+				// 2) create VkImage.
+				// 3) transition image from undefined to dst_optimal (in same CB)
+				// 4) copy pixel data from staging to VkImage (in same CB)
+				// 5) transition from dst_optimal to shader_read_optimal (in same CB)
+				// 6) Create VkImageView and VkSampler
+				image.invalidate(buffer);
+				// invalidate also adds a 'destructor' callback to the command buffer, which
+				// just prior to vkQueueSubmit deallocates the staging buffer, like so:
+				// buffer->add_destruction_callback([&staging_buffer_allocation, &staging_buffer]
+				//	(Allocator& allocator) { allocator.destroy_buffer(staging_buffer, staging_buffer_allocation); });
+
+				images.try_emplace(image_name, image); // Push into image/texture cache
+
+				lock.unlock(); // Unlock the mux
+			});
 		}
-
-		for (auto& res : results) {
-			res.wait();
-		}
-
-		for (auto& res : results) {
-			auto&& code = res.get();
-
-			images.try_emplace(code.name, code.image);
-		}
+		pool.stop();
+		buffer->end();
+		buffer->submit();
 	}
 
 	template class ImageCache<Alabaster::Image>;

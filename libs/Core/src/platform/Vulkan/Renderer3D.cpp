@@ -199,8 +199,9 @@ namespace Alabaster {
 
 	Renderer3D::Renderer3D(Camera& camera) noexcept
 		: camera(camera)
-		, command_buffer(new CommandBuffer("Swapchain"))
 	{
+		command_buffer = CommandBuffer::from_swapchain();
+
 		data.sphere_model = Mesh::from_file("sphere.obj");
 
 		auto image_count = Application::the().swapchain().get_image_count();
@@ -537,7 +538,8 @@ namespace Alabaster {
 
 		vkDestroyDescriptorPool(device, data.descriptor_pool, nullptr);
 		vkDestroyDescriptorSetLayout(device, data.descriptor_set_layout, nullptr);
-		vkDestroyCommandPool(device, command_buffer->get_command_pool(), nullptr);
+
+		command_buffer->destroy();
 
 		data.line_vertex_buffer->destroy();
 		data.quad_vertex_buffer->destroy();

@@ -15,9 +15,23 @@
 #include "graphics/Renderer.hpp"
 #include "graphics/Swapchain.hpp"
 
+#include <cstddef>
+
 #define ALABASTER_USE_IMGUI
 
 namespace Alabaster {
+
+	static constexpr auto last_fifty = [](const auto& frametime_queue) -> double {
+		auto start = frametime_queue.size() - 1;
+		auto end = start - 100;
+
+		double average = 0;
+		for (std::size_t i = frametime_queue.size() - 1; i >= end; i--) {
+			average += frametime_queue[i];
+		}
+
+		return average / (start - end);
+	};
 
 	static Application* global_app;
 
@@ -34,6 +48,10 @@ namespace Alabaster {
 		push_layer(new GUILayer());
 
 		Renderer::init();
+
+		for (auto i = 0; i < 144; i++) {
+			frametime_queue[i] = -1;
+		}
 	}
 
 	Application::~Application()
@@ -71,6 +89,7 @@ namespace Alabaster {
 	{
 		on_init();
 
+		static int frametime_index = 0;
 		while (!window->should_close() && is_running) {
 			Timer<ClockGranularity::MILLIS, float> on_cpu;
 
@@ -89,12 +108,15 @@ namespace Alabaster {
 			}
 			swapchain().end_frame();
 			cpu_time = on_cpu.elapsed();
+			frametime_queue[frametime_index] = cpu_time;
 			float time = Clock::get_ms<float>();
 			frame_time = time - last_frametime;
 			app_ts = frame_time;
 			last_frametime = time;
 
-			Log::info("[Application] CPU time: \t{}ms", cpu_time);
+			Log::info("[Application] CPU time: \t{}ms", last_fifty(frametime_queue));
+
+			frametime_index = (frametime_index + 1) % frametime_queue.size();
 		}
 
 		on_shutdown();

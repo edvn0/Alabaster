@@ -34,7 +34,8 @@ private:
 
 	glm::vec2 viewport_size = { 0.0f, 0.0f };
 	glm::vec2 viewport_bounds[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
-	bool viewport_focused = false, viewport_hovered = false;
+	bool viewport_focused { false };
+	bool viewport_hovered { false };
 	bool is_dockspace_open { true };
 
 	std::unique_ptr<Mesh> viking_room_model;

@@ -70,8 +70,8 @@ namespace Alabaster {
 
 	void Allocator::destroy_image(VkImage image, VmaAllocation allocation)
 	{
-		verify(image);
-		verify(allocation);
+		verify(image, "Image is not allocated");
+		verify(allocation, "Allocation does not exist");
 		vmaDestroyImage(vma_data().allocator, image, allocation);
 	}
 

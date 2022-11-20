@@ -42,23 +42,29 @@ namespace Alabaster {
 		}
 	}
 
-	CommandBuffer::CommandBuffer(std::string_view n)
+	CommandBuffer::CommandBuffer()
 	{
-		std::string name = std::string { n };
 		owned_by_swapchain = true;
-
 		init(3);
 	}
 
-	CommandBuffer::CommandBuffer(uint32_t count, std::string_view debug_name) { init(count); }
+	CommandBuffer::CommandBuffer(uint32_t count, QueueChoice choice)
+		: queue_choice(choice)
+	{
+		init(count);
+	}
 
-	CommandBuffer::~CommandBuffer()
+	void CommandBuffer::destroy()
 	{
 		if (owned_by_swapchain)
 			return;
 
 		const auto& device = GraphicsContext::the().device();
 		vkDestroyCommandPool(device, pool, nullptr);
+
+		for (auto& fence : fences) {
+			vkDestroyFence(device, fence, nullptr);
+		}
 	}
 
 	void CommandBuffer::begin()
@@ -90,6 +96,11 @@ namespace Alabaster {
 		if (owned_by_swapchain)
 			return;
 
+		Allocator allocator("CommandBufferDe-allocator");
+		for (auto& callback : destruction_callbacks) {
+			callback(allocator);
+		}
+
 		uint32_t frame_index = Renderer::current_frame();
 
 		VkSubmitInfo submit_info {};
@@ -100,7 +111,17 @@ namespace Alabaster {
 
 		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frame_index], VK_TRUE, UINT64_MAX));
 		vk_check(vkResetFences(GraphicsContext::the().device(), 1, &fences[frame_index]));
-		vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &submit_info, fences[frame_index]));
+
+		switch (queue_choice) {
+		case QueueChoice::Graphics: {
+			vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &submit_info, fences[frame_index]));
+			break;
+		};
+		case QueueChoice::Compute: {
+			vk_check(vkQueueSubmit(GraphicsContext::the().compute_queue(), 1, &submit_info, fences[frame_index]));
+			break;
+		};
+		};
 	}
 
 } // namespace Alabaster
