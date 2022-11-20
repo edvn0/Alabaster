@@ -96,7 +96,7 @@ namespace Alabaster {
 		Utilities::transition_image_layout(
 			image_info.image, chosen_format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, buffer);
 
-		buffer->add_destruction_callback([&staging_buffer_allocation, &staging_buffer](
+		buffer->add_destruction_callback([staging_buffer_allocation, staging_buffer](
 											 Allocator& allocator) { allocator.destroy_buffer(staging_buffer, staging_buffer_allocation); });
 
 		Log::info("[Image] invalidated image: {}", image_props.path.value().string());
@@ -202,7 +202,11 @@ namespace Alabaster {
 		destruction(allocator);
 		destruction = nullptr;
 
-		Log::info("[Image] Destroying image.");
+		if (image_props.path) {
+			Log::info("[Image] Destroying image {}.", (*image_props.path).string());
+		} else {
+			Log::info("[Image] Destroying image with dimensions [{} x {}].", image_props.width, image_props.height);
+		}
 	}
 
 } // namespace Alabaster

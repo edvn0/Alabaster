@@ -39,17 +39,17 @@ namespace Alabaster {
 		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
 		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
-		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name, nullptr, nullptr);
+		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name.data(), nullptr, nullptr);
 		int actual_w, actual_h;
 		glfwGetWindowSize(handle, &actual_w, &actual_h);
 
 		glfwSetWindowUserPointer(handle, &user_data);
 
-		static constexpr auto set_and_get_window_size = [](GLFWwindow* handle, uint32_t w, uint32_t h) {
-			glfwSetWindowSize(handle, static_cast<int>(w), static_cast<int>(h));
+		static constexpr auto set_and_get_window_size = [](GLFWwindow* glfw_window, uint32_t w, uint32_t h) {
+			glfwSetWindowSize(glfw_window, static_cast<int>(w), static_cast<int>(h));
 
 			int actual_w, actual_h;
-			glfwGetWindowSize(handle, &actual_w, &actual_h);
+			glfwGetWindowSize(glfw_window, &actual_w, &actual_h);
 			return std::make_tuple(actual_w, actual_h);
 		};
 

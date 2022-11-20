@@ -70,7 +70,7 @@ namespace Alabaster {
 		std::array<Pipeline*, 50> mesh_pipeline_submit;
 		std::unique_ptr<Pipeline> mesh_pipeline;
 
-		std::unique_ptr<Image> viking_room_texture;
+		const Image* viking_room_texture;
 		std::unique_ptr<Mesh> sphere_model;
 	};
 

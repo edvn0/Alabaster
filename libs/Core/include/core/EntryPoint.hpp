@@ -8,15 +8,10 @@
 extern Alabaster::Application* Alabaster::create(const Alabaster::ApplicationArguments& props);
 
 #include <any>
-#include <boost/program_options.hpp>
 #include <filesystem>
 #include <memory>
+#include <ProgramOptions.hxx>
 #include <system_error>
-
-namespace Alabaster {
-	using CLIOptions = boost::program_options::options_description;
-	using ArgumentMap = boost::program_options::variables_map;
-} // namespace Alabaster
 
 int main(int argc, char** argv)
 {
@@ -35,55 +30,17 @@ int main(int argc, char** argv)
 
 	std::filesystem::path defaults_path = cwd / std::filesystem::path { "resources" } / std::filesystem::path { "cli_defaults.yml" };
 
-	Alabaster::CLIOptions desc("Allowed options");
-	// clang-format off
-	desc.add_options()
-		("help", "Show help message")
-		("width", boost::program_options::value<uint32_t>()->default_value(1600), "Width of window")
-		("height", boost::program_options::value<uint32_t>()->default_value(900), "Height of window")
-		("name", boost::program_options::value<std::string>()->default_value(std::string { "Alabaster" }), "Title of window")
-		("vsync", boost::program_options::value<bool>()->default_value(true), "Window vsync");
-	// clang-format on
-
-	Alabaster::ArgumentMap vm;
-	try {
-		boost::program_options::store(boost::program_options::parse_command_line(argc, argv, desc), vm);
-		boost::program_options::notify(vm);
-	} catch (const std::runtime_error& err) {
-		Alabaster::Log::error("EntryPoint Error: {}", err.what());
-		std::exit(1);
-	}
-
 	Alabaster::ApplicationArguments props;
+	po::parser parser;
+	parser["width"].abbreviation('w').description("The width of the window.").bind(props.width);
+	parser["height"].abbreviation('h').description("The height of the window.").bind(props.height);
+	parser["name"].description("Name of the applicatin").bind(props.name);
+	auto& help = parser["help"].abbreviation('?').description("print this help screen");
 
-	std::string name = [vm]() {
-		try {
-			return vm["name"].as<std::string>();
-		} catch (const std::bad_any_cast& bad_any_cast) {
-			Alabaster::Log::error("Bad cast, Name: {}", bad_any_cast.what());
-			std::exit(1);
-		}
-	}();
-
-	props.name = name.data();
-
-	props.width = [vm]() {
-		try {
-			return vm["width"].as<uint32_t>();
-		} catch (const std::bad_any_cast& bad_any_cast) {
-			Alabaster::Log::error("Bad cast, Width: {}", bad_any_cast.what());
-			std::exit(1);
-		}
-	}();
-
-	props.height = [vm]() {
-		try {
-			return vm["height"].as<uint32_t>();
-		} catch (const std::bad_any_cast& bad_any_cast) {
-			Alabaster::Log::error("Bad cast, Height: {}", bad_any_cast.what());
-			std::exit(1);
-		}
-	}();
+	if (!parser(argc, argv)) {
+		Alabaster::Log::critical("Could not parse argument options.");
+		return 1;
+	}
 
 	Alabaster::Log::trace("{}, {}, {}", props.width, props.height, props.name);
 

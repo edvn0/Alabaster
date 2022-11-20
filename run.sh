@@ -44,7 +44,7 @@ run_app() {
 }
 
 run_tests
-shift 1
+shift 4
 if [ "$should_run" = "ON" ]; then
     run_app "$@"
 fi

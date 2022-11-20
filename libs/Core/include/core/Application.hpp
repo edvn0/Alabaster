@@ -17,7 +17,7 @@ namespace Alabaster {
 	struct ApplicationArguments {
 		uint32_t width;
 		uint32_t height;
-		const char* name;
+		std::string name;
 	};
 
 	class Application {

@@ -59,7 +59,7 @@ namespace AssetManager {
 		const std::string& name, const std::filesystem::path& vertex_path, const std::filesystem::path& fragment_path) const
 	{
 		const auto&& [vert_spirv, frag_spirv] = compile_to_spirv(name, vertex_path, fragment_path);
-		return Alabaster::Shader(vert_spirv, frag_spirv);
+		return Alabaster::Shader(name, vert_spirv, frag_spirv);
 	}
 
 	std::tuple<std::vector<uint32_t>, std::vector<uint32_t>> ShaderCompiler::compile_to_spirv(

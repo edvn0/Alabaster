@@ -213,7 +213,7 @@ namespace Alabaster {
 			data.uniforms.push_back(UniformBuffer(uniform_buffer_size, 0));
 		}
 
-		data.viking_room_texture = Image::create(IO::texture("viking_room.png"));
+		data.viking_room_texture = *AssetManager::ResourceCache::the().texture("viking_room");
 		create_descriptor_set_layout();
 		create_descriptor_pool();
 		create_descriptor_sets();
@@ -550,7 +550,6 @@ namespace Alabaster {
 		data.line_pipeline->destroy();
 		data.mesh_pipeline->destroy();
 
-		data.viking_room_texture->destroy();
 		data.sphere_model->destroy();
 	}
 

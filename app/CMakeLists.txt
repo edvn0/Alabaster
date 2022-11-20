@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.21)
 
 project(AlabasterApp)
 
+set(THIRD_PARTY ../third_party)
+
 file(GLOB_RECURSE sources main.cpp Alabaster.hpp AlabasterLayer.hpp
 	AlabasterLayer.cpp)
 
@@ -21,13 +23,11 @@ add_executable(${PROJECT_NAME} ${sources})
 
 target_include_directories(
 	${PROJECT_NAME}
-	PRIVATE ../third_party/spdlog/include
-	../third_party/imgui
-	../third_party/debugbreak
-	../third_party/magic_enum/include
-	../third_party/VulkanMemoryAllocator/include
-	../third_party/glm
-	../third_party/random/include)
+	PRIVATE
+	${THIRD_PARTY}/debugbreak
+	${THIRD_PARTY}/magic_enum/include
+	${THIRD_PARTY}/glm
+	${THIRD_PARTY}/random/include)
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE Alabaster::AssetManager
 	Alabaster::Core spdlog imgui)

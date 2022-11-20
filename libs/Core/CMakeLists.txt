@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.21)
 project(Core)
 
 find_package(Vulkan REQUIRED)
-find_package(Boost REQUIRED COMPONENTS program_options)
 
 find_package(Python3 COMPONENTS Interpreter)
 
@@ -35,11 +34,14 @@ set(THIRD_PARTY_DIR ../../third_party/)
 
 target_include_directories(
 	${PROJECT_NAME}
-	PUBLIC $<INSTALL_INTERFACE:include>
+	PUBLIC
+	$<INSTALL_INTERFACE:include>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 	${THIRD_PARTY_DIR}/glm
+	${THIRD_PARTY_DIR}/ProgramOptions/include
 	${THIRD_PARTY_DIR}/spdlog/include
+	${THIRD_PARTY_DIR}/fmt/include
 	${THIRD_PARTY_DIR}/debugbreak
 	${THIRD_PARTY_DIR}/magic_enum/include
 	${THIRD_PARTY_DIR}/random/include
@@ -49,16 +51,17 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/tinyobjloader
 	${THIRD_PARTY_DIR}/VulkanMemoryAllocator/include
 	INTERFACE ${Vulkan_INCLUDE_DIRS}
-	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include /usr/local/include ../AssetManager/include)
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../AssetManager/include)
 
 target_link_libraries(
 	${PROJECT_NAME}
-	INTERFACE Boost::program_options
 	PRIVATE glfw
 	imgui
 	Vulkan::Vulkan
 	spdlog
 	magic_enum
+	fmt
+	ProgramOptionsHxx
 	VulkanMemoryAllocator
 	tinyobjloader
 	effolkronium_random)

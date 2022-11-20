@@ -31,3 +31,9 @@ url = https://github.com/edvn0/imgui
 [submodule "third_party/shaderc"]
 	path = third_party/shaderc
 	url = https://github.com/edvn0/shaderc
+[submodule "third_party/ProgramOptions"]
+	path = third_party/ProgramOptions
+	url = https://github.com/Fytch/ProgramOptions.hxx
+[submodule "third_party/fmt"]
+	path = third_party/fmt
+	url = https://github.com/fmtlib/fmt.git

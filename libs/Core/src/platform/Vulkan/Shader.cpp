@@ -107,7 +107,8 @@ namespace Alabaster {
 		create_layout();
 	}
 
-	Shader::Shader(std::vector<uint32_t> vert_spirv, std::vector<uint32_t> frag_spirv)
+	Shader::Shader(const std::string& path_or_name, std::vector<uint32_t> vert_spirv, std::vector<uint32_t> frag_spirv)
+		: shader_path(path_or_name)
 	{
 		auto vertex_shader_module = create(vert_spirv.data(), vert_spirv.size() * sizeof(uint32_t));
 		auto fragment_shader_module = create(frag_spirv.data(), frag_spirv.size() * sizeof(uint32_t));
@@ -153,7 +154,7 @@ namespace Alabaster {
 			vkDestroyDescriptorSetLayout(GraphicsContext::the().device(), layout, nullptr);
 		}
 
-		Log::info("[Shader] Shader stages deleted.");
+		Log::info("[Shader] Shader stages for shader {} deleted.", shader_path.string());
 	}
 
 } // namespace Alabaster

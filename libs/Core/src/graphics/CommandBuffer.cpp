@@ -96,11 +96,6 @@ namespace Alabaster {
 		if (owned_by_swapchain)
 			return;
 
-		Allocator allocator("CommandBufferDe-allocator");
-		for (auto& callback : destruction_callbacks) {
-			callback(allocator);
-		}
-
 		uint32_t frame_index = Renderer::current_frame();
 
 		VkSubmitInfo submit_info {};
@@ -122,6 +117,13 @@ namespace Alabaster {
 			break;
 		};
 		};
+
+		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frame_index], VK_TRUE, UINT64_MAX));
+
+		Allocator allocator("CommandBufferDe-allocator");
+		for (auto& callback : destruction_callbacks) {
+			callback(allocator);
+		}
 	}
 
 } // namespace Alabaster
