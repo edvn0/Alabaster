@@ -40,7 +40,7 @@ namespace Alabaster {
 		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, false);
 		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
-		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name, nullptr, nullptr);
+		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name.data(), nullptr, nullptr);
 		int actual_w, actual_h;
 		glfwGetWindowSize(handle, &actual_w, &actual_h);
 

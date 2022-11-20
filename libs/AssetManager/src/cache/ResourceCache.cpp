@@ -29,7 +29,24 @@ namespace AssetManager {
 		return cache;
 	}
 
-	std::optional<const Alabaster::Image*> ResourceCache::texture(const std::string& name) { return image_cache.get_from_cache(name); }
-	std::optional<const Alabaster::Shader*> ResourceCache::shader(const std::string& name) { return shader_cache.get_from_cache(name); }
+	std::optional<const Alabaster::Image*> ResourceCache::texture(const std::string& name)
+	{
+		const auto found = image_cache.get_from_cache(name);
+		if (!found) {
+			throw Alabaster::AlabasterException("Texture not found.");
+		}
+
+		return found;
+	}
+
+	std::optional<const Alabaster::Shader*> ResourceCache::shader(const std::string& name)
+	{
+		const auto found = shader_cache.get_from_cache(name);
+		if (!found) {
+			throw Alabaster::AlabasterException("Shader not found.");
+		}
+
+		return found;
+	}
 
 } // namespace AssetManager

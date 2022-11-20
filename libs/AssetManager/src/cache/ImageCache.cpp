@@ -8,35 +8,10 @@
 
 namespace AssetManager {
 
-	template <typename T>
-	static constexpr auto remove_extension = [](const T& path, uint32_t count = 2) {
-		if constexpr (std::is_same_v<std::string, T>) {
-			auto converted_path = std::filesystem::path { path };
-			if (count != 2) {
-				auto out = converted_path.filename();
-				for (auto i = 0; i < count; i++) {
-					out.replace_extension();
-				}
-				return out.string();
-			}
-			return converted_path.filename().replace_extension().replace_extension().string();
-		} else {
-			auto out_converted = std::filesystem::path { path.filename() };
-			if (count != 2) {
-				auto out = out_converted;
-				for (auto i = 0; i < count; i++) {
-					out.replace_extension();
-				}
-				return out.string();
-			}
-			return out_converted.replace_extension().replace_extension().string();
-		}
-	};
-
-	template <class T> void ImageCache<T>::load_from_directory(const std::filesystem::path& shader_directory)
+	template <class T> void ImageCache<T>::load_from_directory(const std::filesystem::path& texture_directory)
 	{
 		using namespace Alabaster;
-		auto sorted_images_in_directory = IO::in_directory<std::string>(shader_directory, { ".tga", ".png", ".jpeg", ".jpg" }, true);
+		auto sorted_images_in_directory = IO::in_directory<std::string>(texture_directory, { ".tga", ".png", ".jpeg", ".jpg" }, true);
 
 		ThreadPool pool { 8 };
 		buffer->begin();

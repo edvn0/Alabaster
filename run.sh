@@ -16,6 +16,7 @@ cmake -B "$build_folder" \
     -D GLFW_BUILD_DOCS=OFF \
     -D GLFW_BUILD_TESTS=OFF \
     -D GLFW_BUILD_EXAMPLES=OFF \
+    -D BUILD_EXAMPLES=OFF \
     -D CMAKE_BUILD_TYPE="$build_type" \
     -D BUILD_TESTING="$build_testing" \
     -D ENABLE_HLSL=ON \

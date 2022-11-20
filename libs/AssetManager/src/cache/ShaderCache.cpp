@@ -15,31 +15,6 @@ namespace AssetManager {
 		Alabaster::Shader shader;
 	};
 
-	template <typename T>
-	static constexpr auto remove_extension = [](const T& path, uint32_t count = 2) {
-		if constexpr (std::is_same_v<std::string, T>) {
-			auto converted_path = std::filesystem::path { path };
-			if (count != 2) {
-				auto out = converted_path.filename();
-				for (auto i = 0; i < count; i++) {
-					out.replace_extension();
-				}
-				return out.string();
-			}
-			return converted_path.filename().replace_extension().replace_extension().string();
-		} else {
-			auto out_converted = std::filesystem::path { path.filename() };
-			if (count != 2) {
-				auto out = out_converted;
-				for (auto i = 0; i < count; i++) {
-					out.replace_extension();
-				}
-				return out.string();
-			}
-			return out_converted.replace_extension().replace_extension().string();
-		}
-	};
-
 	static constexpr auto check_is_sorted = [](auto&& a, auto&& true_if_next_is_after_current_function) -> bool {
 		if (a.size() < 1) {
 			return true;
@@ -68,27 +43,36 @@ namespace AssetManager {
 		ShaderCompiler compiler;
 		for (const auto& [vert, frag] : shader_pairs) {
 
-			const auto shader_name = remove_extension<std::filesystem::path>(vert);
+			const auto& shader_name = remove_extension<std::filesystem::path>(vert);
 
-			const auto vertex_path = vert;
-			const auto fragment_path = frag;
+			const auto& vertex_path = vert;
+			const auto& fragment_path = frag;
 
-			const auto task = [=]() -> ShaderCodeAndName {
-				const Alabaster::Shader shader = compiler.compile(shader_name, vertex_path, fragment_path);
+			auto task = [=]() -> ShaderCodeAndName {
+				Alabaster::Shader shader = compiler.compile(shader_name, vertex_path, fragment_path);
 				return { shader_name, std::move(shader) };
 			};
 
-			results.push_back(std::async(std::launch::async, task));
+			results.push_back(std::async(std::launch::async, std::move(task)));
 		}
 
 		for (auto& res : results) {
-			res.wait();
+			res.wait_for(std::chrono::seconds(3));
 		}
 
 		for (auto& res : results) {
-			auto&& code = res.get();
 
-			shaders.try_emplace(code.name, code.shader);
+			if (!res.valid()) {
+				continue;
+			}
+
+			try {
+
+				auto&& code = res.get();
+				shaders.try_emplace(code.name, code.shader);
+			} catch (const std::exception& exception) {
+				Alabaster::Log::error("[ShaderCache Exception] - {}", exception.what());
+			}
 		}
 	}
 

@@ -4,6 +4,10 @@
 
 #pragma once
 
+#include "core/exceptions/AlabasterException.hpp"
+
+#include <filesystem>
+
 namespace Alabaster {
 
 	enum class OpenMode : unsigned int;
