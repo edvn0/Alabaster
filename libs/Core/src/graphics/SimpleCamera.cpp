@@ -189,7 +189,6 @@ namespace Alabaster {
 		}
 
 		view_position = glm::vec4(position, 0.0f);
-		;
 
 		updated = true;
 	};

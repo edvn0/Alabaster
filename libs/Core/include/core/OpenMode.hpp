@@ -40,6 +40,9 @@ namespace Alabaster {
 		};
 		case OpenMode::Truncate: {
 			return std::ios::trunc;
+		};
+		default: {
+			return 0;
 		}
 		};
 	}

@@ -85,7 +85,7 @@ namespace Alabaster {
 		float frame_time;
 		float last_frametime;
 
-		std::array<double, 144> frametime_queue;
+		std::array<double, 500> frametime_queue;
 
 		bool is_running { true };
 		GUILayer* ui_layer { nullptr };

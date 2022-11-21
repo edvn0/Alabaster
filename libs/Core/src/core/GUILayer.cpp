@@ -18,8 +18,6 @@
 
 namespace Alabaster {
 
-	static std::vector<VkCommandBuffer> imgui_command_buffers;
-
 	void GUILayer::create_renderpass()
 	{
 		const auto&& [color, depth] = Application::the().swapchain().get_formats();
@@ -120,23 +118,13 @@ namespace Alabaster {
 		init_info.Instance = vulkan_context.instance();
 		init_info.PhysicalDevice = vulkan_context.physical_device();
 		init_info.Device = vulkan_context.device();
-		init_info.Queue = vulkan_context.present_queue();
+		init_info.Queue = vulkan_context.graphics_queue();
 		init_info.DescriptorPool = imgui_descriptor_pool;
 		init_info.MinImageCount = 2;
 		auto& swapchain = Application::the().get_window()->get_swapchain();
 		init_info.ImageCount = swapchain->get_image_count();
 		init_info.CheckVkResultFn = vk_check;
 		ImGui_ImplVulkan_Init(&init_info, gui_renderpass);
-
-		imgui_command_buffers.resize(swapchain->get_image_count());
-		for (std::uint32_t i = 0; i < swapchain->get_image_count(); i++) {
-			VkCommandBufferAllocateInfo info {};
-			info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-			info.commandBufferCount = 1;
-			info.commandPool = GraphicsContext::the().pool();
-			info.level = VK_COMMAND_BUFFER_LEVEL_SECONDARY;
-			vk_check(vkAllocateCommandBuffers(device, &info, &imgui_command_buffers[i]));
-		}
 
 		ImGui::GetIO().Fonts->AddFontDefault();
 
@@ -191,7 +179,7 @@ namespace Alabaster {
 
 		vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
-		const auto& imgui_buffer = imgui_command_buffers[command_buffer_index];
+		const auto& imgui_buffer = imgui_command_buffer;
 		{
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
@@ -203,31 +191,31 @@ namespace Alabaster {
 			cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 			cbi.flags = VK_COMMAND_BUFFER_USAGE_RENDER_PASS_CONTINUE_BIT;
 			cbi.pInheritanceInfo = &inheritance_info;
-			vk_check(vkBeginCommandBuffer(imgui_buffer, &cbi));
+			imgui_buffer->begin(&cbi);
 
 			VkViewport viewport = {};
 			viewport.x = 0.0f;
-			viewport.y = static_cast<float>(height);
-			viewport.height = -static_cast<float>(height);
+			viewport.y = 0.0f;
+			viewport.height = static_cast<float>(height);
 			viewport.width = static_cast<float>(width);
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
-			vkCmdSetViewport(imgui_buffer, 0, 1, &viewport);
+			vkCmdSetViewport(*imgui_buffer, 0, 1, &viewport);
 
 			VkRect2D scissor = {};
 			scissor.extent.width = width;
 			scissor.extent.height = height;
 			scissor.offset.x = 0;
 			scissor.offset.y = 0;
-			vkCmdSetScissor(imgui_buffer, 0, 1, &scissor);
+			vkCmdSetScissor(*imgui_buffer, 0, 1, &scissor);
 
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
-			ImGui_ImplVulkan_RenderDrawData(main_draw_data, imgui_buffer);
+			ImGui_ImplVulkan_RenderDrawData(main_draw_data, *imgui_buffer);
 
-			vk_check(vkEndCommandBuffer(imgui_buffer));
+			imgui_buffer->end_with_no_reset();
 		}
 
-		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer);
+		vkCmdExecuteCommands(draw_command_buffer, 1, &imgui_buffer->get_buffer());
 
 		vkCmdEndRenderPass(draw_command_buffer);
 
@@ -242,14 +230,7 @@ namespace Alabaster {
 
 	void GUILayer::ui() { }
 
-	void GUILayer::ui(float timestep)
-	{
-		ImGui::Begin("Test");
-		if (ImGui::Button("Test")) {
-			Log::info("Here");
-		}
-		ImGui::End();
-	}
+	void GUILayer::ui(float timestep) { ImGui::ShowDemoWindow(); }
 
 	GUILayer::~GUILayer() = default;
 
@@ -257,6 +238,8 @@ namespace Alabaster {
 	{
 		const auto& device = GraphicsContext::the().device();
 		vk_check(vkDeviceWaitIdle(device));
+		imgui_command_buffer->destroy();
+
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();
 		ImGui::DestroyContext();

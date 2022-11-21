@@ -6,7 +6,9 @@
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
 #include "graphics/Swapchain.hpp"
+#include "vulkan/vulkan_core.h"
 
+#include <cstddef>
 #include <utility>
 
 namespace Alabaster {
@@ -26,7 +28,7 @@ namespace Alabaster {
 		VkCommandBufferAllocateInfo cbai {};
 		cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 		cbai.commandPool = pool;
-		cbai.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+		cbai.level = is_primary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 		if (count == 0)
 			frames = Application::the().swapchain().get_image_count();
 		cbai.commandBufferCount = frames;
@@ -48,8 +50,9 @@ namespace Alabaster {
 		init(3);
 	}
 
-	CommandBuffer::CommandBuffer(std::uint32_t count, QueueChoice choice)
+	CommandBuffer::CommandBuffer(std::uint32_t count, QueueChoice choice, bool is_primary)
 		: queue_choice(choice)
+		, is_primary(is_primary)
 	{
 		init(count);
 	}
@@ -67,7 +70,7 @@ namespace Alabaster {
 		}
 	}
 
-	void CommandBuffer::begin()
+	void CommandBuffer::begin(VkCommandBufferBeginInfo* begin)
 	{
 		std::uint32_t frame_index = Renderer::current_frame();
 
@@ -82,7 +85,7 @@ namespace Alabaster {
 			active = buffers[frame_index];
 		}
 
-		vk_check(vkBeginCommandBuffer(active, &begin_info));
+		vk_check(vkBeginCommandBuffer(active, (begin != nullptr) ? begin : &begin_info));
 	}
 
 	void CommandBuffer::end()
@@ -90,6 +93,8 @@ namespace Alabaster {
 		vk_check(vkEndCommandBuffer(active));
 		active = nullptr;
 	}
+
+	void CommandBuffer::end_with_no_reset() { vk_check(vkEndCommandBuffer(active)); }
 
 	void CommandBuffer::submit()
 	{
@@ -101,7 +106,7 @@ namespace Alabaster {
 		VkSubmitInfo submit_info {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submit_info.commandBufferCount = 1;
-		VkCommandBuffer command_buffer = buffers[frame_index];
+		const VkCommandBuffer& command_buffer = buffers[frame_index];
 		submit_info.pCommandBuffers = &command_buffer;
 
 		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frame_index], VK_TRUE, UINT64_MAX));

@@ -1,8 +1,10 @@
 #pragma once
 
 #include "graphics/Allocator.hpp"
+#include "vulkan/vulkan_core.h"
 
 #include <memory>
+#include <optional>
 #include <queue>
 #include <string_view>
 #include <vector>
@@ -16,11 +18,12 @@ namespace Alabaster {
 		using DeallocationCallback = std::function<void(Allocator&)>;
 
 	public:
-		explicit CommandBuffer(std::uint32_t count, QueueChoice queue_choice = QueueChoice::Graphics);
+		explicit CommandBuffer(std::uint32_t count, QueueChoice queue_choice = QueueChoice::Graphics, bool is_primary = true);
 		void destroy();
 
-		void begin();
+		void begin(VkCommandBufferBeginInfo* begin = nullptr);
 		void end();
+		void end_with_no_reset();
 		void submit();
 
 		auto& get_buffer() const { return active; }
@@ -42,6 +45,7 @@ namespace Alabaster {
 		std::vector<VkFence> fences;
 
 		QueueChoice queue_choice;
+		bool is_primary { true };
 
 		std::queue<DeallocationCallback> destruction_callbacks {};
 

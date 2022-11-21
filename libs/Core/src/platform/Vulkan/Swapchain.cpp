@@ -192,7 +192,7 @@ namespace Alabaster {
 		present_submit_info.commandBufferCount = 1;
 
 		vk_check(vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence));
-		vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &present_submit_info, sync_objects[frame()].in_flight_fence));
+		vk_check(vkQueueSubmit(GraphicsContext::the().present_queue(), 1, &present_submit_info, sync_objects[frame()].in_flight_fence));
 
 		VkResult result;
 		{
@@ -206,7 +206,7 @@ namespace Alabaster {
 			present_info.swapchainCount = 1;
 
 			present_info.pImageIndices = &current_image_index;
-			result = vkQueuePresentKHR(GraphicsContext::the().graphics_queue(), &present_info);
+			result = vkQueuePresentKHR(GraphicsContext::the().present_queue(), &present_info);
 		}
 
 		if (result != VK_SUCCESS) {

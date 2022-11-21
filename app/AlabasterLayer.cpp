@@ -2,12 +2,12 @@
 
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
-#include "cache/ResourceCache.hpp"
-#include "core/events/MouseEvent.hpp"
-#include "glm/geometric.hpp"
-#include "graphics/Renderer.hpp"
+#include "graphics/CommandBuffer.hpp"
+#include "vulkan/vulkan_core.h"
 
 #include <imgui.h>
+#include <initializer_list>
+#include <optional>
 #include <string_view>
 #include <vulkan/vulkan.h>
 
@@ -21,8 +21,104 @@ static constexpr auto axes = [](auto& renderer, auto&& pos, float size = 2.0f) {
 	renderer.line(pos, pos + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
 };
 
+auto create_renderpass(bool first = false)
+{
+	const auto&& [color, depth] = Application::the().swapchain().get_formats();
+
+	VkAttachmentDescription color_attachment_desc = {};
+	color_attachment_desc.format = color;
+	color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+
+	if (first) {
+		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	} else {
+		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+	}
+	color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+	if (first) {
+		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	} else {
+		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+	}
+	color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+	if (first) {
+		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	} else {
+		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+	}
+
+	VkAttachmentDescription depth_attachment_desc {};
+	depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
+	depth_attachment_desc.format = depth;
+
+	if (first) {
+		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	} else {
+		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+	}
+	depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+
+	if (first) {
+		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	} else {
+		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+	}
+	depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+	if (first) {
+		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	} else {
+		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	}
+
+	VkAttachmentReference color_reference = {};
+	color_reference.attachment = 0;
+	color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+	VkAttachmentReference depth_reference = {};
+	depth_reference.attachment = 1;
+	depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+	VkSubpassDescription subpass_description = {};
+	subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+	subpass_description.colorAttachmentCount = 1;
+	subpass_description.pColorAttachments = &color_reference;
+	subpass_description.pDepthStencilAttachment = &depth_reference;
+
+	VkSubpassDependency dependency = {};
+	dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+	dependency.dstSubpass = 0;
+	dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	dependency.srcAccessMask = 0;
+	dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+	dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+	std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
+	VkRenderPassCreateInfo render_pass_info = {};
+	render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+	render_pass_info.pAttachments = descriptions.data();
+	render_pass_info.attachmentCount = static_cast<std::uint32_t>(descriptions.size());
+	render_pass_info.pSubpasses = &subpass_description;
+	render_pass_info.subpassCount = 1;
+	render_pass_info.pDependencies = &dependency;
+	render_pass_info.dependencyCount = 1;
+
+	VkRenderPass pass;
+	vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &pass));
+	return pass;
+}
+
 bool AlabasterLayer::initialise()
 {
+	first_renderpass = create_renderpass(true);
+	sun_renderpass = create_renderpass(false);
+
 	viking_room_model = Mesh::from_file("viking_room.obj");
 	sphere_model = Mesh::from_file("sphere.obj");
 
@@ -30,7 +126,7 @@ bool AlabasterLayer::initialise()
 	// auto shader = AssetManager::ShaderCache::the().get_from_cache("mesh");
 
 	PipelineSpecification viking_spec {
-		.shader = AssetManager::ResourceCache::the().shader("viking"),
+		.shader = AssetManager::ResourceCache::the().shader("mesh_light"),
 		.debug_name = "Viking Pipeline",
 		.render_pass = renderer.get_render_pass(),
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -42,6 +138,9 @@ bool AlabasterLayer::initialise()
 			PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4)) },
 	};
 	viking_pipeline = Pipeline::create(viking_spec);
+
+	command_buffer = CommandBuffer::from_swapchain();
+
 	return true;
 }
 
@@ -76,9 +175,10 @@ void AlabasterLayer::update(float ts)
 	static std::size_t frame_number { 0 };
 
 	renderer.reset_stats();
-	renderer.begin_scene();
+	editor.on_update(ts);
+	command_buffer->begin();
 	{
-		editor.on_update(ts);
+		renderer.begin_scene();
 
 		renderer.quad({ 0, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 		renderer.quad({ 30, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
@@ -95,21 +195,19 @@ void AlabasterLayer::update(float ts)
 		axes(renderer, glm::vec3 { 0, -0.1, 0 });
 
 		renderer.line(4, { 0, 0, 0 }, { 3, 3, 3 }, { 1, 0, 0, 1 });
-		/*renderer.mesh(sphere_model, nullptr, { 0, 0, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 });
-		renderer.mesh(sphere_model, nullptr, { 0, 1, 0 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 });
-		renderer.mesh(sphere_model, nullptr, { 0, 0, 1 }, std::move(sphere_rot), { 1, 0, 1, 1 }, { .1, .2, .4 }); */
-
 		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
-		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 1 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
-		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 2 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
-		renderer.mesh(sphere_model, nullptr, glm::vec3 { 0, -10, 1 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
-
-		// renderer.mesh(sponza_model, nullptr, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 0.1, 0.1, 0.1 });
+		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0, -2.0f, 0 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
 
 		renderer.text("Test Test", glm::vec3 { 0, 0, 0 });
+		renderer.end_scene(command_buffer, first_renderpass);
 	}
-	renderer.end_scene();
+	{
+		renderer.begin_scene();
+		renderer.mesh(sphere_model, nullptr, { -5, 5, 5 });
+		renderer.end_scene(command_buffer, sun_renderpass);
+	}
+	command_buffer->end();
+	command_buffer->submit();
 
 	frame_number++;
 }
@@ -212,4 +310,8 @@ void AlabasterLayer::destroy()
 	viking_room_model->destroy();
 	sphere_model->destroy();
 	sponza_model->destroy();
+	command_buffer->destroy();
+
+	vkDestroyRenderPass(GraphicsContext::the().device(), sun_renderpass, nullptr);
+	vkDestroyRenderPass(GraphicsContext::the().device(), first_renderpass, nullptr);
 }

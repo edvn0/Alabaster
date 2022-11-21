@@ -14,10 +14,12 @@
 #include "graphics/PushConstantRange.hpp"
 #include "graphics/Renderer.hpp"
 #include "graphics/Vertex.hpp"
+#include "vulkan/vulkan_core.h"
 
+#include <memory>
 #include <vulkan/vulkan.h>
 
-#define ALABASTER_USE_IMGUI
+#define ALABASTER_USE_IMGUI 0
 
 namespace Alabaster {
 
@@ -45,7 +47,7 @@ namespace Alabaster {
 		color_attachment_desc.format = color;
 		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-#ifdef ALABASTER_USE_IMGUI
+#if ALABASTER_USE_IMGUI
 		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 #else
 		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
@@ -194,8 +196,6 @@ namespace Alabaster {
 	Renderer3D::Renderer3D(Camera& camera) noexcept
 		: camera(camera)
 	{
-		command_buffer = CommandBuffer::from_swapchain();
-
 		data.sphere_model = Mesh::from_file("sphere.obj");
 
 		auto image_count = Application::the().swapchain().get_image_count();
@@ -369,18 +369,18 @@ namespace Alabaster {
 		// Flush ignores these for now...
 	}
 
-	void Renderer3D::end_scene()
+	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, VkRenderPass target)
 	{
-		command_buffer->begin();
-		Renderer::begin_render_pass(command_buffer, data.render_pass);
+		const auto chosen_renderpass = target ? target : data.render_pass;
 
+		Renderer::begin_render_pass(command_buffer, chosen_renderpass);
 		if (data.quad_indices_submitted > 0) {
 			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.quad_vertices_submitted);
 
 			std::uint32_t size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer->set_data(data.quad_buffer.data(), size, 0);
 
-			draw_quads();
+			draw_quads(command_buffer);
 
 			data.draw_calls++;
 		}
@@ -391,25 +391,20 @@ namespace Alabaster {
 			std::uint32_t size = vertex_count * sizeof(LineVertex);
 			data.line_vertex_buffer->set_data(data.line_buffer.data(), size, 0);
 
-			draw_lines();
+			draw_lines(command_buffer);
 
 			data.draw_calls++;
 		}
 
 		if (data.meshes_submitted > 0) {
-
-			draw_meshes();
-
-			data.draw_calls++;
+			draw_meshes(command_buffer);
 		}
 
 		Log::info("[Renderer3D] Draw calls: {}", data.draw_calls);
-
 		Renderer::end_render_pass(command_buffer);
-		command_buffer->submit();
 	}
 
-	void Renderer3D::draw_quads()
+	void Renderer3D::draw_quads(const std::unique_ptr<CommandBuffer>& command_buffer)
 	{
 		const auto& vb = data.quad_vertex_buffer;
 		const auto& ib = data.quad_index_buffer;
@@ -435,7 +430,7 @@ namespace Alabaster {
 		vkCmdDrawIndexed(*command_buffer, count, instances, 0, 0, 0);
 	}
 
-	void Renderer3D::draw_lines()
+	void Renderer3D::draw_lines(const std::unique_ptr<CommandBuffer>& command_buffer)
 	{
 		const auto& vb = data.line_vertex_buffer;
 		const auto& ib = data.line_index_buffer;
@@ -464,7 +459,7 @@ namespace Alabaster {
 		vkCmdDrawIndexed(*command_buffer, count, instances, 0, 0, 0);
 	}
 
-	void Renderer3D::draw_meshes()
+	void Renderer3D::draw_meshes(const std::unique_ptr<CommandBuffer>& command_buffer)
 	{
 		const VkDescriptorSet& descriptor = data.descriptor_sets[Renderer::current_frame()];
 
@@ -501,6 +496,7 @@ namespace Alabaster {
 			vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
 
 			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
+			data.draw_calls++;
 		}
 	}
 
@@ -533,8 +529,6 @@ namespace Alabaster {
 
 		vkDestroyDescriptorPool(device, data.descriptor_pool, nullptr);
 		vkDestroyDescriptorSetLayout(device, data.descriptor_set_layout, nullptr);
-
-		command_buffer->destroy();
 
 		data.line_vertex_buffer->destroy();
 		data.quad_vertex_buffer->destroy();

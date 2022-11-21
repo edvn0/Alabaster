@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Application.hpp"
+#include "graphics/CommandBuffer.hpp"
 
 typedef struct VkDescriptorPool_T* VkDescriptorPool;
 typedef struct VkRenderPass_T* VkRenderPass;
@@ -11,7 +12,10 @@ namespace Alabaster {
 
 	class GUILayer : public Layer {
 	public:
-		GUILayer() = default;
+		GUILayer()
+			: imgui_command_buffer(new CommandBuffer(3, QueueChoice::Graphics, false))
+		{
+		}
 		~GUILayer();
 
 		void on_event(Event& e) override {};
@@ -28,6 +32,8 @@ namespace Alabaster {
 		std::string_view name() override { return gui_layer_name; }
 		VkDescriptorPool imgui_descriptor_pool { nullptr };
 		VkRenderPass gui_renderpass { nullptr };
+
+		std::unique_ptr<CommandBuffer> imgui_command_buffer;
 
 		void create_renderpass();
 	};

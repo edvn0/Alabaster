@@ -17,13 +17,13 @@
 
 #include <cstddef>
 
-#define ALABASTER_USE_IMGUI
+#define ALABASTER_USE_IMGUI 0
 
 namespace Alabaster {
 
 	static constexpr auto last_fifty = [](const auto& frametime_queue) -> double {
 		auto start = frametime_queue.size() - 1;
-		auto end = start - 100;
+		auto end = start - 300;
 
 		double average = 0;
 		for (std::size_t i = frametime_queue.size() - 1; i >= end; i--) {
@@ -49,8 +49,8 @@ namespace Alabaster {
 
 		Renderer::init();
 
-		for (auto i = 0; i < 144; i++) {
-			frametime_queue[i] = -1;
+		for (auto i = 0; i < 500; i++) {
+			frametime_queue[i] = 8.5;
 		}
 	}
 
@@ -100,9 +100,11 @@ namespace Alabaster {
 				Renderer::begin();
 
 				update_layers(app_ts);
+#if ALABASTER_USE_IMGUI
 				gui_layer().begin();
 				render_imgui();
 				gui_layer().end();
+#endif
 
 				Renderer::end();
 			}

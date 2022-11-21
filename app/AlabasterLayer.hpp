@@ -7,8 +7,10 @@
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
 #include "graphics/Camera.hpp"
+#include "graphics/Renderer.hpp"
 
 #include <glm/glm.hpp>
+#include <memory>
 
 using namespace Alabaster;
 
@@ -28,9 +30,14 @@ struct AlabasterLayer final : public Layer {
 
 private:
 	std::string_view name() override { return "AlabasterLayer"; }
+
+private:
 	SimpleCamera camera;
 	EditorCamera editor;
 	Renderer3D renderer;
+
+	VkRenderPass sun_renderpass;
+	VkRenderPass first_renderpass;
 
 	glm::vec2 viewport_size = { 0.0f, 0.0f };
 	glm::vec2 viewport_bounds[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
@@ -41,6 +48,8 @@ private:
 	std::unique_ptr<Mesh> viking_room_model;
 	std::unique_ptr<Mesh> sphere_model;
 	std::unique_ptr<Mesh> sponza_model;
+
+	std::unique_ptr<CommandBuffer> command_buffer;
 
 	std::unique_ptr<Pipeline> viking_pipeline;
 };

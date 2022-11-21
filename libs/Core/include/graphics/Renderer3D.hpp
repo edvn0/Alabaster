@@ -2,6 +2,7 @@
 
 #include "graphics/Image.hpp"
 #include "graphics/UniformBuffer.hpp"
+#include "vulkan/vulkan_core.h"
 
 #include <array>
 #include <glm/gtx/transform.hpp>
@@ -85,10 +86,9 @@ namespace Alabaster {
 			const glm::mat4& rotation_matrix = glm::mat4 { 1.0f }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
 		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void line(float size, const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
-
 		void text(std::string text, glm::vec3 position, float font_size = 11.0f);
 
-		void end_scene();
+		void end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, VkRenderPass target = nullptr);
 
 	public:
 		void destroy();
@@ -101,9 +101,9 @@ namespace Alabaster {
 		const VkRenderPass& get_render_pass() const;
 
 	private:
-		void draw_quads();
-		void draw_lines();
-		void draw_meshes();
+		void draw_quads(const std::unique_ptr<CommandBuffer>& command_buffer);
+		void draw_lines(const std::unique_ptr<CommandBuffer>& command_buffer);
+		void draw_meshes(const std::unique_ptr<CommandBuffer>& command_buffer);
 
 	private:
 		void flush();
@@ -116,7 +116,6 @@ namespace Alabaster {
 	private:
 		Camera& camera;
 		RendererData data;
-		std::unique_ptr<CommandBuffer> command_buffer;
 	};
 
 } // namespace Alabaster
