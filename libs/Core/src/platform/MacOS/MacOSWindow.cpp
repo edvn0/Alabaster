@@ -45,7 +45,7 @@ namespace Alabaster {
 
 		glfwSetWindowUserPointer(handle, &user_data);
 
-		static constexpr auto set_and_get_window_size = [](GLFWwindow* glfw_window, uint32_t w, uint32_t h) {
+		static constexpr auto set_and_get_window_size = [](GLFWwindow* glfw_window, std::uint32_t w, std::uint32_t h) {
 			glfwSetWindowSize(glfw_window, static_cast<int>(w), static_cast<int>(h));
 
 			int actual_w, actual_h;
@@ -104,7 +104,7 @@ namespace Alabaster {
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int in_width, int in_height) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
-			WindowResizeEvent event(static_cast<uint32_t>(in_width), static_cast<uint32_t>(in_height));
+			WindowResizeEvent event(static_cast<std::uint32_t>(in_width), static_cast<std::uint32_t>(in_height));
 			data.callback(event);
 			data.width = in_width;
 			data.height = in_height;
@@ -141,7 +141,7 @@ namespace Alabaster {
 			}
 		});
 
-		glfwSetCharCallback(handle, [](GLFWwindow* window, uint32_t codepoint) {
+		glfwSetCharCallback(handle, [](GLFWwindow* window, std::uint32_t codepoint) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
 			KeyTypedEvent event(static_cast<KeyCode>(codepoint));

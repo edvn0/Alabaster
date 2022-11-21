@@ -11,12 +11,12 @@
 
 namespace Alabaster {
 
-	void CommandBuffer::init(uint32_t count)
+	void CommandBuffer::init(std::uint32_t count)
 	{
 		if (owned_by_swapchain)
 			return;
 
-		uint32_t frames = count;
+		std::uint32_t frames = count;
 		VkCommandPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
 		pool_info.queueFamilyIndex = GraphicsContext::the().graphics_queue_family();
@@ -48,7 +48,7 @@ namespace Alabaster {
 		init(3);
 	}
 
-	CommandBuffer::CommandBuffer(uint32_t count, QueueChoice choice)
+	CommandBuffer::CommandBuffer(std::uint32_t count, QueueChoice choice)
 		: queue_choice(choice)
 	{
 		init(count);
@@ -69,7 +69,7 @@ namespace Alabaster {
 
 	void CommandBuffer::begin()
 	{
-		uint32_t frame_index = Renderer::current_frame();
+		std::uint32_t frame_index = Renderer::current_frame();
 
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -96,7 +96,7 @@ namespace Alabaster {
 		if (owned_by_swapchain)
 			return;
 
-		uint32_t frame_index = Renderer::current_frame();
+		std::uint32_t frame_index = Renderer::current_frame();
 
 		VkSubmitInfo submit_info {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

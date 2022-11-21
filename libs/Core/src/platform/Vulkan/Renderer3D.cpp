@@ -97,7 +97,7 @@ namespace Alabaster {
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		render_pass_info.pAttachments = descriptions.data();
-		render_pass_info.attachmentCount = static_cast<uint32_t>(descriptions.size());
+		render_pass_info.attachmentCount = static_cast<std::uint32_t>(descriptions.size());
 		render_pass_info.pSubpasses = &subpass_description;
 		render_pass_info.subpassCount = 1;
 		render_pass_info.pDependencies = &dependency;
@@ -125,7 +125,7 @@ namespace Alabaster {
 		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, combined_image_sampler };
 		VkDescriptorSetLayoutCreateInfo layout_info {};
 		layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		layout_info.bindingCount = static_cast<uint32_t>(bindings.size());
+		layout_info.bindingCount = static_cast<std::uint32_t>(bindings.size());
 		layout_info.pBindings = bindings.data();
 
 		vk_check(vkCreateDescriptorSetLayout(GraphicsContext::the().device(), &layout_info, nullptr, &data.descriptor_set_layout));
@@ -135,16 +135,16 @@ namespace Alabaster {
 	{
 		std::array<VkDescriptorPoolSize, 2> pool_sizes {};
 		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		pool_sizes[0].descriptorCount = static_cast<uint32_t>(Application::the().swapchain().get_image_count());
+		pool_sizes[0].descriptorCount = static_cast<std::uint32_t>(Application::the().swapchain().get_image_count());
 
 		pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		pool_sizes[1].descriptorCount = static_cast<uint32_t>(Application::the().swapchain().get_image_count());
+		pool_sizes[1].descriptorCount = static_cast<std::uint32_t>(Application::the().swapchain().get_image_count());
 
 		VkDescriptorPoolCreateInfo pool_info {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
+		pool_info.poolSizeCount = static_cast<std::uint32_t>(pool_sizes.size());
 		pool_info.pPoolSizes = pool_sizes.data();
-		pool_info.maxSets = static_cast<uint32_t>(Application::the().swapchain().get_image_count());
+		pool_info.maxSets = static_cast<std::uint32_t>(Application::the().swapchain().get_image_count());
 
 		if (vkCreateDescriptorPool(GraphicsContext::the().device(), &pool_info, nullptr, &data.descriptor_pool) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create descriptor pool!");
@@ -159,7 +159,7 @@ namespace Alabaster {
 		VkDescriptorSetAllocateInfo alloc_info {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		alloc_info.descriptorPool = data.descriptor_pool;
-		alloc_info.descriptorSetCount = static_cast<uint32_t>(image_count);
+		alloc_info.descriptorSetCount = static_cast<std::uint32_t>(image_count);
 		alloc_info.pSetLayouts = layouts.data();
 
 		data.descriptor_sets.resize(image_count);
@@ -193,7 +193,7 @@ namespace Alabaster {
 			combined_sampler.pImageInfo = &image_info;
 
 			vkUpdateDescriptorSets(
-				GraphicsContext::the().device(), static_cast<uint32_t>(descriptor_writes.size()), descriptor_writes.data(), 0, nullptr);
+				GraphicsContext::the().device(), static_cast<std::uint32_t>(descriptor_writes.size()), descriptor_writes.data(), 0, nullptr);
 		}
 	}
 
@@ -253,9 +253,9 @@ namespace Alabaster {
 		data.quad_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(QuadVertex));
 		data.line_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(LineVertex));
 
-		std::vector<uint32_t> indices;
+		std::vector<std::uint32_t> indices;
 		indices.resize(RendererData::max_indices);
-		uint32_t offset = 0;
+		std::uint32_t offset = 0;
 		for (std::size_t i = 0; i < RendererData::max_indices; i += 6) {
 			indices[i + 0] = 0 + offset;
 			indices[i + 1] = 1 + offset;
@@ -269,7 +269,7 @@ namespace Alabaster {
 
 		indices.clear();
 		indices.resize(RendererData::max_indices);
-		for (uint32_t i = 0; i < RendererData::max_indices; i++) {
+		for (std::uint32_t i = 0; i < RendererData::max_indices; i++) {
 			indices[i] = i;
 		}
 		data.line_index_buffer = IndexBuffer::create(indices);
@@ -379,9 +379,9 @@ namespace Alabaster {
 		Renderer::begin_render_pass(command_buffer, data.render_pass);
 
 		if (data.quad_indices_submitted > 0) {
-			uint32_t vertex_count = static_cast<uint32_t>(data.quad_vertices_submitted);
+			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.quad_vertices_submitted);
 
-			uint32_t size = vertex_count * sizeof(QuadVertex);
+			std::uint32_t size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer->set_data(data.quad_buffer.data(), size, 0);
 
 			draw_quads();
@@ -390,9 +390,9 @@ namespace Alabaster {
 		}
 
 		if (data.line_indices_submitted > 0) {
-			uint32_t vertex_count = static_cast<uint32_t>(data.line_vertices_submitted);
+			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.line_vertices_submitted);
 
-			uint32_t size = vertex_count * sizeof(LineVertex);
+			std::uint32_t size = vertex_count * sizeof(LineVertex);
 			data.line_vertex_buffer->set_data(data.line_buffer.data(), size, 0);
 
 			draw_lines();
@@ -434,8 +434,8 @@ namespace Alabaster {
 				*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
 		}
 
-		const auto count = static_cast<uint32_t>(index_count);
-		const auto instances = static_cast<uint32_t>(index_count / 6);
+		const auto count = static_cast<std::uint32_t>(index_count);
+		const auto instances = static_cast<std::uint32_t>(index_count / 6);
 		vkCmdDrawIndexed(*command_buffer, count, instances, 0, 0, 0);
 	}
 
@@ -463,8 +463,8 @@ namespace Alabaster {
 		const auto line_width = pipeline->get_specification().line_width;
 		vkCmdSetLineWidth(*command_buffer, line_width);
 
-		const auto count = static_cast<uint32_t>(index_count);
-		const auto instances = static_cast<uint32_t>(index_count / 2);
+		const auto count = static_cast<std::uint32_t>(index_count);
+		const auto instances = static_cast<std::uint32_t>(index_count / 2);
 		vkCmdDrawIndexed(*command_buffer, count, instances, 0, 0, 0);
 	}
 
@@ -472,7 +472,7 @@ namespace Alabaster {
 	{
 		const VkDescriptorSet& descriptor = data.descriptor_sets[Renderer::current_frame()];
 
-		for (uint32_t i = 0; i < data.meshes_submitted; i++) {
+		for (std::uint32_t i = 0; i < data.meshes_submitted; i++) {
 			const auto& mesh = data.mesh[i];
 
 			const auto& vb = mesh->get_vertex_buffer();
@@ -505,7 +505,7 @@ namespace Alabaster {
 			update_uniform_buffers(rt.transform);
 			vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
 
-			vkCmdDrawIndexed(*command_buffer, static_cast<uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
+			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 		}
 	}
 

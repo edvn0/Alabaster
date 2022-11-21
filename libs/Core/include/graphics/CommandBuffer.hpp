@@ -15,7 +15,7 @@ namespace Alabaster {
 
 	class CommandBuffer {
 	public:
-		explicit CommandBuffer(uint32_t count, QueueChoice queue_choice = QueueChoice::Graphics);
+		explicit CommandBuffer(std::uint32_t count, QueueChoice queue_choice = QueueChoice::Graphics);
 		void destroy();
 
 		void begin();
@@ -32,7 +32,7 @@ namespace Alabaster {
 		void add_destruction_callback(DeallocationCallback&& cb) { destruction_callbacks.push_back(std::move(cb)); }
 
 	private:
-		void init(uint32_t count = 0);
+		void init(std::uint32_t count = 0);
 
 	private:
 		VkCommandPool pool { nullptr };

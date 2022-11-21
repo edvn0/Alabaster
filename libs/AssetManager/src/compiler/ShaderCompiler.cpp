@@ -32,7 +32,8 @@ namespace AssetManager {
 
 	// Compiles a shader to a SPIR-V binary. Returns the binary as
 	// a vector of 32-bit words.
-	std::vector<uint32_t> compile_file(const std::string& source_name, shaderc_shader_kind kind, const std::string& source, bool optimize = false)
+	std::vector<std::uint32_t> compile_file(
+		const std::string& source_name, shaderc_shader_kind kind, const std::string& source, bool optimize = false)
 	{
 		shaderc::Compiler compiler;
 		shaderc::CompileOptions options;
@@ -62,7 +63,7 @@ namespace AssetManager {
 		return Alabaster::Shader(name, vert_spirv, frag_spirv);
 	}
 
-	std::tuple<std::vector<uint32_t>, std::vector<uint32_t>> ShaderCompiler::compile_to_spirv(
+	std::tuple<std::vector<std::uint32_t>, std::vector<std::uint32_t>> ShaderCompiler::compile_to_spirv(
 		const std::string& name, const std::filesystem::path& vertex, const std::filesystem::path& fragment) const
 	{
 		const auto read_vertex = Alabaster::IO::read_file(vertex);

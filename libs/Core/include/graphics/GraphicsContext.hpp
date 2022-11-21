@@ -29,11 +29,11 @@ namespace Alabaster {
 		inline VkPhysicalDevice physical_device() { return vk_physical_device; };
 		inline VkDevice device() { return vk_device; };
 
-		inline uint32_t graphics_queue_family() { return queues[QueueType::Graphics].family; }
+		inline std::uint32_t graphics_queue_family() { return queues[QueueType::Graphics].family; }
 		inline VkQueue graphics_queue() { return queues[QueueType::Graphics].queue; }
-		inline uint32_t present_queue_family() { return queues[QueueType::Present].family; }
+		inline std::uint32_t present_queue_family() { return queues[QueueType::Present].family; }
 		inline VkQueue present_queue() { return queues[QueueType::Present].queue; }
-		inline uint32_t compute_queue_family() { return queues[QueueType::Compute].family; }
+		inline std::uint32_t compute_queue_family() { return queues[QueueType::Compute].family; }
 		inline VkQueue compute_queue() { return queues[QueueType::Compute].queue; }
 
 		inline VkCommandPool pool() const { return command_pool; };
@@ -63,9 +63,9 @@ namespace Alabaster {
 		VkDebugUtilsMessengerEXT debug_messenger;
 
 		struct QueueIndices {
-			std::optional<uint32_t> graphics;
-			std::optional<uint32_t> present;
-			std::optional<uint32_t> compute;
+			std::optional<std::uint32_t> graphics;
+			std::optional<std::uint32_t> present;
+			std::optional<std::uint32_t> compute;
 
 			bool is_complete() { return graphics && present && compute; }
 		};
@@ -74,7 +74,7 @@ namespace Alabaster {
 
 		struct QueueAndFamily {
 			VkQueue queue;
-			uint32_t family;
+			std::uint32_t family;
 		};
 
 		std::unordered_map<QueueType, QueueAndFamily> queues;

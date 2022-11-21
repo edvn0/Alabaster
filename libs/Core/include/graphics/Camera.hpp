@@ -87,7 +87,7 @@ namespace Alabaster {
 
 		const glm::vec3& get_focal_point() const { return focal_point; }
 
-		inline void set_viewport_size(uint32_t width, uint32_t height)
+		inline void set_viewport_size(std::uint32_t width, std::uint32_t height)
 		{
 			if (viewport_width == width && viewport_height == height)
 				return;
@@ -154,7 +154,7 @@ namespace Alabaster {
 
 		float min_focus_distance { 100.0f };
 
-		uint32_t viewport_width { 1280 }, viewport_height { 720 };
+		std::uint32_t viewport_width { 1280 }, viewport_height { 720 };
 
 		constexpr static float min_speed { 0.0005f };
 		constexpr static float max_speed { 2.0f };

@@ -13,8 +13,8 @@
 
 namespace Alabaster {
 
-	IndexBuffer::IndexBuffer(uint32_t count)
-		: buffer_size(count * sizeof(uint32_t))
+	IndexBuffer::IndexBuffer(std::uint32_t count)
+		: buffer_size(count * sizeof(std::uint32_t))
 		, buffer_count(count)
 	{
 		index_data.allocate(buffer_size);
@@ -29,8 +29,8 @@ namespace Alabaster {
 		memory_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, vulkan_buffer);
 	}
 
-	IndexBuffer::IndexBuffer(const void* data, uint32_t count)
-		: buffer_size(count * sizeof(uint32_t))
+	IndexBuffer::IndexBuffer(const void* data, std::uint32_t count)
+		: buffer_size(count * sizeof(std::uint32_t))
 		, buffer_count(count)
 	{
 		index_data = Buffer::copy(data, buffer_size);
@@ -44,7 +44,7 @@ namespace Alabaster {
 		VkBuffer staging_buffer;
 		VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
 
-		auto* dest = allocator.map_memory<uint32_t*>(staging_buffer_allocation);
+		auto* dest = allocator.map_memory<std::uint32_t*>(staging_buffer_allocation);
 		std::memcpy(dest, index_data.data, index_data.size);
 		allocator.unmap_memory(staging_buffer_allocation);
 
@@ -79,13 +79,13 @@ namespace Alabaster {
 		destroyed = true;
 	}
 
-	void IndexBuffer::set_data(const void* buffer, uint32_t size, uint32_t offset)
+	void IndexBuffer::set_data(const void* buffer, std::uint32_t size, std::uint32_t offset)
 	{
 		std::memcpy(index_data.data, (uint8_t*)buffer + offset, size);
 		offline_set_data(index_data.data, size, offset);
 	}
 
-	void IndexBuffer::offline_set_data(const void* buffer, uint32_t size, uint32_t offset)
+	void IndexBuffer::offline_set_data(const void* buffer, std::uint32_t size, std::uint32_t offset)
 	{
 		Allocator allocator("IndexBuffer");
 		auto* data_pointer = allocator.map_memory<uint8_t>(memory_allocation);

@@ -22,9 +22,9 @@ namespace Alabaster {
 
 		int w, h, actual_channels;
 		uint8_t* data = stbi_load(path.string().data(), &w, &h, &actual_channels, STBI_rgb_alpha);
-		image_props.width = static_cast<uint32_t>(w);
-		image_props.height = static_cast<uint32_t>(h);
-		image_props.channels = static_cast<uint32_t>(STBI_rgb_alpha);
+		image_props.width = static_cast<std::uint32_t>(w);
+		image_props.height = static_cast<std::uint32_t>(h);
+		image_props.channels = static_cast<std::uint32_t>(STBI_rgb_alpha);
 
 		Log::info("[Image] w: {}, h: {}, channels: {}", w, h, actual_channels);
 		invalidate(data);
@@ -41,9 +41,9 @@ namespace Alabaster {
 
 		assert_that(data != nullptr, "Image data is nullptr.");
 
-		image_props.width = static_cast<uint32_t>(w);
-		image_props.height = static_cast<uint32_t>(h);
-		image_props.channels = static_cast<uint32_t>(STBI_rgb_alpha);
+		image_props.width = static_cast<std::uint32_t>(w);
+		image_props.height = static_cast<std::uint32_t>(h);
+		image_props.channels = static_cast<std::uint32_t>(STBI_rgb_alpha);
 
 		Log::info("[Image] Creating image with path: {}\n\t[Image] Properties: {}x{}px, {} channels.", path.string(), w, h, actual_channels);
 

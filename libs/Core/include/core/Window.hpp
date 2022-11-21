@@ -44,12 +44,12 @@ namespace Alabaster {
 		void setup_events();
 
 	private:
-		uint32_t width;
-		uint32_t height;
+		std::uint32_t width;
+		std::uint32_t height;
 
 		struct UserData {
-			uint32_t width;
-			uint32_t height;
+			std::uint32_t width;
+			std::uint32_t height;
 
 			EventCallback callback;
 		} user_data;

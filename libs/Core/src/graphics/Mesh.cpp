@@ -17,7 +17,7 @@ namespace Alabaster {
 
 	auto handle_vertices(const auto& attrib, const auto& shapes, const auto& materials)
 	{
-		std::unordered_map<Vertex, uint32_t> unique_vertices {};
+		std::unordered_map<Vertex, std::uint32_t> unique_vertices {};
 		std::vector<Vertex> vertices;
 		vertices.reserve(attrib.vertices.size());
 
@@ -42,7 +42,7 @@ namespace Alabaster {
 				vertex.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 				if (!unique_vertices.contains(vertex)) {
-					unique_vertices[vertex] = static_cast<uint32_t>(vertices.size());
+					unique_vertices[vertex] = static_cast<std::uint32_t>(vertices.size());
 					vertices.push_back(vertex);
 				}
 

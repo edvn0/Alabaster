@@ -4,7 +4,7 @@
 
 namespace Alabaster::Vulkan {
 	namespace Shader {
-		const VkShaderModuleCreateInfo module(std::size_t size, const uint32_t* code)
+		const VkShaderModuleCreateInfo module(std::size_t size, const std::uint32_t* code)
 		{
 			VkShaderModuleCreateInfo shader_create_info {};
 			shader_create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

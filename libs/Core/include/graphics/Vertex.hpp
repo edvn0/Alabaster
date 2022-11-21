@@ -29,7 +29,7 @@ namespace Alabaster {
 		bool operator==(const Vertex& other) const { return vertex_is_same(position, other.position) && colour == other.colour && uv == other.uv; }
 	};
 
-	using Index = uint32_t;
+	using Index = std::uint32_t;
 
 	// clang-format off
 	namespace Layout::Default {

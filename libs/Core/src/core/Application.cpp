@@ -168,7 +168,7 @@ namespace Alabaster {
 
 	bool Application::on_window_change(WindowResizeEvent& e)
 	{
-		const uint32_t width = e.width(), height = e.height();
+		const std::uint32_t width = e.width(), height = e.height();
 		if (width == 0 || height == 0) {
 			return false;
 		}

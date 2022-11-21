@@ -8,7 +8,7 @@
 
 namespace Alabaster {
 
-	UniformBuffer::UniformBuffer(uint32_t size, uint32_t binding)
+	UniformBuffer::UniformBuffer(std::uint32_t size, std::uint32_t binding)
 		: size(size)
 		, binding(binding)
 	{
@@ -49,7 +49,7 @@ namespace Alabaster {
 		allocation = allocator.allocate_buffer(buffer_info, VMA_MEMORY_USAGE_CPU_TO_GPU, buffer);
 	}
 
-	void UniformBuffer::set_data(const void* data, uint32_t input_size, uint32_t offset)
+	void UniformBuffer::set_data(const void* data, std::uint32_t input_size, std::uint32_t offset)
 	{
 		Allocator allocator("UniformBuffer");
 		uint8_t* mapped = allocator.map_memory<uint8_t>(allocation);

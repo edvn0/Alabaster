@@ -26,7 +26,7 @@ namespace Alabaster {
 		return render_queue;
 	}
 
-	RenderQueue& Renderer::resource_release_queue(uint32_t index) { return global_release_queues[index]; }
+	RenderQueue& Renderer::resource_release_queue(std::uint32_t index) { return global_release_queues[index]; }
 
 	void Renderer::begin()
 	{
@@ -94,7 +94,7 @@ namespace Alabaster {
 
 	void Renderer::end_render_pass(const std::unique_ptr<CommandBuffer>& buffer) { vkCmdEndRenderPass(*buffer); }
 
-	uint32_t Renderer::current_frame() { return Application::the().swapchain().frame(); }
+	std::uint32_t Renderer::current_frame() { return Application::the().swapchain().frame(); }
 
 	void Renderer::end()
 	{

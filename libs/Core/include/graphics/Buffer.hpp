@@ -14,13 +14,13 @@ namespace Alabaster {
 		{
 		}
 
-		Buffer(void* data, uint32_t size)
+		Buffer(void* data, std::uint32_t size)
 			: data(data)
 			, size(size)
 		{
 		}
 
-		static Buffer copy(const void* data, uint32_t in_size)
+		static Buffer copy(const void* data, std::uint32_t in_size)
 		{
 			Buffer buffer;
 			buffer.allocate(in_size);
@@ -28,7 +28,7 @@ namespace Alabaster {
 			return buffer;
 		}
 
-		void allocate(uint32_t in_size)
+		void allocate(std::uint32_t in_size)
 		{
 			delete[] static_cast<byte*>(this->data);
 			this->data = nullptr;
@@ -53,9 +53,9 @@ namespace Alabaster {
 				memset(this->data, 0, this->size);
 		}
 
-		template <typename T> T& read(uint32_t offset = 0) { return *(T*)(static_cast<byte*>(this->data) + offset); }
+		template <typename T> T& read(std::uint32_t offset = 0) { return *(T*)(static_cast<byte*>(this->data) + offset); }
 
-		byte* read_bytes(uint32_t in_size, uint32_t offset) const
+		byte* read_bytes(std::uint32_t in_size, std::uint32_t offset) const
 		{
 			// core_assert_bool(offset + in_size <= this->size);
 			byte* buffer = new byte[in_size];
@@ -63,7 +63,7 @@ namespace Alabaster {
 			return buffer;
 		}
 
-		void write(const void* in_data, uint32_t in_size, uint32_t offset = 0) const
+		void write(const void* in_data, std::uint32_t in_size, std::uint32_t offset = 0) const
 		{
 			// core_assert_bool(offset + in_size <= this->size);
 			std::memcpy(static_cast<byte*>(this->data) + offset, in_data, in_size);
@@ -76,17 +76,17 @@ namespace Alabaster {
 
 		template <typename T> T* as() const { return (T*)this->data; }
 
-		[[nodiscard]] inline uint32_t get_size() const { return this->size; }
+		[[nodiscard]] inline std::uint32_t get_size() const { return this->size; }
 
 	public:
 		void* data;
-		uint32_t size;
+		std::uint32_t size;
 	};
 
 	struct BufferSafe : public Buffer {
 		~BufferSafe() { release(); }
 
-		static BufferSafe copy(const void* data, uint32_t in_size)
+		static BufferSafe copy(const void* data, std::uint32_t in_size)
 		{
 			BufferSafe buffer;
 			buffer.allocate(in_size);

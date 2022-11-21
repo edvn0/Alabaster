@@ -38,12 +38,12 @@ namespace Alabaster {
 
 	struct ImageProps {
 		std::optional<std::filesystem::path> path { std::nullopt };
-		uint32_t width;
-		uint32_t height;
-		uint32_t mips { 1 };
-		uint32_t layers { 1 };
-		uint32_t depth { 1 };
-		uint32_t channels { 3 };
+		std::uint32_t width;
+		std::uint32_t height;
+		std::uint32_t mips { 1 };
+		std::uint32_t layers { 1 };
+		std::uint32_t depth { 1 };
+		std::uint32_t channels { 3 };
 		ImageFormat format { ImageFormat::RGBA };
 	};
 

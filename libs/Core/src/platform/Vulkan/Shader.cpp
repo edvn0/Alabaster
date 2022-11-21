@@ -43,7 +43,7 @@ namespace Alabaster {
 			throw AlabasterException("No shader code read.");
 		}
 
-		auto data = reinterpret_cast<uint32_t*>(code.data());
+		auto data = reinterpret_cast<std::uint32_t*>(code.data());
 		auto create_info = Vulkan::Shader::module(size, data);
 		VkShaderModule shader_module;
 		vk_check(vkCreateShaderModule(GraphicsContext::the().device(), &create_info, nullptr, &shader_module));
@@ -51,7 +51,7 @@ namespace Alabaster {
 		return shader_module;
 	}
 
-	static VkShaderModule create(const uint32_t* code, std::size_t size)
+	static VkShaderModule create(const std::uint32_t* code, std::size_t size)
 	{
 		auto create_info = Vulkan::Shader::module(size, code);
 		VkShaderModule shader_module;
@@ -107,11 +107,11 @@ namespace Alabaster {
 		create_layout();
 	}
 
-	Shader::Shader(const std::string& path_or_name, std::vector<uint32_t> vert_spirv, std::vector<uint32_t> frag_spirv)
+	Shader::Shader(const std::string& path_or_name, std::vector<std::uint32_t> vert_spirv, std::vector<std::uint32_t> frag_spirv)
 		: shader_path(path_or_name)
 	{
-		auto vertex_shader_module = create(vert_spirv.data(), vert_spirv.size() * sizeof(uint32_t));
-		auto fragment_shader_module = create(frag_spirv.data(), frag_spirv.size() * sizeof(uint32_t));
+		auto vertex_shader_module = create(vert_spirv.data(), vert_spirv.size() * sizeof(std::uint32_t));
+		auto fragment_shader_module = create(frag_spirv.data(), frag_spirv.size() * sizeof(std::uint32_t));
 
 		VkPipelineShaderStageCreateInfo vertex_stage {};
 		vertex_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -140,7 +140,7 @@ namespace Alabaster {
 		create_info.pBindings = bindings.data();
 
 		layouts.resize(bindings.size());
-		for (uint32_t i = 0; i < bindings.size(); i++) {
+		for (std::uint32_t i = 0; i < bindings.size(); i++) {
 			vk_check(vkCreateDescriptorSetLayout(GraphicsContext::the().device(), &create_info, nullptr, &layouts[i]));
 		}
 	}

@@ -15,8 +15,8 @@ namespace Alabaster {
 	class GUILayer;
 
 	struct ApplicationArguments {
-		uint32_t width;
-		uint32_t height;
+		std::uint32_t width;
+		std::uint32_t height;
 		std::string name;
 	};
 

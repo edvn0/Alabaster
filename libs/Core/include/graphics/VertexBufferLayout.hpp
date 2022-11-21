@@ -9,7 +9,7 @@ namespace Alabaster {
 
 	enum class ShaderDataType { None = 0, Float, Float2, Float3, Float4, Mat3, Mat4, Int, Int2, Int3, Int4, Bool };
 
-	static uint32_t shader_data_type_size(ShaderDataType type)
+	static std::uint32_t shader_data_type_size(ShaderDataType type)
 	{
 		switch (type) {
 		case ShaderDataType::Float:
@@ -46,8 +46,8 @@ namespace Alabaster {
 	struct VertexBufferElement {
 		std::string name;
 		ShaderDataType shader_data_type;
-		uint32_t size;
-		uint32_t offset;
+		std::uint32_t size;
+		std::uint32_t offset;
 		bool normalised;
 
 		VertexBufferElement() = default;
@@ -61,7 +61,7 @@ namespace Alabaster {
 		{
 		}
 
-		uint32_t get_component_count() const
+		std::uint32_t get_component_count() const
 		{
 			switch (shader_data_type) {
 			case ShaderDataType::Float:
@@ -106,9 +106,9 @@ namespace Alabaster {
 			calculate_offsets_and_strides();
 		}
 
-		uint32_t get_stride() const { return stride; }
+		std::uint32_t get_stride() const { return stride; }
 		const std::vector<VertexBufferElement>& get_elements() const { return elements; }
-		uint32_t get_element_count() const { return (uint32_t)elements.size(); }
+		std::uint32_t get_element_count() const { return (std::uint32_t)elements.size(); }
 
 		[[nodiscard]] std::vector<VertexBufferElement>::iterator begin() { return elements.begin(); }
 		[[nodiscard]] std::vector<VertexBufferElement>::iterator end() { return elements.end(); }
@@ -125,7 +125,7 @@ namespace Alabaster {
 	private:
 		void calculate_offsets_and_strides()
 		{
-			uint32_t offset = 0;
+			std::uint32_t offset = 0;
 			stride = 0;
 			for (auto& element : elements) {
 				element.offset = offset;
@@ -136,7 +136,7 @@ namespace Alabaster {
 
 	private:
 		std::vector<VertexBufferElement> elements;
-		uint32_t stride = 0;
+		std::uint32_t stride = 0;
 	};
 
 } // namespace Alabaster

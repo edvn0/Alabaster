@@ -41,7 +41,7 @@ namespace Alabaster {
 		CPUProfiler profiler("RenderQueue-execute");
 		byte* buffer = command_buffer;
 
-		for (uint32_t i = 0; i < command_count; i++) {
+		for (std::uint32_t i = 0; i < command_count; i++) {
 			RenderFunction function = *(RenderFunction*)buffer;
 			buffer += sizeof(RenderFunction);
 

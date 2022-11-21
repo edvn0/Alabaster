@@ -9,9 +9,9 @@ namespace Alabaster {
 
 	struct PushConstantRange {
 		VkShaderStageFlags flags;
-		uint32_t size;
+		std::uint32_t size;
 
-		PushConstantRange(VkShaderStageFlags flags, uint32_t size)
+		PushConstantRange(VkShaderStageFlags flags, std::uint32_t size)
 			: flags(flags)
 			, size(size) {};
 	};
@@ -24,7 +24,7 @@ namespace Alabaster {
 		VkPushConstantRange get_push_constant_range() const
 		{
 			VkPushConstantRange out {};
-			uint32_t current_size { 0 };
+			std::uint32_t current_size { 0 };
 			auto f = VK_SHADER_STAGE_VERTEX_BIT;
 			VkShaderStageFlags flags {};
 			for (const auto& range : ranges) {

@@ -9,7 +9,7 @@
 namespace AssetManager {
 
 	template <typename T>
-	static constexpr auto remove_extension = [](const T& path, uint32_t count = 2) {
+	static constexpr auto remove_extension = [](const T& path, std::uint32_t count = 2) {
 		if constexpr (std::is_same_v<std::string, T>) {
 			auto converted_path = std::filesystem::path { path };
 			if (count != 2) {

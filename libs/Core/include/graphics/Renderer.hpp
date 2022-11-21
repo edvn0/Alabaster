@@ -26,10 +26,10 @@ namespace Alabaster {
 		static void end_render_pass(const std::unique_ptr<CommandBuffer>& buffer);
 		static void end();
 
-		static uint32_t current_frame();
+		static std::uint32_t current_frame();
 
 	public:
-		static RenderQueue& resource_release_queue(uint32_t index);
+		static RenderQueue& resource_release_queue(std::uint32_t index);
 
 	private:
 		static RenderQueue& render_queue();

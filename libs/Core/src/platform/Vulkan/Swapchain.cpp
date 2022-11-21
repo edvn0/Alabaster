@@ -18,7 +18,7 @@
 
 namespace Alabaster {
 
-	void create_image(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits, DepthImage& image);
+	void create_image(std::uint32_t width, std::uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits, DepthImage& image);
 	void create_image_view(VkFormat format, VkImageAspectFlagBits bits, DepthImage& image);
 
 	VkFormat find_supported_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
@@ -55,7 +55,7 @@ namespace Alabaster {
 		vk_check(glfwCreateWindowSurface(instance, sc_handle, nullptr, &vk_surface));
 	}
 
-	void Swapchain::construct(uint32_t width, uint32_t height)
+	void Swapchain::construct(std::uint32_t width, std::uint32_t height)
 	{
 		sc_width = width;
 		sc_height = height;
@@ -130,7 +130,7 @@ namespace Alabaster {
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		render_pass_info.pAttachments = descriptions.data();
-		render_pass_info.attachmentCount = static_cast<uint32_t>(descriptions.size());
+		render_pass_info.attachmentCount = static_cast<std::uint32_t>(descriptions.size());
 		render_pass_info.pSubpasses = &subpass_description;
 		render_pass_info.subpassCount = 1;
 		render_pass_info.pDependencies = &dependency;
@@ -151,10 +151,10 @@ namespace Alabaster {
 
 		frame_buffers.clear();
 		frame_buffers.resize(image_count);
-		for (uint32_t i = 0; i < frame_buffers.size(); i++) {
+		for (std::uint32_t i = 0; i < frame_buffers.size(); i++) {
 			std::array<VkImageView, 2> attachments = { images.views[i], depth_image.view };
 			framebuffer_create_info.pAttachments = attachments.data();
-			framebuffer_create_info.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebuffer_create_info.attachmentCount = static_cast<std::uint32_t>(attachments.size());
 			vk_check(vkCreateFramebuffer(GraphicsContext::the().device(), &framebuffer_create_info, nullptr, &frame_buffers[i]));
 		}
 
@@ -227,7 +227,7 @@ namespace Alabaster {
 		current_frame = (frame() + 1) % image_count;
 	}
 
-	void Swapchain::on_resize(uint32_t w, uint32_t h)
+	void Swapchain::on_resize(std::uint32_t w, std::uint32_t h)
 	{
 		int test_w = 0, test_h = 0;
 		glfwGetFramebufferSize(sc_handle, &test_w, &test_h);
@@ -257,24 +257,24 @@ namespace Alabaster {
 
 	VkFramebuffer Swapchain::get_current_framebuffer() const { return frame_buffers[frame()]; };
 
-	uint32_t Swapchain::get_width() const { return sc_width; }
+	std::uint32_t Swapchain::get_width() const { return sc_width; }
 
-	uint32_t Swapchain::get_height() const { return sc_height; }
+	std::uint32_t Swapchain::get_height() const { return sc_height; }
 
-	uint32_t Swapchain::get_image_count() { return image_count; }
+	std::uint32_t Swapchain::get_image_count() { return image_count; }
 
 	VkRenderPass Swapchain::get_render_pass() const { return vk_render_pass; };
 
 	VkCommandBuffer Swapchain::get_current_drawbuffer() const { return command_buffers[frame()].buffer; }
 
-	VkCommandBuffer Swapchain::get_drawbuffer(uint32_t frame) const { return command_buffers[frame].buffer; }
+	VkCommandBuffer Swapchain::get_drawbuffer(std::uint32_t frame) const { return command_buffers[frame].buffer; }
 
-	uint32_t Swapchain::get_next_image()
+	std::uint32_t Swapchain::get_next_image()
 	{
 		vkWaitForFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence, VK_TRUE, UINT64_MAX);
 		vkResetFences(GraphicsContext::the().device(), 1, &sync_objects[frame()].in_flight_fence);
 
-		uint32_t image_index;
+		std::uint32_t image_index;
 		auto result = vkAcquireNextImageKHR(
 			GraphicsContext::the().device(), vk_swapchain, default_fence_timeout, present_complete, (VkFence) nullptr, &image_index);
 
@@ -293,7 +293,7 @@ namespace Alabaster {
 		Capabilities details {};
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(GraphicsContext::the().physical_device(), vk_surface, &details.capabilities);
 
-		uint32_t format_count;
+		std::uint32_t format_count;
 		vkGetPhysicalDeviceSurfaceFormatsKHR(GraphicsContext::the().physical_device(), vk_surface, &format_count, nullptr);
 
 		if (format_count != 0) {
@@ -301,7 +301,7 @@ namespace Alabaster {
 			vkGetPhysicalDeviceSurfaceFormatsKHR(GraphicsContext::the().physical_device(), vk_surface, &format_count, details.formats.data());
 		}
 
-		uint32_t present_mode_count;
+		std::uint32_t present_mode_count;
 		vkGetPhysicalDeviceSurfacePresentModesKHR(GraphicsContext::the().physical_device(), vk_surface, &present_mode_count, nullptr);
 
 		if (present_mode_count != 0) {
@@ -373,7 +373,7 @@ namespace Alabaster {
 
 		auto graphics_family = GraphicsContext::the().graphics_queue_family();
 		auto present_family = GraphicsContext::the().present_queue_family();
-		uint32_t indices[] = { graphics_family, present_family };
+		std::uint32_t indices[] = { graphics_family, present_family };
 
 		if (graphics_family != present_family) {
 			swapchain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
@@ -539,7 +539,7 @@ namespace Alabaster {
 			fences.push_back(frame.in_flight_fence);
 		}
 
-		vkWaitForFences(GraphicsContext::the().device(), static_cast<uint32_t>(fences.size()), fences.data(), VK_TRUE, default_fence_timeout);
+		vkWaitForFences(GraphicsContext::the().device(), static_cast<std::uint32_t>(fences.size()), fences.data(), VK_TRUE, default_fence_timeout);
 	}
 
 	std::tuple<VkFormat, VkFormat> Swapchain::get_formats() { return { format.format, depth_format }; }
@@ -560,7 +560,7 @@ namespace Alabaster {
 		vk_check(vkCreateImageView(GraphicsContext::the().device(), &view_info, nullptr, &image.view));
 	}
 
-	void create_image(uint32_t width, uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits, DepthImage& image)
+	void create_image(std::uint32_t width, std::uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits, DepthImage& image)
 	{
 		VkImageCreateInfo image_info {};
 		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;

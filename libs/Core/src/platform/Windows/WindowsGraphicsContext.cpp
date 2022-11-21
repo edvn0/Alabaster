@@ -58,7 +58,7 @@ namespace Alabaster {
 
 	bool check_validation_support()
 	{
-		uint32_t layer_count;
+		std::uint32_t layer_count;
 		vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
 
 		std::vector<VkLayerProperties> available_layers(layer_count);
@@ -144,7 +144,7 @@ namespace Alabaster {
 		instance_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		instance_info.pApplicationInfo = &application_info;
 
-		uint32_t glfw_ext_count = 0;
+		std::uint32_t glfw_ext_count = 0;
 		const char** glfw_extensions;
 
 		glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_ext_count);
@@ -155,7 +155,7 @@ namespace Alabaster {
 		}
 		// extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 		instance_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-		instance_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+		instance_info.enabledExtensionCount = static_cast<std::uint32_t>(extensions.size());
 		instance_info.ppEnabledExtensionNames = extensions.data();
 
 		// Validation layers
@@ -178,10 +178,10 @@ namespace Alabaster {
 	void GraphicsContext::create_device()
 	{
 		std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
-		std::set<uint32_t> unique_queues = { queues[QueueType::Graphics].family, queues[QueueType::Present].family };
+		std::set<std::uint32_t> unique_queues = { queues[QueueType::Graphics].family, queues[QueueType::Present].family };
 
 		float queue_prio = 1.0f;
-		for (uint32_t family : unique_queues) {
+		for (std::uint32_t family : unique_queues) {
 			VkDeviceQueueCreateInfo queue_create_info {};
 			queue_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 			queue_create_info.queueFamilyIndex = family;
@@ -196,7 +196,7 @@ namespace Alabaster {
 
 		VkDeviceCreateInfo device_create_info {};
 		device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		device_create_info.queueCreateInfoCount = static_cast<uint32_t>(queue_create_infos.size());
+		device_create_info.queueCreateInfoCount = static_cast<std::uint32_t>(queue_create_infos.size());
 		device_create_info.pQueueCreateInfos = queue_create_infos.data();
 		VkPhysicalDeviceFeatures device_features {};
 		device_features.wideLines = true;
@@ -204,13 +204,13 @@ namespace Alabaster {
 		device_create_info.pEnabledFeatures = &device_features;
 
 		if (!device_exts.empty()) {
-			device_create_info.enabledExtensionCount = static_cast<uint32_t>(device_exts.size());
+			device_create_info.enabledExtensionCount = static_cast<std::uint32_t>(device_exts.size());
 			device_create_info.ppEnabledExtensionNames = device_exts.data();
 		}
 
 		device_create_info.enabledLayerCount = 0;
 		if (!requested_validation_layers.empty()) {
-			device_create_info.enabledLayerCount = static_cast<uint32_t>(requested_validation_layers.size());
+			device_create_info.enabledLayerCount = static_cast<std::uint32_t>(requested_validation_layers.size());
 			device_create_info.ppEnabledLayerNames = requested_validation_layers.data();
 		}
 		vk_check(vkCreateDevice(vk_physical_device, &device_create_info, nullptr, &vk_device));
@@ -240,7 +240,7 @@ namespace Alabaster {
 			return props.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU or props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU;
 		};
 
-		uint32_t device_count { 0 };
+		std::uint32_t device_count { 0 };
 		vkEnumeratePhysicalDevices(vk_instance, &device_count, nullptr);
 
 		if (device_count == 0) {
@@ -263,7 +263,7 @@ namespace Alabaster {
 	{
 		QueueIndices indices;
 
-		uint32_t nr_families = 0;
+		std::uint32_t nr_families = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(vk_physical_device, &nr_families, nullptr);
 
 		std::vector<VkQueueFamilyProperties> queue_families(nr_families);

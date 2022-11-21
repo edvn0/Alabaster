@@ -40,19 +40,19 @@ namespace Alabaster {
 	};
 
 	struct RendererData {
-		static constexpr uint32_t max_vertices = 20000;
-		static constexpr uint32_t max_indices = 6 * max_vertices;
-		uint32_t draw_calls { 0 };
+		static constexpr std::uint32_t max_vertices = 20000;
+		static constexpr std::uint32_t max_indices = 6 * max_vertices;
+		std::uint32_t draw_calls { 0 };
 
-		uint32_t quad_indices_submitted { 0 };
-		uint32_t quad_vertices_submitted { 0 };
+		std::uint32_t quad_indices_submitted { 0 };
+		std::uint32_t quad_vertices_submitted { 0 };
 		std::unique_ptr<Pipeline> quad_pipeline;
 		std::array<QuadVertex, max_vertices> quad_buffer;
 		std::unique_ptr<VertexBuffer> quad_vertex_buffer;
 		std::unique_ptr<IndexBuffer> quad_index_buffer;
 
-		uint32_t line_indices_submitted { 0 };
-		uint32_t line_vertices_submitted { 0 };
+		std::uint32_t line_indices_submitted { 0 };
+		std::uint32_t line_vertices_submitted { 0 };
 		std::unique_ptr<Pipeline> line_pipeline;
 		std::array<LineVertex, max_vertices> line_buffer;
 		std::unique_ptr<VertexBuffer> line_vertex_buffer;
@@ -65,7 +65,7 @@ namespace Alabaster {
 		VkDescriptorPool descriptor_pool;
 		VkRenderPass render_pass;
 
-		uint32_t meshes_submitted { 0 };
+		std::uint32_t meshes_submitted { 0 };
 		std::array<Mesh*, 50> mesh;
 		std::array<Pipeline*, 50> mesh_pipeline_submit;
 		std::unique_ptr<Pipeline> mesh_pipeline;

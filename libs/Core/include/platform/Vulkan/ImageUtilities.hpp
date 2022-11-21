@@ -54,7 +54,7 @@ namespace Alabaster::Utilities {
 	}
 
 	void copy_buffer_to_image(
-		VkBuffer buffer, const ImageInfo& image_info, uint32_t w, uint32_t h, const std::unique_ptr<CommandBuffer>& cmd_buffer = nullptr)
+		VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, const std::unique_ptr<CommandBuffer>& cmd_buffer = nullptr)
 	{
 		const auto command_buffer = cmd_buffer ? cmd_buffer->get_buffer() : GraphicsContext::the().get_command_buffer();
 

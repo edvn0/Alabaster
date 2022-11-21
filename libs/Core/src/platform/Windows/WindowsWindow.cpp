@@ -1,7 +1,5 @@
 #include "av_pch.hpp"
 
-#include "core/Window.hpp"
-
 #include "codes/KeyCode.hpp"
 #include "core/Application.hpp"
 #include "core/Common.hpp"
@@ -10,6 +8,7 @@
 #include "core/events/MouseEvent.hpp"
 #include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
+#include "core/Window.hpp"
 #include "graphics/Swapchain.hpp"
 
 #include <GLFW/glfw3.h>
@@ -46,7 +45,7 @@ namespace Alabaster {
 
 		glfwSetWindowUserPointer(handle, &user_data);
 
-		static constexpr auto set_and_get_window_size = [](GLFWwindow* handle, uint32_t w, uint32_t h) {
+		static constexpr auto set_and_get_window_size = [](GLFWwindow* handle, std::uint32_t w, std::uint32_t h) {
 			glfwSetWindowSize(handle, static_cast<int>(w), static_cast<int>(h));
 
 			int actual_w, actual_h;
@@ -96,7 +95,7 @@ namespace Alabaster {
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int width, int height) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
-			WindowResizeEvent event((uint32_t)width, (uint32_t)height);
+			WindowResizeEvent event((std::uint32_t)width, (std::uint32_t)height);
 			data.callback(event);
 			data.width = width;
 			data.height = height;
@@ -131,7 +130,7 @@ namespace Alabaster {
 			}
 		});
 
-		glfwSetCharCallback(handle, [](GLFWwindow* window, uint32_t codepoint) {
+		glfwSetCharCallback(handle, [](GLFWwindow* window, std::uint32_t codepoint) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
 			KeyTypedEvent event(static_cast<KeyCode>(codepoint));

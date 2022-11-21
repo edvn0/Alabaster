@@ -53,7 +53,7 @@ namespace Alabaster {
 		VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
 		pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipeline_layout_create_info.pNext = nullptr;
-		pipeline_layout_create_info.setLayoutCount = static_cast<uint32_t>(shader.descriptor_set_layouts().size());
+		pipeline_layout_create_info.setLayoutCount = static_cast<std::uint32_t>(shader.descriptor_set_layouts().size());
 		pipeline_layout_create_info.pSetLayouts = shader.descriptor_set_layouts().data();
 
 		if (spec.ranges) {
@@ -124,7 +124,7 @@ namespace Alabaster {
 		VkPipelineDynamicStateCreateInfo dynamic_state = {};
 		dynamic_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
 		dynamic_state.pDynamicStates = dynamic_state_enables.data();
-		dynamic_state.dynamicStateCount = static_cast<uint32_t>(dynamic_state_enables.size());
+		dynamic_state.dynamicStateCount = static_cast<std::uint32_t>(dynamic_state_enables.size());
 
 		VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {};
 		depth_stencil_state.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -165,8 +165,8 @@ namespace Alabaster {
 		std::vector<VkVertexInputAttributeDescription> vertex_input_attributes(
 			vertex_layout.get_element_count() + instance_layout.get_element_count());
 
-		uint32_t binding = 0;
-		uint32_t location = 0;
+		std::uint32_t binding = 0;
+		std::uint32_t location = 0;
 		for (const auto& layout : { vertex_layout, instance_layout }) {
 			for (const auto& element : layout) {
 				auto& attribute = vertex_input_attributes[location];
@@ -182,14 +182,14 @@ namespace Alabaster {
 		// Vertex input state used for pipeline creation
 		VkPipelineVertexInputStateCreateInfo vertex_input_state = {};
 		vertex_input_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-		vertex_input_state.vertexBindingDescriptionCount = static_cast<uint32_t>(vertex_input_binding_descriptor.size());
+		vertex_input_state.vertexBindingDescriptionCount = static_cast<std::uint32_t>(vertex_input_binding_descriptor.size());
 		vertex_input_state.pVertexBindingDescriptions = vertex_input_binding_descriptor.data();
-		vertex_input_state.vertexAttributeDescriptionCount = static_cast<uint32_t>(vertex_input_attributes.size());
+		vertex_input_state.vertexAttributeDescriptionCount = static_cast<std::uint32_t>(vertex_input_attributes.size());
 		vertex_input_state.pVertexAttributeDescriptions = vertex_input_attributes.data();
 
 		const auto& stages = shader.stages();
 
-		pipeline_create_info.stageCount = static_cast<uint32_t>(stages.size());
+		pipeline_create_info.stageCount = static_cast<std::uint32_t>(stages.size());
 		pipeline_create_info.pStages = stages.data();
 
 		pipeline_create_info.pVertexInputState = &vertex_input_state;

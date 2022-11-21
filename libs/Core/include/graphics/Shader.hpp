@@ -15,7 +15,7 @@ namespace Alabaster {
 		/// @param path_and_filename
 		explicit Shader(const std::filesystem::path& path_and_filename);
 		Shader(const std::string& vertex_path, const std::string& fragment_path);
-		Shader(const std::string& path_or_name, std::vector<uint32_t> vertex_shader_spirv, std::vector<uint32_t> fragment_shader_spirv);
+		Shader(const std::string& path_or_name, std::vector<std::uint32_t> vertex_shader_spirv, std::vector<std::uint32_t> fragment_shader_spirv);
 
 		const std::array<VkPipelineShaderStageCreateInfo, 2>& stages() const { return shader_stages; };
 

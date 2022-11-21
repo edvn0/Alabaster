@@ -14,7 +14,7 @@ namespace Alabaster {
 	Texture::Texture(void* data, std::size_t size)
 	{
 		Allocator allocator("Texture");
-		Buffer buffer(data, static_cast<uint32_t>(size));
+		Buffer buffer(data, static_cast<std::uint32_t>(size));
 		VkImageCreateInfo image_create_info {};
 	}
 
@@ -40,8 +40,8 @@ namespace Alabaster {
 			throw AlabasterException("TextureLoad.");
 		}
 
-		width = static_cast<uint32_t>(w);
-		height = static_cast<uint32_t>(h);
+		width = static_cast<std::uint32_t>(w);
+		height = static_cast<std::uint32_t>(h);
 	};
 
 } // namespace Alabaster

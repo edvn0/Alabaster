@@ -70,7 +70,7 @@ namespace Alabaster {
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 		render_pass_info.pAttachments = descriptions.data();
-		render_pass_info.attachmentCount = static_cast<uint32_t>(descriptions.size());
+		render_pass_info.attachmentCount = static_cast<std::uint32_t>(descriptions.size());
 		render_pass_info.pSubpasses = &subpass_description;
 		render_pass_info.subpassCount = 1;
 		render_pass_info.pDependencies = &dependency;
@@ -110,7 +110,7 @@ namespace Alabaster {
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 		pool_info.maxSets = 100 * IM_ARRAYSIZE(pool_sizes);
-		pool_info.poolSizeCount = static_cast<uint32_t>(IM_ARRAYSIZE(pool_sizes));
+		pool_info.poolSizeCount = static_cast<std::uint32_t>(IM_ARRAYSIZE(pool_sizes));
 		pool_info.pPoolSizes = pool_sizes;
 		vk_check(vkCreateDescriptorPool(device, &pool_info, nullptr, &imgui_descriptor_pool));
 
@@ -129,7 +129,7 @@ namespace Alabaster {
 		ImGui_ImplVulkan_Init(&init_info, gui_renderpass);
 
 		imgui_command_buffers.resize(swapchain->get_image_count());
-		for (uint32_t i = 0; i < swapchain->get_image_count(); i++) {
+		for (std::uint32_t i = 0; i < swapchain->get_image_count(); i++) {
 			VkCommandBufferAllocateInfo info {};
 			info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
 			info.commandBufferCount = 1;
@@ -171,10 +171,10 @@ namespace Alabaster {
 		clear_values[0].color = clear_colour;
 		clear_values[1].depthStencil = { .depth = 1.0f, .stencil = 0 };
 
-		uint32_t width = swapchain->get_width();
-		uint32_t height = swapchain->get_height();
+		std::uint32_t width = swapchain->get_width();
+		std::uint32_t height = swapchain->get_height();
 
-		uint32_t command_buffer_index = swapchain->frame();
+		std::uint32_t command_buffer_index = swapchain->frame();
 
 		VkCommandBuffer draw_command_buffer = swapchain->get_drawbuffer(command_buffer_index);
 

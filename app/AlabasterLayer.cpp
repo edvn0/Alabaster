@@ -12,7 +12,7 @@
 
 using namespace Alabaster;
 
-static uint32_t quads { 1 };
+static std::uint32_t quads { 1 };
 
 static constexpr auto axes = [](auto& renderer, auto&& pos, float size = 2.0f) {
 	renderer.line(pos, pos + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });

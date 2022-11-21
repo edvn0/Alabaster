@@ -14,7 +14,7 @@ TEST(PlatformTests, VulkanCreateInfos)
 // Demonstrate some basic assertions.
 TEST(PlatformTests, VulkanCreateInfosShader)
 {
-	const uint32_t* code = new uint32_t[10];
+	const std::uint32_t* code = new std::uint32_t[10];
 
 	const auto size = 10;
 
