@@ -122,7 +122,7 @@ bool AlabasterLayer::initialise()
 	viking_room_model = Mesh::from_file("viking_room.obj");
 	sphere_model = Mesh::from_file("sphere.obj");
 
-	sponza_model = Mesh::from_file("sponza.obj");
+	// sponza_model = Mesh::from_file("sponza.obj");
 	// auto shader = AssetManager::ShaderCache::the().get_from_cache("mesh");
 
 	PipelineSpecification viking_spec {

@@ -36,8 +36,8 @@ namespace Alabaster {
 				const auto v = 1.0f - attrib.texcoords[2 * index.texcoord_index + 1];
 				vertex.uv = { u, v };
 
-				vertex.normal = { attrib.normals[3 * index.texcoord_index + 0], attrib.normals[3 * index.texcoord_index + 1],
-					attrib.normals[3 * index.normal_index + 1] };
+				vertex.normal = { attrib.normals[3 * index.normal_index + 0], attrib.normals[3 * index.normal_index + 1],
+					attrib.normals[3 * index.normal_index + 2] };
 
 				vertex.colour = { 1.0f, 1.0f, 1.0f, 1.0f };
 
@@ -107,8 +107,11 @@ namespace Alabaster {
 
 	void Mesh::destroy()
 	{
-		vertex_buffer->destroy();
-		index_buffer->destroy();
+		if (vertex_buffer)
+			vertex_buffer->destroy();
+
+		if (index_buffer)
+			index_buffer->destroy();
 	}
 
 } // namespace Alabaster

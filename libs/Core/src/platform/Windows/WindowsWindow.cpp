@@ -1,5 +1,7 @@
 #include "av_pch.hpp"
 
+#include "core/Window.hpp"
+
 #include "codes/KeyCode.hpp"
 #include "core/Application.hpp"
 #include "core/Common.hpp"
@@ -8,7 +10,6 @@
 #include "core/events/MouseEvent.hpp"
 #include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
-#include "core/Window.hpp"
 #include "graphics/Swapchain.hpp"
 
 #include <GLFW/glfw3.h>

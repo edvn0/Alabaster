@@ -70,6 +70,9 @@ namespace Alabaster {
 
 	void IndexBuffer::destroy()
 	{
+		if (!vulkan_buffer)
+			return;
+
 		VkBuffer buffer = vulkan_buffer;
 		VmaAllocation allocation = memory_allocation;
 		Allocator allocator("IndexBuffer");
