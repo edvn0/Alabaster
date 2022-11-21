@@ -164,7 +164,7 @@ namespace Alabaster {
 	{
 		ImGui::Render();
 
-		static constexpr VkClearColorValue clear_colour { 0.1f, 0.1f, 0.1f, 1.0f };
+		static constexpr VkClearColorValue clear_colour { { 0.1f, 0.1f, 0.1f, 1.0f } };
 
 		const auto& swapchain = Application::the().get_window()->get_swapchain();
 		std::array<VkClearValue, 2> clear_values {};

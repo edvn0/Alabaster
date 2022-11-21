@@ -5,6 +5,7 @@
 #include "graphics/Image.hpp"
 
 #include <filesystem>
+
 namespace AssetManager {
 
 	class ResourceCache {
@@ -16,12 +17,11 @@ namespace AssetManager {
 		void initialise();
 		void shutdown();
 
-	public:
 		static ResourceCache& the();
 
 	public:
-		std::optional<const Alabaster::Image*> texture(const std::string& name);
-		std::optional<const Alabaster::Shader*> shader(const std::string& name);
+		const Alabaster::Image& texture(const std::string& name);
+		const Alabaster::Shader& shader(const std::string& name);
 
 	private:
 		ResourceCache();
@@ -30,5 +30,7 @@ namespace AssetManager {
 		ImageCache<Alabaster::Image> image_cache;
 		ShaderCache<Alabaster::Shader> shader_cache;
 	};
+
+	static inline auto& the() { return ResourceCache::the(); }
 
 } // namespace AssetManager

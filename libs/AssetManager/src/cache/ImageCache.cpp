@@ -4,14 +4,16 @@
 
 #include "graphics/CommandBuffer.hpp"
 #include "utilities/FileInputOutput.hpp"
+#include "utilities/FileSystem.hpp"
 #include "utilities/ThreadPool.hpp"
 
 namespace AssetManager {
 
-	template <class T> void ImageCache<T>::load_from_directory(const std::filesystem::path& texture_directory)
+	template <class T>
+	void ImageCache<T>::load_from_directory(const std::filesystem::path& directory, std::unordered_set<std::string> include_extensions)
 	{
 		using namespace Alabaster;
-		auto sorted_images_in_directory = IO::in_directory<std::string>(texture_directory, { ".tga", ".png", ".jpeg", ".jpg" }, true);
+		auto sorted_images_in_directory = FS::in_directory<std::string>(directory, include_extensions, true);
 
 		ThreadPool pool { 8 };
 		buffer->begin();

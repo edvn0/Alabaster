@@ -27,7 +27,7 @@ namespace Alabaster {
 		bindings[1].descriptorCount = 1;
 		bindings[1].pImmutableSamplers = nullptr;
 		bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		return std::move(bindings);
+		return bindings;
 	}
 
 	std::pair<std::filesystem::path, std::filesystem::path> to_path(const auto& path)
@@ -62,8 +62,8 @@ namespace Alabaster {
 
 	Shader::Shader(const std::string& vertex_path, const std::string& fragment_path)
 	{
-		auto vertex_shader_module = create(std::move(IO::read_file(vertex_path)));
-		auto fragment_shader_module = create(std::move(IO::read_file(fragment_path)));
+		auto vertex_shader_module = create(IO::read_file(vertex_path));
+		auto fragment_shader_module = create(IO::read_file(fragment_path));
 
 		VkPipelineShaderStageCreateInfo vertex_stage {};
 		vertex_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -88,8 +88,8 @@ namespace Alabaster {
 		verify(IO::exists(vert), "Could not find vertex shader.");
 		verify(IO::exists(frag), "Could not find fragment shader.");
 
-		auto vertex_shader_module = create(std::move(IO::read_file(vert)));
-		auto fragment_shader_module = create(std::move(IO::read_file(frag)));
+		auto vertex_shader_module = create(IO::read_file(vert));
+		auto fragment_shader_module = create(IO::read_file(frag));
 
 		VkPipelineShaderStageCreateInfo vertex_stage {};
 		vertex_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;

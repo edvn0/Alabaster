@@ -338,11 +338,7 @@ namespace Alabaster {
 		present_format = VK_PRESENT_MODE_FIFO_KHR;
 	}
 
-	void Swapchain::choose_extent(const Capabilities& in)
-	{
-		const auto& capabilities = in.capabilities;
-		extent = { sc_width, sc_height };
-	}
+	void Swapchain::choose_extent(const Capabilities& in) { extent = { sc_width, sc_height }; }
 
 	void Swapchain::create_swapchain(const Capabilities& in)
 	{

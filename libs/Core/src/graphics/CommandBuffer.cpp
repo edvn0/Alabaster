@@ -121,8 +121,10 @@ namespace Alabaster {
 		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frame_index], VK_TRUE, UINT64_MAX));
 
 		Allocator allocator("CommandBufferDe-allocator");
-		for (auto& callback : destruction_callbacks) {
-			callback(allocator);
+		while (!destruction_callbacks.empty()) {
+			auto& cb = destruction_callbacks.front();
+			destruction_callbacks.pop();
+			cb(allocator);
 		}
 	}
 

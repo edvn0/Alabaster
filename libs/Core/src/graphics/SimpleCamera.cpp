@@ -22,10 +22,10 @@ namespace Alabaster {
 
 	SimpleCamera::SimpleCamera(CameraType type, float aspect, float near, float far, float fov)
 		: type(type)
-		, aspect(aspect)
+		, field_of_view(fov)
 		, near_plane(near)
 		, far_plane(far)
-		, field_of_view(fov)
+		, aspect(aspect)
 	{
 		set_perspective(fov, aspect, near, far);
 		set_position({ 0, 3, -5 });

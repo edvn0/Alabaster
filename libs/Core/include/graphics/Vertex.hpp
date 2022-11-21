@@ -31,23 +31,6 @@ namespace Alabaster {
 
 	using Index = std::uint32_t;
 
-	// clang-format off
-	namespace Layout::Default {
-		static const auto vertex_attributes()
-		{
-			return VertexBufferLayout 
-				{ 
-					VertexBufferElement(ShaderDataType::Float3, "position"),
-					VertexBufferElement(ShaderDataType::Float4, "colour"), 
-					VertexBufferElement(ShaderDataType::Float3, "normal"),
-					VertexBufferElement(ShaderDataType::Float3, "tangent"), 
-					VertexBufferElement(ShaderDataType::Float3, "bitangent"),
-					VertexBufferElement(ShaderDataType::Float2, "uvs") 
-				};
-		}
-	} // namespace Layout::Default
-	// clang-format on
-
 } // namespace Alabaster
 
 template <> struct std::hash<Alabaster::Vertex> {

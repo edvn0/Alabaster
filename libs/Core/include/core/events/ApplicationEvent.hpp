@@ -56,23 +56,20 @@ namespace Alabaster {
 
 	class WindowTitleBarHitTestEvent : public Event {
 	public:
-		WindowTitleBarHitTestEvent(int x, int y, int& hit)
+		WindowTitleBarHitTestEvent(int x, int y)
 			: x(x)
 			, y(y)
-			, hit(hit)
 		{
 		}
 
 		inline int get_x() const { return x; }
 		inline int get_y() const { return y; }
-		inline void set_hit(bool hit) { hit = (int)hit; }
 
 		EVENT_STATIC_CLASS_TYPE(WindowTitleBarHitTest)
 		EVENT_CLASS_CATEGORY(EventCategoryApplication)
 	private:
 		int x;
 		int y;
-		int& hit;
 	};
 
 	class AppTickEvent : public Event {

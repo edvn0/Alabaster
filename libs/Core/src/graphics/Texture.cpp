@@ -15,7 +15,6 @@ namespace Alabaster {
 	{
 		Allocator allocator("Texture");
 		Buffer buffer(data, static_cast<std::uint32_t>(size));
-		VkImageCreateInfo image_create_info {};
 	}
 
 	Texture::Texture(std::string file_path)

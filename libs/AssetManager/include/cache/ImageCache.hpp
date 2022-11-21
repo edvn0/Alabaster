@@ -4,6 +4,7 @@
 #include "graphics/Image.hpp"
 
 #include <unordered_map>
+#include <unordered_set>
 
 namespace AssetManager {
 
@@ -13,7 +14,8 @@ namespace AssetManager {
 			: cache_crud(std::move(cache_crud))
 			, buffer(new Alabaster::CommandBuffer(3)) {};
 
-		void load_from_directory(const std::filesystem::path& texture_path);
+		void load_from_directory(
+			const std::filesystem::path& texture_path, std::unordered_set<std::string> include_extensions = { ".tga", ".png", ".jpeg", ".jpg" });
 
 	public:
 		void destroy_impl()

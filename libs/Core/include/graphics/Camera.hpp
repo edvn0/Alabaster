@@ -138,9 +138,7 @@ namespace Alabaster {
 		float vertical_fov, aspect_ratio, near_clip, far_clip;
 
 		bool active = false;
-		bool m_Panning, m_Rotating;
 		glm::vec2 initial_mouse_position {};
-		glm::vec3 m_InitialFocalPoint, m_InitialRotation;
 
 		float distance;
 		float normal_speed { 0.002f };

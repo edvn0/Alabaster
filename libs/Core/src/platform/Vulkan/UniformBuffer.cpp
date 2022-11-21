@@ -38,8 +38,6 @@ namespace Alabaster {
 		if (allocation)
 			release();
 
-		const auto& device = GraphicsContext::the().device();
-
 		VkBufferCreateInfo buffer_info = {};
 		buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		buffer_info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;

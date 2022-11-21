@@ -1,5 +1,6 @@
 #pragma once
 
+#include "graphics/Image.hpp"
 #include "graphics/UniformBuffer.hpp"
 
 #include <array>
@@ -18,7 +19,6 @@ namespace Alabaster {
 	class VertexBuffer;
 	class IndexBuffer;
 	class CommandBuffer;
-	class Image;
 	class Camera;
 
 	struct QuadVertex {
@@ -70,7 +70,6 @@ namespace Alabaster {
 		std::array<Pipeline*, 50> mesh_pipeline_submit;
 		std::unique_ptr<Pipeline> mesh_pipeline;
 
-		const Image* viking_room_texture;
 		std::unique_ptr<Mesh> sphere_model;
 	};
 
@@ -86,6 +85,9 @@ namespace Alabaster {
 			const glm::mat4& rotation_matrix = glm::mat4 { 1.0f }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
 		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void line(float size, const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
+
+		void text(std::string text, glm::vec3 position, float font_size = 11.0f);
+
 		void end_scene();
 
 	public:

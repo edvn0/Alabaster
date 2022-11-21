@@ -3,6 +3,7 @@
 #include "graphics/Allocator.hpp"
 
 #include <memory>
+#include <queue>
 #include <string_view>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -11,9 +12,9 @@ namespace Alabaster {
 
 	enum class QueueChoice { Graphics = 0, Compute = 1 };
 
-	using DeallocationCallback = std::function<void(Allocator&)>;
-
 	class CommandBuffer {
+		using DeallocationCallback = std::function<void(Allocator&)>;
+
 	public:
 		explicit CommandBuffer(std::uint32_t count, QueueChoice queue_choice = QueueChoice::Graphics);
 		void destroy();
@@ -29,7 +30,7 @@ namespace Alabaster {
 
 		operator VkCommandBuffer() { return active; }
 
-		void add_destruction_callback(DeallocationCallback&& cb) { destruction_callbacks.push_back(std::move(cb)); }
+		void add_destruction_callback(DeallocationCallback&& cb) { destruction_callbacks.push(std::move(cb)); }
 
 	private:
 		void init(std::uint32_t count = 0);
@@ -42,7 +43,7 @@ namespace Alabaster {
 
 		QueueChoice queue_choice;
 
-		std::vector<DeallocationCallback> destruction_callbacks {};
+		std::queue<DeallocationCallback> destruction_callbacks {};
 
 		bool owned_by_swapchain { false };
 

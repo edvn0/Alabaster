@@ -69,7 +69,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/av_pch.hpp)
 
 if(APPLE)
-	target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-volatile)
+	target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-volatile -Wall -Werror)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

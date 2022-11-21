@@ -4,6 +4,7 @@
 
 #include "debug_break.h"
 #include "utilities/FileInputOutput.hpp"
+#include "utilities/FileSystem.hpp"
 
 #include <future>
 #include <shaderc/shaderc.hpp>
@@ -32,7 +33,7 @@ namespace AssetManager {
 
 	template <class T> void ShaderCache<T>::load_from_directory(const std::filesystem::path& shader_directory)
 	{
-		using namespace Alabaster::IO;
+		using namespace Alabaster::FS;
 		auto all_files_in_shaders = in_directory<std::string>(shader_directory, { ".vert", ".frag" }, true);
 
 		const auto shader_pairs = extract_into_pairs_of_shaders(all_files_in_shaders);

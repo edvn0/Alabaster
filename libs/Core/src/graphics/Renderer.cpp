@@ -9,15 +9,13 @@
 #include "graphics/Pipeline.hpp"
 #include "graphics/Swapchain.hpp"
 #include "utilities/FileInputOutput.hpp"
+#include "utilities/FileSystem.hpp"
 #include "vulkan/vulkan_core.h"
 
 namespace Alabaster {
 
-	static std::unordered_map<std::string, Shader> shaders;
 	static RenderQueue global_release_queues[3];
 
-	static bool renderer_is_initialized { false };
-	static bool scene_renderer_is_initialized { false };
 	static bool frame_started { false };
 
 	RenderQueue& Renderer::render_queue()
@@ -49,7 +47,7 @@ namespace Alabaster {
 		render_pass_info.renderArea.extent = extent;
 
 		std::array<VkClearValue, 2> clear_values {};
-		clear_values[0].color = { 0, 0, 0, 0 };
+		clear_values[0].color = { { 0, 0, 0, 0 } };
 		clear_values[1].depthStencil = { .depth = 1.0f, .stencil = 0 };
 
 		render_pass_info.clearValueCount = clear_values.size();
@@ -104,26 +102,7 @@ namespace Alabaster {
 		Log::info("[Renderer] End frame.");
 	}
 
-	void Renderer::init()
-	{
-		Log::info("[Renderer] Initialisation of renderer.");
-
-		renderer_is_initialized = true;
-		std::vector<std::string> all_files_in_shaders = IO::in_directory<std::string>(IO::resources(), { ".spv" });
-		std::sort(all_files_in_shaders.begin(), all_files_in_shaders.end());
-		verify(all_files_in_shaders.size() % 2 == 0, "2N shaders, hopefully matching by name");
-		for (std::size_t i = 0; i < all_files_in_shaders.size(); i += 2) {
-			auto fragment = all_files_in_shaders[i];
-			auto vertex = all_files_in_shaders[i + 1];
-			const auto path = std::filesystem::path { vertex };
-			const auto wo_extensions = path.filename().replace_extension().replace_extension().string();
-			shaders.try_emplace(wo_extensions, vertex, fragment);
-		}
-
-		for (auto&& [k, v] : shaders) {
-			Log::info("Shader created: \"{}\"", k);
-		}
-	}
+	void Renderer::init() { Log::info("[Renderer] Initialisation of renderer."); }
 
 	void Renderer::shutdown()
 	{

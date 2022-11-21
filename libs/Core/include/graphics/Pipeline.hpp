@@ -54,7 +54,7 @@ namespace Alabaster {
 		{
 			auto pipeline = std::make_unique<Pipeline>(spec);
 			pipeline->invalidate();
-			return std::move(pipeline);
+			return pipeline;
 		}
 
 	private:

@@ -8,6 +8,7 @@
 #include "graphics/Renderer.hpp"
 
 #include <imgui.h>
+#include <string_view>
 #include <vulkan/vulkan.h>
 
 using namespace Alabaster;
@@ -29,12 +30,16 @@ bool AlabasterLayer::initialise()
 	// auto shader = AssetManager::ShaderCache::the().get_from_cache("mesh");
 
 	PipelineSpecification viking_spec {
-		.shader = *AssetManager::ResourceCache::the().shader("viking").value(),
+		.shader = AssetManager::ResourceCache::the().shader("viking"),
 		.debug_name = "Viking Pipeline",
 		.render_pass = renderer.get_render_pass(),
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-		.vertex_layout = Layout::Default::vertex_attributes(),
-		.ranges = Layout::Defaults::push_constants(),
+		.vertex_layout
+		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
+			VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
+			VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+		.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)),
+			PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4)) },
 	};
 	viking_pipeline = Pipeline::create(viking_spec);
 	return true;
@@ -96,9 +101,13 @@ void AlabasterLayer::update(float ts)
 
 		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
 		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
-		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 1, 0, 1 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
+		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 1 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
+		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 2 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
+		renderer.mesh(sphere_model, nullptr, glm::vec3 { 0, -10, 1 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
 
 		// renderer.mesh(sponza_model, nullptr, glm::vec3 { 0 }, rot, glm::vec4 { 1 }, { 0.1, 0.1, 0.1 });
+
+		renderer.text("Test Test", glm::vec3 { 0, 0, 0 });
 	}
 	renderer.end_scene();
 

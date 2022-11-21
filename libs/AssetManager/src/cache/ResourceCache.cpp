@@ -12,7 +12,8 @@ namespace AssetManager {
 	ResourceCache::ResourceCache()
 	{
 		shader_cache.load_from_directory(Alabaster::IO::shaders());
-		image_cache.load_from_directory(Alabaster::IO::textures());
+		image_cache.load_from_directory(Alabaster::IO::textures(), { ".png", ".tga", ".jpg", ".jpeg", ".bmp" });
+		image_cache.load_from_directory(Alabaster::IO::fonts(), { ".png", ".tga", ".jpg", ".jpeg", ".bmp" });
 	}
 
 	void ResourceCache::initialise() { the(); }
@@ -29,24 +30,24 @@ namespace AssetManager {
 		return cache;
 	}
 
-	std::optional<const Alabaster::Image*> ResourceCache::texture(const std::string& name)
+	const Alabaster::Image& ResourceCache::texture(const std::string& name)
 	{
 		const auto found = image_cache.get_from_cache(name);
 		if (!found) {
 			throw Alabaster::AlabasterException("Texture not found.");
 		}
 
-		return found;
+		return *found.value();
 	}
 
-	std::optional<const Alabaster::Shader*> ResourceCache::shader(const std::string& name)
+	const Alabaster::Shader& ResourceCache::shader(const std::string& name)
 	{
 		const auto found = shader_cache.get_from_cache(name);
 		if (!found) {
 			throw Alabaster::AlabasterException("Shader not found.");
 		}
 
-		return found;
+		return *found.value();
 	}
 
 } // namespace AssetManager
