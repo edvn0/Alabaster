@@ -25,17 +25,18 @@ target_include_directories(
 	PUBLIC $<INSTALL_INTERFACE:include>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+	${THIRD_PARTY_DIR}
 	${THIRD_PARTY_DIR}/glm
 	${THIRD_PARTY_DIR}/spdlog/include
 	${THIRD_PARTY_DIR}/debugbreak
 	${THIRD_PARTY_DIR}/magic_enum/include
 	../Core/include/
 	INTERFACE ${Vulkan_INCLUDE_DIRS}
-	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} /opt/homebrew/include /usr/local/include)
+	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE Vulkan::Vulkan spdlog magic_enum effolkronium_random
-	Alabaster::Core shaderc)
+	Alabaster::Core shaderc spirv-cross-core spirv-cross-msl spirv-cross-glsl)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/am_pch.hpp)
 

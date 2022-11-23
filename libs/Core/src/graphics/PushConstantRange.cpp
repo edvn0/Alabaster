@@ -31,7 +31,7 @@ namespace Alabaster {
 	};
 
 	PushConstantRange::PushConstantRange(PushConstantKind flags, std::uint32_t size)
-		: flags(flags)
-		, size(size) {};
+		: size(size)
+		, flags(flags) {};
 
 } // namespace Alabaster

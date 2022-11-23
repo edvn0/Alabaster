@@ -23,7 +23,7 @@ namespace Alabaster {
 
 	void EditorCamera::init()
 	{
-		static constexpr glm::vec3 pos = { 0, 3, -5 };
+		static constexpr glm::vec3 pos = { 0, 3, -20 };
 		distance = glm::distance(pos, focal_point);
 
 		yaw = 0;
