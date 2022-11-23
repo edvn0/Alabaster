@@ -7,30 +7,18 @@
 
 namespace Alabaster {
 
-	struct PushConstantRange {
-		VkShaderStageFlags flags;
-		std::uint32_t size;
+	enum class PushConstantKind { Vertex = 1 << 0, Fragment = 1 << 1, Both = 1 << 2 };
 
-		PushConstantRange(VkShaderStageFlags flags, std::uint32_t size)
-			: flags(flags)
-			, size(size) {};
+	VkShaderStageFlags to_vulkan_flags(PushConstantKind kind);
+
+	struct PushConstantRange {
+		PushConstantKind flags;
+		std::uint32_t size;
+		PushConstantRange(PushConstantKind flags, std::uint32_t size);
 	};
 
 	struct PushConstantRanges {
-		explicit PushConstantRanges(const std::initializer_list<PushConstantRange>& in)
-			: ranges(in)
-		{
-			std::uint32_t offset = 0;
-			for (const auto& range : ranges) {
-				VkPushConstantRange out {};
-				out.offset = offset;
-				out.size = range.size;
-				out.stageFlags = range.flags;
-				output_ranges.push_back(out);
-				offset += range.size;
-			}
-		};
-
+		explicit PushConstantRanges(const std::initializer_list<PushConstantRange>& in);
 		const auto& get_ranges() const { return output_ranges; }
 
 	private:

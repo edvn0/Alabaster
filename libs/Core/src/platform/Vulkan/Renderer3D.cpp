@@ -14,6 +14,7 @@
 #include "graphics/PushConstantRange.hpp"
 #include "graphics/Renderer.hpp"
 #include "graphics/Vertex.hpp"
+#include "graphics/VertexBufferLayout.hpp"
 #include "vulkan/vulkan_core.h"
 
 #include <memory>
@@ -209,16 +210,37 @@ namespace Alabaster {
 		create_descriptor_pool();
 		create_descriptor_sets();
 
-		PipelineSpecification quad_spec {
-			.shader = AssetManager::the().shader("main"),
+		// QUAD STUFF
+
+		PipelineSpecification quad_spec { .shader = AssetManager::the().shader("quad_light"),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.render_pass,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
-			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
-				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-		};
+			.vertex_layout
+			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
+				VertexBufferElement(ShaderDataType::Float3, "normals"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 		data.quad_pipeline = std::make_unique<Pipeline>(quad_spec);
 		data.quad_pipeline->invalidate();
+
+		data.quad_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(QuadVertex));
+		data.line_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(LineVertex));
+
+		std::vector<std::uint32_t> quad_indices;
+		quad_indices.resize(RendererData::max_indices);
+		std::uint32_t offset = 0;
+		for (std::size_t i = 0; i < RendererData::max_indices; i += 6) {
+			quad_indices[i + 0] = 0 + offset;
+			quad_indices[i + 1] = 1 + offset;
+			quad_indices[i + 2] = 2 + offset;
+			quad_indices[i + 3] = 2 + offset;
+			quad_indices[i + 4] = 3 + offset;
+			quad_indices[i + 5] = 0 + offset;
+			offset += 4;
+		}
+		data.quad_index_buffer = IndexBuffer::create(quad_indices);
+
+		// END QUAD STUFF
 
 		PipelineSpecification mesh_spec {
 			.shader = AssetManager::the().shader("mesh_light"),
@@ -229,7 +251,7 @@ namespace Alabaster {
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(PC)) },
+			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) },
 		};
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh_spec);
 		data.mesh_pipeline->invalidate();
@@ -244,29 +266,12 @@ namespace Alabaster {
 		data.line_pipeline = std::make_unique<Pipeline>(line_spec);
 		data.line_pipeline->invalidate();
 
-		data.quad_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(QuadVertex));
-		data.line_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(LineVertex));
-
-		std::vector<std::uint32_t> indices;
-		indices.resize(RendererData::max_indices);
-		std::uint32_t offset = 0;
-		for (std::size_t i = 0; i < RendererData::max_indices; i += 6) {
-			indices[i + 0] = 0 + offset;
-			indices[i + 1] = 1 + offset;
-			indices[i + 2] = 2 + offset;
-			indices[i + 3] = 2 + offset;
-			indices[i + 4] = 3 + offset;
-			indices[i + 5] = 0 + offset;
-			offset += 4;
-		}
-		data.quad_index_buffer = IndexBuffer::create(indices);
-
-		indices.clear();
-		indices.resize(RendererData::max_indices);
+		std::vector<std::uint32_t> line_indices;
+		line_indices.resize(RendererData::max_indices);
 		for (std::uint32_t i = 0; i < RendererData::max_indices; i++) {
-			indices[i] = i;
+			line_indices[i] = i;
 		}
-		data.line_index_buffer = IndexBuffer::create(indices);
+		data.line_index_buffer = IndexBuffer::create(line_indices);
 	};
 
 	void Renderer3D::begin_scene()
@@ -288,6 +293,7 @@ namespace Alabaster {
 		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
 		static constexpr glm::vec4 quad_positions[]
 			= { { -0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { -0.5f, 0.5f, 0.0f, 1.0f } };
+		static constexpr glm::vec4 quad_normal = glm::vec4 { 0, 0, 1, 0 };
 
 		if (data.quad_indices_submitted >= RendererData::max_indices) {
 			flush();
@@ -304,6 +310,7 @@ namespace Alabaster {
 			auto& vertex = data.quad_buffer[data.quad_vertices_submitted];
 			vertex.position = transform * quad_positions[i];
 			vertex.colour = colour;
+			vertex.normals = transform * quad_normal;
 			vertex.uvs = texture_coordinates[i];
 			data.quad_vertices_submitted++;
 		}
@@ -423,6 +430,12 @@ namespace Alabaster {
 
 		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
+		if (data.push_constant) {
+			const auto& pc = *data.push_constant;
+			vkCmdPushConstants(*command_buffer, data.quad_pipeline->get_vulkan_pipeline_layout(),
+				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
+		}
+
 		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
 		VkDeviceSize offsets { 0 };
 		vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
@@ -436,7 +449,7 @@ namespace Alabaster {
 
 		const auto count = static_cast<std::uint32_t>(index_count);
 		const auto instances = static_cast<std::uint32_t>(index_count / 6);
-		vkCmdDrawIndexed(*command_buffer, count, instances, 0, 0, 0);
+		vkCmdDrawIndexed(*command_buffer, count, 1, 0, 0, 0);
 	}
 
 	void Renderer3D::draw_lines(const std::unique_ptr<CommandBuffer>& command_buffer)
@@ -488,8 +501,6 @@ namespace Alabaster {
 				vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, initial->get_vulkan_pipeline());
 			}
 
-			vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor, 0, nullptr);
-
 			std::array<VkBuffer, 1> vbs { *vb };
 			VkDeviceSize offsets { 0 };
 			vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
@@ -505,11 +516,14 @@ namespace Alabaster {
 			if (mesh_colour) {
 				data.push_constant->object_colour = *mesh_colour;
 			}
-			update_uniform_buffers(mesh_transform);
 			if (data.push_constant) {
 				const auto& pc = *data.push_constant;
+				update_uniform_buffers(mesh_transform);
 				vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 			}
+
+			vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor, 0, nullptr);
+
 			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 			data.draw_calls++;
 		}

@@ -25,6 +25,7 @@ namespace Alabaster {
 	struct QuadVertex {
 		glm::vec4 position;
 		glm::vec4 colour;
+		glm::vec3 normals;
 		glm::vec2 uvs;
 	};
 

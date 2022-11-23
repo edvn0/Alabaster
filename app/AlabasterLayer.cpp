@@ -134,7 +134,7 @@ bool AlabasterLayer::initialise()
 		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 			VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 			VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-		.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(PC)) } };
+		.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 	viking_pipeline = Pipeline::create(viking_spec);
 
 	PipelineSpecification sun_spec { .shader = AssetManager::ResourceCache::the().shader("mesh"),
@@ -145,7 +145,7 @@ bool AlabasterLayer::initialise()
 		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 			VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 			VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-		.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(PC)) } };
+		.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 	sun_pipeline = Pipeline::create(sun_spec);
 
 	command_buffer = CommandBuffer::from_swapchain();
@@ -199,23 +199,23 @@ void AlabasterLayer::update(float ts)
 		renderer.begin_scene();
 		renderer.set_light_data(pos, col, ambience);
 
-		renderer.quad({ 0, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
-		renderer.quad({ 30, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
-		renderer.quad({ -30, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 0, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ -30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 
-		renderer.quad({ 0, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
-		renderer.quad({ 30, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
-		renderer.quad({ -30, 0, 0 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 0, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ -30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 
-		renderer.quad({ 0, 0, 30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
-		renderer.quad({ 30, 0, 30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
-		renderer.quad({ -30, 0, 30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 0, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
+		renderer.quad({ -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 
 		axes(renderer, glm::vec3 { 0, -0.1, 0 });
 
 		renderer.line(4, { 0, 0, 0 }, { 3, 3, 3 }, { 1, 0, 0, 1 });
 		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0, -2.0f, 0 }, rot, glm::vec4 { 1 }, { 2, 2, 2 });
+		renderer.mesh(viking_room_model, viking_pipeline, glm::vec3 { 0, -2.0f, 0 }, rot, glm::vec4 { 1 }, { 10, 10, 10 });
 
 		renderer.text("Test Test", glm::vec3 { 0, 0, 0 });
 		renderer.end_scene(command_buffer, first_renderpass);
@@ -239,6 +239,9 @@ void AlabasterLayer::update(float ts)
 		renderer.set_light_data(pos, col, ambience);
 		renderer.mesh(sphere_model, sun_pipeline, pos);
 		renderer.mesh(cube_model, { 5, 5, 5 });
+
+		renderer.quad({ 15, 15, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 30.0f);
+
 		renderer.end_scene(command_buffer, sun_renderpass);
 	}
 	command_buffer->end();
