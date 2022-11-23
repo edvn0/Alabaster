@@ -7,19 +7,22 @@ layout(location = 3) in vec3 tangent;
 layout(location = 4) in vec3 bitangent;
 layout(location = 5) in vec2 uvs;
 
-layout(binding = 0) uniform UBO
+layout(binding = 0) uniform Camera
 {
 	mat4 model;
 	mat4 view;
 	mat4 proj;
 	mat4 view_proj;
 }
-ubo;
+camera;
 
 layout(push_constant) uniform Renderer3D
 {
-	mat4 transform;
-	vec4 mesh_colour;
+	vec4 light_position;
+	vec4 light_colour;
+	vec4 light_ambience;
+	vec4 object_colour;
+	mat4 object_transform;
 }
 pc;
 
@@ -28,8 +31,7 @@ layout(location = 1) out vec2 out_uvs;
 
 void main()
 {
-	gl_Position = ubo.view_proj * pc.transform * vec4(locations, 1.0);
-	vec4 col_out = pc.mesh_colour * abs(vec4(normal, 1.0));
-	out_colour = normalize(col_out);
+	gl_Position = camera.view_proj * pc.object_transform * vec4(locations, 1.0);
+	out_colour = pc.object_colour;
 	out_uvs = uvs;
 }

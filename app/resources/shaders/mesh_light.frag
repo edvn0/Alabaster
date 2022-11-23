@@ -7,11 +7,21 @@ layout(location = 3) in vec3 position;
 
 layout(location = 0) out vec4 out_colour;
 
+layout(push_constant) uniform PC
+{
+	vec4 light_position;
+	vec4 light_colour;
+	vec4 light_ambience;
+	vec4 object_colour;
+	mat4 object_transform;
+}
+pc;
+
 void main()
 {
-	vec3 light_pos = vec3(-5, 5, 5);
-	vec3 light_colour = vec3(0.3, 0, 0);
-	float ambient_strength = 0.1;
+	vec3 light_pos = vec3(pc.light_position);
+	vec3 light_colour = vec3(pc.light_colour);
+	float ambient_strength = pc.light_ambience.x;
 	vec3 ambient = ambient_strength * light_colour;
 
 	vec3 norm = normalize(normal);

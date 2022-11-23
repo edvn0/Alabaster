@@ -32,9 +32,9 @@ int main(int argc, char** argv)
 
 	Alabaster::ApplicationArguments props;
 	po::parser parser;
-	parser["width"].abbreviation('w').description("The width of the window.").bind(props.width);
-	parser["height"].abbreviation('h').description("The height of the window.").bind(props.height);
-	parser["name"].description("Name of the applicatin").bind(props.name);
+	parser["width"].abbreviation('w').description("The width of the window.").type(po::u32).fallback(std::uint32_t { 1600 }).bind(props.width);
+	parser["height"].abbreviation('h').description("The height of the window.").type(po::u32).fallback(std::uint32_t { 900 }).bind(props.height);
+	parser["name"].description("Name of the applicatin").type(po::string).fallback(std::string { "Alabaster" }).bind(props.name);
 	auto& help = parser["help"].abbreviation('?').description("print this help screen");
 
 	if (!parser(argc, argv)) {
@@ -51,7 +51,6 @@ int main(int argc, char** argv)
 	} catch (const std::system_error& e) {
 		Alabaster::Log::error("Error in app creation: {}", e.what());
 	}
-
 	AssetManager::ResourceCache::the().initialise();
 
 	try {
@@ -60,9 +59,7 @@ int main(int argc, char** argv)
 		Alabaster::Log::error("{}", e.what());
 	}
 	Alabaster::Renderer::shutdown();
-
 	AssetManager::ResourceCache::the().shutdown();
-
 	Alabaster::Allocator::shutdown();
 
 	delete app;

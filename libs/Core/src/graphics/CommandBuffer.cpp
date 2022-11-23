@@ -68,6 +68,15 @@ namespace Alabaster {
 		for (auto& fence : fences) {
 			vkDestroyFence(device, fence, nullptr);
 		}
+
+		destroyed = true;
+	}
+
+	CommandBuffer::~CommandBuffer()
+	{
+		if (!destroyed) {
+			destroy();
+		}
 	}
 
 	void CommandBuffer::begin(VkCommandBufferBeginInfo* begin)

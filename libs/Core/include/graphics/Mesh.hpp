@@ -22,6 +22,7 @@ namespace Alabaster {
 	public:
 		explicit Mesh(const std::filesystem::path& path);
 		Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
+		~Mesh();
 
 		const VertexBuffer& get_vertex_buffer() const { return *vertex_buffer; }
 		const IndexBuffer& get_index_buffer() const { return *index_buffer; }
@@ -54,6 +55,8 @@ namespace Alabaster {
 
 		std::size_t vertex_count { 0 };
 		std::size_t index_count { 0 };
+
+		bool destroyed { false };
 
 	private:
 		std::tuple<Vertices, Indices> load_model();

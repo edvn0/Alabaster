@@ -37,6 +37,23 @@ namespace Alabaster {
 
 	Allocator::~Allocator() { }
 
+	VmaAllocation Allocator::allocate_buffer(
+		VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VmaAllocationCreateFlags flags, VkBuffer& out_buffer)
+	{
+		VmaAllocationCreateInfo allocation_create_info = {};
+		allocation_create_info.usage = usage;
+		allocation_create_info.flags = flags;
+
+		VmaAllocation allocation;
+		vk_check(vmaCreateBuffer(vma_data().allocator, &buffer_create_info, &allocation_create_info, &out_buffer, &allocation, nullptr));
+
+		VmaAllocationInfo allocation_info {};
+		vmaGetAllocationInfo(vma_data().allocator, allocation, &allocation_info);
+		vma_data().total_allocated_bytes += allocation_info.size;
+
+		return allocation;
+	}
+
 	VmaAllocation Allocator::allocate_buffer(VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VkBuffer& out_buffer)
 	{
 		VmaAllocationCreateInfo allocation_create_info = {};
@@ -49,6 +66,22 @@ namespace Alabaster {
 		vmaGetAllocationInfo(vma_data().allocator, allocation, &allocation_info);
 		vma_data().total_allocated_bytes += allocation_info.size;
 
+		return allocation;
+	}
+
+	VmaAllocation Allocator::allocate_image(
+		VkImageCreateInfo image_create_info, VmaMemoryUsage usage, VmaAllocationCreateFlags flags, VkImage& out_image)
+	{
+		VmaAllocationCreateInfo allocation_create_info = {};
+		allocation_create_info.usage = usage;
+		allocation_create_info.flags = flags;
+
+		VmaAllocation allocation;
+		vk_check(vmaCreateImage(vma_data().allocator, &image_create_info, &allocation_create_info, &out_image, &allocation, nullptr));
+
+		VmaAllocationInfo allocation_info;
+		vmaGetAllocationInfo(vma_data().allocator, allocation, &allocation_info);
+		vma_data().total_allocated_bytes += allocation_info.size;
 		return allocation;
 	}
 

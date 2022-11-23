@@ -58,10 +58,9 @@ namespace Alabaster {
 
 		if (spec.ranges) {
 			const auto& used = *spec.ranges;
-			const auto range = used.get_push_constant_range();
-
-			pipeline_layout_create_info.pushConstantRangeCount = 1;
-			pipeline_layout_create_info.pPushConstantRanges = &range;
+			const auto& range = used.get_ranges();
+			pipeline_layout_create_info.pushConstantRangeCount = static_cast<std::uint32_t>(range.size());
+			pipeline_layout_create_info.pPushConstantRanges = range.data();
 		}
 
 		vk_check(vkCreatePipelineLayout(device, &pipeline_layout_create_info, nullptr, &pipeline_layout));

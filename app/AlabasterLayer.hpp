@@ -36,8 +36,8 @@ private:
 	EditorCamera editor;
 	Renderer3D renderer;
 
-	VkRenderPass sun_renderpass;
-	VkRenderPass first_renderpass;
+	VkRenderPass sun_renderpass { nullptr };
+	VkRenderPass first_renderpass { nullptr };
 
 	glm::vec2 viewport_size = { 0.0f, 0.0f };
 	glm::vec2 viewport_bounds[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
@@ -47,9 +47,11 @@ private:
 
 	std::unique_ptr<Mesh> viking_room_model;
 	std::unique_ptr<Mesh> sphere_model;
+	std::unique_ptr<Mesh> cube_model;
 	std::unique_ptr<Mesh> sponza_model;
 
 	std::unique_ptr<CommandBuffer> command_buffer;
 
 	std::unique_ptr<Pipeline> viking_pipeline;
+	std::unique_ptr<Pipeline> sun_pipeline;
 };

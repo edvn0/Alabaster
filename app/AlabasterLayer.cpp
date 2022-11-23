@@ -3,17 +3,18 @@
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
 #include "graphics/CommandBuffer.hpp"
-#include "vulkan/vulkan_core.h"
 
 #include <imgui.h>
-#include <initializer_list>
 #include <optional>
-#include <string_view>
 #include <vulkan/vulkan.h>
 
 using namespace Alabaster;
 
 static std::uint32_t quads { 1 };
+
+static glm::vec4 pos { -5, 5, 5, 1.0f };
+static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
+static float ambience { 1.0f };
 
 static constexpr auto axes = [](auto& renderer, auto&& pos, float size = 2.0f) {
 	renderer.line(pos, pos + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
@@ -121,12 +122,11 @@ bool AlabasterLayer::initialise()
 
 	viking_room_model = Mesh::from_file("viking_room.obj");
 	sphere_model = Mesh::from_file("sphere.obj");
+	cube_model = Mesh::from_file("cube.obj");
 
 	// sponza_model = Mesh::from_file("sponza.obj");
-	// auto shader = AssetManager::ShaderCache::the().get_from_cache("mesh");
 
-	PipelineSpecification viking_spec {
-		.shader = AssetManager::ResourceCache::the().shader("mesh_light"),
+	PipelineSpecification viking_spec { .shader = AssetManager::ResourceCache::the().shader("viking"),
 		.debug_name = "Viking Pipeline",
 		.render_pass = renderer.get_render_pass(),
 		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -134,10 +134,19 @@ bool AlabasterLayer::initialise()
 		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 			VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 			VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-		.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)),
-			PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4)) },
-	};
+		.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(PC)) } };
 	viking_pipeline = Pipeline::create(viking_spec);
+
+	PipelineSpecification sun_spec { .shader = AssetManager::ResourceCache::the().shader("mesh"),
+		.debug_name = "Sun Pipeline",
+		.render_pass = renderer.get_render_pass(),
+		.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+		.vertex_layout
+		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
+			VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
+			VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+		.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(PC)) } };
+	sun_pipeline = Pipeline::create(sun_spec);
 
 	command_buffer = CommandBuffer::from_swapchain();
 
@@ -161,6 +170,15 @@ void AlabasterLayer::on_event(Event& e)
 			return true;
 		}
 
+		if (key_code == Key::U) {
+			pos.x += 0.1;
+			pos.y += 0.1;
+		}
+		if (key_code == Key::H) {
+			pos.x -= 0.1;
+			pos.y -= 0.1;
+		}
+
 		if (Input::key(Key::G)) {
 			Logger::cycle_levels();
 			return true;
@@ -174,11 +192,12 @@ void AlabasterLayer::update(float ts)
 {
 	static std::size_t frame_number { 0 };
 
-	renderer.reset_stats();
 	editor.on_update(ts);
 	command_buffer->begin();
 	{
+		renderer.reset_stats();
 		renderer.begin_scene();
+		renderer.set_light_data(pos, col, ambience);
 
 		renderer.quad({ 0, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
 		renderer.quad({ 30, 0, -30 }, glm::vec4 { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 90.0f);
@@ -202,8 +221,24 @@ void AlabasterLayer::update(float ts)
 		renderer.end_scene(command_buffer, first_renderpass);
 	}
 	{
+		renderer.reset_stats();
 		renderer.begin_scene();
-		renderer.mesh(sphere_model, nullptr, { -5, 5, 5 });
+
+		static double x = 0.0;
+		x += 0.8;
+
+		static double y = 0.0;
+		y += 0.8;
+
+		float cosx = 30 * glm::cos(glm::radians(x));
+		float z = 30 * glm::sin(glm::radians(y));
+		float pos_y = (cosx * z) / 30;
+
+		pos = { cosx, pos_y, z, 1.0f };
+
+		renderer.set_light_data(pos, col, ambience);
+		renderer.mesh(sphere_model, sun_pipeline, pos);
+		renderer.mesh(cube_model, { 5, 5, 5 });
 		renderer.end_scene(command_buffer, sun_renderpass);
 	}
 	command_buffer->end();
@@ -307,10 +342,6 @@ void AlabasterLayer::ui(float ts)
 void AlabasterLayer::destroy()
 {
 	renderer.destroy();
-	viking_room_model->destroy();
-	sphere_model->destroy();
-	sponza_model->destroy();
-	command_buffer->destroy();
 
 	vkDestroyRenderPass(GraphicsContext::the().device(), sun_renderpass, nullptr);
 	vkDestroyRenderPass(GraphicsContext::the().device(), first_renderpass, nullptr);

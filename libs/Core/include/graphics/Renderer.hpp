@@ -8,7 +8,6 @@ typedef struct VkPipelineLayout_T* VkPipelineLayout;
 
 namespace Alabaster {
 
-	class SceneRenderer;
 	class Mesh;
 	class Camera;
 	class EditorCamera;

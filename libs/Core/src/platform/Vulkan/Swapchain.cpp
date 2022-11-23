@@ -163,9 +163,6 @@ namespace Alabaster {
 
 	void Swapchain::begin_frame()
 	{
-		auto& queue = Renderer::resource_release_queue(frame());
-		queue.execute();
-
 		unsafe_semaphore = false;
 		current_image_index = get_next_image();
 		unsafe_semaphore = true;
@@ -244,6 +241,7 @@ namespace Alabaster {
 
 	void Swapchain::cleanup_swapchain()
 	{
+		vkDeviceWaitIdle(GraphicsContext::the().device());
 		for (std::size_t i = 0; i < frame_buffers.size(); i++) {
 			vkDestroyFramebuffer(GraphicsContext::the().device(), frame_buffers[i], nullptr);
 		}
@@ -253,6 +251,7 @@ namespace Alabaster {
 		}
 
 		vkDestroySwapchainKHR(GraphicsContext::the().device(), vk_swapchain, nullptr);
+		vkDeviceWaitIdle(GraphicsContext::the().device());
 	}
 
 	VkFramebuffer Swapchain::get_current_framebuffer() const { return frame_buffers[frame()]; };
@@ -279,6 +278,7 @@ namespace Alabaster {
 			GraphicsContext::the().device(), vk_swapchain, default_fence_timeout, present_complete, (VkFence) nullptr, &image_index);
 
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+			cleanup_swapchain();
 			on_resize(sc_width, sc_height);
 			return -1;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
@@ -580,13 +580,13 @@ namespace Alabaster {
 	void Swapchain::cleanup_unsafe_semaphore()
 	{
 		const VkPipelineStageFlags psw = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT;
-		VkSubmitInfo submit_info = {};
-		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-		submit_info.waitSemaphoreCount = 1;
-		submit_info.pWaitSemaphores = &present_complete;
-		submit_info.pWaitDstStageMask = &psw;
+		VkSubmitInfo cleanup_submit = {};
+		cleanup_submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		cleanup_submit.waitSemaphoreCount = 1;
+		cleanup_submit.pWaitSemaphores = &present_complete;
+		cleanup_submit.pWaitDstStageMask = &psw;
 
-		vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &submit_info, VK_NULL_HANDLE);
+		vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &cleanup_submit, VK_NULL_HANDLE);
 	}
 
 } // namespace Alabaster

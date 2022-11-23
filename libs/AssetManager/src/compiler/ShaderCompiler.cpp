@@ -48,9 +48,8 @@ namespace AssetManager {
 		shaderc::SpvCompilationResult module = compiler.CompileGlslToSpv(pre_process, kind, source_name.c_str(), options);
 
 		if (module.GetCompilationStatus() != shaderc_compilation_status_success) {
-			Alabaster::Log::critical(
-				"[VulkanShaderCompiler] Could not compile shader with name: {}. Errors: {}", source_name, module.GetErrorMessage());
-			return {};
+			throw Alabaster::AlabasterException(
+				fmt::format("[VulkanShaderCompiler] Could not compile shader with name: {}. Errors: {}", source_name, module.GetErrorMessage()));
 		}
 
 		return { module.cbegin(), module.cend() };

@@ -60,8 +60,8 @@ namespace Alabaster {
 		: path(path)
 	{
 		auto t0 = Clock::get_ms<float>();
-		verify(IO::exists(path));
-		verify(IO::is_file(path));
+		verify(IO::exists(path), fmt::format("{} did not exist.", path.string()));
+		verify(IO::is_file(path), fmt::format("{} is not a file.", path.string()));
 
 		auto&& [vertices, indices] = load_model();
 
@@ -105,6 +105,13 @@ namespace Alabaster {
 		return handle_vertices(attrib, shapes, materials);
 	}
 
+	Mesh::~Mesh()
+	{
+		if (!destroyed) {
+			destroy();
+		}
+	}
+
 	void Mesh::destroy()
 	{
 		if (vertex_buffer)
@@ -112,6 +119,8 @@ namespace Alabaster {
 
 		if (index_buffer)
 			index_buffer->destroy();
+
+		destroyed = true;
 	}
 
 } // namespace Alabaster

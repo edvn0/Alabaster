@@ -18,27 +18,24 @@ namespace Alabaster {
 
 	struct PushConstantRanges {
 		explicit PushConstantRanges(const std::initializer_list<PushConstantRange>& in)
-			: ranges(in) {};
-
-	public:
-		VkPushConstantRange get_push_constant_range() const
+			: ranges(in)
 		{
-			VkPushConstantRange out {};
-			std::uint32_t current_size { 0 };
-			VkShaderStageFlags flags {};
+			std::uint32_t offset = 0;
 			for (const auto& range : ranges) {
-				current_size += range.size;
-				flags |= range.flags;
+				VkPushConstantRange out {};
+				out.offset = offset;
+				out.size = range.size;
+				out.stageFlags = range.flags;
+				output_ranges.push_back(out);
+				offset += range.size;
 			}
+		};
 
-			out.size = current_size;
-			out.stageFlags = flags;
-			out.offset = 0;
-			return out;
-		}
+		const auto& get_ranges() const { return output_ranges; }
 
 	private:
 		std::vector<PushConstantRange> ranges;
+		std::vector<VkPushConstantRange> output_ranges;
 	};
 
 } // namespace Alabaster

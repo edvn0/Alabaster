@@ -19,6 +19,7 @@ namespace Alabaster {
 
 	public:
 		explicit CommandBuffer(std::uint32_t count, QueueChoice queue_choice = QueueChoice::Graphics, bool is_primary = true);
+		~CommandBuffer();
 		void destroy();
 
 		void begin(VkCommandBufferBeginInfo* begin = nullptr);
@@ -50,6 +51,7 @@ namespace Alabaster {
 		std::queue<DeallocationCallback> destruction_callbacks {};
 
 		bool owned_by_swapchain { false };
+		bool destroyed { false };
 
 		CommandBuffer();
 

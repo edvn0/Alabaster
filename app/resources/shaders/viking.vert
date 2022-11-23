@@ -18,17 +18,23 @@ ubo;
 
 layout(push_constant) uniform Renderer3D
 {
-	mat4 transform;
-	vec4 mesh_colour;
+	vec4 light_position;
+	vec4 light_colour;
+	vec4 light_ambience;
+	vec4 object_colour;
+	mat4 object_transform;
 }
 pc;
 
 layout(location = 0) out vec4 out_colour;
 layout(location = 1) out vec2 out_uvs;
+layout(location = 2) out vec3 out_normal;
+layout(location = 3) out vec3 out_frag_position;
 
 void main()
 {
-	gl_Position = ubo.view_proj * pc.transform * vec4(locations, 1.0);
-	out_colour = colour;
+	gl_Position = ubo.view_proj * pc.object_transform * vec4(locations, 1.0);
+	out_colour = pc.object_colour;
 	out_uvs = uvs;
+	out_normal = normal;
 }

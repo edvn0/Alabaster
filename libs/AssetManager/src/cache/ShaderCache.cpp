@@ -66,14 +66,8 @@ namespace AssetManager {
 			if (!res.valid()) {
 				continue;
 			}
-
-			try {
-
-				auto&& code = res.get();
-				shaders.try_emplace(code.name, code.shader);
-			} catch (const std::exception& exception) {
-				Alabaster::Log::error("[ShaderCache Exception] - {}", exception.what());
-			}
+			auto&& code = res.get();
+			shaders.try_emplace(code.name, code.shader);
 		}
 	}
 

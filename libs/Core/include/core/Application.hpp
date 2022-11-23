@@ -41,7 +41,7 @@ namespace Alabaster {
 
 		void resize(int w, int h);
 
-		void push_layer(Layer* layer) 
+		void push_layer(Layer* layer)
 		{
 			layer->initialise();
 			layers.emplace(layer->name(), std::move(layer));

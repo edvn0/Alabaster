@@ -8,7 +8,7 @@ namespace Alabaster {
 	class AlabasterException : public std::runtime_error {
 	public:
 		explicit AlabasterException(const std::string& ex = "") noexcept
-			: std::runtime_error("[AlabasterException]: " + ex)
+			: std::runtime_error(ex)
 		{
 		}
 	};

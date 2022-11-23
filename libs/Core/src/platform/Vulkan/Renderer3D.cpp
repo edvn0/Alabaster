@@ -23,11 +23,6 @@
 
 namespace Alabaster {
 
-	struct RendererTransform {
-		alignas(16) glm::mat4 transform;
-		alignas(16) glm::vec4 colour;
-	};
-
 	static constexpr auto default_model = glm::mat4 { 1.0f };
 
 	static void reset_data(RendererData& to_reset)
@@ -37,6 +32,9 @@ namespace Alabaster {
 		to_reset.line_indices_submitted = 0;
 		to_reset.line_vertices_submitted = 0;
 		to_reset.meshes_submitted = 0;
+		to_reset.mesh.fill(nullptr);
+		to_reset.mesh_pipeline_submit.fill(nullptr);
+		to_reset.push_constant = {};
 	}
 
 	void Renderer3D::create_renderpass()
@@ -164,7 +162,7 @@ namespace Alabaster {
 		const auto image_info = AssetManager::the().texture("viking_room").vulkan_image_info();
 		for (std::size_t i = 0; i < image_count; i++) {
 			VkDescriptorBufferInfo buffer_info {};
-			buffer_info.buffer = data.uniforms[i].get_buffer();
+			buffer_info.buffer = data.uniforms[i]->get_buffer();
 			buffer_info.offset = 0;
 			buffer_info.range = sizeof(UBO);
 
@@ -204,7 +202,7 @@ namespace Alabaster {
 		VkDeviceSize uniform_buffer_size = sizeof(UBO);
 
 		for (std::size_t i = 0; i < image_count; i++) {
-			data.uniforms.push_back(UniformBuffer(uniform_buffer_size, 0));
+			data.uniforms.emplace_back(std::make_unique<UniformBuffer>(uniform_buffer_size, 0));
 		}
 
 		create_descriptor_set_layout();
@@ -223,7 +221,7 @@ namespace Alabaster {
 		data.quad_pipeline->invalidate();
 
 		PipelineSpecification mesh_spec {
-			.shader = AssetManager::the().shader("mesh"),
+			.shader = AssetManager::the().shader("mesh_light"),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.render_pass,
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -231,8 +229,7 @@ namespace Alabaster {
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::mat4)),
-				PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT, sizeof(glm::vec4)) },
+			.ranges = PushConstantRanges { PushConstantRange(VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, sizeof(PC)) },
 		};
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh_spec);
 		data.mesh_pipeline->invalidate();
@@ -276,6 +273,7 @@ namespace Alabaster {
 	{
 		reset_data(data);
 		update_uniform_buffers();
+		data.push_constant = PC();
 	}
 
 	void Renderer3D::reset_stats()
@@ -324,6 +322,11 @@ namespace Alabaster {
 		data.meshes_submitted++;
 	}
 
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& input_mesh, const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale)
+	{
+		mesh(input_mesh, nullptr, pos, glm::mat4 { 1.0f }, colour, scale);
+	}
+
 	void Renderer3D::line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
 	{
 		if (data.line_indices_submitted >= RendererData::max_indices) {
@@ -364,6 +367,13 @@ namespace Alabaster {
 
 	void Renderer3D::text(std::string text, glm::vec3 position, float font_size) { }
 
+	void Renderer3D::set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience)
+	{
+		data.push_constant->light_position = light_position;
+		data.push_constant->light_colour = colour;
+		data.push_constant->light_ambience = glm::vec4 { ambience };
+	}
+
 	void Renderer3D::flush()
 	{
 		// Flush ignores these for now...
@@ -372,7 +382,6 @@ namespace Alabaster {
 	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, VkRenderPass target)
 	{
 		const auto chosen_renderpass = target ? target : data.render_pass;
-
 		Renderer::begin_render_pass(command_buffer, chosen_renderpass);
 		if (data.quad_indices_submitted > 0) {
 			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.quad_vertices_submitted);
@@ -463,6 +472,8 @@ namespace Alabaster {
 	{
 		const VkDescriptorSet& descriptor = data.descriptor_sets[Renderer::current_frame()];
 
+		Pipeline* initial = nullptr;
+
 		for (std::uint32_t i = 0; i < data.meshes_submitted; i++) {
 			const auto& mesh = data.mesh[i];
 
@@ -472,7 +483,10 @@ namespace Alabaster {
 			const auto& layout = pipeline->get_vulkan_pipeline_layout();
 			const auto& vk_pipeline = pipeline->get_vulkan_pipeline();
 
-			vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vk_pipeline);
+			if (initial != pipeline) {
+				initial = pipeline;
+				vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, initial->get_vulkan_pipeline());
+			}
 
 			vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor, 0, nullptr);
 
@@ -482,19 +496,20 @@ namespace Alabaster {
 
 			vkCmdBindIndexBuffer(*command_buffer, *ib, 0, VK_INDEX_TYPE_UINT32);
 
-			RendererTransform rt {};
 			const auto mesh_transform = mesh->get_transform();
 			const auto mesh_colour = mesh->get_colour();
 
 			if (mesh_transform) {
-				rt.transform = *mesh_transform;
+				data.push_constant->object_transform = *mesh_transform;
 			}
 			if (mesh_colour) {
-				rt.colour = *mesh_colour;
+				data.push_constant->object_colour = *mesh_colour;
 			}
-			update_uniform_buffers(rt.transform);
-			vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(RendererTransform), &rt);
-
+			update_uniform_buffers(mesh_transform);
+			if (data.push_constant) {
+				const auto& pc = *data.push_constant;
+				vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
+			}
 			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 			data.draw_calls++;
 		}
@@ -507,14 +522,10 @@ namespace Alabaster {
 		UBO ubo {};
 		ubo.projection = camera.get_projection_matrix();
 		ubo.view = camera.get_view_matrix();
-		if (model) {
-			ubo.model = *model;
-		} else {
-			ubo.model = default_model;
-		}
-		ubo.view_projection = camera.get_view_projection();
+		ubo.view_projection = ubo.projection * ubo.view;
+		ubo.model = model.has_value() ? *model : default_model;
 
-		data.uniforms[image_index].set_data(&ubo, sizeof(ubo), 0);
+		data.uniforms[image_index]->set_data(&ubo, sizeof(ubo), 0);
 	}
 
 	void Renderer3D::destroy()
@@ -523,23 +534,8 @@ namespace Alabaster {
 
 		vkDestroyRenderPass(device, data.render_pass, nullptr);
 
-		for (std::size_t i = 0; i < Application::the().swapchain().get_image_count(); i++) {
-			data.uniforms[i].destroy();
-		}
-
 		vkDestroyDescriptorPool(device, data.descriptor_pool, nullptr);
 		vkDestroyDescriptorSetLayout(device, data.descriptor_set_layout, nullptr);
-
-		data.line_vertex_buffer->destroy();
-		data.quad_vertex_buffer->destroy();
-		data.line_index_buffer->destroy();
-		data.quad_index_buffer->destroy();
-
-		data.quad_pipeline->destroy();
-		data.line_pipeline->destroy();
-		data.mesh_pipeline->destroy();
-
-		data.sphere_model->destroy();
 	}
 
 	const VkRenderPass& Renderer3D::get_render_pass() const { return data.render_pass; }
