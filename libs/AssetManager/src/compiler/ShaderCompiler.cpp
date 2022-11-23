@@ -2,6 +2,7 @@
 
 #include "compiler/ShaderCompiler.hpp"
 
+#include "compiler/ShaderReflector.hpp"
 #include "debug_break.h"
 #include "utilities/FileInputOutput.hpp"
 
@@ -59,6 +60,12 @@ namespace AssetManager {
 		const std::string& name, const std::filesystem::path& vertex_path, const std::filesystem::path& fragment_path) const
 	{
 		const auto&& [vert_spirv, frag_spirv] = compile_to_spirv(name, vertex_path, fragment_path);
+
+		auto shader_name = vertex_path.filename();
+
+		ShaderReflector vert_reflector(shader_name, vert_spirv);
+		ShaderReflector frag_reflector(shader_name, frag_spirv);
+
 		return Alabaster::Shader(name, vert_spirv, frag_spirv);
 	}
 
