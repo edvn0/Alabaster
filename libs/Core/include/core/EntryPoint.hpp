@@ -31,6 +31,9 @@ int main(int argc, char** argv)
 	std::filesystem::path defaults_path = cwd / std::filesystem::path { "resources" } / std::filesystem::path { "cli_defaults.yml" };
 
 	Alabaster::ApplicationArguments props;
+	props.width = 1600;
+	props.height = 900;
+	props.name = "Alabaster";
 	po::parser parser;
 	parser["width"].abbreviation('w').description("The width of the window.").type(po::u32).fallback(std::uint32_t { 1600 }).bind(props.width);
 	parser["height"].abbreviation('h').description("The height of the window.").type(po::u32).fallback(std::uint32_t { 900 }).bind(props.height);
