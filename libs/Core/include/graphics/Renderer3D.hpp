@@ -77,11 +77,13 @@ namespace Alabaster {
 
 		std::uint32_t meshes_submitted { 0 };
 		std::array<Mesh*, 50> mesh;
+		std::array<glm::mat4, 50> mesh_transform {};
+		std::array<glm::vec4, 50> mesh_colour;
 		std::array<Pipeline*, 50> mesh_pipeline_submit;
 		std::unique_ptr<Pipeline> mesh_pipeline;
 
 		std::unique_ptr<Mesh> sphere_model;
-		std::optional<PC> push_constant;
+		PC push_constant;
 	};
 
 	class Renderer3D {

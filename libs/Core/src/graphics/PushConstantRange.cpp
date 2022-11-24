@@ -4,7 +4,7 @@
 
 namespace Alabaster {
 
-	VkShaderStageFlags to_vulkan_flags(PushConstantKind kind)
+	constexpr VkShaderStageFlags to_vulkan_flags(PushConstantKind kind)
 	{
 		switch (kind) {
 		case PushConstantKind::Vertex:
@@ -29,9 +29,5 @@ namespace Alabaster {
 			offset += range.size;
 		}
 	};
-
-	PushConstantRange::PushConstantRange(PushConstantKind flags, std::uint32_t size)
-		: size(size)
-		, flags(flags) {};
 
 } // namespace Alabaster

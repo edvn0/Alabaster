@@ -36,7 +36,7 @@ namespace Alabaster {
 		}
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_FALSE);
+		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
 		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
 		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name.data(), nullptr, nullptr);
@@ -65,7 +65,9 @@ namespace Alabaster {
 
 		swapchain = std::make_unique<Swapchain>();
 		swapchain->init(handle);
-		swapchain->construct(width, height);
+
+		const auto&& [fb_w, fb_h] = framebuffer_extent();
+		swapchain->construct(fb_w, fb_h);
 
 		setup_events();
 	};

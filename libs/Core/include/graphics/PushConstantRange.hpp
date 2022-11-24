@@ -9,11 +9,18 @@ namespace Alabaster {
 
 	enum class PushConstantKind { Vertex = 1 << 0, Fragment = 1 << 1, Both = 1 << 2 };
 
-	VkShaderStageFlags to_vulkan_flags(PushConstantKind kind);
+	constexpr PushConstantKind operator|(PushConstantKind a, PushConstantKind b)
+	{
+		return static_cast<PushConstantKind>(static_cast<std::uint32_t>(a) | static_cast<std::uint32_t>(b));
+	};
+
+	constexpr VkShaderStageFlags to_vulkan_flags(PushConstantKind kind);
 
 	struct PushConstantRange {
-		PushConstantRange(PushConstantKind flags, std::uint32_t size);
-		PushConstantRange()
+		constexpr PushConstantRange(PushConstantKind flags, std::uint32_t size)
+			: size(size)
+			, flags(flags) {};
+		constexpr PushConstantRange()
 			: size(0)
 			, flags(PushConstantKind::Both) {};
 

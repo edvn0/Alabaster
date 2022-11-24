@@ -94,7 +94,7 @@ namespace Alabaster {
 			active = buffers[frame_index];
 		}
 
-		vk_check(vkBeginCommandBuffer(active, (begin != nullptr) ? begin : &begin_info));
+		vk_check(vkBeginCommandBuffer(active, begin ? begin : &begin_info));
 	}
 
 	void CommandBuffer::end()

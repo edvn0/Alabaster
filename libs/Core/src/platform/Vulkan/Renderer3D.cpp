@@ -35,6 +35,8 @@ namespace Alabaster {
 		to_reset.meshes_submitted = 0;
 		to_reset.mesh.fill(nullptr);
 		to_reset.mesh_pipeline_submit.fill(nullptr);
+		to_reset.mesh_transform.fill({});
+		to_reset.mesh_colour.fill({});
 		to_reset.push_constant = {};
 	}
 
@@ -322,8 +324,8 @@ namespace Alabaster {
 		const glm::mat4& rotation_matrix, const glm::vec4& colour, const glm::vec3& scale)
 	{
 		auto transform = glm::translate(glm::mat4(1.0f), pos) * rotation_matrix * glm::scale(glm::mat4(1.0f), scale);
-		mesh->set_transform(std::move(transform));
-		mesh->set_colour(colour);
+		data.mesh_transform[data.meshes_submitted] = std::move(transform);
+		data.mesh_colour[data.meshes_submitted] = colour;
 		data.mesh[data.meshes_submitted] = mesh.get();
 		data.mesh_pipeline_submit[data.meshes_submitted] = pipeline ? pipeline.get() : data.mesh_pipeline.get();
 		data.meshes_submitted++;
@@ -376,13 +378,14 @@ namespace Alabaster {
 
 	void Renderer3D::set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience)
 	{
-		data.push_constant->light_position = light_position;
-		data.push_constant->light_colour = colour;
-		data.push_constant->light_ambience = glm::vec4 { ambience };
+		data.push_constant.light_position = light_position;
+		data.push_constant.light_colour = colour;
+		data.push_constant.light_ambience = glm::vec4 { ambience };
 	}
 
 	void Renderer3D::flush()
 	{
+
 		// Flush ignores these for now...
 	}
 
@@ -430,11 +433,9 @@ namespace Alabaster {
 
 		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-		if (data.push_constant) {
-			const auto& pc = *data.push_constant;
-			vkCmdPushConstants(*command_buffer, data.quad_pipeline->get_vulkan_pipeline_layout(),
-				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
-		}
+		const auto& pc = data.push_constant;
+		vkCmdPushConstants(*command_buffer, data.quad_pipeline->get_vulkan_pipeline_layout(),
+			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
 		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
 		VkDeviceSize offsets { 0 };
@@ -485,44 +486,43 @@ namespace Alabaster {
 	{
 		const VkDescriptorSet& descriptor = data.descriptor_sets[Renderer::current_frame()];
 
-		Pipeline* initial = nullptr;
+		Pipeline* initial_pipeline = nullptr;
+		VkPipelineLayout initial_layout = nullptr;
+		Mesh* initial_mesh = nullptr;
 
 		for (std::uint32_t i = 0; i < data.meshes_submitted; i++) {
 			const auto& mesh = data.mesh[i];
-
 			const auto& vb = mesh->get_vertex_buffer();
 			const auto& ib = mesh->get_index_buffer();
 			const auto& pipeline = data.mesh_pipeline_submit[i];
+			const auto& mesh_transform = data.mesh_transform[i];
+			const auto& mesh_colour = data.mesh_colour[i];
 			const auto& layout = pipeline->get_vulkan_pipeline_layout();
 			const auto& vk_pipeline = pipeline->get_vulkan_pipeline();
 
-			if (initial != pipeline) {
-				initial = pipeline;
-				vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, initial->get_vulkan_pipeline());
+			data.push_constant.object_transform = mesh_transform;
+			data.push_constant.object_colour = mesh_colour;
+			const auto& pc = data.push_constant;
+			vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
+
+			if (initial_layout != layout) {
+				initial_layout = layout;
+				vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, initial_layout, 0, 1, &descriptor, 0, nullptr);
 			}
 
-			std::array<VkBuffer, 1> vbs { *vb };
-			VkDeviceSize offsets { 0 };
-			vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
-
-			vkCmdBindIndexBuffer(*command_buffer, *ib, 0, VK_INDEX_TYPE_UINT32);
-
-			const auto mesh_transform = mesh->get_transform();
-			const auto mesh_colour = mesh->get_colour();
-
-			if (mesh_transform) {
-				data.push_constant->object_transform = *mesh_transform;
-			}
-			if (mesh_colour) {
-				data.push_constant->object_colour = *mesh_colour;
-			}
-			if (data.push_constant) {
-				const auto& pc = *data.push_constant;
-				update_uniform_buffers(mesh_transform);
-				vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
+			if (initial_pipeline != pipeline) {
+				initial_pipeline = pipeline;
+				vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, initial_pipeline->get_vulkan_pipeline());
 			}
 
-			vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &descriptor, 0, nullptr);
+			if (initial_mesh != mesh) {
+				initial_mesh = mesh;
+				std::array<VkBuffer, 1> vbs { *vb };
+				VkDeviceSize offsets { 0 };
+				vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
+
+				vkCmdBindIndexBuffer(*command_buffer, *ib, 0, VK_INDEX_TYPE_UINT32);
+			}
 
 			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 			data.draw_calls++;

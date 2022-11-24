@@ -96,19 +96,17 @@ namespace Alabaster {
 			window->update();
 
 			swapchain().begin_frame();
-			{
-				Renderer::begin();
 
+			Renderer::begin();
+			{
 				update_layers(app_ts);
-#if ALABASTER_USE_IMGUI
 				gui_layer().begin();
 				render_imgui();
 				gui_layer().end();
-#endif
-
-				Renderer::end();
 			}
+			Renderer::end();
 			swapchain().end_frame();
+
 			cpu_time = on_cpu.elapsed();
 			frametime_queue[frametime_index] = cpu_time;
 			float time = Clock::get_ms<float>();
