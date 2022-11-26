@@ -10,7 +10,7 @@
 namespace Alabaster::Utilities {
 
 	static inline void transition_image_layout(
-		VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer = nullptr)
+		VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout, CommandBuffer* buffer)
 	{
 		const auto& command_buffer = buffer ? buffer->get_buffer() : GraphicsContext::the().get_command_buffer();
 
@@ -53,8 +53,13 @@ namespace Alabaster::Utilities {
 		}
 	}
 
-	void copy_buffer_to_image(
-		VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, const std::unique_ptr<CommandBuffer>& cmd_buffer = nullptr)
+	static inline void transition_image_layout(
+		VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer = nullptr)
+	{
+		transition_image_layout(image, format, old_layout, new_layout, buffer.get());
+	}
+
+	void copy_buffer_to_image(VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, CommandBuffer* cmd_buffer)
 	{
 		const auto command_buffer = cmd_buffer ? cmd_buffer->get_buffer() : GraphicsContext::the().get_command_buffer();
 
@@ -74,6 +79,12 @@ namespace Alabaster::Utilities {
 		if (!buffer) {
 			GraphicsContext::the().flush_command_buffer(command_buffer);
 		}
+	}
+
+	void copy_buffer_to_image(
+		VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, const std::unique_ptr<CommandBuffer>& cmd_buffer = nullptr)
+	{
+		copy_buffer_to_image(buffer, image_info, w, h, cmd_buffer.get());
 	}
 
 } // namespace Alabaster::Utilities

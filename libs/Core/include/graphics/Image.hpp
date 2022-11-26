@@ -65,7 +65,8 @@ namespace Alabaster {
 			return info;
 		};
 
-		void invalidate(const std::unique_ptr<CommandBuffer>& buffer);
+		void invalidate(const std::unique_ptr<CommandBuffer>& buffer) { invalidate(*buffer); };
+		void invalidate(CommandBuffer& buffer);
 
 	private:
 		void invalidate(void* data);

@@ -11,7 +11,7 @@
 
 namespace Alabaster {
 
-	enum class LoggerLevel : uint8_t { Debug, Error, Info, Trace, Warn };
+	enum class LoggerLevel { Debug, Error, Info, Trace, Warn };
 
 	class Logger {
 		using LoggerWrapper = std::shared_ptr<spdlog::logger>;

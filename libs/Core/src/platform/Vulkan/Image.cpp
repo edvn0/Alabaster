@@ -50,7 +50,7 @@ namespace Alabaster {
 		pixel_data = data;
 	}
 
-	void Image::invalidate(const std::unique_ptr<CommandBuffer>& buffer)
+	void Image::invalidate(CommandBuffer& buffer)
 	{
 		if (!pixel_data) {
 			throw AlabasterException("Pixel data has not been loaded, either correctly, or at all.");
@@ -58,7 +58,7 @@ namespace Alabaster {
 
 		Allocator allocator("Image");
 
-		VkDeviceSize buffer_size = image_props.width * image_props.height * image_props.channels;
+		VkDeviceSize buffer_size = static_cast<VkDeviceSize>(image_props.width * image_props.height * image_props.channels);
 
 		VkBufferCreateInfo buffer_create_info {};
 		buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -91,13 +91,16 @@ namespace Alabaster {
 		image_create_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		image_info.allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_HOST, image_info.image);
 
-		Utilities::transition_image_layout(image_info.image, chosen_format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, buffer);
-		Utilities::copy_buffer_to_image(staging_buffer, image_info, image_props.width, image_props.height, buffer);
+		Utilities::transition_image_layout(image_info.image, chosen_format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &buffer);
+		Utilities::copy_buffer_to_image(staging_buffer, image_info, image_props.width, image_props.height, &buffer);
 		Utilities::transition_image_layout(
-			image_info.image, chosen_format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, buffer);
+			image_info.image, chosen_format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, &buffer);
 
-		buffer->add_destruction_callback([staging_buffer_allocation, staging_buffer](
-											 Allocator& allocator) { allocator.destroy_buffer(staging_buffer, staging_buffer_allocation); });
+		//	Allocator alloc;
+		//	allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
+
+		buffer.add_destruction_callback([staging_buffer_allocation, staging_buffer](
+											Allocator& allocator) { allocator.destroy_buffer(staging_buffer, staging_buffer_allocation); });
 
 		Log::info("[Image] invalidated image: {}", image_props.path.value().string());
 		create_view();

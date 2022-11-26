@@ -136,7 +136,7 @@ namespace Alabaster {
 
 		Allocator allocator("CommandBufferDe-allocator");
 		while (!destruction_callbacks.empty()) {
-			auto& cb = destruction_callbacks.front();
+			std::function<void(Allocator&)> cb = destruction_callbacks.front();
 			destruction_callbacks.pop();
 			cb(allocator);
 		}

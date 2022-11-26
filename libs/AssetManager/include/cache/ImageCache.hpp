@@ -11,8 +11,7 @@ namespace AssetManager {
 	template <class T> class ImageCache : public BaseCache<ImageCache, Alabaster::Image> {
 	public:
 		ImageCache(std::unique_ptr<CacheCreateRead<T>> cache_crud = std::make_unique<DefaultImageCrud>())
-			: cache_crud(std::move(cache_crud))
-			, buffer(new Alabaster::CommandBuffer(3)) {};
+			: cache_crud(std::move(cache_crud)) {};
 
 		void load_from_directory(
 			const std::filesystem::path& texture_path, std::unordered_set<std::string> include_extensions = { ".tga", ".png", ".jpeg", ".jpg" });
@@ -20,7 +19,6 @@ namespace AssetManager {
 	public:
 		void destroy_impl()
 		{
-			buffer->destroy();
 			for (auto& [key, image] : images) {
 				image.destroy();
 			}
@@ -38,7 +36,11 @@ namespace AssetManager {
 		{
 			if (images.contains(name))
 				return false;
-			cache_crud->create(name, input, images);
+			try {
+				cache_crud->create(name, input, images);
+			} catch (const std::exception& exc) {
+				throw Alabaster::AlabasterException(exc.what());
+			}
 			return true;
 		};
 
@@ -46,7 +48,6 @@ namespace AssetManager {
 		std::unordered_map<std::string, Alabaster::Image> images;
 		std::filesystem::path texture_path;
 		std::unique_ptr<CacheCreateRead<T>> cache_crud;
-		std::unique_ptr<Alabaster::CommandBuffer> buffer;
 	};
 
 } // namespace AssetManager

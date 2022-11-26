@@ -63,8 +63,8 @@ namespace AssetManager {
 
 		auto shader_name = vertex_path.filename();
 
-		ShaderReflector vert_reflector(shader_name, vert_spirv);
-		ShaderReflector frag_reflector(shader_name, frag_spirv);
+		ShaderReflector vert_reflector(shader_name.string(), vert_spirv);
+		ShaderReflector frag_reflector(shader_name.string(), frag_spirv);
 
 		return Alabaster::Shader(name, vert_spirv, frag_spirv);
 	}

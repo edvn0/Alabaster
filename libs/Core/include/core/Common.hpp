@@ -12,9 +12,6 @@ namespace Alabaster {
 	static constexpr auto enum_name = [](auto&& in) { return magic_enum::enum_name(in); };
 	static constexpr auto non_empty = [](const auto& in) { return not in.empty(); };
 
-	template <typename U> U& as(auto&& in) { return *static_cast<U*>(in.get()); }
-	template <typename U> U& as(const auto& in) { return *static_cast<U*>(in.get()); }
-
 #ifdef ALABASTER_DEBUG
 
 	template <typename VkResult> static constexpr auto vk_check(VkResult result) -> void
