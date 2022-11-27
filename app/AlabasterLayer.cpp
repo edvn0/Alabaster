@@ -150,11 +150,14 @@ bool AlabasterLayer::initialise()
 
 	command_buffer = CommandBuffer::from_swapchain();
 
+	editor_scene = std::make_unique<SceneSystem::Scene>(camera);
+
 	return true;
 }
 
 void AlabasterLayer::on_event(Event& e)
 {
+	editor_scene->on_event(e);
 	editor.on_event(e);
 
 	EventDispatcher dispatch(e);
@@ -191,6 +194,8 @@ void AlabasterLayer::on_event(Event& e)
 void AlabasterLayer::update(float ts)
 {
 	static std::size_t frame_number { 0 };
+
+	editor_scene->update(ts);
 
 	editor.on_update(ts);
 	command_buffer->begin();
@@ -253,7 +258,7 @@ void AlabasterLayer::update(float ts)
 
 void AlabasterLayer::ui() { }
 
-void AlabasterLayer::ui(float ts) { ImGui::ShowDebugLogWindow(); }
+void AlabasterLayer::ui(float ts) { editor_scene->ui(ts); }
 
 void AlabasterLayer::destroy()
 {

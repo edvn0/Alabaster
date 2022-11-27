@@ -8,6 +8,7 @@
 #include "AssetManager.hpp"
 #include "graphics/Camera.hpp"
 #include "graphics/Renderer.hpp"
+#include "SceneSystem.hpp"
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -37,6 +38,8 @@ private:
 	SimpleCamera camera;
 	EditorCamera editor;
 	Renderer3D renderer;
+
+	std::unique_ptr<SceneSystem::Scene> editor_scene;
 
 	VkRenderPass sun_renderpass { nullptr };
 	VkRenderPass first_renderpass { nullptr };

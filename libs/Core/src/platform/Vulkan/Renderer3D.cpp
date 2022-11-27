@@ -15,7 +15,6 @@
 #include "graphics/Renderer.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
-#include "vulkan/vulkan_core.h"
 
 #include <memory>
 #include <vulkan/vulkan.h>

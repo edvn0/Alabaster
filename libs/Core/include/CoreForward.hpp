@@ -13,6 +13,7 @@ namespace Alabaster {
 	class CommandBuffer;
 	class IndexBuffer;
 	class Renderer;
+	class Renderer3D;
 	class RenderQueue;
 	class GraphicsContext;
 	class Swapchain;
