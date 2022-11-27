@@ -24,9 +24,9 @@ namespace Alabaster {
 			, unreversed_projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, near_plane, far_plane)) {};
 		virtual ~Camera() = default;
 
-		virtual void focus(const glm::vec3& focus_point) {};
-		virtual void on_update(float ts) {};
-		virtual void on_event(Event& e) {};
+		virtual void focus(const glm::vec3&) {};
+		virtual void on_update(float) {};
+		virtual void on_event(Event&) {};
 
 		virtual const glm::vec3& get_position() const = 0;
 

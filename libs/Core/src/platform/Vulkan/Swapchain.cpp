@@ -173,7 +173,7 @@ namespace Alabaster {
 
 	void Swapchain::present()
 	{
-		if (current_image_index < 0)
+		if (current_image_index == INVALID_IMAGE_INDEX)
 			return;
 
 		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -280,7 +280,7 @@ namespace Alabaster {
 		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
 			cleanup_swapchain();
 			on_resize(sc_width, sc_height);
-			return -1;
+			return INVALID_IMAGE_INDEX;
 		} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
 			throw AlabasterException("Failed to acquire swap chain image!");
 		}
@@ -338,7 +338,7 @@ namespace Alabaster {
 		present_format = VK_PRESENT_MODE_FIFO_KHR;
 	}
 
-	void Swapchain::choose_extent(const Capabilities& in) { extent = { sc_width, sc_height }; }
+	void Swapchain::choose_extent(const Capabilities&) { extent = { sc_width, sc_height }; }
 
 	void Swapchain::create_swapchain(const Capabilities& in)
 	{

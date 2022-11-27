@@ -43,3 +43,6 @@ url = https://github.com/edvn0/imgui
 [submodule "third_party/entt"]
 	path = third_party/entt
 	url = https://github.com/skypjack/entt.git
+[submodule "third_party/stduuid"]
+	path = third_party/stduuid
+	url = https://github.com/mariusbancila/stduuid.git

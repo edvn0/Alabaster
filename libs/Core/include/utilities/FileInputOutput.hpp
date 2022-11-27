@@ -99,7 +99,7 @@ namespace Alabaster::IO {
 
 		try {
 			return sanity_checks();
-		} catch (const AlabasterException& e) {
+		} catch (const AlabasterException&) {
 			return {};
 		}
 	}

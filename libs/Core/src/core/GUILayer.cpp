@@ -77,6 +77,15 @@ namespace Alabaster {
 		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &gui_renderpass));
 	}
 
+	void GUILayer::on_event(Event& event)
+	{
+		if (should_block) {
+			ImGuiIO& io = ImGui::GetIO();
+			event.handled |= event.is_in_category(EventCategoryMouse) & io.WantCaptureMouse;
+			event.handled |= event.is_in_category(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+		}
+	}
+
 	bool GUILayer::initialise()
 	{
 		ImGui::CreateContext();
@@ -162,8 +171,6 @@ namespace Alabaster {
 		std::uint32_t width = swapchain->get_width();
 		std::uint32_t height = swapchain->get_height();
 
-		std::uint32_t command_buffer_index = swapchain->frame();
-
 		VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
 
 		VkRenderPassBeginInfo render_pass_begin_info = {};
@@ -173,7 +180,7 @@ namespace Alabaster {
 		render_pass_begin_info.renderArea.offset.y = 0;
 		render_pass_begin_info.renderArea.extent.width = width;
 		render_pass_begin_info.renderArea.extent.height = height;
-		render_pass_begin_info.clearValueCount = clear_values.size();
+		render_pass_begin_info.clearValueCount = static_cast<std::uint32_t>(clear_values.size());
 		render_pass_begin_info.pClearValues = clear_values.data();
 		render_pass_begin_info.framebuffer = swapchain->get_current_framebuffer();
 
@@ -230,7 +237,7 @@ namespace Alabaster {
 
 	void GUILayer::ui() { }
 
-	void GUILayer::ui(float timestep) { }
+	void GUILayer::ui(float) { }
 
 	GUILayer::~GUILayer() = default;
 

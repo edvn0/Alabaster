@@ -2,6 +2,7 @@
 
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
+#include "core/GUILayer.hpp"
 #include "graphics/CommandBuffer.hpp"
 
 #include <imgui.h>
@@ -258,7 +259,22 @@ void AlabasterLayer::update(float ts)
 
 void AlabasterLayer::ui() { }
 
-void AlabasterLayer::ui(float ts) { editor_scene->ui(ts); }
+void AlabasterLayer::ui(float ts)
+{
+	editor_scene->ui(ts);
+
+	auto viewport_min_region = ImGui::GetWindowContentRegionMin();
+	auto viewport_max_region = ImGui::GetWindowContentRegionMax();
+	auto viewport_offset = ImGui::GetWindowPos();
+	viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
+	viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
+
+	viewport_focused = ImGui::IsWindowFocused();
+	viewport_hovered = ImGui::IsWindowHovered();
+
+	if (!viewport_hovered)
+		Application::the().gui_layer().block_events();
+}
 
 void AlabasterLayer::destroy()
 {

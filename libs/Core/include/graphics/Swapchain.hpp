@@ -12,6 +12,8 @@ struct GLFWwindow;
 
 namespace Alabaster {
 
+	static constexpr std::uint32_t INVALID_IMAGE_INDEX = 1023;
+
 	struct DepthImage {
 		VkImage image;
 		VkImageView view;

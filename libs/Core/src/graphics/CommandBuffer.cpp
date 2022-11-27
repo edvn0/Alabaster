@@ -39,7 +39,7 @@ namespace Alabaster {
 		fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 		fences.resize(frames);
-		for (int i = 0; i < frames; i++) {
+		for (std::uint32_t i = 0; i < frames; i++) {
 			vk_check(vkCreateFence(GraphicsContext::the().device(), &fence_create_info, nullptr, &fences[i]));
 		}
 	}

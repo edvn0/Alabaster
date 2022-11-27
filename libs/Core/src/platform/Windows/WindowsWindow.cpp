@@ -90,7 +90,7 @@ namespace Alabaster {
 
 	void Window::setup_events()
 	{
-		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow* window, int w, int h) { Application::the().resize(w, h); });
+		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow*, int w, int h) { Application::the().resize(w, h); });
 
 		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int width, int height) {
@@ -109,7 +109,7 @@ namespace Alabaster {
 			data.callback(event);
 		});
 
-		glfwSetKeyCallback(handle, [](GLFWwindow* window, int key, int scancode, int action, int mods) {
+		glfwSetKeyCallback(handle, [](GLFWwindow* window, int key, int, int action, int) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
 			switch (action) {
@@ -138,7 +138,7 @@ namespace Alabaster {
 			data.callback(event);
 		});
 
-		glfwSetMouseButtonCallback(handle, [](GLFWwindow* window, int button, int action, int mods) {
+		glfwSetMouseButtonCallback(handle, [](GLFWwindow* window, int button, int action, int) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
 			switch (action) {

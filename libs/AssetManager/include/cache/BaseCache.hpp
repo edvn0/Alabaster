@@ -14,7 +14,7 @@ namespace AssetManager {
 			auto converted_path = std::filesystem::path { path };
 			if (count != 2) {
 				auto out = converted_path.filename();
-				for (auto i = 0; i < count; i++) {
+				for (std::uint32_t i = 0; i < count; i++) {
 					out.replace_extension();
 				}
 				return out.string();
@@ -24,7 +24,7 @@ namespace AssetManager {
 			auto out_converted = std::filesystem::path { path.filename() };
 			if (count != 2) {
 				auto out = out_converted;
-				for (auto i = 0; i < count; i++) {
+				for (std::uint32_t i = 0; i < count; i++) {
 					out.replace_extension();
 				}
 				return out.string();

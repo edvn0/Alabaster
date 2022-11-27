@@ -54,7 +54,7 @@ namespace Alabaster {
 		float field_of_view;
 		float near_plane;
 		float far_plane;
-		float aspect { 1.666 };
+		float aspect { 1.666f };
 
 		glm::vec3 rotation {};
 		glm::vec3 position {};

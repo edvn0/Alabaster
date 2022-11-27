@@ -15,7 +15,7 @@
 
 namespace Alabaster {
 
-	auto handle_vertices(const auto& attrib, const auto& shapes, const auto& materials)
+	auto handle_vertices(const auto& attrib, const auto& shapes)
 	{
 		std::unordered_map<Vertex, std::uint32_t> unique_vertices {};
 		std::vector<Vertex> vertices;
@@ -100,9 +100,9 @@ namespace Alabaster {
 
 		const auto& attrib = reader.GetAttrib();
 		const auto& shapes = reader.GetShapes();
-		const auto& materials = reader.GetMaterials();
+		// TODO: const auto& materials = reader.GetMaterials();
 
-		return handle_vertices(attrib, shapes, materials);
+		return handle_vertices(attrib, shapes);
 	}
 
 	Mesh::~Mesh()

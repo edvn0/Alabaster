@@ -129,8 +129,9 @@ namespace Alabaster {
 	void Application::render_imgui()
 	{
 
+		auto time_step = float(app_ts);
 		for (const auto& [key, layer] : layers) {
-			layer->ui(app_ts);
+			layer->ui(time_step);
 		}
 	}
 
@@ -138,6 +139,14 @@ namespace Alabaster {
 	{
 		for (const auto& [key, layer] : layers) {
 			layer->update(ts);
+		}
+	}
+
+	void Application::update_layers(double ts)
+	{
+		auto time_step = float(ts);
+		for (const auto& [key, layer] : layers) {
+			layer->update(time_step);
 		}
 	}
 
@@ -157,9 +166,10 @@ namespace Alabaster {
 		dispatcher.dispatch<WindowCloseEvent>([this](WindowCloseEvent& e) { return on_window_change(e); });
 
 		for (const auto& [key, layer] : layers) {
-			layer->on_event(event);
 			if (event.handled)
 				return;
+
+			layer->on_event(event);
 		};
 
 		if (event.handled)
@@ -178,7 +188,7 @@ namespace Alabaster {
 		return false;
 	}
 
-	bool Application::on_window_change(WindowMinimizeEvent& event)
+	bool Application::on_window_change(WindowMinimizeEvent&)
 	{
 		// minimized = e.is_minimized();
 		return false;

@@ -25,6 +25,7 @@ namespace Alabaster {
 		image_props.width = static_cast<std::uint32_t>(w);
 		image_props.height = static_cast<std::uint32_t>(h);
 		image_props.channels = static_cast<std::uint32_t>(STBI_rgb_alpha);
+		image_props.format = format;
 
 		Log::info("[Image] w: {}, h: {}, channels: {}", w, h, actual_channels);
 		invalidate(data);
@@ -34,7 +35,7 @@ namespace Alabaster {
 		: image_props(props)
 	{
 		assert_that(props.path, "You need to supply a path to an image file.");
-		const auto path = props.path.value();
+		const auto& path = props.path.value();
 
 		int w, h, actual_channels;
 		uint8_t* data = stbi_load(path.string().data(), &w, &h, &actual_channels, STBI_rgb_alpha);
@@ -91,10 +92,9 @@ namespace Alabaster {
 		image_create_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		image_info.allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_HOST, image_info.image);
 
-		Utilities::transition_image_layout(image_info.image, chosen_format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &buffer);
+		Utilities::transition_image_layout(image_info.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &buffer);
 		Utilities::copy_buffer_to_image(staging_buffer, image_info, image_props.width, image_props.height, &buffer);
-		Utilities::transition_image_layout(
-			image_info.image, chosen_format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, &buffer);
+		Utilities::transition_image_layout(image_info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, &buffer);
 
 		//	Allocator alloc;
 		//	allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
@@ -144,10 +144,9 @@ namespace Alabaster {
 		image_create_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		image_info.allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_HOST, image_info.image);
 
-		Utilities::transition_image_layout(image_info.image, chosen_format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		Utilities::transition_image_layout(image_info.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 		Utilities::copy_buffer_to_image(staging_buffer, image_info, image_props.width, image_props.height);
-		Utilities::transition_image_layout(
-			image_info.image, chosen_format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		Utilities::transition_image_layout(image_info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
 		allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
 

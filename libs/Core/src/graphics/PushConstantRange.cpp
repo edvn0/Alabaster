@@ -2,6 +2,9 @@
 
 #include "graphics/PushConstantRange.hpp"
 
+#include "core/Common.hpp"
+#include "core/exceptions/AlabasterException.hpp"
+
 namespace Alabaster {
 
 	constexpr VkShaderStageFlags to_vulkan_flags(PushConstantKind kind)
@@ -13,6 +16,8 @@ namespace Alabaster {
 			return VK_SHADER_STAGE_FRAGMENT_BIT;
 		case PushConstantKind::Both:
 			return VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT;
+		default:
+			throw AlabasterException("PushConstantKind is never here.");
 		}
 	}
 

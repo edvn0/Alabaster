@@ -136,7 +136,7 @@ namespace Alabaster {
 
 		VkDescriptorSetLayoutCreateInfo create_info {};
 		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-		create_info.bindingCount = bindings.size();
+		create_info.bindingCount = static_cast<std::uint32_t>(bindings.size());
 		create_info.pBindings = bindings.data();
 
 		layouts.resize(bindings.size());

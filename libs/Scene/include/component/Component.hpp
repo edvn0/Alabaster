@@ -51,22 +51,27 @@ namespace SceneSystem::Component {
 	};
 
 	struct Mesh {
-		const Alabaster::Mesh* mesh;
+		const std::unique_ptr<Alabaster::Mesh>& mesh;
 
-		Mesh(const Alabaster::Mesh*)
+		Mesh(const std::unique_ptr<Alabaster::Mesh>& mesh)
 			: mesh(mesh)
 		{
 		}
 	};
 
-	template <typename... T> struct Components {
+	struct Texture {
+		glm::vec4 colour;
+
+		Texture(glm::vec4 col)
+			: colour(std::move(col))
+		{
+		}
 	};
-	using AllComponents = Components<Mesh, Transform, ID, Tag>;
 
 	template <typename T, typename... U>
 	concept IsAnyOf = (std::same_as<T, U> || ...);
 
 	template <typename T>
-	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag>;
+	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture>;
 
 } // namespace SceneSystem::Component

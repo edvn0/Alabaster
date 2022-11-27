@@ -319,20 +319,25 @@ namespace Alabaster {
 		data.quad_indices_submitted += 6;
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec3& pos,
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& input_mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec3& pos,
 		const glm::mat4& rotation_matrix, const glm::vec4& colour, const glm::vec3& scale)
 	{
 		auto transform = glm::translate(glm::mat4(1.0f), pos) * rotation_matrix * glm::scale(glm::mat4(1.0f), scale);
-		data.mesh_transform[data.meshes_submitted] = std::move(transform);
-		data.mesh_colour[data.meshes_submitted] = colour;
-		data.mesh[data.meshes_submitted] = mesh.get();
-		data.mesh_pipeline_submit[data.meshes_submitted] = pipeline ? pipeline.get() : data.mesh_pipeline.get();
-		data.meshes_submitted++;
+		mesh(input_mesh, std::move(transform), pipeline, colour);
 	}
 
 	void Renderer3D::mesh(const std::unique_ptr<Mesh>& input_mesh, const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale)
 	{
 		mesh(input_mesh, nullptr, pos, glm::mat4 { 1.0f }, colour, scale);
+	}
+
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, glm::mat4 transform, const std::unique_ptr<Pipeline>& pipeline, const glm::vec4& colour)
+	{
+		data.mesh_transform[data.meshes_submitted] = std::move(transform);
+		data.mesh_colour[data.meshes_submitted] = colour;
+		data.mesh[data.meshes_submitted] = mesh.get();
+		data.mesh_pipeline_submit[data.meshes_submitted] = pipeline ? pipeline.get() : data.mesh_pipeline.get();
+		data.meshes_submitted++;
 	}
 
 	void Renderer3D::line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
@@ -373,7 +378,7 @@ namespace Alabaster {
 		}
 	}
 
-	void Renderer3D::text(std::string text, glm::vec3 position, float font_size) { }
+	void Renderer3D::text(std::string, glm::vec3, float) { }
 
 	void Renderer3D::set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience)
 	{
@@ -448,7 +453,6 @@ namespace Alabaster {
 		}
 
 		const auto count = static_cast<std::uint32_t>(index_count);
-		const auto instances = static_cast<std::uint32_t>(index_count / 6);
 		vkCmdDrawIndexed(*command_buffer, count, 1, 0, 0, 0);
 	}
 
@@ -497,7 +501,6 @@ namespace Alabaster {
 			const auto& mesh_transform = data.mesh_transform[i];
 			const auto& mesh_colour = data.mesh_colour[i];
 			const auto& layout = pipeline->get_vulkan_pipeline_layout();
-			const auto& vk_pipeline = pipeline->get_vulkan_pipeline();
 
 			data.push_constant.object_transform = mesh_transform;
 			data.push_constant.object_colour = mesh_colour;

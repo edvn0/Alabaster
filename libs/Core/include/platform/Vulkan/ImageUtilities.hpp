@@ -9,8 +9,7 @@
 
 namespace Alabaster::Utilities {
 
-	static inline void transition_image_layout(
-		VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout, CommandBuffer* buffer)
+	static inline void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, CommandBuffer* buffer)
 	{
 		const auto& command_buffer = buffer ? buffer->get_buffer() : GraphicsContext::the().get_command_buffer();
 
@@ -54,9 +53,9 @@ namespace Alabaster::Utilities {
 	}
 
 	static inline void transition_image_layout(
-		VkImage image, VkFormat format, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer = nullptr)
+		VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer = nullptr)
 	{
-		transition_image_layout(image, format, old_layout, new_layout, buffer.get());
+		transition_image_layout(image, old_layout, new_layout, buffer.get());
 	}
 
 	void copy_buffer_to_image(VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, CommandBuffer* cmd_buffer)

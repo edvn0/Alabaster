@@ -17,7 +17,7 @@ namespace Alabaster {
 #endif
 
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_callback(VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
-		VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void* p_user_data)
+		VkDebugUtilsMessageTypeFlagsEXT message_type, const VkDebugUtilsMessengerCallbackDataEXT* callback_data, void*)
 	{
 		std::string type = message_type == 1 ? "General" : "1";
 		if (message_severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT) {
@@ -33,7 +33,7 @@ namespace Alabaster {
 			Log::error("Error: Message Type: {}, Message: {}", type, callback_data->pMessage, callback_data->queueLabelCount);
 			return VK_TRUE;
 		} else {
-			Log::error("Message Severity: {}", message_severity);
+			Log::error("Message Severity: {}", enum_name(message_severity));
 			return VK_FALSE;
 		}
 	}
@@ -163,7 +163,7 @@ namespace Alabaster {
 		instance_info.pNext = nullptr;
 
 		if (enable_layers) {
-			instance_info.enabledLayerCount = requested_validation_layers.size();
+			instance_info.enabledLayerCount = static_cast<uint32_t>(requested_validation_layers.size());
 			instance_info.ppEnabledLayerNames = requested_validation_layers.data();
 
 			VkDebugUtilsMessengerCreateInfoEXT debug_create_info {};

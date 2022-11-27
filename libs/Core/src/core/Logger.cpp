@@ -3,6 +3,7 @@
 #include "core/Logger.hpp"
 
 #include "core/Common.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 
 #include <filesystem>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -24,6 +25,8 @@ namespace Alabaster {
 			return spdlog::level::err;
 		case LoggerLevel::Debug:
 			return spdlog::level::debug;
+		default:
+			throw AlabasterException(fmt::format("to_spdlog throw, value of level: {}", enum_name(level)));
 		};
 	};
 

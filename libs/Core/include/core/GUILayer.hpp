@@ -18,12 +18,14 @@ namespace Alabaster {
 		}
 		~GUILayer();
 
-		void on_event(Event& e) override {};
+		void on_event(Event&) override;
 		bool initialise() override;
-		void update(float timestep) override {};
-		void ui(float timestep) override;
+		void update(float) override {};
+		void ui(float) override;
 		void ui() override;
 		void destroy() override;
+
+		void block_events() { should_block = true; }
 
 		void begin();
 		void end();
@@ -34,6 +36,8 @@ namespace Alabaster {
 		VkRenderPass gui_renderpass { nullptr };
 
 		std::unique_ptr<CommandBuffer> imgui_command_buffer;
+
+		bool should_block { false };
 
 		void create_renderpass();
 	};

@@ -50,7 +50,7 @@ namespace Alabaster {
 		clear_values[0].color = { { 0, 0, 0, 0 } };
 		clear_values[1].depthStencil = { .depth = 1.0f, .stencil = 0 };
 
-		render_pass_info.clearValueCount = clear_values.size();
+		render_pass_info.clearValueCount = static_cast<std::uint32_t>(clear_values.size());
 		render_pass_info.pClearValues = clear_values.data();
 		verify(*buffer, "[Renderer - Begin Render Pass] Command buffer is not active.");
 		vkCmdBeginRenderPass(*buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
@@ -107,7 +107,7 @@ namespace Alabaster {
 	void Renderer::shutdown()
 	{
 		Log::info("[Renderer] Destruction of renderer.");
-		for (int i = 0; i < Application::the().swapchain().get_image_count(); i++) {
+		for (std::uint32_t i = 0; i < Application::the().swapchain().get_image_count(); i++) {
 			auto& queue = Renderer::resource_release_queue(i);
 			queue.execute();
 		}

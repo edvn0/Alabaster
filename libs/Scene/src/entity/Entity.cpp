@@ -8,6 +8,7 @@ namespace SceneSystem {
 		: scene(scene)
 		, entity_handle(entity_handle == entt::null ? scene.registry.create() : entity_handle)
 	{
+		add_component<Component::Transform>();
 		add_component<Component::Tag>(name);
 		add_component<Component::ID>();
 	};

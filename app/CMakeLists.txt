@@ -33,13 +33,13 @@ target_link_libraries(
     Alabaster::Core Alabaster::SceneSystem spdlog imgui)
 
 if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS /wd4201)
 elseif(APPLE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
 endif()
 
 if(MSVC)
-    target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
+    target_compile_options(${PROJECT_NAME} PRIVATE "/MP" /wd4201)
 endif()
 
 add_custom_command(

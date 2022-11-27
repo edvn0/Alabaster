@@ -33,17 +33,20 @@ target_include_directories(
     ${THIRD_PARTY_DIR}/magic_enum/include
     ${THIRD_PARTY_DIR}/entt/single_include
     ../Core/include/
+    ../AssetManager/include/
     INTERFACE ${Vulkan_INCLUDE_DIRS}
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
     ${PROJECT_NAME} PRIVATE Vulkan::Vulkan spdlog magic_enum effolkronium_random
-    imgui Alabaster::Core)
+    imgui stduuid Alabaster::Core Alabaster::AssetManager)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/scene_pch.hpp)
 
-if(APPLE)
-    target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-volatile -Wall -Werror)
+if(MSVC)
+    target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /wd4201)
+else()
+    target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -56,7 +59,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
 endif()
 
 if(WIN32)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS /wd4201)
 elseif(APPLE)
     target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
 endif()
