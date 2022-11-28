@@ -10,7 +10,6 @@ namespace SceneSystem {
 	class Entity {
 	public:
 		Entity(Scene& scene, entt::entity entity_handle = entt::null, std::string name = "Unnamed entity");
-
 		~Entity() {};
 
 		template <Component::IsComponent... T> bool has_any() { return scene.registry.any_of<T...>(entity_handle); }

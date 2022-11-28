@@ -1,9 +1,8 @@
 #include "scene_pch.hpp"
 
-#include "scene/Scene.hpp"
-
 #include "cache/ResourceCache.hpp"
 #include "core/Application.hpp"
+#include "core/Random.hpp"
 #include "core/Window.hpp"
 #include "entity/Entity.hpp"
 #include "graphics/Camera.hpp"
@@ -17,6 +16,7 @@
 #include "graphics/Renderer3D.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
+#include "scene/Scene.hpp"
 
 #include <imgui/imgui.h>
 
@@ -35,6 +35,11 @@ namespace SceneSystem {
 			entity.add_component<Component::Mesh>(sphere);
 			auto& transform = entity.get_component<Component::Transform>();
 			transform.position = Alabaster::sphere_vector3(30);
+			float cosx = 30 * glm::cos(glm::radians(transform.position.x));
+			float z = 30 * glm::sin(glm::radians(transform.position.y));
+			float pos_y = (cosx * z) / 30;
+
+			transform.position = { cosx, pos_y, z };
 			transform.scale = { 0.2, 0.2, 0.2 };
 			entity.add_component<Component::Texture>(glm::vec4(1.0f));
 		}
@@ -45,7 +50,6 @@ namespace SceneSystem {
 		, scene_renderer(new Alabaster::Renderer3D(camera))
 		, command_buffer(Alabaster::CommandBuffer::from_swapchain())
 	{
-
 		build_scene();
 	}
 
@@ -53,14 +57,18 @@ namespace SceneSystem {
 
 	void Scene::update(float)
 	{
-		command_buffer->begin({}, false);
-		scene_renderer->begin_scene();
-		scene_renderer->reset_stats();
-		scene_renderer->set_light_data(pos, col, ambience);
-		auto view = registry.view<Component::Transform, Component::Mesh, Component::Texture>();
-		view.each([&renderer = scene_renderer](const Component::Transform& transform, const Component::Mesh& mesh,
-					  const Component::Texture& texture) { renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, texture.colour); });
-		scene_renderer->end_scene(command_buffer);
+		command_buffer->begin(false);
+		{
+			scene_renderer->begin_scene();
+			scene_renderer->reset_stats();
+			scene_renderer->set_light_data(pos, col, ambience);
+			auto view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture>();
+			view.each([&renderer = scene_renderer](Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture) {
+				transform.position = Alabaster::sphere_vector3(30);
+				renderer->mesh(mesh.mesh, transform.to_matrix(), texture.colour);
+			});
+			scene_renderer->end_scene(command_buffer);
+		}
 		command_buffer->submit();
 	}
 
@@ -68,7 +76,7 @@ namespace SceneSystem {
 
 	void Scene::ui(float)
 	{
-		auto view = registry.view<Component::ID, Component::Tag>();
+		auto view = registry.view<const Component::ID, const Component::Tag>();
 
 		ImGui::Begin("IDs");
 		if (ImGui::Button("Add Entity")) {
@@ -79,6 +87,24 @@ namespace SceneSystem {
 		});
 
 		ImGui::End();
+	}
+
+	void Scene::delete_entity(const std::string& tag)
+	{
+		registry.view<Component::Tag>().each([tag, &registry = registry](const auto entity, const Component::Tag& tag_component) mutable {
+			if (tag_component.tag == tag) {
+				registry.destroy(entity);
+			}
+		});
+	}
+
+	void Scene::delete_entity(const uuids::uuid& uuid)
+	{
+		registry.view<Component::ID>().each([uuid, &registry = registry](const auto entity, const Component::ID& id_component) mutable {
+			if (id_component.identifier == uuid) {
+				registry.destroy(entity);
+			}
+		});
 	}
 
 } // namespace SceneSystem

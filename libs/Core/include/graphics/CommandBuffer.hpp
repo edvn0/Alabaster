@@ -22,7 +22,11 @@ namespace Alabaster {
 		~CommandBuffer();
 		void destroy();
 
-		void begin(VkCommandBufferBeginInfo* begin = nullptr, bool should_begin = true);
+		void begin(VkCommandBufferBeginInfo* begin, bool should_start_cb);
+		void begin() { begin(nullptr, true); };
+		void begin(bool should_start_cb) { begin(nullptr, should_start_cb); };
+		void begin(VkCommandBufferBeginInfo* begin_info) { begin(begin_info, true); };
+
 		void end();
 		void end_with_no_reset();
 		void submit();

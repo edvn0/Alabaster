@@ -1,7 +1,5 @@
 #include "av_pch.hpp"
 
-#include "graphics/Renderer3D.hpp"
-
 #include "AssetManager.hpp"
 #include "core/Application.hpp"
 #include "core/Window.hpp"
@@ -13,6 +11,7 @@
 #include "graphics/Pipeline.hpp"
 #include "graphics/PushConstantRange.hpp"
 #include "graphics/Renderer.hpp"
+#include "graphics/Renderer3D.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 
@@ -340,6 +339,15 @@ namespace Alabaster {
 		data.meshes_submitted++;
 	}
 
+	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, glm::mat4 transform, const glm::vec4& colour)
+	{
+		data.mesh_transform[data.meshes_submitted] = std::move(transform);
+		data.mesh_colour[data.meshes_submitted] = colour;
+		data.mesh[data.meshes_submitted] = mesh.get();
+		data.mesh_pipeline_submit[data.meshes_submitted] = data.mesh_pipeline.get();
+		data.meshes_submitted++;
+	}
+
 	void Renderer3D::line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
 	{
 		if (data.line_indices_submitted >= RendererData::max_indices) {
@@ -501,6 +509,12 @@ namespace Alabaster {
 			const auto& mesh_transform = data.mesh_transform[i];
 			const auto& mesh_colour = data.mesh_colour[i];
 
+			data.push_constant.object_transform = mesh_transform;
+			data.push_constant.object_colour = mesh_colour;
+			const auto& pc = data.push_constant;
+			vkCmdPushConstants(*command_buffer, pipeline->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+				sizeof(PC), &pc);
+
 			if (initial_layout != pipeline->get_vulkan_pipeline_layout()) {
 				initial_layout = pipeline->get_vulkan_pipeline_layout();
 				vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, initial_layout, 0, 1, &descriptor, 0, nullptr);
@@ -519,10 +533,6 @@ namespace Alabaster {
 
 				vkCmdBindIndexBuffer(*command_buffer, *ib, 0, VK_INDEX_TYPE_UINT32);
 			}
-			data.push_constant.object_transform = mesh_transform;
-			data.push_constant.object_colour = mesh_colour;
-			const auto& pc = data.push_constant;
-			vkCmdPushConstants(*command_buffer, initial_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
 			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 			data.draw_calls++;

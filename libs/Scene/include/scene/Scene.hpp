@@ -18,6 +18,10 @@ namespace SceneSystem {
 		void on_event(Alabaster::Event& event);
 		void ui(float ts);
 
+	public:
+		void delete_entity(const std::string& tag);
+		void delete_entity(const uuids::uuid& uuid);
+
 	private:
 		void build_scene();
 
