@@ -96,7 +96,6 @@ namespace Alabaster {
 			window->update();
 
 			swapchain().begin_frame();
-
 			Renderer::begin();
 			{
 				update_layers(app_ts);

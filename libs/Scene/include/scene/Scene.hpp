@@ -2,8 +2,10 @@
 
 #include "component/Component.hpp"
 #include "CoreForward.hpp"
+#include "graphics/Camera.hpp"
 
 #include <entt/entt.hpp>
+#include <vulkan/vulkan.h>
 
 namespace SceneSystem {
 
@@ -11,7 +13,7 @@ namespace SceneSystem {
 
 	class Scene {
 	public:
-		Scene(Alabaster::Camera& camera);
+		Scene();
 		~Scene();
 
 		void update(float ts);
@@ -27,10 +29,20 @@ namespace SceneSystem {
 
 	private:
 		entt::registry registry;
+
+		Alabaster::EditorCamera scene_camera;
+
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
 
-		std::unique_ptr<Alabaster::Mesh> sphere;
+		std::unique_ptr<Alabaster::Mesh> viking_room_model;
+		std::unique_ptr<Alabaster::Mesh> sphere_model;
+		std::unique_ptr<Alabaster::Mesh> cube_model;
+
+		std::unique_ptr<Alabaster::Pipeline> viking_pipeline;
+		std::unique_ptr<Alabaster::Pipeline> sun_pipeline;
+
+		VkRenderPass first_renderpass { nullptr };
 
 		friend Entity;
 	};

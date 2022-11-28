@@ -1,5 +1,7 @@
 #include "av_pch.hpp"
 
+#include "graphics/Renderer3D.hpp"
+
 #include "AssetManager.hpp"
 #include "core/Application.hpp"
 #include "core/Window.hpp"
@@ -11,7 +13,6 @@
 #include "graphics/Pipeline.hpp"
 #include "graphics/PushConstantRange.hpp"
 #include "graphics/Renderer.hpp"
-#include "graphics/Renderer3D.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 
@@ -305,6 +306,34 @@ namespace Alabaster {
 
 		const auto transform = glm::translate(glm::mat4(1.0f), { pos.x, pos.y, pos.z })
 			* glm::rotate(glm::mat4(1.0f), glm::radians(rotation), glm::vec3 { 1, 0, 0 }) * glm::scale(glm::mat4(1.0f), { scale.x, scale.y, 1.0f });
+
+		for (std::size_t i = 0; i < quad_vertex_count; i++) {
+			auto& vertex = data.quad_buffer[data.quad_vertices_submitted];
+			vertex.position = transform * quad_positions[i];
+			vertex.colour = colour;
+			vertex.normals = transform * quad_normal;
+			vertex.uvs = texture_coordinates[i];
+			data.quad_vertices_submitted++;
+		}
+
+		data.quad_indices_submitted += 6;
+	}
+
+	void Renderer3D::quad(glm::mat4 transform, const glm::vec4& colour)
+	{
+		static constexpr std::size_t quad_vertex_count = 4;
+		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		static constexpr glm::vec4 quad_positions[]
+			= { { -0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { -0.5f, 0.5f, 0.0f, 1.0f } };
+		static constexpr glm::vec4 quad_normal = glm::vec4 { 0, 0, 1, 0 };
+
+		if (data.quad_indices_submitted >= RendererData::max_indices) {
+			flush();
+		}
+
+		if (data.quad_vertices_submitted >= RendererData::max_vertices) {
+			flush();
+		}
 
 		for (std::size_t i = 0; i < quad_vertex_count; i++) {
 			auto& vertex = data.quad_buffer[data.quad_vertices_submitted];

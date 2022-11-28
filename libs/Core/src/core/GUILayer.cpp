@@ -35,11 +35,11 @@ namespace Alabaster {
 		VkAttachmentDescription depth_attachment_desc {};
 		depth_attachment_desc.format = depth;
 		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentReference color_reference = {};

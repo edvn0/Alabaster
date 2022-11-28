@@ -52,6 +52,15 @@ namespace SceneSystem::Component {
 		~Mesh() = default;
 	};
 
+	enum class Geometry { Rect, Quad, Circle };
+
+	struct BasicGeometry {
+		Geometry geometry;
+
+		BasicGeometry(Geometry geometry)
+			: geometry(geometry) {};
+	};
+
 	struct Texture {
 		glm::vec4 colour;
 		Texture(glm::vec4 col);
@@ -62,6 +71,6 @@ namespace SceneSystem::Component {
 	concept IsAnyOf = (std::same_as<T, U> || ...);
 
 	template <typename T>
-	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture>;
+	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry>;
 
 } // namespace SceneSystem::Component

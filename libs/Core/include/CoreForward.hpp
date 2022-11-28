@@ -2,6 +2,7 @@
 
 namespace Alabaster {
 	class Camera;
+	class EditorCamera;
 	class VertexBuffer;
 	class VertexBufferLayout;
 	class Texture;
