@@ -5,17 +5,20 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <uuid.h>
 
 namespace SceneSystem::Component {
 
 	struct ID {
-		std::size_t identifier;
+		uuids::uuid identifier;
 
 		ID()
-			: identifier(Alabaster::Random::get<std::size_t>())
+			: identifier(uuids::uuid())
 		{
 		}
 		~ID() = default;
+
+		auto to_string() const { return uuids::to_string(identifier); }
 	};
 
 	struct Tag {

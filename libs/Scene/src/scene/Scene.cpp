@@ -75,9 +75,7 @@ namespace SceneSystem {
 			Entity entity { *this };
 		}
 		view.each([](const Component::ID& id, const Component::Tag& tag) {
-			ImGui::PushID(static_cast<int>(id.identifier));
-			ImGui::Text("ID: %s, Name: %s", std::to_string(id.identifier).c_str(), std::string(tag.tag).c_str());
-			ImGui::PopID();
+			ImGui::Text("ID: %s, Name: %s", id.to_string().c_str(), std::string(tag.tag).c_str());
 		});
 
 		ImGui::End();
