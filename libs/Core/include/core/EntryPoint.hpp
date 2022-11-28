@@ -38,7 +38,6 @@ int main(int argc, char** argv)
 	parser["width"].abbreviation('w').description("The width of the window.").type(po::u32).fallback(std::uint32_t { 1600 }).bind(props.width);
 	parser["height"].abbreviation('h').description("The height of the window.").type(po::u32).fallback(std::uint32_t { 900 }).bind(props.height);
 	parser["name"].description("Name of the applicatin").type(po::string).fallback(std::string { "Alabaster" }).bind(props.name);
-	auto& help = parser["help"].abbreviation('?').description("print this help screen");
 
 	if (!parser(argc, argv)) {
 		Alabaster::Log::critical("Could not parse argument options.");

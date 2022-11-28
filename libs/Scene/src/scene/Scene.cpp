@@ -22,6 +22,10 @@
 
 namespace SceneSystem {
 
+	static glm::vec4 pos { -5, 5, 5, 1.0f };
+	static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
+	static float ambience { 1.0f };
+
 	void Scene::build_scene()
 	{
 		sphere = Alabaster::Mesh::from_file("sphere.obj");
@@ -29,6 +33,9 @@ namespace SceneSystem {
 		for (std::uint32_t i = 0; i < 100; i++) {
 			auto entity = Entity(*this);
 			entity.add_component<Component::Mesh>(sphere);
+			auto& transform = entity.get_component<Component::Transform>();
+			transform.position = Alabaster::sphere_vector3(30);
+			transform.scale = { 0.2, 0.2, 0.2 };
 			entity.add_component<Component::Texture>(glm::vec4(1.0f));
 		}
 	}
@@ -36,7 +43,7 @@ namespace SceneSystem {
 	Scene::Scene(Alabaster::Camera& camera)
 		: registry()
 		, scene_renderer(new Alabaster::Renderer3D(camera))
-		, command_buffer(new Alabaster::CommandBuffer(3))
+		, command_buffer(Alabaster::CommandBuffer::from_swapchain())
 	{
 
 		build_scene();
@@ -46,16 +53,15 @@ namespace SceneSystem {
 
 	void Scene::update(float)
 	{
-		command_buffer->begin();
+		command_buffer->begin({}, false);
 		scene_renderer->begin_scene();
+		scene_renderer->reset_stats();
+		scene_renderer->set_light_data(pos, col, ambience);
 		auto view = registry.view<Component::Transform, Component::Mesh, Component::Texture>();
-		view.each(
-			[&renderer = scene_renderer](const Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture) {
-				const auto t = transform.to_matrix();
-				const auto colour = texture.colour;
-				renderer->mesh(mesh.mesh, t, nullptr, colour);
-			});
+		view.each([&renderer = scene_renderer](const Component::Transform& transform, const Component::Mesh& mesh,
+					  const Component::Texture& texture) { renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, texture.colour); });
 		scene_renderer->end_scene(command_buffer);
+		command_buffer->submit();
 	}
 
 	void Scene::on_event(Alabaster::Event&) { }
@@ -70,7 +76,7 @@ namespace SceneSystem {
 		}
 		view.each([](const Component::ID& id, const Component::Tag& tag) {
 			ImGui::PushID(static_cast<int>(id.identifier));
-			ImGui::Text(fmt::format("ID: {}, Name: {}", id.identifier, std::string(tag.tag)).c_str());
+			ImGui::Text("ID: %s, Name: %s", std::to_string(id.identifier).c_str(), std::string(tag.tag).c_str());
 			ImGui::PopID();
 		});
 

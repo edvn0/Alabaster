@@ -22,9 +22,9 @@ namespace SceneSystem {
 		void build_scene();
 
 	private:
+		entt::registry registry;
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
-		entt::registry registry;
 
 		std::unique_ptr<Alabaster::Mesh> sphere;
 

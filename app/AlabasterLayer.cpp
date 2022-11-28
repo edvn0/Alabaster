@@ -17,7 +17,7 @@ static glm::vec4 pos { -5, 5, 5, 1.0f };
 static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
 static float ambience { 1.0f };
 
-static constexpr auto axes = [](auto& renderer, auto&& pos, float size = 2.0f) {
+static constexpr auto axes = [](auto& renderer, auto&& pos) {
 	renderer.line(pos, pos + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
 	renderer.line(pos, pos + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
 	renderer.line(pos, pos + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
@@ -196,10 +196,10 @@ void AlabasterLayer::update(float ts)
 {
 	static std::size_t frame_number { 0 };
 
-	editor_scene->update(ts);
-
-	editor.on_update(ts);
 	command_buffer->begin();
+
+	editor_scene->update(ts);
+	editor.on_update(ts);
 	{
 		renderer.reset_stats();
 		renderer.begin_scene();
@@ -245,9 +245,9 @@ void AlabasterLayer::update(float ts)
 		renderer.set_light_data(pos, col, ambience);
 		renderer.mesh(sphere_model, sun_pipeline, pos);
 
-		for (int i = 0; i < 45; i++) {
+		/*for (int i = 0; i < 45; i++) {
 			renderer.mesh(sphere_model, sphere_vector3(30));
-		}
+		}*/
 
 		renderer.quad({ 15, 15, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 30.0f);
 

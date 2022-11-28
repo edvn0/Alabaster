@@ -64,7 +64,7 @@ namespace Alabaster {
 		inline const std::unique_ptr<Window>& get_window() const { return window; }
 		Swapchain& swapchain();
 		Swapchain& swapchain() const;
-		inline GUILayer& gui_layer();
+		GUILayer& gui_layer();
 
 	private:
 		bool on_window_change(WindowResizeEvent& event);

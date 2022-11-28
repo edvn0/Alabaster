@@ -76,10 +76,10 @@ namespace Alabaster {
 		VkRenderPass render_pass;
 
 		std::uint32_t meshes_submitted { 0 };
-		std::array<Mesh*, 50> mesh;
-		std::array<glm::mat4, 50> mesh_transform {};
-		std::array<glm::vec4, 50> mesh_colour;
-		std::array<Pipeline*, 50> mesh_pipeline_submit;
+		std::array<Mesh*, 200> mesh;
+		std::array<glm::mat4, 200> mesh_transform {};
+		std::array<glm::vec4, 200> mesh_colour;
+		std::array<Pipeline*, 200> mesh_pipeline_submit;
 		std::unique_ptr<Pipeline> mesh_pipeline;
 
 		std::unique_ptr<Mesh> sphere_model;

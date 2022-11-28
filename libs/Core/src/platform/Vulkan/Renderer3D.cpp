@@ -500,15 +500,9 @@ namespace Alabaster {
 			const auto& pipeline = data.mesh_pipeline_submit[i];
 			const auto& mesh_transform = data.mesh_transform[i];
 			const auto& mesh_colour = data.mesh_colour[i];
-			const auto& layout = pipeline->get_vulkan_pipeline_layout();
 
-			data.push_constant.object_transform = mesh_transform;
-			data.push_constant.object_colour = mesh_colour;
-			const auto& pc = data.push_constant;
-			vkCmdPushConstants(*command_buffer, layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
-
-			if (initial_layout != layout) {
-				initial_layout = layout;
+			if (initial_layout != pipeline->get_vulkan_pipeline_layout()) {
+				initial_layout = pipeline->get_vulkan_pipeline_layout();
 				vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, initial_layout, 0, 1, &descriptor, 0, nullptr);
 			}
 
@@ -525,6 +519,10 @@ namespace Alabaster {
 
 				vkCmdBindIndexBuffer(*command_buffer, *ib, 0, VK_INDEX_TYPE_UINT32);
 			}
+			data.push_constant.object_transform = mesh_transform;
+			data.push_constant.object_colour = mesh_colour;
+			const auto& pc = data.push_constant;
+			vkCmdPushConstants(*command_buffer, initial_layout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
 			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 			data.draw_calls++;

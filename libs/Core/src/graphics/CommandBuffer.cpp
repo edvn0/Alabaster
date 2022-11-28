@@ -79,7 +79,7 @@ namespace Alabaster {
 		}
 	}
 
-	void CommandBuffer::begin(VkCommandBufferBeginInfo* begin)
+	void CommandBuffer::begin(VkCommandBufferBeginInfo* begin, bool should_begin)
 	{
 		std::uint32_t frame_index = Renderer::current_frame();
 
@@ -94,7 +94,8 @@ namespace Alabaster {
 			active = buffers[frame_index];
 		}
 
-		vk_check(vkBeginCommandBuffer(active, begin ? begin : &begin_info));
+		if (should_begin)
+			vk_check(vkBeginCommandBuffer(active, begin ? begin : &begin_info));
 	}
 
 	void CommandBuffer::end()

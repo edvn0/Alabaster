@@ -33,7 +33,7 @@ namespace Alabaster {
 		explicit PushConstantRanges(const std::initializer_list<PushConstantRange>& in);
 		const auto& get_ranges() const { return output_ranges; }
 
-		const auto size() const { return ranges.size(); }
+		auto size() const { return ranges.size(); }
 
 	private:
 		std::vector<PushConstantRange> ranges;

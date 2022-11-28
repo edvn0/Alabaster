@@ -518,7 +518,7 @@ namespace Alabaster {
 		if (present_complete)
 			vkDestroySemaphore(vk_device, present_complete, nullptr);
 
-		for (auto i = 0; i < sync_objects.size(); i++)
+		for (std::uint32_t i = 0; i < sync_objects.size(); i++)
 			vkDestroyFence(vk_device, sync_objects[i].in_flight_fence, nullptr);
 
 		vkDestroySurfaceKHR(GraphicsContext::the().instance(), vk_surface, nullptr);

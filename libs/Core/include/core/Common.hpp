@@ -59,15 +59,15 @@ namespace Alabaster {
 
 #else
 
-	template <typename VkResult> static constexpr auto vk_check(VkResult result) -> void {};
+	template <typename VkResult> static constexpr auto vk_check(VkResult) -> void {};
 
-	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&& happy) -> void {};
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&) -> void {};
 
-	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&& happy, std::string_view message) -> void {};
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&, std::string_view) -> void {};
 
-	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&& happy) -> void {};
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&) -> void {};
 
-	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&& happy, std::string_view message) -> void {};
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&, std::string_view) -> void {};
 
 #endif
 
