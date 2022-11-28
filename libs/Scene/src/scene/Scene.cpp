@@ -210,7 +210,7 @@ namespace SceneSystem {
 			quad_view.each([&renderer = scene_renderer](
 							   const Component::Transform& transform, const Component::BasicGeometry& geom, const Component::Texture& texture) {
 				if (geom.geometry == Component::Geometry::Quad)
-					renderer->quad(std::move(transform.to_matrix()), texture.colour);
+					renderer->quad(transform.to_matrix(), texture.colour);
 			});
 
 			auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
