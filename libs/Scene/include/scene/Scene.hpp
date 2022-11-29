@@ -17,7 +17,9 @@ namespace SceneSystem {
 		~Scene();
 
 		void update(float ts);
+		void initialise();
 		void on_event(Alabaster::Event& event);
+		void shutdown();
 		void ui(float ts);
 
 	public:
@@ -30,7 +32,7 @@ namespace SceneSystem {
 	private:
 		entt::registry registry;
 
-		Alabaster::EditorCamera scene_camera;
+		std::unique_ptr<Alabaster::EditorCamera> scene_camera;
 
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;

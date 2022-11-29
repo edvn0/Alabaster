@@ -21,6 +21,7 @@ bool AlabasterLayer::initialise()
 {
 	command_buffer = CommandBuffer::from_swapchain();
 	editor_scene = std::make_unique<SceneSystem::Scene>();
+	editor_scene->initialise();
 
 	return true;
 }
@@ -81,4 +82,4 @@ void AlabasterLayer::ui(float ts)
 		Application::the().gui_layer().block_events();
 }
 
-void AlabasterLayer::destroy() { }
+void AlabasterLayer::destroy() { editor_scene->shutdown(); }

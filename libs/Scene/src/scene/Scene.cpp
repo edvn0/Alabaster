@@ -5,6 +5,7 @@
 #include "cache/ResourceCache.hpp"
 #include "component/Component.hpp"
 #include "core/Application.hpp"
+#include "core/Input.hpp"
 #include "core/Random.hpp"
 #include "core/Window.hpp"
 #include "entity/Entity.hpp"
@@ -20,6 +21,7 @@
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 
+#include <glm/gtx/string_cast.hpp>
 #include <imgui/imgui.h>
 
 namespace SceneSystem {
@@ -180,11 +182,7 @@ namespace SceneSystem {
 
 	Scene::Scene()
 		: registry()
-		, scene_camera(45.0f, 1600.f, 900.f, 0.1f, 1000.0f)
-		, scene_renderer(new Alabaster::Renderer3D(scene_camera))
-		, command_buffer(Alabaster::CommandBuffer::from_swapchain())
 	{
-		build_scene();
 	}
 
 	Scene::~Scene()
@@ -195,7 +193,7 @@ namespace SceneSystem {
 
 	void Scene::update(float ts)
 	{
-		scene_camera.on_update(ts);
+		scene_camera->on_update(ts);
 		command_buffer->begin();
 		{
 			scene_renderer->begin_scene();
@@ -242,8 +240,21 @@ namespace SceneSystem {
 		command_buffer->submit();
 	}
 
-	void Scene::on_event(Alabaster::Event& event) { scene_camera.on_event(event); }
+	void Scene::on_event(Alabaster::Event& event) { scene_camera->on_event(event); }
 
+	void Scene::shutdown() { }
+
+	void Scene::initialise()
+	{
+
+		auto&& [w, h] = Alabaster::Application::the().get_window()->size();
+
+		scene_camera = std::make_unique<Alabaster::EditorCamera>(50.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
+		scene_renderer = std::make_unique<Alabaster::Renderer3D>(*scene_camera.get());
+		command_buffer = Alabaster::CommandBuffer::from_swapchain();
+
+		build_scene();
+	}
 	void Scene::ui(float)
 	{
 		auto view = registry.view<const Component::ID, const Component::Tag>();

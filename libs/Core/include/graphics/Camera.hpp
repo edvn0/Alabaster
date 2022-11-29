@@ -28,7 +28,7 @@ namespace Alabaster {
 		virtual void on_update(float) {};
 		virtual void on_event(Event&) {};
 
-		virtual const glm::vec3& get_position() const = 0;
+		virtual const glm::vec3 get_position() const = 0;
 
 		virtual const glm::mat4& get_projection_matrix() const { return projection_matrix; }
 		virtual const glm::mat4& get_view_matrix() const { return view_matrix; }
@@ -104,7 +104,7 @@ namespace Alabaster {
 		glm::vec3 get_right_direction() const;
 		glm::vec3 get_forward_direction() const;
 
-		const glm::vec3& get_position() const override { return focal_point; }
+		const glm::vec3 get_position() const override { return calculate_position(); }
 
 		glm::quat get_orientation() const;
 

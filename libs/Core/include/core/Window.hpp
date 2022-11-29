@@ -34,7 +34,7 @@ namespace Alabaster {
 		const std::pair<int, int> framebuffer_extent() const;
 		const std::pair<float, float> framebuffer_scale() const;
 		const std::pair<std::uint32_t, std::uint32_t> size() const;
-		
+
 		void swap_buffers();
 
 		bool was_resized() const { return resize_status; }
