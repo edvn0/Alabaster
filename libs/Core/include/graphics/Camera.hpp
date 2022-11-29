@@ -82,16 +82,16 @@ namespace Alabaster {
 
 		CameraMode get_current_mode() const { return camera_mode; }
 
-		inline float get_distance() const { return distance; }
-		inline void set_distance(float in) { this->distance = in; }
+		float get_distance() const { return distance; }
+		void set_distance(float in) { distance = in; }
 
 		const glm::vec3& get_focal_point() const { return focal_point; }
 
-		inline void set_viewport_size(std::uint32_t width, std::uint32_t height)
+		void set_viewport_size(std::uint32_t width, std::uint32_t height)
 		{
 			if (viewport_width == width && viewport_height == height)
 				return;
-			set_perspective_projection_matrix(vertical_fov, (float)width, (float)height, near_clip, far_clip);
+			set_perspective_projection_matrix(vertical_fov, static_cast<float>(width), static_cast<float>(height), near_clip, far_clip);
 			viewport_width = width;
 			viewport_height = height;
 		}

@@ -53,9 +53,14 @@ namespace Alabaster {
 		VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};
 		pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipeline_layout_create_info.pNext = nullptr;
-		pipeline_layout_create_info.setLayoutCount = static_cast<std::uint32_t>(shader.descriptor_set_layouts().size());
-		pipeline_layout_create_info.pSetLayouts = shader.descriptor_set_layouts().data();
 
+		if (shader.descriptor_set_layouts().empty()) {
+			pipeline_layout_create_info.setLayoutCount = static_cast<std::uint32_t>(spec.descriptor_set_layouts.size());
+			pipeline_layout_create_info.pSetLayouts = spec.descriptor_set_layouts.data();
+		} else {
+			pipeline_layout_create_info.setLayoutCount = static_cast<std::uint32_t>(shader.descriptor_set_layouts().size());
+			pipeline_layout_create_info.pSetLayouts = shader.descriptor_set_layouts().data();
+		}
 		if (spec.ranges) {
 			const auto& used = *spec.ranges;
 			const auto& range = used.get_ranges();
@@ -82,7 +87,7 @@ namespace Alabaster {
 		rasterisation_state.polygonMode = VK_POLYGON_MODE_FILL;
 
 		rasterisation_state.lineWidth = spec.line_width;
-		rasterisation_state.cullMode = VK_CULL_MODE_NONE; // spec.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
+		rasterisation_state.cullMode = spec.backface_culling ? VK_CULL_MODE_BACK_BIT : VK_CULL_MODE_FRONT_BIT;
 		rasterisation_state.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		rasterisation_state.depthBiasEnable = VK_FALSE;
 

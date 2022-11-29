@@ -3,6 +3,7 @@
 #include "scene/Scene.hpp"
 
 #include "cache/ResourceCache.hpp"
+#include "component/Component.hpp"
 #include "core/Application.hpp"
 #include "core/Random.hpp"
 #include "core/Window.hpp"
@@ -133,14 +134,17 @@ namespace SceneSystem {
 			entity.add_component<Component::Mesh>(sphere_model);
 			auto& transform = entity.get_component<Component::Transform>();
 			transform.position = sphere_vector3(30);
-			float cosx = 30 * glm::cos(glm::radians(transform.position.x));
-			float z = 30 * glm::sin(glm::radians(transform.position.y));
-			float pos_y = (cosx * z) / 30;
-
-			transform.position = { cosx, pos_y, z };
-			transform.scale = { 0.2, 0.2, 0.2 };
 			entity.add_component<Component::Texture>(glm::vec4(1.0f));
+			entity.add_component<Component::Pipeline>(viking_pipeline);
 		}
+
+		Entity floor { *this, "Floor" };
+		floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
+		auto& floor_transform = floor.get_component<Component::Transform>();
+		floor_transform.scale = { 200, 200, .2 };
+		floor_transform.position.y += 30;
+		floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
+		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
 
 		struct {
 			glm::vec3 pos;
@@ -149,17 +153,17 @@ namespace SceneSystem {
 			float rotation;
 		} quad_data[9];
 
-		quad_data[0] = { { 0, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 45.0f };
-		quad_data[1] = { { 30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 45.0f };
-		quad_data[2] = { { -30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 45.0f };
+		quad_data[0] = { { 0, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[1] = { { 30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[2] = { { -30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
 
-		quad_data[3] = { { 0, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 45.0f };
-		quad_data[4] = { { 30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 45.0f };
-		quad_data[5] = { { -30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 45.0f };
+		quad_data[3] = { { 0, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[4] = { { 30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[5] = { { -30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
 
-		quad_data[6] = { { 0, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 45.0f };
-		quad_data[7] = { { 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 45.0f };
-		quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, 45.0f };
+		quad_data[6] = { { 0, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[7] = { { 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
 
 		for (std::uint32_t i = 0; i < 9; i++) {
 			Entity entity { *this, fmt::format("Quad-{}", i) };
@@ -199,12 +203,12 @@ namespace SceneSystem {
 
 			axes(scene_renderer, glm::vec3 { 0, -0.1, 0 });
 			scene_renderer->set_light_data(pos, col, ambience);
-			auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture>();
-			mesh_view.each(
-				[&renderer = scene_renderer](Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture) {
-					transform.position = Alabaster::sphere_vector3(30);
-					renderer->mesh(mesh.mesh, transform.to_matrix(), texture.colour);
-				});
+			auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>();
+			mesh_view.each([&renderer = scene_renderer](Component::Transform& transform, const Component::Mesh& mesh,
+							   const Component::Texture& texture, const Component::Pipeline& pipeline) {
+				// transform.position = Alabaster::sphere_vector3(30);
+				renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour);
+			});
 
 			auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
 			quad_view.each([&renderer = scene_renderer](

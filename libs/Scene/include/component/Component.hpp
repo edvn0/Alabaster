@@ -2,6 +2,7 @@
 
 #include "core/Random.hpp"
 #include "graphics/Mesh.hpp"
+#include "graphics/Pipeline.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -52,6 +53,13 @@ namespace SceneSystem::Component {
 		~Mesh() = default;
 	};
 
+	struct Pipeline {
+		const std::unique_ptr<Alabaster::Pipeline>& pipeline = nullptr;
+
+		Pipeline(const std::unique_ptr<Alabaster::Pipeline>& pipeline);
+		~Pipeline() = default;
+	};
+
 	enum class Geometry { Rect, Quad, Circle };
 
 	struct BasicGeometry {
@@ -71,6 +79,6 @@ namespace SceneSystem::Component {
 	concept IsAnyOf = (std::same_as<T, U> || ...);
 
 	template <typename T>
-	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry>;
+	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline>;
 
 } // namespace SceneSystem::Component

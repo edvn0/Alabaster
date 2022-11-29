@@ -35,11 +35,11 @@ namespace Alabaster {
 		VkAttachmentDescription depth_attachment_desc {};
 		depth_attachment_desc.format = depth;
 		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkAttachmentReference color_reference = {};
@@ -88,11 +88,12 @@ namespace Alabaster {
 
 	bool GUILayer::initialise()
 	{
+
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-		// io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-		// io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
 		ImGui::StyleColorsDark();
 
 		ImGuiStyle& style = ImGui::GetStyle();
@@ -138,7 +139,7 @@ namespace Alabaster {
 		ImGui::GetIO().Fonts->AddFontDefault();
 
 		{
-			VkCommandBuffer command_buffer = GraphicsContext::the().get_command_buffer();
+			const auto command_buffer = GraphicsContext::the().get_command_buffer();
 			ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
 			GraphicsContext::the().flush_command_buffer(command_buffer);
 

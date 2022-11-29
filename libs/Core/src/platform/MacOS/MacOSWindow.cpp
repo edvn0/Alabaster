@@ -86,6 +86,13 @@ namespace Alabaster {
 		return { tw, th };
 	}
 
+	const std::pair<std::uint32_t, std::uint32_t> Window::size() const
+	{
+		int window_size, window_height;
+		glfwGetWindowSize(handle, &window_size, &window_height);
+		return { static_cast<std::uint32_t>(window_size), static_cast<std::uint32_t>(window_height) };
+	}
+
 	void Window::destroy()
 	{
 		swapchain->destroy();

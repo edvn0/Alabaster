@@ -23,6 +23,11 @@ namespace SceneSystem {
 	{
 	}
 
+	Component::Pipeline::Pipeline(const std::unique_ptr<Alabaster::Pipeline>& pipeline)
+		: pipeline(pipeline)
+	{
+	}
+
 	Component::Texture::Texture(glm::vec4 col)
 		: colour(std::move(col))
 	{
