@@ -218,6 +218,8 @@ namespace Alabaster {
 			vkCmdSetScissor(*imgui_buffer, 0, 1, &scissor);
 
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
+			const auto&& [sx, sy] = Application::the().get_window()->framebuffer_scale();
+			main_draw_data->FramebufferScale = { sx, sy };
 			ImGui_ImplVulkan_RenderDrawData(main_draw_data, *imgui_buffer);
 
 			imgui_buffer->end_with_no_reset();
