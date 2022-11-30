@@ -460,7 +460,6 @@ namespace Alabaster {
 			draw_meshes(command_buffer);
 		}
 
-		Log::info("[Renderer3D] Draw calls: {}", data.draw_calls);
 		Renderer::end_render_pass(command_buffer);
 	}
 

@@ -113,8 +113,6 @@ namespace Alabaster {
 			app_ts = frame_time;
 			last_frametime = time;
 
-			Log::info("[Application] CPU time: \t{}ms", last_fifty(frametime_queue));
-
 			frametime_index = (frametime_index + 1) % frametime_queue.size();
 		}
 

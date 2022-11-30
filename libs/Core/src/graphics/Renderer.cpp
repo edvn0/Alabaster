@@ -30,8 +30,6 @@ namespace Alabaster {
 	{
 		verify(!frame_started);
 		frame_started = true;
-
-		Log::info("[Renderer] Begin frame.");
 	}
 
 	void Renderer::begin_render_pass(const std::unique_ptr<CommandBuffer>& buffer, VkRenderPass render_pass, bool explicit_clear)
@@ -98,8 +96,6 @@ namespace Alabaster {
 	{
 		verify(frame_started);
 		frame_started = false;
-
-		Log::info("[Renderer] End frame.");
 	}
 
 	void Renderer::init() { Log::info("[Renderer] Initialisation of renderer."); }

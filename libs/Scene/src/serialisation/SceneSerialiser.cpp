@@ -78,11 +78,13 @@ namespace SceneSystem {
 		const auto output_file = Alabaster::IO::scene(uuids::to_string(scene.get_name()));
 		std::ofstream scene_output(output_file);
 		if (!scene_output) {
-			Alabaster::Log::warn("Could not write scene to {}.", output_file.string());
+			Alabaster::Log::warn("[SceneSerialiser] Could not write scene to {}.", output_file.string());
 			return;
 		}
 
 		scene_output << std::setw(4) << output_json << std::endl;
+
+		Alabaster::Log::info("[SceneSerialiser] Wrote scene to file {}", output_file.string());
 	}
 
 } // namespace SceneSystem
