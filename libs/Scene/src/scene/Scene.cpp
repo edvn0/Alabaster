@@ -21,7 +21,6 @@
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 
-#include <glm/gtx/string_cast.hpp>
 #include <imgui/imgui.h>
 
 namespace SceneSystem {
