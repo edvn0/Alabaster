@@ -32,6 +32,7 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/debugbreak
 	${THIRD_PARTY_DIR}/magic_enum/include
 	${THIRD_PARTY_DIR}/entt/single_include
+	${THIRD_PARTY_DIR}/json/single_include
 	${THIRD_PARTY_DIR}/stduuid/include
 	../Core/include/
 	../AssetManager/include/
@@ -45,6 +46,7 @@ target_link_libraries(
 	magic_enum
 	effolkronium_random
 	imgui
+	nlohmann_json
 	stduuid
 	Alabaster::Core
 	Alabaster::AssetManager)

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 
@@ -32,6 +33,12 @@ namespace Alabaster::IO {
 		return IO::resources() / std::filesystem::path { "textures" } / std::filesystem::path { path };
 	}
 
+	template <typename Path = std::filesystem::path> std::filesystem::path scene(const Path& path)
+	{
+		const auto out = IO::resources() / std::filesystem::path { "scene" } / std::filesystem::path { path };
+		return std::filesystem::path { out.string() + ".json" };
+	}
+
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);
 
 	std::string read_file(std::filesystem::path&& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);
@@ -44,7 +51,7 @@ namespace Alabaster::IO {
 
 	std::filesystem::path slashed_to_fp(const std::string& slashed_string);
 
-	static inline std::optional<std::filesystem::path> get_resource_root()
+	inline std::optional<std::filesystem::path> get_resource_root()
 	{
 		constexpr const auto sanity_checks = [] {
 			const auto cwd = std::filesystem::current_path();

@@ -11,9 +11,10 @@
 namespace SceneSystem::Component {
 
 	struct ID {
-		const uuids::uuid identifier;
+		uuids::uuid identifier;
 
 		ID();
+		ID(uuids::uuid id);
 		~ID() = default;
 
 		std::string to_string() const;

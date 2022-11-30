@@ -56,3 +56,5 @@ compile_commands.json
 
 # Folders
 build/*
+
+app/resources/scene/*.json

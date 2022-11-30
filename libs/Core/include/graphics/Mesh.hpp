@@ -43,6 +43,8 @@ namespace Alabaster {
 
 		void destroy();
 
+		const auto& get_asset_path() const { return path; }
+
 	private:
 		std::filesystem::path path;
 

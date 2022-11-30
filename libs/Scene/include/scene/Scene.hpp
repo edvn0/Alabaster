@@ -3,6 +3,7 @@
 #include "component/Component.hpp"
 #include "CoreForward.hpp"
 #include "graphics/Camera.hpp"
+#include "uuid.h"
 
 #include <entt/entt.hpp>
 #include <vulkan/vulkan.h>
@@ -25,6 +26,10 @@ namespace SceneSystem {
 	public:
 		void delete_entity(const std::string& tag);
 		void delete_entity(const uuids::uuid& uuid);
+
+		auto get_name() const { return Component::ID().identifier; }
+
+		const auto& get_registry() const { return registry; }
 
 	private:
 		void build_scene();

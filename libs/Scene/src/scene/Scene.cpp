@@ -20,6 +20,7 @@
 #include "graphics/Renderer3D.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
+#include "serialisation/SceneSerialiser.hpp"
 
 #include <imgui/imgui.h>
 
@@ -241,11 +242,10 @@ namespace SceneSystem {
 
 	void Scene::on_event(Alabaster::Event& event) { scene_camera->on_event(event); }
 
-	void Scene::shutdown() { }
+	void Scene::shutdown() { SceneSerialiser serialiser(*this); }
 
 	void Scene::initialise()
 	{
-
 		auto&& [w, h] = Alabaster::Application::the().get_window()->size();
 
 		scene_camera = std::make_unique<Alabaster::EditorCamera>(50.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);

@@ -11,6 +11,11 @@ namespace SceneSystem {
 	{
 	}
 
+	Component::ID::ID(uuids::uuid id)
+		: identifier(id)
+	{
+	}
+
 	std::string Component::ID::to_string() const { return uuids::to_string(identifier); }
 
 	glm::mat4 Component::Transform::to_matrix() const
