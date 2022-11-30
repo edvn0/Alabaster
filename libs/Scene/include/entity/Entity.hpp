@@ -26,7 +26,7 @@ namespace SceneSystem {
 
 		template <Component::IsComponent T> T& get_component() const { return scene.registry.get<T>(entity_handle); }
 
-		template <Component::IsComponent T, typename... Args> auto& add_or_set_component(Args&&... args)
+		template <Component::IsComponent T, typename... Args> auto& put_component(Args&&... args)
 		{
 			if (has_component<T>()) {
 				auto& component = get_component<T>();

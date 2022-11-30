@@ -15,12 +15,4 @@ namespace SceneSystem {
 		void operator()(nlohmann::json&, Entity&) {};
 	};
 
-	template <> struct deserialise_component<Component::ID> {
-		void operator()(nlohmann::json& json, Entity& out)
-		{
-			auto id = json.get<uuids::uuid>();
-			out.add_or_set_component<Component::ID>(id);
-		}
-	};
-
 } // namespace SceneSystem
