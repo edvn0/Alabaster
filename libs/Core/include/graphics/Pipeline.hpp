@@ -51,9 +51,9 @@ namespace Alabaster {
 		bool operator()(const Pipeline* other) const { return spec.debug_name < other->spec.debug_name; }
 
 	public:
-		inline static std::unique_ptr<Pipeline> create(PipelineSpecification spec)
+		inline static std::shared_ptr<Pipeline> create(PipelineSpecification spec)
 		{
-			auto pipeline = std::make_unique<Pipeline>(spec);
+			auto pipeline = std::make_shared<Pipeline>(spec);
 			pipeline->invalidate();
 			return pipeline;
 		}

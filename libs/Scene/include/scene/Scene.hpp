@@ -42,13 +42,6 @@ namespace SceneSystem {
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
 
-		std::unique_ptr<Alabaster::Mesh> viking_room_model;
-		std::unique_ptr<Alabaster::Mesh> sphere_model;
-		std::unique_ptr<Alabaster::Mesh> cube_model;
-
-		std::unique_ptr<Alabaster::Pipeline> viking_pipeline;
-		std::unique_ptr<Alabaster::Pipeline> sun_pipeline;
-
 		VkRenderPass first_renderpass { nullptr };
 
 		friend Entity;

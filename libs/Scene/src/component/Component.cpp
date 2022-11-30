@@ -23,12 +23,12 @@ namespace SceneSystem {
 		return glm::translate(glm::mat4(1.0f), position) * glm::mat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
 	}
 
-	Component::Mesh::Mesh(const std::unique_ptr<Alabaster::Mesh>& mesh)
+	Component::Mesh::Mesh(const std::shared_ptr<Alabaster::Mesh>& mesh)
 		: mesh(mesh)
 	{
 	}
 
-	Component::Pipeline::Pipeline(const std::unique_ptr<Alabaster::Pipeline>& pipeline)
+	Component::Pipeline::Pipeline(const std::shared_ptr<Alabaster::Pipeline>& pipeline)
 		: pipeline(pipeline)
 	{
 	}

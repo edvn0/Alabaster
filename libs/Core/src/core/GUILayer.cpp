@@ -217,9 +217,16 @@ namespace Alabaster {
 			scissor.offset.y = 0;
 			vkCmdSetScissor(*imgui_buffer, 0, 1, &scissor);
 
+			static float scale_x { -1.0f }, scale_y { -1.0f };
+
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
-			const auto&& [sx, sy] = Application::the().get_window()->framebuffer_scale();
-			main_draw_data->FramebufferScale = { sx, sy };
+			if (scale_x == -1.0f && scale_y == -1.0f) {
+				const auto&& [sx, sy] = Application::the().get_window()->framebuffer_scale();
+				scale_x = sx;
+				scale_y = sy;
+			}
+
+			main_draw_data->FramebufferScale = { scale_x, scale_y };
 			ImGui_ImplVulkan_RenderDrawData(main_draw_data, *imgui_buffer);
 
 			imgui_buffer->end_with_no_reset();

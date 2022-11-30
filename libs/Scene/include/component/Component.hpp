@@ -48,16 +48,16 @@ namespace SceneSystem::Component {
 	};
 
 	struct Mesh {
-		const std::unique_ptr<Alabaster::Mesh>& mesh;
+		std::shared_ptr<Alabaster::Mesh> mesh;
 
-		Mesh(const std::unique_ptr<Alabaster::Mesh>& mesh);
+		Mesh(const std::shared_ptr<Alabaster::Mesh>& mesh);
 		~Mesh() = default;
 	};
 
 	struct Pipeline {
-		const std::unique_ptr<Alabaster::Pipeline>& pipeline = nullptr;
+		std::shared_ptr<Alabaster::Pipeline> pipeline = nullptr;
 
-		Pipeline(const std::unique_ptr<Alabaster::Pipeline>& pipeline);
+		Pipeline(const std::shared_ptr<Alabaster::Pipeline>& pipeline);
 		~Pipeline() = default;
 	};
 

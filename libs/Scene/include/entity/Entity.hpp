@@ -44,6 +44,10 @@ namespace SceneSystem {
 
 		template <Component::IsComponent T> auto remove_component() { scene.registry.remove<T>(entity_handle); }
 
+	public:
+		auto& get_transform() { return get_component<Component::Transform>(); }
+		auto& get_tag() { return get_component<Component::Tag>(); }
+
 	private:
 		Scene& scene;
 		entt::entity entity_handle;

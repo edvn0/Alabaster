@@ -48,6 +48,8 @@ namespace AssetManager {
 		std::unordered_map<std::string, Alabaster::Image> images;
 		std::filesystem::path texture_path;
 		std::unique_ptr<CacheCreateRead<T>> cache_crud;
+
+		friend BaseCache;
 	};
 
 } // namespace AssetManager

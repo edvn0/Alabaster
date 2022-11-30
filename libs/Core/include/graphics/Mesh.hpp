@@ -64,10 +64,10 @@ namespace Alabaster {
 		std::tuple<Vertices, Indices> load_model();
 
 	public:
-		static std::unique_ptr<Mesh> from_file(const std::filesystem::path& args) { return std::make_unique<Mesh>(IO::model(std::move(args))); };
-		static std::unique_ptr<Mesh> from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)
+		static std::shared_ptr<Mesh> from_file(const std::filesystem::path& args) { return std::make_shared<Mesh>(IO::model(std::move(args))); };
+		static std::shared_ptr<Mesh> from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)
 		{
-			return std::make_unique<Mesh>(vertices, indices);
+			return std::make_shared<Mesh>(vertices, indices);
 		};
 	};
 
