@@ -104,7 +104,7 @@ namespace Alabaster {
 		glm::vec3 get_right_direction() const;
 		glm::vec3 get_forward_direction() const;
 
-		const glm::vec3 get_position() const override { return calculate_position(); }
+		const glm::vec3 get_position() const override { return position; }
 
 		glm::quat get_orientation() const;
 

@@ -26,10 +26,15 @@ namespace SceneSystem {
 	public:
 		void delete_entity(const std::string& tag);
 		void delete_entity(const uuids::uuid& uuid);
+		void delete_entity(const Entity& entity);
+		void create_entity();
+		void create_entity(std::string_view name);
+		const auto& get_registry() const { return registry; }
+
+		template <Component::IsComponent... T> auto all_with() { return registry.view<T...>(); }
+		void for_each_entity(auto&& func) { registry.each(std::move(func)); }
 
 		auto get_name() const { return Component::ID().identifier; }
-
-		const auto& get_registry() const { return registry; }
 
 	private:
 		void build_scene();

@@ -128,7 +128,7 @@ namespace SceneSystem {
 		std::shared_ptr<Alabaster::Pipeline> sun_pipeline = Pipeline::create(sun_spec);
 
 		for (std::uint32_t i = 0; i < 100; i++) {
-			Entity entity { *this, fmt::format("Sphere-{}", i) };
+			Entity entity { this, fmt::format("Sphere-{}", i) };
 			entity.add_component<Component::Mesh>(sphere_model);
 			auto& transform = entity.get_component<Component::Transform>();
 			transform.position = sphere_vector3(30);
@@ -137,7 +137,7 @@ namespace SceneSystem {
 		}
 
 		{
-			Entity floor { *this, "Floor" };
+			Entity floor { this, "Floor" };
 			floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
 			auto& floor_transform = floor.get_component<Component::Transform>();
 			floor_transform.scale = { 200, 200, .2 };
@@ -167,7 +167,7 @@ namespace SceneSystem {
 			quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
 
 			for (std::uint32_t i = 0; i < 9; i++) {
-				Entity entity { *this, fmt::format("Quad-{}", i) };
+				Entity entity { this, fmt::format("Quad-{}", i) };
 				entity.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
 
 				auto& transform = entity.get_component<Component::Transform>();
@@ -180,7 +180,7 @@ namespace SceneSystem {
 		}
 
 		{
-			Entity viking { *this, "Viking" };
+			Entity viking { this, "Viking" };
 			auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
 			viking.add_component<Component::Mesh>(viking_room_model);
 			viking.add_component<Component::Pipeline>(viking_pipeline);
@@ -264,20 +264,7 @@ namespace SceneSystem {
 		build_scene();
 	}
 
-	void Scene::ui(float)
-	{
-		auto view = registry.view<const Component::ID, const Component::Tag>();
-
-		ImGui::Begin("IDs");
-		if (ImGui::Button("Add Entity")) {
-			Entity entity { *this };
-		}
-		view.each([](const Component::ID& id, const Component::Tag& tag) {
-			ImGui::Text("ID: %s, Name: %s", id.to_string().c_str(), std::string(tag.tag).c_str());
-		});
-
-		ImGui::End();
-	}
+	void Scene::ui(float) { }
 
 	void Scene::delete_entity(const std::string& tag)
 	{
@@ -296,5 +283,11 @@ namespace SceneSystem {
 			}
 		});
 	}
+
+	void Scene::delete_entity(const Entity& entity) { registry.destroy(entity.entity_handle); }
+
+	void Scene::create_entity() { Entity entity { this }; }
+
+	void Scene::create_entity(std::string_view name) { Entity entity { this, std::string { name } }; }
 
 } // namespace SceneSystem

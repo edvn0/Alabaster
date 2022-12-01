@@ -3,6 +3,7 @@
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
 #include "core/GUILayer.hpp"
+#include "entity/Entity.hpp"
 #include "graphics/CommandBuffer.hpp"
 
 #include <imgui.h>
@@ -69,6 +70,44 @@ void AlabasterLayer::ui(float ts)
 {
 	editor_scene->ui(ts);
 
+	auto all_meshes = editor_scene->all_with<SceneSystem::Component::ID, SceneSystem::Component::Tag>();
+	ImGui::Begin("All entities");
+	if (ImGui::Button("Add Entity")) {
+		editor_scene->create_entity();
+	}
+	all_meshes.each([](const SceneSystem::Component::ID& id, const SceneSystem::Component::Tag& tag) {
+		ImGui::Text("ID: %s, Name: %s", id.to_string().c_str(), std::string(tag.tag).c_str());
+	});
+	ImGui::End();
+
+	{
+		ImGui::Begin("Scene Hierarchy");
+
+		editor_scene->for_each_entity([&](auto entity_id) {
+			SceneSystem::Entity entity { editor_scene.get(), entity_id };
+			draw_entity_node(entity);
+		});
+
+		if (ImGui::IsMouseDown(ImGuiMouseButton_Left) && ImGui::IsWindowHovered())
+			selected_entity = {};
+
+		// Right-click on blank space
+		if (ImGui::BeginPopupContextWindow(0, 1)) {
+			if (ImGui::MenuItem("Create Empty Entity"))
+				editor_scene->create_entity("Empty Entity");
+
+			ImGui::EndPopup();
+		}
+
+		ImGui::End();
+
+		ImGui::Begin("Properties");
+		// if (selected_entity) {
+		//	draw_components(selected_entity);
+		// }
+
+		ImGui::End();
+	}
 	auto viewport_min_region = ImGui::GetWindowContentRegionMin();
 	auto viewport_max_region = ImGui::GetWindowContentRegionMax();
 	auto viewport_offset = ImGui::GetWindowPos();
@@ -80,6 +119,41 @@ void AlabasterLayer::ui(float ts)
 
 	if (!viewport_hovered)
 		Application::the().gui_layer().block_events();
+}
+
+void AlabasterLayer::draw_entity_node(SceneSystem::Entity& entity)
+{
+	using namespace SceneSystem;
+	auto& tag = entity.get_component<Component::Tag>().tag;
+
+	ImGuiTreeNodeFlags flags = ((selected_entity == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
+	flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
+	bool opened = ImGui::TreeNodeEx((void*)(uint64_t)(uint32_t)entity, flags, "%s", tag.c_str());
+	if (ImGui::IsItemClicked()) {
+		selected_entity = entity;
+	}
+
+	bool entity_deleted = false;
+	if (ImGui::BeginPopupContextItem()) {
+		if (ImGui::MenuItem("Delete Entity"))
+			entity_deleted = true;
+
+		ImGui::EndPopup();
+	}
+
+	if (opened) {
+		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+		bool opened = ImGui::TreeNodeEx((void*)9817239, flags, "%s", tag.c_str());
+		if (opened)
+			ImGui::TreePop();
+		ImGui::TreePop();
+	}
+
+	if (entity_deleted) {
+		editor_scene->delete_entity(entity);
+		if (selected_entity == entity)
+			selected_entity = {};
+	}
 }
 
 void AlabasterLayer::destroy() { editor_scene->shutdown(); }
