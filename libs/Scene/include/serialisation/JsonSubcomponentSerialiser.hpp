@@ -23,9 +23,7 @@ namespace nlohmann {
 		// preferred version
 		static type from_json(const json& /*unnamed*/) { return { 4.0, 5.0, 6.0 }; }
 	};
-} // namespace nlohmann
 
-namespace nlohmann {
 	template <> struct adl_serializer<glm::vec4> {
 		using type = glm::vec4;
 		static void to_json(json& j, const type& vec)
@@ -43,9 +41,7 @@ namespace nlohmann {
 		// preferred version
 		static type from_json(const json& /*unnamed*/) { return { 42.0, 42.0, 42.0, 42.0 }; }
 	};
-} // namespace nlohmann
 
-namespace nlohmann {
 	template <> struct adl_serializer<glm::vec3> {
 		using type = glm::vec3;
 		static void to_json(json& j, const type& vec)
@@ -62,9 +58,7 @@ namespace nlohmann {
 		// preferred version
 		static type from_json(const json& /*unnamed*/) { return { 42.0, 42.0, 42.0 }; }
 	};
-} // namespace nlohmann
 
-namespace nlohmann {
 	template <> struct adl_serializer<glm::vec2> {
 		using type = glm::vec2;
 		static void to_json(json& j, const type& vec)
@@ -86,9 +80,7 @@ namespace nlohmann {
 		// preferred version
 		static type from_json(const json& /*unnamed*/) { return { 42.0, 42.0 }; }
 	};
-} // namespace nlohmann
 
-namespace nlohmann {
 	template <> struct adl_serializer<glm::quat> {
 		using type = glm::quat;
 		static void to_json(json& j, const type& vec)
@@ -106,9 +98,7 @@ namespace nlohmann {
 		// preferred version
 		static type from_json(const json& /*unnamed*/) { return { 42.0, 42.0, 42.0, 42.0 }; }
 	};
-} // namespace nlohmann
 
-namespace nlohmann {
 	template <> struct adl_serializer<uuids::uuid> {
 		using type = uuids::uuid;
 		static void to_json(json& j, const type& uuid) { j = uuids::to_string(uuid); }

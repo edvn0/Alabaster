@@ -19,8 +19,6 @@
 #include <memory>
 #include <vulkan/vulkan.h>
 
-#define ALABASTER_USE_IMGUI 0
-
 namespace Alabaster {
 
 	static constexpr auto default_model = glm::mat4 { 1.0f };
@@ -47,11 +45,7 @@ namespace Alabaster {
 		color_attachment_desc.format = color;
 		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-#if ALABASTER_USE_IMGUI
 		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-#else
-		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-#endif
 		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;

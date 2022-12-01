@@ -27,8 +27,8 @@ namespace Alabaster {
 		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
@@ -37,8 +37,8 @@ namespace Alabaster {
 		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
 		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
@@ -193,7 +193,6 @@ namespace Alabaster {
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 			inheritance_info.renderPass = gui_renderpass;
 			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
-			inheritance_info.subpass = 0;
 
 			VkCommandBufferBeginInfo cbi = {};
 			cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -203,8 +202,8 @@ namespace Alabaster {
 
 			VkViewport viewport = {};
 			viewport.x = 0.0f;
-			viewport.y = 0.0f;
-			viewport.height = static_cast<float>(height);
+			viewport.y = static_cast<float>(height);
+			viewport.height = -static_cast<float>(height);
 			viewport.width = static_cast<float>(width);
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
@@ -227,6 +226,7 @@ namespace Alabaster {
 			}
 
 			main_draw_data->FramebufferScale = { scale_x, scale_y };
+			// UI scale and translate via push constants
 			ImGui_ImplVulkan_RenderDrawData(main_draw_data, *imgui_buffer);
 
 			imgui_buffer->end_with_no_reset();
