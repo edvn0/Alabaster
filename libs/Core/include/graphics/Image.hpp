@@ -23,6 +23,7 @@ namespace Alabaster {
 		VkImage image { nullptr };
 		VkImageView view { nullptr };
 		VkSampler sampler { nullptr };
+		VkImageLayout layout;
 		VmaAllocation allocation { nullptr };
 	};
 
@@ -67,6 +68,10 @@ namespace Alabaster {
 
 		void invalidate(const std::unique_ptr<CommandBuffer>& buffer) { invalidate(*buffer); };
 		void invalidate(CommandBuffer& buffer);
+
+		auto get_view() const { return image_info.view; }
+		auto get_sampler() const { return image_info.sampler; }
+		auto get_layout() const { return image_info.layout; }
 
 	private:
 		void invalidate(void* data);

@@ -571,7 +571,7 @@ namespace Alabaster {
 		ubo.view_projection = ubo.projection * ubo.view;
 		ubo.model = model.has_value() ? *model : default_model;
 
-		data.uniforms[image_index]->set_data(&ubo, sizeof(ubo), 0);
+		data.uniforms[image_index]->set_data(&ubo, sizeof(UBO), 0);
 	}
 
 	void Renderer3D::destroy()

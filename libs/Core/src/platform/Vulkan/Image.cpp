@@ -96,13 +96,11 @@ namespace Alabaster {
 		Utilities::copy_buffer_to_image(staging_buffer, image_info, image_props.width, image_props.height, &buffer);
 		Utilities::transition_image_layout(image_info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, &buffer);
 
-		//	Allocator alloc;
-		//	allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
-
 		buffer.add_destruction_callback([staging_buffer_allocation, staging_buffer](
 											Allocator& allocator) { allocator.destroy_buffer(staging_buffer, staging_buffer_allocation); });
 
 		Log::info("[Image] invalidated image: {}", image_props.path.value().string());
+		image_info.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		create_view();
 		create_sampler();
 	}
