@@ -30,6 +30,16 @@ struct AlabasterLayer final : public Layer {
 	void on_event(Event& event) final;
 
 	void draw_entity_node(SceneSystem::Entity& entity);
+	void draw_components(SceneSystem::Entity& entity);
+	template <SceneSystem::Component::IsComponent T> void display_add_component_entry(const std::string& entry_name)
+	{
+		if (!selected_entity.has_component<T>()) {
+			if (ImGui::MenuItem(entry_name.c_str())) {
+				selected_entity.add_component<T>();
+				ImGui::CloseCurrentPopup();
+			}
+		}
+	}
 
 private:
 	std::string_view name() override { return "AlabasterLayer"; }

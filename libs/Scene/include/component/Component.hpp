@@ -18,6 +18,7 @@ namespace SceneSystem::Component {
 		~ID() = default;
 
 		std::string to_string() const;
+		operator const char*() { return (const char*)&identifier; }
 	};
 
 	struct Tag {
@@ -71,15 +72,24 @@ namespace SceneSystem::Component {
 	};
 
 	struct Texture {
-		glm::vec4 colour;
+		glm::vec4 colour { 1.0f };
 		Texture(glm::vec4 col);
+		Texture()
+			: colour() {};
 		~Texture() = default;
 	};
 
-	template <typename T, typename... U>
-	concept IsAnyOf = (std::same_as<T, U> || ...);
+	struct Camera {
+		Camera() = default;
+		~Camera() = default;
+	};
+
+	namespace {
+		template <typename T, typename... U>
+		concept IsAnyOf = (std::same_as<T, U> || ...);
+	}
 
 	template <typename T>
-	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline>;
+	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera>;
 
 } // namespace SceneSystem::Component

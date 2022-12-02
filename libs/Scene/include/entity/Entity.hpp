@@ -26,31 +26,42 @@ namespace SceneSystem {
 
 		template <Component::IsComponent... T> bool has_all() { return scene->registry.all_of<T...>(entity_handle); }
 
+		template <Component::IsComponent... T> bool has_any() const { return scene->registry.any_of<T...>(entity_handle); }
+
+		template <Component::IsComponent... T> bool has_all() const { return scene->registry.all_of<T...>(entity_handle); }
+
+		template <Component::IsComponent T> bool has_component() const { return scene->registry.any_of<T>(entity_handle); }
 		template <Component::IsComponent T> bool has_component() { return scene->registry.any_of<T>(entity_handle); }
 
 		template <Component::IsComponent T> T& get_component() { return scene->registry.get<T>(entity_handle); }
 
 		template <Component::IsComponent T> T& get_component() const { return scene->registry.get<T>(entity_handle); }
 
-		template <Component::IsComponent T, typename... Args> auto& put_component(Args&&... args)
+		template <Component::IsComponent T, typename... Args> void put_component(Args&&... args)
 		{
 			if (has_component<T>()) {
 				auto& component = get_component<T>();
 				component = T(std::forward<Args>(args)...);
-				return component;
+				return;
 			}
 
-			return add_component<T>(std::forward<Args>(args)...);
+			add_component<T>(std::forward<Args>(args)...);
 		}
 
-		template <Component::IsComponent T, typename... Args> auto& add_component(Args&&... args)
+		template <Component::IsComponent T, typename... Args> void add_component(Args&&... args)
 		{
-			return scene->registry.emplace<T>(entity_handle, std::forward<Args>(args)...);
+			scene->registry.emplace<T>(entity_handle, std::forward<Args>(args)...);
 		}
+
+		template <Component::IsComponent T, typename... Args> void add_component() { scene->registry.emplace<T>(entity_handle); }
 
 		template <Component::IsComponent T> auto remove_component() { scene->registry.remove<T>(entity_handle); }
 
 		operator bool() const { return entity_handle != entt::null; }
+
+		bool operator==(const Entity& other) const { return entity_handle == other.entity_handle && scene == other.scene; }
+
+		bool operator!=(const Entity& other) const { return !(*this == other); }
 
 	public:
 		auto& get_transform() { return get_component<Component::Transform>(); }
@@ -58,7 +69,7 @@ namespace SceneSystem {
 
 	private:
 		Scene* scene;
-		entt::entity entity_handle;
+		entt::entity entity_handle { entt::null };
 
 		friend Scene;
 	};
