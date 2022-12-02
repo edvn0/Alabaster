@@ -56,14 +56,14 @@ namespace Alabaster {
 
 		std::uint32_t quad_indices_submitted { 0 };
 		std::uint32_t quad_vertices_submitted { 0 };
-		std::unique_ptr<Pipeline> quad_pipeline;
+		std::shared_ptr<Pipeline> quad_pipeline;
 		std::array<QuadVertex, max_vertices> quad_buffer;
 		std::unique_ptr<VertexBuffer> quad_vertex_buffer;
 		std::unique_ptr<IndexBuffer> quad_index_buffer;
 
 		std::uint32_t line_indices_submitted { 0 };
 		std::uint32_t line_vertices_submitted { 0 };
-		std::unique_ptr<Pipeline> line_pipeline;
+		std::shared_ptr<Pipeline> line_pipeline;
 		std::array<LineVertex, max_vertices> line_buffer;
 		std::unique_ptr<VertexBuffer> line_vertex_buffer;
 		std::unique_ptr<IndexBuffer> line_index_buffer;
@@ -80,9 +80,9 @@ namespace Alabaster {
 		std::array<glm::mat4, 200> mesh_transform {};
 		std::array<glm::vec4, 200> mesh_colour;
 		std::array<Pipeline*, 200> mesh_pipeline_submit;
-		std::unique_ptr<Pipeline> mesh_pipeline;
+		std::shared_ptr<Pipeline> mesh_pipeline;
 
-		std::unique_ptr<Mesh> sphere_model;
+		std::shared_ptr<Mesh> sphere_model;
 		PC push_constant;
 	};
 
@@ -96,13 +96,13 @@ namespace Alabaster {
 			float rotation_degrees = 0.0f);
 		void quad(glm::mat4 transform, const glm::vec4& colour);
 
-		void mesh(const std::unique_ptr<Mesh>& mesh, const std::unique_ptr<Pipeline>& pipeline = nullptr, const glm::vec3& pos = { 0, 0, 0 },
+		void mesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Pipeline>& pipeline = nullptr, const glm::vec3& pos = { 0, 0, 0 },
 			const glm::mat4& rotation_matrix = glm::mat4 { 1.0f }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
-		void mesh(const std::unique_ptr<Mesh>& mesh, const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 },
+		void mesh(const std::shared_ptr<Mesh>& mesh, const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 },
 			const glm::vec3& scale = { 1, 1, 1 });
-		void mesh(const std::unique_ptr<Mesh>& mesh, glm::mat4 transform, const std::unique_ptr<Pipeline>& pipeline = nullptr,
+		void mesh(const std::shared_ptr<Mesh>& mesh, glm::mat4 transform, const std::shared_ptr<Pipeline>& pipeline = nullptr,
 			const glm::vec4& colour = { 1, 1, 1, 1 });
-		void mesh(const std::unique_ptr<Mesh>& mesh, glm::mat4 transform, const glm::vec4& colour = { 1, 1, 1, 1 });
+		void mesh(const std::shared_ptr<Mesh>& mesh, glm::mat4 transform, const glm::vec4& colour = { 1, 1, 1, 1 });
 
 		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void line(float size, const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);

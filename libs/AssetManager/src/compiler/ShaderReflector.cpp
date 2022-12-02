@@ -22,8 +22,8 @@ namespace AssetManager {
 		for (auto& resource : resources.sampled_images) {
 			unsigned set = reflector->get_decoration(resource.id, spv::DecorationDescriptorSet);
 			unsigned binding = reflector->get_decoration(resource.id, spv::DecorationBinding);
-			Alabaster::Log::info("[ShaderReflector] Found sampled image for shader {}. Resource name = {},set = {}, binding = {}.", shader_file_name,
-				resource.name, set, binding);
+			Alabaster::Log::info("[ShaderReflector] - Found sampled image for shader {}. Resource name = {},set = {}, binding = {}.",
+				shader_file_name, resource.name, set, binding);
 
 			// Modify the decoration to prepare it for GLSL.
 			reflector->unset_decoration(resource.id, spv::DecorationDescriptorSet);

@@ -20,6 +20,7 @@
 #include "graphics/Renderer3D.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
+#include "serialisation/SceneSerialiser.hpp"
 
 #include <imgui/imgui.h>
 
@@ -100,11 +101,9 @@ namespace SceneSystem {
 		using namespace Alabaster;
 		first_renderpass = create_renderpass();
 
-		viking_room_model = Mesh::from_file("viking_room.obj");
-		sphere_model = Mesh::from_file("sphere.obj");
-		cube_model = Mesh::from_file("cube.obj");
-
-		// sponza_model = Mesh::from_file("sponza.obj");
+		auto viking_room_model = Mesh::from_file("viking_room.obj");
+		auto sphere_model = Mesh::from_file("sphere.obj");
+		auto cube_model = Mesh::from_file("cube.obj");
 
 		PipelineSpecification viking_spec { .shader = AssetManager::ResourceCache::the().shader("viking"),
 			.debug_name = "Viking Pipeline",
@@ -115,7 +114,7 @@ namespace SceneSystem {
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
-		viking_pipeline = Pipeline::create(viking_spec);
+		std::shared_ptr<Alabaster::Pipeline> viking_pipeline = Pipeline::create(viking_spec);
 
 		PipelineSpecification sun_spec { .shader = AssetManager::ResourceCache::the().shader("mesh"),
 			.debug_name = "Sun Pipeline",
@@ -126,12 +125,10 @@ namespace SceneSystem {
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
-		sun_pipeline = Pipeline::create(sun_spec);
-
-		sphere_model = Mesh::from_file("sphere.obj");
+		std::shared_ptr<Alabaster::Pipeline> sun_pipeline = Pipeline::create(sun_spec);
 
 		for (std::uint32_t i = 0; i < 100; i++) {
-			Entity entity { *this, fmt::format("Sphere-{}", i) };
+			Entity entity { this, fmt::format("Sphere-{}", i) };
 			entity.add_component<Component::Mesh>(sphere_model);
 			auto& transform = entity.get_component<Component::Transform>();
 			transform.position = sphere_vector3(30);
@@ -139,43 +136,58 @@ namespace SceneSystem {
 			entity.add_component<Component::Pipeline>(viking_pipeline);
 		}
 
-		Entity floor { *this, "Floor" };
-		floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
-		auto& floor_transform = floor.get_component<Component::Transform>();
-		floor_transform.scale = { 200, 200, .2 };
-		floor_transform.position.y += 30;
-		floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
-		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
+		{
+			Entity floor { this, "Floor" };
+			floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
+			auto& floor_transform = floor.get_component<Component::Transform>();
+			floor_transform.scale = { 200, 200, .2 };
+			floor_transform.position.y += 30;
+			floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
+			floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
+		}
 
-		struct {
-			glm::vec3 pos;
-			glm::vec4 col;
-			glm::vec3 scale;
-			float rotation;
-		} quad_data[9];
+		{
+			struct {
+				glm::vec3 pos;
+				glm::vec4 col;
+				glm::vec3 scale;
+				float rotation;
+			} quad_data[9];
 
-		quad_data[0] = { { 0, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-		quad_data[1] = { { 30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-		quad_data[2] = { { -30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[0] = { { 0, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[1] = { { 30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[2] = { { -30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
 
-		quad_data[3] = { { 0, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-		quad_data[4] = { { 30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-		quad_data[5] = { { -30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[3] = { { 0, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[4] = { { 30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[5] = { { -30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
 
-		quad_data[6] = { { 0, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-		quad_data[7] = { { 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-		quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[6] = { { 0, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[7] = { { 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
 
-		for (std::uint32_t i = 0; i < 9; i++) {
-			Entity entity { *this, fmt::format("Quad-{}", i) };
-			entity.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
+			for (std::uint32_t i = 0; i < 9; i++) {
+				Entity entity { this, fmt::format("Quad-{}", i) };
+				entity.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
 
-			auto& transform = entity.get_component<Component::Transform>();
-			transform.position = quad_data[i].pos;
-			transform.scale = quad_data[i].scale;
-			transform.rotation = glm::rotate(glm::mat4 { 1.0f }, quad_data[i].rotation, { 1, 0, 0 });
+				auto& transform = entity.get_component<Component::Transform>();
+				transform.position = quad_data[i].pos;
+				transform.scale = quad_data[i].scale;
+				transform.rotation = glm::rotate(glm::mat4 { 1.0f }, quad_data[i].rotation, { 1, 0, 0 });
 
-			entity.add_component<Component::Texture>(quad_data[i].col);
+				entity.add_component<Component::Texture>(quad_data[i].col);
+			}
+		}
+
+		{
+			Entity viking { this, "Viking" };
+			auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
+			viking.add_component<Component::Mesh>(viking_room_model);
+			viking.add_component<Component::Pipeline>(viking_pipeline);
+			viking.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });
+			auto& viking_transform = viking.get_transform();
+			viking_transform.rotation = rot;
+			viking_transform.scale = { 15, 15, 15 };
 		}
 	}
 
@@ -200,6 +212,7 @@ namespace SceneSystem {
 
 			axes(scene_renderer, glm::vec3 { 0, -0.1, 0 });
 			scene_renderer->set_light_data(pos, col, ambience);
+
 			auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>();
 			mesh_view.each([&renderer = scene_renderer](Component::Transform& transform, const Component::Mesh& mesh,
 							   const Component::Texture& texture, const Component::Pipeline& pipeline) {
@@ -214,9 +227,6 @@ namespace SceneSystem {
 					renderer->quad(transform.to_matrix(), texture.colour);
 			});
 
-			auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-			scene_renderer->mesh(viking_room_model, viking_pipeline, glm::vec3 { 0, -2.0f, 0 }, rot, glm::vec4 { 1 }, { 10, 10, 10 });
-
 			// Sun stuff
 			static double x = 0.0;
 			x += 0.8;
@@ -229,7 +239,7 @@ namespace SceneSystem {
 			double pos_y = (cosx * z) / 30;
 
 			pos = { cosx, pos_y, z, 1.0f };
-			scene_renderer->mesh(sphere_model, sun_pipeline, pos);
+			// scene_renderer->mesh(sphere_model, sun_pipeline, pos);
 			// Sun done
 
 			// End todo
@@ -241,33 +251,20 @@ namespace SceneSystem {
 
 	void Scene::on_event(Alabaster::Event& event) { scene_camera->on_event(event); }
 
-	void Scene::shutdown() { }
+	void Scene::shutdown() { SceneSerialiser serialiser(*this); }
 
 	void Scene::initialise()
 	{
-
 		auto&& [w, h] = Alabaster::Application::the().get_window()->size();
 
-		scene_camera = std::make_unique<Alabaster::EditorCamera>(50.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
+		scene_camera = std::make_unique<Alabaster::EditorCamera>(74.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
 		scene_renderer = std::make_unique<Alabaster::Renderer3D>(*scene_camera.get());
 		command_buffer = Alabaster::CommandBuffer::from_swapchain();
 
 		build_scene();
 	}
-	void Scene::ui(float)
-	{
-		auto view = registry.view<const Component::ID, const Component::Tag>();
 
-		ImGui::Begin("IDs");
-		if (ImGui::Button("Add Entity")) {
-			Entity entity { *this };
-		}
-		view.each([](const Component::ID& id, const Component::Tag& tag) {
-			ImGui::Text("ID: %s, Name: %s", id.to_string().c_str(), std::string(tag.tag).c_str());
-		});
-
-		ImGui::End();
-	}
+	void Scene::ui(float) { }
 
 	void Scene::delete_entity(const std::string& tag)
 	{
@@ -286,5 +283,11 @@ namespace SceneSystem {
 			}
 		});
 	}
+
+	void Scene::delete_entity(const Entity& entity) { registry.destroy(entity.entity_handle); }
+
+	void Scene::create_entity() { Entity entity { this }; }
+
+	void Scene::create_entity(std::string_view name) { Entity entity { this, std::string { name } }; }
 
 } // namespace SceneSystem

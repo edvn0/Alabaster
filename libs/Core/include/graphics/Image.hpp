@@ -87,7 +87,7 @@ namespace Alabaster {
 		std::function<void(Allocator&)> destruction = [](Allocator&) {};
 
 	public:
-		static std::unique_ptr<Image> create(const std::filesystem::path& filename) { return std::make_unique<Image>(filename); }
+		static std::shared_ptr<Image> create(const std::filesystem::path& filename) { return std::make_shared<Image>(filename); }
 	};
 
 } // namespace Alabaster

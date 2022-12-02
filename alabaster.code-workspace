@@ -202,7 +202,9 @@
 			"cbai",
 			"cbbi",
 			"cpci",
+			"deserialise",
 			"drawbuffer",
+			"entt",
 			"framebuffer",
 			"frametime",
 			"Glfw",
@@ -212,6 +214,7 @@
 			"renderable",
 			"renderables",
 			"renderpass",
+			"Serialiser",
 			"SSBO",
 			"Subpass",
 			"Subpasses",
@@ -241,7 +244,7 @@
 					"--height",
 					"900",
 					"--name",
-					"Edwins motor"
+					"Alabaster"
 				],
 				"cwd": "${workspaceFolder:Alabaster}/build/app"
 			}
@@ -265,9 +268,9 @@
 					"--height",
 					"900",
 					"--name",
-					"Edwins motor"
+					"Alabaster"
 				],
-				"type": "shell",
+				"type": "process",
 				"group": "build",
 				"options": {
 					"cwd": "${workspaceFolder:Alabaster}"

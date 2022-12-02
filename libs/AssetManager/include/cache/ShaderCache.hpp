@@ -46,6 +46,8 @@ namespace AssetManager {
 	private:
 		std::unordered_map<std::string, Alabaster::Shader> shaders;
 		std::unique_ptr<CacheCreateRead<T>> cache_crud;
+
+		friend BaseCache;
 	};
 
 } // namespace AssetManager

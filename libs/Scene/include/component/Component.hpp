@@ -11,12 +11,14 @@
 namespace SceneSystem::Component {
 
 	struct ID {
-		const uuids::uuid identifier;
+		uuids::uuid identifier;
 
 		ID();
+		ID(uuids::uuid id);
 		~ID() = default;
 
 		std::string to_string() const;
+		operator const char*() { return (const char*)&identifier; }
 	};
 
 	struct Tag {
@@ -47,16 +49,16 @@ namespace SceneSystem::Component {
 	};
 
 	struct Mesh {
-		const std::unique_ptr<Alabaster::Mesh>& mesh;
+		std::shared_ptr<Alabaster::Mesh> mesh;
 
-		Mesh(const std::unique_ptr<Alabaster::Mesh>& mesh);
+		Mesh(const std::shared_ptr<Alabaster::Mesh>& mesh);
 		~Mesh() = default;
 	};
 
 	struct Pipeline {
-		const std::unique_ptr<Alabaster::Pipeline>& pipeline = nullptr;
+		std::shared_ptr<Alabaster::Pipeline> pipeline = nullptr;
 
-		Pipeline(const std::unique_ptr<Alabaster::Pipeline>& pipeline);
+		Pipeline(const std::shared_ptr<Alabaster::Pipeline>& pipeline);
 		~Pipeline() = default;
 	};
 
@@ -70,15 +72,24 @@ namespace SceneSystem::Component {
 	};
 
 	struct Texture {
-		glm::vec4 colour;
+		glm::vec4 colour { 1.0f };
 		Texture(glm::vec4 col);
+		Texture()
+			: colour() {};
 		~Texture() = default;
 	};
 
-	template <typename T, typename... U>
-	concept IsAnyOf = (std::same_as<T, U> || ...);
+	struct Camera {
+		Camera() = default;
+		~Camera() = default;
+	};
+
+	namespace {
+		template <typename T, typename... U>
+		concept IsAnyOf = (std::same_as<T, U> || ...);
+	}
 
 	template <typename T>
-	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline>;
+	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera>;
 
 } // namespace SceneSystem::Component

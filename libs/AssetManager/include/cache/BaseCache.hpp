@@ -43,6 +43,9 @@ namespace AssetManager {
 
 	private:
 		auto& child() { return *static_cast<Child<ItemType>*>(this); }
+
+	private:
+		friend Child<ItemType>;
 	};
 
 	template <typename T> struct CacheCreateRead {

@@ -19,8 +19,6 @@
 #include <memory>
 #include <vulkan/vulkan.h>
 
-#define ALABASTER_USE_IMGUI 0
-
 namespace Alabaster {
 
 	static constexpr auto default_model = glm::mat4 { 1.0f };
@@ -47,11 +45,7 @@ namespace Alabaster {
 		color_attachment_desc.format = color;
 		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-#if ALABASTER_USE_IMGUI
 		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-#else
-		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-#endif
 		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
 		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -347,19 +341,19 @@ namespace Alabaster {
 		data.quad_indices_submitted += 6;
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& input_mesh, const std::unique_ptr<Pipeline>& pipeline, const glm::vec3& pos,
+	void Renderer3D::mesh(const std::shared_ptr<Mesh>& input_mesh, const std::shared_ptr<Pipeline>& pipeline, const glm::vec3& pos,
 		const glm::mat4& rotation_matrix, const glm::vec4& colour, const glm::vec3& scale)
 	{
 		auto transform = glm::translate(glm::mat4(1.0f), pos) * rotation_matrix * glm::scale(glm::mat4(1.0f), scale);
 		mesh(input_mesh, std::move(transform), pipeline, colour);
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& input_mesh, const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale)
+	void Renderer3D::mesh(const std::shared_ptr<Mesh>& input_mesh, const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale)
 	{
 		mesh(input_mesh, nullptr, pos, glm::mat4 { 1.0f }, colour, scale);
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, glm::mat4 transform, const std::unique_ptr<Pipeline>& pipeline, const glm::vec4& colour)
+	void Renderer3D::mesh(const std::shared_ptr<Mesh>& mesh, glm::mat4 transform, const std::shared_ptr<Pipeline>& pipeline, const glm::vec4& colour)
 	{
 		data.mesh_transform[data.meshes_submitted] = std::move(transform);
 		data.mesh_colour[data.meshes_submitted] = colour;
@@ -368,7 +362,7 @@ namespace Alabaster {
 		data.meshes_submitted++;
 	}
 
-	void Renderer3D::mesh(const std::unique_ptr<Mesh>& mesh, glm::mat4 transform, const glm::vec4& colour)
+	void Renderer3D::mesh(const std::shared_ptr<Mesh>& mesh, glm::mat4 transform, const glm::vec4& colour)
 	{
 		data.mesh_transform[data.meshes_submitted] = std::move(transform);
 		data.mesh_colour[data.meshes_submitted] = colour;
@@ -460,7 +454,6 @@ namespace Alabaster {
 			draw_meshes(command_buffer);
 		}
 
-		Log::info("[Renderer3D] Draw calls: {}", data.draw_calls);
 		Renderer::end_render_pass(command_buffer);
 	}
 
