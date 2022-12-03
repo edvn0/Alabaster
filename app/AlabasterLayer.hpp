@@ -53,6 +53,4 @@ private:
 	glm::vec2 viewport_bounds[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
 	bool viewport_focused { false };
 	bool viewport_hovered { false };
-
-	std::unique_ptr<CommandBuffer> command_buffer;
 };

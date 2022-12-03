@@ -26,4 +26,10 @@ namespace SceneSystem {
 		}
 	}
 
+	Entity::Entity(const std::unique_ptr<Scene>& scene, std::string name)
+		: Entity(scene.get(), entt ::null, name) {};
+	Entity::Entity(const std::shared_ptr<Scene>& scene, std::string name)
+		: Entity(scene.get(), entt ::null, name) {};
+	Entity::Entity(Scene* scene, std::string name)
+		: Entity(scene, entt ::null, name) {};
 } // namespace SceneSystem

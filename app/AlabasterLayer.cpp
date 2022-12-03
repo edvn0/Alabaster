@@ -129,9 +129,100 @@ static void draw_vec3_control(const std::string& label, glm::vec3& values, float
 	ImGui::PopID();
 }
 
+static void draw_quat_control(const std::string& label, glm::quat& values, float reset_value = 0.0f, float column_width = 100.0f)
+{
+	ImGuiIO& io = ImGui::GetIO();
+	auto bold_font = io.Fonts->Fonts[0];
+
+	ImGui::PushID(label.c_str());
+
+	{
+		ImGui::Columns(2);
+		ImGui::SetColumnWidth(0, column_width);
+		ImGui::Text("%s", label.c_str());
+		ImGui::NextColumn();
+	}
+
+	{
+		ImGui::PushMultiItemsWidths(4, ImGui::CalcItemWidth());
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2 { 0, 0 });
+	}
+
+	float line_height = GImGui->Font->FontSize + GImGui->Style.FramePadding.y * 2.0f;
+	ImVec2 button_size = { line_height + 3.0f, line_height };
+
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 { 0.8f, 0.1f, 0.15f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 { 0.9f, 0.2f, 0.2f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 { 0.8f, 0.1f, 0.15f, 1.0f });
+		ImGui::PushFont(bold_font);
+		if (ImGui::Button("X", button_size))
+			values.x = reset_value;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##X", &values.x, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+	}
+
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 { 0.2f, 0.7f, 0.2f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 { 0.3f, 0.8f, 0.3f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 { 0.2f, 0.7f, 0.2f, 1.0f });
+		ImGui::PushFont(bold_font);
+		if (ImGui::Button("Y", button_size))
+			values.y = reset_value;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##Y", &values.y, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+	}
+
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 { 0.1f, 0.25f, 0.8f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 { 0.2f, 0.35f, 0.9f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 { 0.1f, 0.25f, 0.8f, 1.0f });
+		ImGui::PushFont(bold_font);
+		if (ImGui::Button("Z", button_size))
+			values.z = reset_value;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##Z", &values.z, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+		ImGui::SameLine();
+	}
+
+	{
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4 { 0.2f, 0.7f, 0.2f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4 { 0.3f, 0.8f, 0.3f, 1.0f });
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4 { 0.2f, 0.7f, 0.2f, 1.0f });
+		ImGui::PushFont(bold_font);
+		if (ImGui::Button("W", button_size))
+			values.w = reset_value;
+		ImGui::PopFont();
+		ImGui::PopStyleColor(3);
+
+		ImGui::SameLine();
+		ImGui::DragFloat("##W", &values.w, 0.1f, 0.0f, 0.0f, "%.2f");
+		ImGui::PopItemWidth();
+	}
+
+	ImGui::PopStyleVar();
+
+	ImGui::Columns(1);
+
+	ImGui::PopID();
+}
+
 bool AlabasterLayer::initialise()
 {
-	command_buffer = CommandBuffer::from_swapchain();
 	editor_scene = std::make_unique<Scene>();
 	editor_scene->initialise();
 
@@ -236,7 +327,7 @@ void AlabasterLayer::draw_components(Entity& entity)
 
 	draw_component<Component::Transform>(entity, "Transform", [](Component::Transform& component) {
 		draw_vec3_control("Translation", component.position);
-		// draw_quat_control("Rotation", component.rotation);
+		draw_quat_control("Rotation", component.rotation);
 		draw_vec3_control("Scale", component.scale, 1.0f);
 	});
 }

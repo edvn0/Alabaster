@@ -13,14 +13,18 @@ namespace SceneSystem {
 	public:
 		Entity() = default;
 		explicit Entity(Scene* scene, entt::entity entity_handle, std::string name = "Unnamed entity");
-		explicit Entity(Scene* scene, std::string name = "Unnamed entity")
-			: Entity(scene, entt ::null, name) {};
-		explicit Entity(const std::unique_ptr<Scene>& scene, std::string name = "Unnamed entity")
-			: Entity(scene.get(), entt ::null, name) {};
-		explicit Entity(const std::shared_ptr<Scene>& scene, std::string name = "Unnamed entity")
-			: Entity(scene.get(), entt ::null, name) {};
-		Entity(const Entity& other);
+		explicit Entity(Scene* scene, std::string name = "Unnamed entity");
+		explicit Entity(const std::unique_ptr<Scene>& scene, std::string name = "Unnamed entity");
+		explicit Entity(const std::shared_ptr<Scene>& scene, std::string name = "Unnamed entity");
 		~Entity() {};
+
+		Entity(const Entity& other);
+		Entity& operator=(const Entity& other)
+		{
+			scene = other.scene;
+			entity_handle = other.entity_handle;
+			return *this;
+		}
 
 		template <Component::IsComponent... T> bool has_any() { return scene->registry.any_of<T...>(entity_handle); }
 

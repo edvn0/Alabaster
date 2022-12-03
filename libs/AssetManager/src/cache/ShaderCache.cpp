@@ -58,7 +58,7 @@ namespace AssetManager {
 		}
 
 		for (auto& res : results) {
-			res.wait_for(std::chrono::seconds(3));
+			res.wait();
 		}
 
 		for (auto& res : results) {
