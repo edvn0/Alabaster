@@ -10,6 +10,7 @@
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
 #include "graphics/Swapchain.hpp"
+#include "graphics/VulkanSwapChain.hpp"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -63,11 +64,13 @@ namespace Alabaster {
 		user_data.width = width;
 		user_data.height = height;
 
-		swapchain = std::make_unique<Swapchain>();
+		swapchain = std::make_unique<VulkanSwapChain>();
 		swapchain->init(handle);
 
 		const auto&& [fb_w, fb_h] = framebuffer_extent();
-		swapchain->construct(fb_w, fb_h);
+		auto w = std::uint32_t(fb_w);
+		auto h = std::uint32_t(fb_h);
+		swapchain->create(&w, &h, false);
 
 		setup_events();
 	};

@@ -119,9 +119,9 @@ namespace Alabaster {
 		on_shutdown();
 	}
 
-	Swapchain& Application::swapchain() { return *window->get_swapchain(); }
+	VulkanSwapChain& Application::swapchain() { return *window->get_swapchain(); }
 
-	Swapchain& Application::swapchain() const { return *window->get_swapchain(); }
+	VulkanSwapChain& Application::swapchain() const { return *window->get_swapchain(); }
 
 	void Application::render_imgui()
 	{

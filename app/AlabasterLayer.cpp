@@ -363,7 +363,7 @@ void AlabasterLayer::ui(float ts)
 				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 				viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 
-				UI::image(AssetManager::ResourceCache::the().texture("viking_room"), ImVec2 { viewport_size.x, viewport_size.y });
+				// UI::image(AssetManager::ResourceCache::the().texture("viking_room"), ImVec2 { viewport_size.x, viewport_size.y });
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 

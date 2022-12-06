@@ -5,6 +5,7 @@
 #include "core/Layer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Swapchain.hpp"
+#include "graphics/VulkanSwapChain.hpp"
 
 #include <map>
 #include <memory>
@@ -62,8 +63,8 @@ namespace Alabaster {
 		static Application& the();
 		inline const std::unique_ptr<Window>& get_window() { return window; };
 		inline const std::unique_ptr<Window>& get_window() const { return window; }
-		Swapchain& swapchain();
-		Swapchain& swapchain() const;
+		VulkanSwapChain& swapchain();
+		VulkanSwapChain& swapchain() const;
 		GUILayer& gui_layer();
 
 	private:

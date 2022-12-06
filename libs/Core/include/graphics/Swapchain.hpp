@@ -2,6 +2,7 @@
 
 #include "graphics/Allocator.hpp"
 #include "graphics/CommandBuffer.hpp"
+#include "graphics/DepthImage.hpp"
 
 #include <memory>
 #include <vector>
@@ -13,19 +14,6 @@ struct GLFWwindow;
 namespace Alabaster {
 
 	static constexpr std::uint32_t INVALID_IMAGE_INDEX = 1023;
-
-	struct DepthImage {
-		VkImage image;
-		VkImageView view;
-		VmaAllocation allocation;
-
-		void destroy(auto& device)
-		{
-			vkDestroyImageView(device, view, nullptr);
-			Allocator allocator("Depth image destruction");
-			allocator.destroy_image(image, allocation);
-		}
-	};
 
 	class Swapchain {
 	public:
