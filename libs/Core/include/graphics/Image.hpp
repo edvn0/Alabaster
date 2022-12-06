@@ -14,8 +14,9 @@
 #include <functional>
 #include <memory>
 #include <optional>
-#include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
+
+typedef struct VmaAllocation_T* VmaAllocation;
 
 namespace Alabaster {
 

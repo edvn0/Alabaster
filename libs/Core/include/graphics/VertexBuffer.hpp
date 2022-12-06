@@ -7,8 +7,9 @@
 #include "graphics/Buffer.hpp"
 #include "graphics/Vertex.hpp"
 
-#include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
+
+typedef struct VmaAllocation_T* VmaAllocation;
 
 namespace Alabaster {
 

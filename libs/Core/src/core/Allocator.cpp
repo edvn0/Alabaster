@@ -2,6 +2,7 @@
 
 #include "graphics/Allocator.hpp"
 
+#define VMA_IMPLEMENTATION
 #include "core/Common.hpp"
 #include "graphics/GraphicsContext.hpp"
 

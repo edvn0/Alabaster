@@ -8,6 +8,7 @@
 #include "platform/Vulkan/ImageUtilities.hpp"
 
 #include <GLFW/glfw3.h>
+#include <vk_mem_alloc.h>
 #include <vulkan/vulkan_core.h>
 
 namespace Alabaster {
@@ -485,7 +486,6 @@ namespace Alabaster {
 
 	void VulkanSwapChain::find_image_format_and_color_space()
 	{
-		// Get list of supported surface formats
 		std::uint32_t format_count;
 		vk_check(vkGetPhysicalDeviceSurfaceFormatsKHR(GraphicsContext::the().physical_device(), surface, &format_count, NULL));
 		assert_that(format_count > 0);
@@ -493,26 +493,21 @@ namespace Alabaster {
 		std::vector<VkSurfaceFormatKHR> surface_formats(format_count);
 		vk_check(vkGetPhysicalDeviceSurfaceFormatsKHR(GraphicsContext::the().physical_device(), surface, &format_count, surface_formats.data()));
 
-		// If the surface format list only includes one entry with VK_FORMAT_UNDEFINED,
-		// there is no preferered format, so we assume VK_FORMAT_B8G8R8A8_UNORM
 		if ((format_count == 1) && (surface_formats[0].format == VK_FORMAT_UNDEFINED)) {
-			color_format = VK_FORMAT_B8G8R8A8_UNORM;
+			color_format = VK_FORMAT_B8G8R8A8_SRGB;
 			color_space = surface_formats[0].colorSpace;
 		} else {
-			// iterate over the list of available imagesrface format and
-			bool found_b8_g8_r8_a8_unorm = false;
+			bool found_wanted_format = false;
 			for (auto&& surface_format : surface_formats) {
-				if (surface_format.format == VK_FORMAT_R8G8B8A8_SRGB) {
+				if (surface_format.format == VK_FORMAT_B8G8R8A8_SRGB) {
 					color_format = surface_format.format;
 					color_space = surface_format.colorSpace;
-					found_b8_g8_r8_a8_unorm = true;
+					found_wanted_format = true;
 					break;
 				}
 			}
 
-			// in case VK_FORMAT_B8G8R8A8_UNORM is not available
-			// select the first available color format
-			if (!found_b8_g8_r8_a8_unorm) {
+			if (!found_wanted_format) {
 				color_format = surface_formats[0].format;
 				color_space = surface_formats[0].colorSpace;
 			}

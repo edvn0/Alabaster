@@ -66,6 +66,8 @@ namespace Alabaster {
 	{
 		using Map = std::map<std::string, Layer*>;
 		for (Map::iterator itr = layers.begin(); itr != layers.end();) {
+			Log::warn("[Application] Destroying layer: {}", (*itr).second->get_name());
+
 			itr->second->destroy();
 			itr->second->~Layer();
 			itr = layers.erase(itr);
@@ -125,7 +127,6 @@ namespace Alabaster {
 
 	void Application::render_imgui()
 	{
-
 		auto time_step = float(app_ts);
 		for (const auto& [key, layer] : layers) {
 			layer->ui(time_step);

@@ -4,8 +4,9 @@
 #include "graphics/DepthImage.hpp"
 
 #include <vector>
-#include <vk_mem_alloc.h>
 #include <vulkan/vulkan.h>
+
+typedef struct VmaAllocation_T* VmaAllocation;
 
 struct GLFWwindow;
 
