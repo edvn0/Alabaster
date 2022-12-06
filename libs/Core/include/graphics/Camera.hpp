@@ -141,7 +141,7 @@ namespace Alabaster {
 		glm::vec2 initial_mouse_position {};
 
 		float distance;
-		float normal_speed { 0.002f };
+		float normal_speed { 0.2f };
 
 		float pitch, yaw;
 		float pitch_delta {}, yaw_delta {};

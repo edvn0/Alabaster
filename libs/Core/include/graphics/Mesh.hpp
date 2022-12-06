@@ -64,7 +64,7 @@ namespace Alabaster {
 		std::tuple<Vertices, Indices> load_model();
 
 	public:
-		static std::shared_ptr<Mesh> from_file(const std::filesystem::path& args) { return std::make_shared<Mesh>(IO::model(std::move(args))); };
+		static std::shared_ptr<Mesh> from_file(const std::filesystem::path& args) { return std::make_shared<Mesh>(IO::model(args)); };
 		static std::shared_ptr<Mesh> from_data(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)
 		{
 			return std::make_shared<Mesh>(vertices, indices);

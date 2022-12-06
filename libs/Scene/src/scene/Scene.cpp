@@ -210,15 +210,28 @@ namespace SceneSystem {
 			scene_renderer->begin_scene();
 			scene_renderer->reset_stats();
 
+			static const auto sphere_model = Alabaster::Mesh::from_file("sphere.obj");
+			static double x = 0.0;
+			x += 0.8 * ts;
+
+			static double y = 0.0;
+			y += 0.8 * ts;
+
+			double cosx = 30 * glm::cos(glm::radians(x));
+			double z = 30 * glm::sin(glm::radians(y));
+			double pos_y = (cosx * z) / 30;
+
+			pos = { cosx, pos_y, z, 1.0f };
+
+			scene_renderer->mesh(sphere_model, pos);
+
 			axes(scene_renderer, glm::vec3 { 0, -0.1, 0 });
 			scene_renderer->set_light_data(pos, col, ambience);
 
 			auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>();
-			mesh_view.each([&renderer = scene_renderer](Component::Transform& transform, const Component::Mesh& mesh,
-							   const Component::Texture& texture, const Component::Pipeline& pipeline) {
-				// transform.position = Alabaster::sphere_vector3(30);
-				renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour);
-			});
+			mesh_view.each(
+				[&renderer = scene_renderer](Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture,
+					const Component::Pipeline& pipeline) { renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour); });
 
 			auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
 			quad_view.each([&renderer = scene_renderer](
@@ -227,19 +240,6 @@ namespace SceneSystem {
 					renderer->quad(transform.to_matrix(), texture.colour);
 			});
 
-			// Sun stuff
-			static double x = 0.0;
-			x += 0.8;
-
-			static double y = 0.0;
-			y += 0.8;
-
-			double cosx = 30 * glm::cos(glm::radians(x));
-			double z = 30 * glm::sin(glm::radians(y));
-			double pos_y = (cosx * z) / 30;
-
-			pos = { cosx, pos_y, z, 1.0f };
-			// scene_renderer->mesh(sphere_model, sun_pipeline, pos);
 			// Sun done
 
 			// End todo

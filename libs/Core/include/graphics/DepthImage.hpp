@@ -6,6 +6,7 @@
 #include <vulkan/vulkan.h>
 
 namespace Alabaster {
+
 	struct DepthImage {
 		VkImage image;
 		VkImageView view;
@@ -18,4 +19,5 @@ namespace Alabaster {
 			allocator.destroy_image(image, allocation);
 		}
 	};
+
 } // namespace Alabaster

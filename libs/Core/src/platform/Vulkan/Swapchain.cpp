@@ -11,39 +11,13 @@
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
+#include "platform/Vulkan/ImageUtilities.hpp"
 
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 
 namespace Alabaster {
-
-	void create_image(std::uint32_t width, std::uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits, DepthImage& image);
-	void create_image_view(VkFormat format, VkImageAspectFlagBits bits, DepthImage& image);
-
-	VkFormat find_supported_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
-	{
-		for (VkFormat format : candidates) {
-			VkFormatProperties props;
-			vkGetPhysicalDeviceFormatProperties(GraphicsContext::the().physical_device(), format, &props);
-
-			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
-				return format;
-			} else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
-				return format;
-			}
-		}
-
-		throw std::runtime_error("failed to find supported format!");
-	}
-
-	VkFormat find_depth_format()
-	{
-		auto format = find_supported_format({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-			VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-		;
-		return format;
-	}
 
 	static constexpr auto default_fence_timeout = std::numeric_limits<uint64_t>::max();
 
@@ -315,7 +289,7 @@ namespace Alabaster {
 
 	void Swapchain::choose_format(const Capabilities& capabilities)
 	{
-		depth_format = find_depth_format();
+		depth_format = Utilities::find_depth_format();
 		for (const auto& available : capabilities.formats) {
 			if (available.format == VK_FORMAT_B8G8R8A8_SRGB && available.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
 				format = available;
@@ -436,8 +410,9 @@ namespace Alabaster {
 			vk_check(vkCreateImageView(GraphicsContext::the().device(), &view_create_info, nullptr, &views[i]));
 		}
 
-		create_image(extent.width, extent.height, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depth_image);
-		create_image_view(depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, depth_image);
+		Utilities::create_image(
+			extent.width, extent.height, depth_format, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, &depth_image);
+		Utilities::create_image_view(depth_format, VK_IMAGE_ASPECT_DEPTH_BIT, &depth_image);
 	}
 
 	void Swapchain::create_synchronisation_objects()

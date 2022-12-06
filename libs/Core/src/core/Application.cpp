@@ -89,7 +89,7 @@ namespace Alabaster {
 	{
 		on_init();
 
-		static int frametime_index = 0;
+		static std::size_t frametime_index = 0;
 		while (!window->should_close() && is_running) {
 			Timer<ClockGranularity::MILLIS, float> on_cpu;
 
@@ -110,7 +110,7 @@ namespace Alabaster {
 			frametime_queue[frametime_index] = cpu_time;
 			float time = Clock::get_ms<float>();
 			frame_time = time - last_frametime;
-			app_ts = frame_time;
+			app_ts = glm::min<float>(frame_time, 0.0333f);
 			last_frametime = time;
 
 			frametime_index = (frametime_index + 1) % frametime_queue.size();

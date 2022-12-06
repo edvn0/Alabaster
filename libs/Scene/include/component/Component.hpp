@@ -84,12 +84,12 @@ namespace SceneSystem::Component {
 		~Camera() = default;
 	};
 
-	namespace {
+	namespace detail {
 		template <typename T, typename... U>
 		concept IsAnyOf = (std::same_as<T, U> || ...);
 	}
 
 	template <typename T>
-	concept IsComponent = IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera>;
+	concept IsComponent = detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera>;
 
 } // namespace SceneSystem::Component

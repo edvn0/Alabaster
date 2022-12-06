@@ -10,8 +10,31 @@
 
 namespace Alabaster::Utilities {
 
+	inline VkFormat find_supported_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+	{
+		for (VkFormat format : candidates) {
+			VkFormatProperties props;
+			vkGetPhysicalDeviceFormatProperties(GraphicsContext::the().physical_device(), format, &props);
+
+			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+				return format;
+			} else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+				return format;
+			}
+		}
+
+		throw std::runtime_error("failed to find supported format!");
+	}
+
+	inline VkFormat find_depth_format()
+	{
+		auto format = find_supported_format({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+			VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+		return format;
+	}
+
 	inline void create_image(
-		std::uint32_t width, std::uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits, DepthImage& image)
+		std::uint32_t width, std::uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits, DepthImage* image)
 	{
 		VkImageCreateInfo image_info {};
 		image_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -29,20 +52,20 @@ namespace Alabaster::Utilities {
 		image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		Allocator allocator("Create Image");
-		image.allocation = allocator.allocate_image(image_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, image.image);
+		image->allocation = allocator.allocate_image(image_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, image->image);
 	}
 
 	inline void create_image(std::uint32_t width, std::uint32_t height, VkFormat format, VkImageTiling tiling, VkImageUsageFlagBits bits,
 		std::unique_ptr<DepthImage>& image)
 	{
-		create_image(width, height, format, tiling, bits, *image.get());
+		create_image(width, height, format, tiling, bits, image.get());
 	}
 
-	inline void create_image_view(VkFormat format, VkImageAspectFlagBits bits, DepthImage& image)
+	inline void create_image_view(VkFormat format, VkImageAspectFlagBits bits, DepthImage* image)
 	{
 		VkImageViewCreateInfo view_info {};
 		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		view_info.image = image.image;
+		view_info.image = image->image;
 		view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
 		view_info.format = format;
 		view_info.subresourceRange.aspectMask = bits;
@@ -51,12 +74,12 @@ namespace Alabaster::Utilities {
 		view_info.subresourceRange.baseArrayLayer = 0;
 		view_info.subresourceRange.layerCount = 1;
 
-		vk_check(vkCreateImageView(GraphicsContext::the().device(), &view_info, nullptr, &image.view));
+		vk_check(vkCreateImageView(GraphicsContext::the().device(), &view_info, nullptr, &image->view));
 	}
 
 	inline void create_image_view(VkFormat format, VkImageAspectFlagBits bits, std::unique_ptr<DepthImage>& image)
 	{
-		create_image_view(format, bits, *image.get());
+		create_image_view(format, bits, image.get());
 	}
 
 	inline void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, CommandBuffer* buffer)

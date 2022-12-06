@@ -12,29 +12,11 @@
 
 namespace Alabaster {
 
-	VkFormat find_supported_format(const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
-	{
-		for (VkFormat format : candidates) {
-			VkFormatProperties props;
-			vkGetPhysicalDeviceFormatProperties(GraphicsContext::the().physical_device(), format, &props);
+	VkCommandBuffer VulkanSwapChain::get_current_drawbuffer() const { return get_drawbuffer(current_buffer_index); }
 
-			if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
-				return format;
-			} else if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
-				return format;
-			}
-		}
+	VkCommandBuffer VulkanSwapChain::get_drawbuffer(std::uint32_t frame) const { return command_buffers[frame].CommandBuffer; }
 
-		throw std::runtime_error("failed to find supported format!");
-	}
-
-	VkFormat find_depth_format()
-	{
-		auto format = find_supported_format({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-			VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-		;
-		return format;
-	}
+	VkRenderPass VulkanSwapChain::get_render_pass() const { return render_pass; }
 
 	std::tuple<VkFormat, VkFormat> VulkanSwapChain::get_formats() { return { color_format, VK_FORMAT_D32_SFLOAT }; }
 
@@ -351,11 +333,6 @@ namespace Alabaster {
 		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass_description.colorAttachmentCount = 1;
 		subpass_description.pColorAttachments = &color_reference;
-		subpass_description.inputAttachmentCount = 0;
-		subpass_description.pInputAttachments = nullptr;
-		subpass_description.preserveAttachmentCount = 0;
-		subpass_description.pPreserveAttachments = nullptr;
-		subpass_description.pResolveAttachments = nullptr;
 		subpass_description.pDepthStencilAttachment = &depth_reference;
 
 		VkSubpassDependency dependency = {};
@@ -457,8 +434,6 @@ namespace Alabaster {
 	void VulkanSwapChain::present()
 	{
 
-		const uint64_t default_fence_timeout = 100000000000;
-
 		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkSubmitInfo present_submit_info = {};
@@ -474,9 +449,6 @@ namespace Alabaster {
 		vk_check(vkResetFences(device, 1, &wait_fences[current_buffer_index]));
 		vk_check(vkQueueSubmit(GraphicsContext::the().graphics_queue(), 1, &present_submit_info, wait_fences[current_buffer_index]));
 
-		// Present the current buffer to the swap chain
-		// Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for swap chain presentation
-		// This ensures that the image is not presented to the windowing system until all commands have been submitted
 		VkResult result;
 		{
 			VkPresentInfoKHR present_info = {};
@@ -530,7 +502,7 @@ namespace Alabaster {
 			// iterate over the list of available imagesrface format and
 			bool found_b8_g8_r8_a8_unorm = false;
 			for (auto&& surface_format : surface_formats) {
-				if (surface_format.format == VK_FORMAT_R8G8B8A8_UNORM) {
+				if (surface_format.format == VK_FORMAT_R8G8B8A8_SRGB) {
 					color_format = surface_format.format;
 					color_space = surface_format.colorSpace;
 					found_b8_g8_r8_a8_unorm = true;

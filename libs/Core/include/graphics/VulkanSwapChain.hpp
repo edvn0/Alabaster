@@ -101,9 +101,7 @@ namespace Alabaster {
 		std::vector<SwapchainCommandBuffer> command_buffers;
 
 		struct {
-			// Swap chain
 			VkSemaphore PresentComplete = nullptr;
-			// Command buffer
 			VkSemaphore RenderComplete = nullptr;
 		} semaphores;
 		VkSubmitInfo submit_info;

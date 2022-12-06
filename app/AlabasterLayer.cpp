@@ -130,7 +130,7 @@ static void draw_vec3_control(const std::string& label, glm::vec3& values, float
 	ImGui::PopID();
 }
 
-static void draw_quat_control(const std::string& label, glm::quat& values, float reset_value = 0.0f, float column_width = 100.0f)
+static void draw_quat_control(const std::string& label, auto&& values, float reset_value = 0.0f, float column_width = 100.0f)
 {
 	ImGuiIO& io = ImGui::GetIO();
 	auto bold_font = io.Fonts->Fonts[0];
@@ -381,7 +381,7 @@ void AlabasterLayer::draw_components(Entity& entity)
 		auto& tag = entity.get_component<Component::Tag>().tag;
 
 		char buffer[500];
-		memset(buffer, 0, sizeof(buffer));
+		std::memset(buffer, 0, sizeof(buffer));
 		tag.copy(buffer, 499);
 		buffer[499] = '\0';
 		if (ImGui::InputText("##Tag", buffer, sizeof(buffer))) {
@@ -409,6 +409,8 @@ void AlabasterLayer::draw_components(Entity& entity)
 		draw_quat_control("Rotation", component.rotation);
 		draw_vec3_control("Scale", component.scale, 1.0f);
 	});
+
+	draw_component<Component::Texture>(entity, "Texture", [](Component::Texture& component) { draw_quat_control("Colour", component.colour); });
 }
 
 void AlabasterLayer::draw_entity_node(Entity& entity)
