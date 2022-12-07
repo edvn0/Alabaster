@@ -28,13 +28,7 @@ namespace Alabaster {
 		VmaAllocation allocation { nullptr };
 	};
 
-	enum class ImageFormat : uint8_t {
-		RGBA = 0,
-		RGB,
-		RBG,
-		RBGA,
-		SINGLE_CHANNEL,
-	};
+	enum class ImageFormat : uint8_t { RGBA = 0, RGB, RBG, RBGA, SINGLE_CHANNEL, Depth32, Depth24Stencil8 };
 
 	enum class ImageUsage : uint8_t { Attachment = 0, Texture, Storage };
 
@@ -46,7 +40,9 @@ namespace Alabaster {
 		std::uint32_t layers { 1 };
 		std::uint32_t depth { 1 };
 		std::uint32_t channels { 3 };
+		ImageUsage usage { ImageUsage::Attachment };
 		ImageFormat format { ImageFormat::RGBA };
+		std::string debug_name { "Debug" };
 	};
 
 	class Image {
@@ -74,6 +70,9 @@ namespace Alabaster {
 		auto get_sampler() const { return image_info.sampler; }
 		auto get_layout() const { return image_info.layout; }
 
+		auto& get_properties() { return image_props; }
+		auto& get_properties() const { return image_props; }
+
 	private:
 		void invalidate(void* data);
 		void create_view();
@@ -94,6 +93,7 @@ namespace Alabaster {
 
 	public:
 		static std::shared_ptr<Image> create(const std::filesystem::path& filename) { return std::make_shared<Image>(filename); }
+		static std::shared_ptr<Image> create(ImageProps props) { return std::make_shared<Image>(props); }
 	};
 
 } // namespace Alabaster

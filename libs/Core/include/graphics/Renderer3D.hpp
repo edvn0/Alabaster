@@ -88,7 +88,7 @@ namespace Alabaster {
 
 	class Renderer3D {
 	public:
-		explicit Renderer3D(Camera& camera) noexcept;
+		explicit Renderer3D(const std::shared_ptr<Camera>& camera) noexcept;
 
 		void begin_scene();
 
@@ -117,7 +117,7 @@ namespace Alabaster {
 		void reset_stats();
 
 	public:
-		void set_camera(Camera& cam);
+		void set_camera(const std::shared_ptr<Camera>& cam);
 
 	public:
 		const VkRenderPass& get_render_pass() const;
@@ -136,7 +136,7 @@ namespace Alabaster {
 		void create_renderpass();
 
 	private:
-		Camera& camera;
+		std::shared_ptr<Camera> camera;
 		RendererData data;
 	};
 

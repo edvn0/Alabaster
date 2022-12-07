@@ -141,7 +141,7 @@ namespace Alabaster {
 		glm::vec2 initial_mouse_position {};
 
 		float distance;
-		float normal_speed { 0.2f };
+		float normal_speed { 2.0f };
 
 		float pitch, yaw;
 		float pitch_delta {}, yaw_delta {};
@@ -154,8 +154,8 @@ namespace Alabaster {
 
 		std::uint32_t viewport_width { 1280 }, viewport_height { 720 };
 
-		constexpr static float min_speed { 0.005f };
-		constexpr static float max_speed { 0.020f };
+		constexpr static float min_speed { 0.5f };
+		constexpr static float max_speed { 6.0f };
 	};
 
 } // namespace Alabaster

@@ -72,7 +72,7 @@ namespace Alabaster {
 		index_buffer = IndexBuffer::create(std::move(indices));
 		auto t1 = Clock::get_ms<float>() - t0;
 
-		Log::info("[Mesh] Model load took: {}ms", t1);
+		Log::info("[Mesh] Model with name [{}] load took: {}ms", path.string(), t1);
 	}
 
 	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)

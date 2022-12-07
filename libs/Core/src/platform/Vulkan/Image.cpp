@@ -34,19 +34,24 @@ namespace Alabaster {
 	Image::Image(const ImageProps& props)
 		: image_props(props)
 	{
-		assert_that(props.path, "You need to supply a path to an image file.");
-		const auto& path = props.path.value();
+		image_props.width = static_cast<std::uint32_t>(props.width);
+		image_props.height = static_cast<std::uint32_t>(props.height);
+		image_props.channels = static_cast<std::uint32_t>(props.channels);
 
-		int w, h, actual_channels;
-		uint8_t* data = stbi_load(path.string().data(), &w, &h, &actual_channels, STBI_rgb_alpha);
+		uint8_t* data = nullptr;
+		if (props.path) {
+
+			int w, h, actual_channels;
+			data = stbi_load((*props.path).string().data(), &w, &h, &actual_channels, STBI_rgb_alpha);
+
+			image_props.width = static_cast<std::uint32_t>(w);
+			image_props.height = static_cast<std::uint32_t>(h);
+			image_props.channels = static_cast<std::uint32_t>(STBI_rgb_alpha);
+		} else {
+			data = new uint8_t[image_props.width * image_props.height * image_props.channels];
+		}
 
 		assert_that(data != nullptr, "Image data is nullptr.");
-
-		image_props.width = static_cast<std::uint32_t>(w);
-		image_props.height = static_cast<std::uint32_t>(h);
-		image_props.channels = static_cast<std::uint32_t>(STBI_rgb_alpha);
-
-		Log::info("[Image] Creating image with path: {}\n\t[Image] Properties: {}x{}px, {} channels.", path.string(), w, h, actual_channels);
 
 		pixel_data = data;
 	}
@@ -99,7 +104,6 @@ namespace Alabaster {
 		buffer.add_destruction_callback([staging_buffer_allocation, staging_buffer](
 											Allocator& allocator) { allocator.destroy_buffer(staging_buffer, staging_buffer_allocation); });
 
-		Log::info("[Image] invalidated image: {}", image_props.path.value().string());
 		image_info.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 		create_view();
 		create_sampler();

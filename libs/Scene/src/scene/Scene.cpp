@@ -11,6 +11,7 @@
 #include "entity/Entity.hpp"
 #include "graphics/Camera.hpp"
 #include "graphics/CommandBuffer.hpp"
+#include "graphics/Framebuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/IndexBuffer.hpp"
 #include "graphics/Mesh.hpp"
@@ -189,6 +190,26 @@ namespace SceneSystem {
 			viking_transform.rotation = rot;
 			viking_transform.scale = { 15, 15, 15 };
 		}
+
+		{
+			Entity sun { this, "Sun" };
+			sun.add_component<Component::Light>();
+			sun.add_component<Component::Mesh>(sphere_model);
+			sun.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });
+			auto& sun_transform = sun.get_transform();
+			sun_transform.scale = { 3, 3, 3 };
+		}
+
+		const auto&& [w, h] = Application::the().get_window()->size();
+		FramebufferSpecification fbs;
+		fbs.width = w;
+		fbs.height = h;
+		fbs.attachments = { ImageFormat::RGBA, ImageFormat::Depth32 };
+		fbs.samples = 1;
+		fbs.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+		fbs.debug_name = "Geometry";
+		fbs.clear_depth_on_load = false;
+		auto fb = Framebuffer::create(fbs);
 	}
 
 	Scene::Scene()
@@ -210,27 +231,31 @@ namespace SceneSystem {
 			scene_renderer->begin_scene();
 			scene_renderer->reset_stats();
 
-			static const auto sphere_model = Alabaster::Mesh::from_file("sphere.obj");
 			static double x = 0.0;
 			x += 0.8 * ts;
 
 			static double y = 0.0;
 			y += 0.8 * ts;
 
-			double cosx = 30 * glm::cos(glm::radians(x));
-			double z = 30 * glm::sin(glm::radians(y));
-			double pos_y = (cosx * z) / 30;
+			auto light_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Light>();
+			light_view.each([&renderer = scene_renderer](Component::Transform& transform, const Component::Mesh& mesh,
+								const Component::Texture& texture, const Component::Light&) {
+				double cosx = 30 * glm::cos(glm::radians(x));
+				double z = 30 * glm::sin(glm::radians(y));
+				double pos_y = (cosx * z) / 30;
 
-			pos = { cosx, pos_y, z, 1.0f };
+				pos = { cosx, pos_y, z, 1.0f };
+				transform.position = pos;
 
-			scene_renderer->mesh(sphere_model, pos);
+				renderer->mesh(mesh.mesh, transform.to_matrix(), texture.colour);
+			});
 
 			axes(scene_renderer, glm::vec3 { 0, -0.1, 0 });
 			scene_renderer->set_light_data(pos, col, ambience);
 
 			auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>();
 			mesh_view.each(
-				[&renderer = scene_renderer](Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture,
+				[&renderer = scene_renderer](const Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture,
 					const Component::Pipeline& pipeline) { renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour); });
 
 			auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
@@ -249,7 +274,18 @@ namespace SceneSystem {
 		command_buffer->submit();
 	}
 
-	void Scene::on_event(Alabaster::Event& event) { scene_camera->on_event(event); }
+	void Scene::on_event(Alabaster::Event& event)
+	{
+		scene_camera->on_event(event);
+
+		Alabaster::EventDispatcher dispatch(event);
+		dispatch.dispatch<Alabaster::WindowResizeEvent>([this](Alabaster::WindowResizeEvent& e) {
+			const auto vertical_fov = glm::degrees(scene_camera->get_vertical_fov());
+			scene_camera.reset(new Alabaster::EditorCamera(vertical_fov, e.width(), e.height(), 0.1f, 1000.0f));
+			this->scene_renderer->set_camera(scene_camera);
+			return false;
+		});
+	}
 
 	void Scene::shutdown() { SceneSerialiser serialiser(*this); }
 
@@ -257,8 +293,8 @@ namespace SceneSystem {
 	{
 		auto&& [w, h] = Alabaster::Application::the().get_window()->size();
 
-		scene_camera = std::make_unique<Alabaster::EditorCamera>(74.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
-		scene_renderer = std::make_unique<Alabaster::Renderer3D>(*scene_camera.get());
+		scene_camera = std::make_shared<Alabaster::EditorCamera>(74.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
+		scene_renderer = std::make_unique<Alabaster::Renderer3D>(scene_camera);
 		command_buffer = Alabaster::CommandBuffer::from_swapchain();
 
 		build_scene();

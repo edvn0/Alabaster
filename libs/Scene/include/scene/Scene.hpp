@@ -42,7 +42,7 @@ namespace SceneSystem {
 	private:
 		entt::registry registry;
 
-		std::unique_ptr<Alabaster::EditorCamera> scene_camera;
+		std::shared_ptr<Alabaster::EditorCamera> scene_camera;
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
 

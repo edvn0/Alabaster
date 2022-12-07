@@ -70,7 +70,7 @@ namespace Alabaster {
 		const auto&& [fb_w, fb_h] = framebuffer_extent();
 		auto w = std::uint32_t(fb_w);
 		auto h = std::uint32_t(fb_h);
-		swapchain->create(&w, &h, false);
+		swapchain->create(&w, &h, arguments.sync_mode == SyncMode::VSync);
 
 		setup_events();
 	};

@@ -9,6 +9,7 @@
 #include "graphics/CommandBuffer.hpp"
 #include "imgui_internal.h"
 
+#include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
 #include <optional>
 #include <string.h>
@@ -130,7 +131,232 @@ static void draw_vec3_control(const std::string& label, glm::vec3& values, float
 	ImGui::PopID();
 }
 
-static void draw_quat_control(const std::string& label, auto&& values, float reset_value = 0.0f, float column_width = 100.0f)
+static bool color_picker(const char* label, glm::vec3& col)
+{
+	static constexpr float hue_picker_width = 20.0f;
+	static constexpr float crosshair_size = 7.0f;
+	static constexpr ImVec2 sv_picker_size = ImVec2(200, 200);
+
+	ImColor color(col[0], col[1], col[2]);
+	bool value_changed = false;
+
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+	ImVec2 picker_pos = ImGui::GetCursorScreenPos();
+
+	ImColor colors[] = { ImColor(255, 0, 0), ImColor(255, 255, 0), ImColor(0, 255, 0), ImColor(0, 255, 255), ImColor(0, 0, 255), ImColor(255, 0, 255),
+		ImColor(255, 0, 0) };
+
+	for (int i = 0; i < 6; ++i) {
+		draw_list->AddRectFilledMultiColor(ImVec2(picker_pos.x + sv_picker_size.x + 10, picker_pos.y + i * (sv_picker_size.y / 6)),
+			ImVec2(picker_pos.x + sv_picker_size.x + 10 + hue_picker_width, picker_pos.y + (i + 1) * (sv_picker_size.y / 6)), colors[i], colors[i],
+			colors[i + 1], colors[i + 1]);
+	}
+
+	float hue, saturation, value;
+	ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, hue, saturation, value);
+
+	draw_list->AddLine(ImVec2(picker_pos.x + sv_picker_size.x + 8, picker_pos.y + hue * sv_picker_size.y),
+		ImVec2(picker_pos.x + sv_picker_size.x + 12 + hue_picker_width, picker_pos.y + hue * sv_picker_size.y), ImColor(255, 255, 255));
+
+	{
+		const int step = 5;
+		ImVec2 pos = ImVec2(0, 0);
+
+		ImVec4 c00(1, 1, 1, 1);
+		ImVec4 c10(1, 1, 1, 1);
+		ImVec4 c01(1, 1, 1, 1);
+		ImVec4 c11(1, 1, 1, 1);
+		for (int y = 0; y < step; y++) {
+			for (int x = 0; x < step; x++) {
+				float s0 = (float)x / (float)step;
+				float s1 = (float)(x + 1) / (float)step;
+				float v0 = 1.0 - (float)(y) / (float)step;
+				float v1 = 1.0 - (float)(y + 1) / (float)step;
+
+				ImGui::ColorConvertHSVtoRGB(hue, s0, v0, c00.x, c00.y, c00.z);
+				ImGui::ColorConvertHSVtoRGB(hue, s1, v0, c10.x, c10.y, c10.z);
+				ImGui::ColorConvertHSVtoRGB(hue, s0, v1, c01.x, c01.y, c01.z);
+				ImGui::ColorConvertHSVtoRGB(hue, s1, v1, c11.x, c11.y, c11.z);
+
+				draw_list->AddRectFilledMultiColor(ImVec2(picker_pos.x + pos.x, picker_pos.y + pos.y),
+					ImVec2(picker_pos.x + pos.x + sv_picker_size.x / step, picker_pos.y + pos.y + sv_picker_size.y / step),
+					ImGui::ColorConvertFloat4ToU32(c00), ImGui::ColorConvertFloat4ToU32(c10), ImGui::ColorConvertFloat4ToU32(c11),
+					ImGui::ColorConvertFloat4ToU32(c01));
+
+				pos.x += sv_picker_size.x / step;
+			}
+			pos.x = 0;
+			pos.y += sv_picker_size.y / step;
+		}
+	}
+
+	float x = saturation * sv_picker_size.x;
+	float y = (1 - value) * sv_picker_size.y;
+	ImVec2 p(picker_pos.x + x, picker_pos.y + y);
+	draw_list->AddLine(ImVec2(p.x - crosshair_size, p.y), ImVec2(p.x - 2, p.y), ImColor(255, 255, 255));
+	draw_list->AddLine(ImVec2(p.x + crosshair_size, p.y), ImVec2(p.x + 2, p.y), ImColor(255, 255, 255));
+	draw_list->AddLine(ImVec2(p.x, p.y + crosshair_size), ImVec2(p.x, p.y + 2), ImColor(255, 255, 255));
+	draw_list->AddLine(ImVec2(p.x, p.y - crosshair_size), ImVec2(p.x, p.y - 2), ImColor(255, 255, 255));
+
+	ImGui::InvisibleButton("saturation_value_selector", sv_picker_size);
+
+	if (ImGui::IsItemActive() && ImGui::GetIO().MouseDown[0]) {
+		ImVec2 mouse_pos_in_canvas = ImVec2(ImGui::GetIO().MousePos.x - picker_pos.x, ImGui::GetIO().MousePos.y - picker_pos.y);
+
+		/**/ if (mouse_pos_in_canvas.x < 0)
+			mouse_pos_in_canvas.x = 0;
+		else if (mouse_pos_in_canvas.x >= sv_picker_size.x - 1)
+			mouse_pos_in_canvas.x = sv_picker_size.x - 1;
+
+		/**/ if (mouse_pos_in_canvas.y < 0)
+			mouse_pos_in_canvas.y = 0;
+		else if (mouse_pos_in_canvas.y >= sv_picker_size.y - 1)
+			mouse_pos_in_canvas.y = sv_picker_size.y - 1;
+
+		value = 1 - (mouse_pos_in_canvas.y / (sv_picker_size.y - 1));
+		saturation = mouse_pos_in_canvas.x / (sv_picker_size.x - 1);
+		value_changed = true;
+	}
+
+	ImGui::SetCursorScreenPos(ImVec2(picker_pos.x + sv_picker_size.x + 10, picker_pos.y));
+	ImGui::InvisibleButton("hue_selector", ImVec2(hue_picker_width, sv_picker_size.y));
+
+	if ((ImGui::IsItemHovered() || ImGui::IsItemActive()) && ImGui::GetIO().MouseDown[0]) {
+		ImVec2 mouse_pos_in_canvas = ImVec2(ImGui::GetIO().MousePos.x - picker_pos.x, ImGui::GetIO().MousePos.y - picker_pos.y);
+
+		/* Previous horizontal bar will represent hue=1 (bottom) as hue=0 (top). Since both colors are red, we clamp at (-2, above edge) to avoid
+		 * visual continuities */
+		/**/ if (mouse_pos_in_canvas.y < 0)
+			mouse_pos_in_canvas.y = 0;
+		else if (mouse_pos_in_canvas.y >= sv_picker_size.y - 2)
+			mouse_pos_in_canvas.y = sv_picker_size.y - 2;
+
+		hue = mouse_pos_in_canvas.y / (sv_picker_size.y - 1);
+		value_changed = true;
+	}
+
+	color = ImColor::HSV(hue > 0 ? hue : 1e-6, saturation > 0 ? saturation : 1e-6, value > 0 ? value : 1e-6);
+	col[0] = color.Value.x;
+	col[1] = color.Value.y;
+	col[2] = color.Value.z;
+	return value_changed | ImGui::ColorEdit3(label, glm::value_ptr(col));
+}
+
+static bool color_picker(const char* label, glm::vec4& col)
+{
+	static constexpr float hue_picker_width = 20.0f;
+	static constexpr float crosshair_size = 7.0f;
+	static constexpr ImVec2 sv_picker_size = ImVec2(200, 200);
+
+	ImColor color(col[0], col[1], col[2], col[3]);
+	bool value_changed = false;
+
+	ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+	ImVec2 picker_pos = ImGui::GetCursorScreenPos();
+
+	ImColor colors[] = { ImColor(255, 0, 0), ImColor(255, 255, 0), ImColor(0, 255, 0), ImColor(0, 255, 255), ImColor(0, 0, 255), ImColor(255, 0, 255),
+		ImColor(255, 0, 0) };
+
+	for (int i = 0; i < 6; ++i) {
+		draw_list->AddRectFilledMultiColor(ImVec2(picker_pos.x + sv_picker_size.x + 10, picker_pos.y + i * (sv_picker_size.y / 6)),
+			ImVec2(picker_pos.x + sv_picker_size.x + 10 + hue_picker_width, picker_pos.y + (i + 1) * (sv_picker_size.y / 6)), colors[i], colors[i],
+			colors[i + 1], colors[i + 1]);
+	}
+
+	float hue, saturation, value;
+	ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, hue, saturation, value);
+
+	draw_list->AddLine(ImVec2(picker_pos.x + sv_picker_size.x + 8, picker_pos.y + hue * sv_picker_size.y),
+		ImVec2(picker_pos.x + sv_picker_size.x + 12 + hue_picker_width, picker_pos.y + hue * sv_picker_size.y), ImColor(255, 255, 255));
+
+	{
+		const int step = 5;
+		ImVec2 pos = ImVec2(0, 0);
+
+		ImVec4 c00(1, 1, 1, 1);
+		ImVec4 c10(1, 1, 1, 1);
+		ImVec4 c01(1, 1, 1, 1);
+		ImVec4 c11(1, 1, 1, 1);
+		for (int y = 0; y < step; y++) {
+			for (int x = 0; x < step; x++) {
+				float s0 = (float)x / (float)step;
+				float s1 = (float)(x + 1) / (float)step;
+				float v0 = 1.0 - (float)(y) / (float)step;
+				float v1 = 1.0 - (float)(y + 1) / (float)step;
+
+				ImGui::ColorConvertHSVtoRGB(hue, s0, v0, c00.x, c00.y, c00.z);
+				ImGui::ColorConvertHSVtoRGB(hue, s1, v0, c10.x, c10.y, c10.z);
+				ImGui::ColorConvertHSVtoRGB(hue, s0, v1, c01.x, c01.y, c01.z);
+				ImGui::ColorConvertHSVtoRGB(hue, s1, v1, c11.x, c11.y, c11.z);
+
+				draw_list->AddRectFilledMultiColor(ImVec2(picker_pos.x + pos.x, picker_pos.y + pos.y),
+					ImVec2(picker_pos.x + pos.x + sv_picker_size.x / step, picker_pos.y + pos.y + sv_picker_size.y / step),
+					ImGui::ColorConvertFloat4ToU32(c00), ImGui::ColorConvertFloat4ToU32(c10), ImGui::ColorConvertFloat4ToU32(c11),
+					ImGui::ColorConvertFloat4ToU32(c01));
+
+				pos.x += sv_picker_size.x / step;
+			}
+			pos.x = 0;
+			pos.y += sv_picker_size.y / step;
+		}
+	}
+
+	float x = saturation * sv_picker_size.x;
+	float y = (1 - value) * sv_picker_size.y;
+	ImVec2 p(picker_pos.x + x, picker_pos.y + y);
+	draw_list->AddLine(ImVec2(p.x - crosshair_size, p.y), ImVec2(p.x - 2, p.y), ImColor(255, 255, 255));
+	draw_list->AddLine(ImVec2(p.x + crosshair_size, p.y), ImVec2(p.x + 2, p.y), ImColor(255, 255, 255));
+	draw_list->AddLine(ImVec2(p.x, p.y + crosshair_size), ImVec2(p.x, p.y + 2), ImColor(255, 255, 255));
+	draw_list->AddLine(ImVec2(p.x, p.y - crosshair_size), ImVec2(p.x, p.y - 2), ImColor(255, 255, 255));
+
+	ImGui::InvisibleButton("saturation_value_selector", sv_picker_size);
+
+	if (ImGui::IsItemActive() && ImGui::GetIO().MouseDown[0]) {
+		ImVec2 mouse_pos_in_canvas = ImVec2(ImGui::GetIO().MousePos.x - picker_pos.x, ImGui::GetIO().MousePos.y - picker_pos.y);
+
+		/**/ if (mouse_pos_in_canvas.x < 0)
+			mouse_pos_in_canvas.x = 0;
+		else if (mouse_pos_in_canvas.x >= sv_picker_size.x - 1)
+			mouse_pos_in_canvas.x = sv_picker_size.x - 1;
+
+		/**/ if (mouse_pos_in_canvas.y < 0)
+			mouse_pos_in_canvas.y = 0;
+		else if (mouse_pos_in_canvas.y >= sv_picker_size.y - 1)
+			mouse_pos_in_canvas.y = sv_picker_size.y - 1;
+
+		value = 1 - (mouse_pos_in_canvas.y / (sv_picker_size.y - 1));
+		saturation = mouse_pos_in_canvas.x / (sv_picker_size.x - 1);
+		value_changed = true;
+	}
+
+	ImGui::SetCursorScreenPos(ImVec2(picker_pos.x + sv_picker_size.x + 10, picker_pos.y));
+	ImGui::InvisibleButton("hue_selector", ImVec2(hue_picker_width, sv_picker_size.y));
+
+	if ((ImGui::IsItemHovered() || ImGui::IsItemActive()) && ImGui::GetIO().MouseDown[0]) {
+		ImVec2 mouse_pos_in_canvas = ImVec2(ImGui::GetIO().MousePos.x - picker_pos.x, ImGui::GetIO().MousePos.y - picker_pos.y);
+
+		/* Previous horizontal bar will represent hue=1 (bottom) as hue=0 (top). Since both colors are red, we clamp at (-2, above edge) to avoid
+		 * visual continuities */
+		/**/ if (mouse_pos_in_canvas.y < 0)
+			mouse_pos_in_canvas.y = 0;
+		else if (mouse_pos_in_canvas.y >= sv_picker_size.y - 2)
+			mouse_pos_in_canvas.y = sv_picker_size.y - 2;
+
+		hue = mouse_pos_in_canvas.y / (sv_picker_size.y - 1);
+		value_changed = true;
+	}
+
+	color = ImColor::HSV(hue > 0 ? hue : 1e-6, saturation > 0 ? saturation : 1e-6, value > 0 ? value : 1e-6);
+	col[0] = color.Value.x;
+	col[1] = color.Value.y;
+	col[2] = color.Value.z;
+	col[3] = color.Value.w;
+	return value_changed | ImGui::ColorEdit4(label, glm::value_ptr(col));
+}
+
+static void draw_four_component_vector(const std::string& label, auto&& values, float reset_value = 0.0f, float column_width = 100.0f)
 {
 	ImGuiIO& io = ImGui::GetIO();
 	auto bold_font = io.Fonts->Fonts[0];
@@ -406,11 +632,11 @@ void AlabasterLayer::draw_components(Entity& entity)
 
 	draw_component<Component::Transform>(entity, "Transform", [](Component::Transform& component) {
 		draw_vec3_control("Translation", component.position);
-		draw_quat_control("Rotation", component.rotation);
+		draw_four_component_vector("Rotation", component.rotation);
 		draw_vec3_control("Scale", component.scale, 1.0f);
 	});
 
-	draw_component<Component::Texture>(entity, "Texture", [](Component::Texture& component) { draw_quat_control("Colour", component.colour); });
+	draw_component<Component::Texture>(entity, "Texture", [](Component::Texture& component) { color_picker("Colour", component.colour); });
 }
 
 void AlabasterLayer::draw_entity_node(Entity& entity)
@@ -435,7 +661,7 @@ void AlabasterLayer::draw_entity_node(Entity& entity)
 
 	if (opened) {
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-		bool opened = ImGui::TreeNodeEx(entity.get_component<Component::ID>(), flags, "%s", tag.c_str());
+		bool opened = ImGui::TreeNodeEx((const char*)&entity.get_component<Component::ID>().identifier, flags, "%s", tag.c_str());
 		if (opened)
 			ImGui::TreePop();
 		ImGui::TreePop();

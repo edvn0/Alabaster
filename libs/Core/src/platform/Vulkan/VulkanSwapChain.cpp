@@ -429,6 +429,9 @@ namespace Alabaster {
 	{
 		current_image_index = acquire_next_image();
 
+		if (current_image_index == 9877)
+			return;
+
 		vk_check(vkResetCommandPool(device, command_buffers[current_buffer_index].CommandPool, 0));
 	}
 
@@ -480,7 +483,17 @@ namespace Alabaster {
 	uint32_t VulkanSwapChain::acquire_next_image()
 	{
 		uint32_t image_index;
-		vk_check(vkAcquireNextImageKHR(device, swap_chain, UINT64_MAX, semaphores.PresentComplete, (VkFence) nullptr, &image_index));
+		auto result = vkAcquireNextImageKHR(device, swap_chain, UINT64_MAX, semaphores.PresentComplete, (VkFence) nullptr, &image_index);
+
+		if (result != VK_SUCCESS) {
+			if (result == VK_SUBOPTIMAL_KHR || result == VK_ERROR_OUT_OF_DATE_KHR) {
+				on_resize(width, height);
+				return 9877; // Magic number
+			} else {
+				throw AlabasterException("Could not acquire new image.");
+			}
+		}
+
 		return image_index;
 	}
 

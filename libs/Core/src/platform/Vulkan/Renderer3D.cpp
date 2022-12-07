@@ -187,7 +187,7 @@ namespace Alabaster {
 		}
 	}
 
-	Renderer3D::Renderer3D(Camera& camera) noexcept
+	Renderer3D::Renderer3D(const std::shared_ptr<Camera>& camera) noexcept
 		: camera(camera)
 	{
 		data.sphere_model = Mesh::from_file("sphere.obj");
@@ -566,8 +566,8 @@ namespace Alabaster {
 		const auto image_index = Application::the().swapchain().frame();
 
 		UBO ubo {};
-		ubo.projection = camera.get_projection_matrix();
-		ubo.view = camera.get_view_matrix();
+		ubo.projection = camera->get_projection_matrix();
+		ubo.view = camera->get_view_matrix();
 		ubo.view_projection = ubo.projection * ubo.view;
 		ubo.model = model.has_value() ? *model : default_model;
 
@@ -586,6 +586,6 @@ namespace Alabaster {
 
 	const VkRenderPass& Renderer3D::get_render_pass() const { return data.render_pass; }
 
-	void Renderer3D::set_camera(Camera& cam) { camera = cam; }
+	void Renderer3D::set_camera(const std::shared_ptr<Camera>& cam) { camera = cam; }
 
 } // namespace Alabaster
