@@ -1,4 +1,4 @@
-#include "cache/ImageCache.hpp"
+#include "cache/TextureCache.hpp"
 #include "cache/ShaderCache.hpp"
 #include "graphics/Shader.hpp"
 

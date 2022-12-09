@@ -38,8 +38,8 @@ namespace Alabaster {
 		auto begin() { return attachments.begin(); }
 		auto end() { return attachments.end(); }
 
-		auto cbegin() { return attachments.cbegin(); }
-		auto cend() { return attachments.cend(); }
+		auto cbegin() const { return attachments.cbegin(); }
+		auto cend() const { return attachments.cend(); }
 
 		auto is_empty() const { return attachments.empty(); }
 		auto size() const { return attachments.size(); }
@@ -50,37 +50,34 @@ namespace Alabaster {
 	class Framebuffer;
 
 	struct FramebufferSpecification {
-		float scale = 1.0f;
-		uint32_t width = 0;
-		uint32_t height = 0;
-		glm::vec4 clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+		uint32_t width { 0 };
+		uint32_t height { 0 };
+		float scale { 1.0f };
+
 		float depth_clear_value = 1.0f;
 		bool clear_colour_on_load = true;
 		bool clear_depth_on_load = true;
+		glm::vec4 clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 		FramebufferAttachmentSpecification attachments;
-		uint32_t samples = 1; // multisampling
+		uint32_t samples { 1 };
 
-		bool no_resize = false;
+		bool no_resize { false };
+		bool blend { true };
+		FramebufferBlendMode blend_mode { FramebufferBlendMode::None };
 
-		bool blend = true;
-		FramebufferBlendMode blend_mode = FramebufferBlendMode::None;
-
-		bool swap_chain_target = false;
+		bool swap_chain_target { false };
 
 		std::shared_ptr<Image> existing_image;
 		std::vector<uint32_t> existing_image_layers;
-
 		std::map<uint32_t, std::shared_ptr<Image>> existing_images;
-
 		std::shared_ptr<Framebuffer> existing_framebuffer;
-
 		std::string debug_name;
 	};
 
 	class Framebuffer {
 	public:
-		Framebuffer(const FramebufferSpecification& spec);
+		Framebuffer(const FramebufferSpecification& w);
 		~Framebuffer()
 		{
 			if (!destroyed)
@@ -90,8 +87,8 @@ namespace Alabaster {
 		void resize(uint32_t width, uint32_t height, bool force_recreate = false);
 		void add_resize_callback(const std::function<void(Framebuffer&)>& func);
 
-		uint32_t get_width() const;
-		uint32_t get_height() const;
+		std::uint32_t get_width() const { return width; };
+		std::uint32_t get_height() const { return height; };
 
 		std::shared_ptr<Image> get_image(std::uint32_t index = 0) const { return attachment_images[index]; }
 		std::shared_ptr<Image> get_depth_image() const { return depth_image; }
@@ -104,6 +101,7 @@ namespace Alabaster {
 		const FramebufferSpecification& get_specification() const { return spec; }
 
 		void invalidate();
+		void release();
 		void destroy();
 
 	private:

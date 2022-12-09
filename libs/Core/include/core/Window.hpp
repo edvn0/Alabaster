@@ -1,6 +1,6 @@
 #pragma once
 
-#include "graphics/VulkanSwapChain.hpp"
+#include "graphics/Swapchain.hpp"
 
 #include <functional>
 #include <memory>
@@ -33,8 +33,8 @@ namespace Alabaster {
 
 		void set_event_callback(const EventCallback& cb);
 
-		const std::unique_ptr<VulkanSwapChain>& get_swapchain() { return swapchain; }
-		const std::unique_ptr<VulkanSwapChain>& get_swapchain() const { return swapchain; }
+		const std::unique_ptr<Swapchain>& get_swapchain() { return swapchain; }
+		const std::unique_ptr<Swapchain>& get_swapchain() const { return swapchain; }
 
 		const std::pair<int, int> framebuffer_extent() const;
 		const std::pair<float, float> framebuffer_scale() const;
@@ -60,7 +60,7 @@ namespace Alabaster {
 			EventCallback callback;
 		} user_data;
 
-		std::unique_ptr<VulkanSwapChain> swapchain;
+		std::unique_ptr<Swapchain> swapchain;
 		GLFWwindow* handle;
 		GLFWcursor* imgui_mouse_cursors[9];
 	};

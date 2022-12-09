@@ -20,7 +20,6 @@
 #include "graphics/Renderer3D.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/SimpleCamera.hpp"
-#include "graphics/Swapchain.hpp"
 #include "graphics/Texture.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBuffer.hpp"

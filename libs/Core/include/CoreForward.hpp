@@ -18,7 +18,6 @@ namespace Alabaster {
 	class RenderQueue;
 	class GraphicsContext;
 	class Swapchain;
-	class RenderPass;
 	class Input;
 	class Allocator;
 	class Application;

@@ -107,6 +107,7 @@ namespace Alabaster {
 		verify(image, "Image is not allocated");
 		verify(allocation, "Allocation does not exist");
 		vmaDestroyImage(vma_data().allocator, image, allocation);
+		Log::info("[Allocator] Destroying image for {}", this->tag);
 	}
 
 	void Allocator::destroy_buffer(VkBuffer buffer, VmaAllocation allocation)
@@ -114,6 +115,7 @@ namespace Alabaster {
 		verify(buffer, "Buffer is not allocated");
 		verify(allocation, "Allocation does not exist");
 		vmaDestroyBuffer(vma_data().allocator, buffer, allocation);
+		Log::info("[Allocator] Destroying buffer for {}", this->tag);
 	}
 
 	void Allocator::unmap_memory(VmaAllocation allocation) { vmaUnmapMemory(vma_data().allocator, allocation); }

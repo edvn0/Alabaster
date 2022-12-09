@@ -16,7 +16,7 @@ namespace Alabaster {
 		void destroy(auto& device)
 		{
 			vkDestroyImageView(device, view, nullptr);
-			Allocator allocator("Depth image destruction");
+			Allocator allocator("Depth image");
 			allocator.destroy_image(image, allocation);
 		}
 	};

@@ -2,7 +2,6 @@
 
 #include "codes/KeyCode.hpp"
 #include "core/Application.hpp"
-#include "core/Common.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/events/KeyEvent.hpp"
 #include "core/events/MouseEvent.hpp"
@@ -10,7 +9,6 @@
 #include "core/Logger.hpp"
 #include "core/Window.hpp"
 #include "graphics/Swapchain.hpp"
-#include "graphics/VulkanSwapChain.hpp"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -64,7 +62,7 @@ namespace Alabaster {
 		user_data.width = width;
 		user_data.height = height;
 
-		swapchain = std::make_unique<VulkanSwapChain>();
+		swapchain = std::make_unique<Swapchain>();
 		swapchain->init(handle);
 
 		const auto&& [fb_w, fb_h] = framebuffer_extent();
@@ -112,7 +110,6 @@ namespace Alabaster {
 	{
 		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow*, int, int) { Application::the().get_window()->resize_status = true; });
 
-		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int in_width, int in_height) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 

@@ -1,27 +1,25 @@
 #include "av_pch.hpp"
 
-#include "graphics/VulkanSwapChain.hpp"
+#include "graphics/Swapchain.hpp"
 
 #include "core/Common.hpp"
 #include "graphics/GraphicsContext.hpp"
-#include "graphics/Swapchain.hpp"
 #include "platform/Vulkan/ImageUtilities.hpp"
 
 #include <GLFW/glfw3.h>
-#include <vk_mem_alloc.h>
 #include <vulkan/vulkan_core.h>
 
 namespace Alabaster {
 
-	VkCommandBuffer VulkanSwapChain::get_current_drawbuffer() const { return get_drawbuffer(current_buffer_index); }
+	VkCommandBuffer Swapchain::get_current_drawbuffer() const { return get_drawbuffer(current_buffer_index); }
 
-	VkCommandBuffer VulkanSwapChain::get_drawbuffer(std::uint32_t frame) const { return command_buffers[frame].CommandBuffer; }
+	VkCommandBuffer Swapchain::get_drawbuffer(std::uint32_t frame) const { return command_buffers[frame].CommandBuffer; }
 
-	VkRenderPass VulkanSwapChain::get_render_pass() const { return render_pass; }
+	VkRenderPass Swapchain::get_render_pass() const { return render_pass; }
 
-	std::tuple<VkFormat, VkFormat> VulkanSwapChain::get_formats() { return { color_format, VK_FORMAT_D32_SFLOAT }; }
+	std::tuple<VkFormat, VkFormat> Swapchain::get_formats() { return { color_format, VK_FORMAT_D32_SFLOAT }; }
 
-	void VulkanSwapChain::init(GLFWwindow* window_handle)
+	void Swapchain::init(GLFWwindow* window_handle)
 	{
 		instance = GraphicsContext::the().instance();
 		device = GraphicsContext::the().device();
@@ -60,6 +58,7 @@ namespace Alabaster {
 				}
 			}
 		}
+
 		if (present_queue_node_index == UINT32_MAX) {
 			// If there's no queue that supports both present and graphics
 			// try to find a separate present queue
@@ -76,7 +75,7 @@ namespace Alabaster {
 		find_image_format_and_color_space();
 	}
 
-	void VulkanSwapChain::create(uint32_t* in_width, uint32_t* in_height, bool in_vsync)
+	void Swapchain::create(uint32_t* in_width, uint32_t* in_height, bool in_vsync)
 	{
 		this->vsync = in_vsync;
 
@@ -94,15 +93,11 @@ namespace Alabaster {
 		vk_check(
 			vkGetPhysicalDeviceSurfacePresentModesKHR(GraphicsContext::the().physical_device(), surface, &present_mode_count, present_modes.data()));
 
-		VkExtent2D swapchain_extent = {};
-		// If width (and height) equals the special value 0xFFFFFFFF, the size of the surface will be set by the swapchain
+		VkExtent2D swapchain_extent {};
 		if (surf_caps.currentExtent.width == (uint32_t)-1) {
-			// If the surface size is undefined, the size is set to
-			// the size of the images requested.
 			swapchain_extent.width = *in_width;
 			swapchain_extent.height = *in_height;
 		} else {
-			// If the surface size is defined, the swap chain size must match
 			swapchain_extent = surf_caps.currentExtent;
 			*in_width = surf_caps.currentExtent.width;
 			*in_height = surf_caps.currentExtent.height;
@@ -113,14 +108,8 @@ namespace Alabaster {
 
 		extent = swapchain_extent;
 
-		// Select a present mode for the swapchain
-
-		// The VK_PRESENT_MODE_FIFO_KHR mode must always be present as per spec
-		// This mode waits for the vertical blank ("v-sync")
 		VkPresentModeKHR swapchain_present_mode = VK_PRESENT_MODE_FIFO_KHR;
 
-		// If v-sync is not requested, try to find a mailbox mode
-		// It's the lowest latency non-tearing present mode available
 		if (!in_vsync) {
 			for (size_t i = 0; i < present_mode_count; i++) {
 				if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -133,24 +122,19 @@ namespace Alabaster {
 			}
 		}
 
-		// Determine the number of images
 		uint32_t desired_number_of_swapchain_images = surf_caps.minImageCount + 1;
 		if ((surf_caps.maxImageCount > 0) && (desired_number_of_swapchain_images > surf_caps.maxImageCount)) {
 			desired_number_of_swapchain_images = surf_caps.maxImageCount;
 		}
 
-		// Find the transformation of the surface
 		VkSurfaceTransformFlagsKHR pre_transform;
 		if (surf_caps.supportedTransforms & VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR) {
-			// We prefer a non-rotated transform
 			pre_transform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR;
 		} else {
 			pre_transform = surf_caps.currentTransform;
 		}
 
-		// Find a supported composite alpha format (not all devices support alpha opaque)
 		VkCompositeAlphaFlagBitsKHR composite_alpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-		// Simply select the first composite alpha format available
 		std::vector<VkCompositeAlphaFlagBitsKHR> composite_alpha_flags = {
 			VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 			VK_COMPOSITE_ALPHA_PRE_MULTIPLIED_BIT_KHR,
@@ -180,16 +164,13 @@ namespace Alabaster {
 		swapchain_ci.pQueueFamilyIndices = NULL;
 		swapchain_ci.presentMode = swapchain_present_mode;
 		swapchain_ci.oldSwapchain = old_swapchain;
-		// Setting clipped to VK_TRUE allows the implementation to discard rendering outside of the surface area
 		swapchain_ci.clipped = VK_TRUE;
 		swapchain_ci.compositeAlpha = composite_alpha;
 
-		// Enable transfer source on swap chain images if supported
 		if (surf_caps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT) {
 			swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
 		}
 
-		// Enable transfer destination on swap chain images if supported
 		if (surf_caps.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_DST_BIT) {
 			swapchain_ci.imageUsage |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
 		}
@@ -204,12 +185,10 @@ namespace Alabaster {
 		images.clear();
 
 		vk_check(vkGetSwapchainImagesKHR(device, swap_chain, &image_count, NULL));
-		// Get the swap chain images
 		images.resize(image_count);
 		vulkan_images.resize(image_count);
 		vk_check(vkGetSwapchainImagesKHR(device, swap_chain, &image_count, vulkan_images.data()));
 
-		// Get the swap chain buffers containing the image and imageview
 		images.resize(image_count);
 		for (uint32_t i = 0; i < image_count; i++) {
 			VkImageViewCreateInfo color_attachment_view = {};
@@ -241,7 +220,6 @@ namespace Alabaster {
 			extent.width, extent.height, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depth_image);
 		Utilities::create_image_view(VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT, depth_image);
 
-		// Create command buffers
 		{
 			for (auto& command_buffer : command_buffers)
 				vkDestroyCommandPool(device, command_buffer.CommandPool, nullptr);
@@ -265,9 +243,6 @@ namespace Alabaster {
 			}
 		}
 
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		// Synchronization Objects
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 		if (!semaphores.RenderComplete || !semaphores.PresentComplete) {
 			VkSemaphoreCreateInfo semaphore_create_info {};
 			semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -298,9 +273,7 @@ namespace Alabaster {
 
 		VkFormat depth_format = VK_FORMAT_D32_SFLOAT;
 
-		// Render Pass
 		VkAttachmentDescription color_attachment_desc = {};
-		// Color attachment
 		color_attachment_desc.format = color_format;
 		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -310,9 +283,7 @@ namespace Alabaster {
 		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		// Render Pass
 		VkAttachmentDescription depth_attachment_desc = {};
-		// Color attachment
 		depth_attachment_desc.format = depth_format;
 		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -339,10 +310,10 @@ namespace Alabaster {
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
 		std::array<VkAttachmentDescription, 2> attachments = { color_attachment_desc, depth_attachment_desc };
 
@@ -383,7 +354,7 @@ namespace Alabaster {
 		}
 	}
 
-	void VulkanSwapChain::destroy()
+	void Swapchain::destroy()
 	{
 		vkDeviceWaitIdle(device);
 
@@ -418,14 +389,14 @@ namespace Alabaster {
 		vkDeviceWaitIdle(device);
 	}
 
-	void VulkanSwapChain::on_resize(uint32_t in_width, uint32_t in_height)
+	void Swapchain::on_resize(uint32_t in_width, uint32_t in_height)
 	{
 		vkDeviceWaitIdle(device);
 		create(&in_width, &in_height, this->vsync);
 		vkDeviceWaitIdle(device);
 	}
 
-	void VulkanSwapChain::begin_frame()
+	void Swapchain::begin_frame()
 	{
 		current_image_index = acquire_next_image();
 
@@ -435,7 +406,7 @@ namespace Alabaster {
 		vk_check(vkResetCommandPool(device, command_buffers[current_buffer_index].CommandPool, 0));
 	}
 
-	void VulkanSwapChain::present()
+	void Swapchain::present()
 	{
 
 		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -480,7 +451,7 @@ namespace Alabaster {
 		}
 	}
 
-	uint32_t VulkanSwapChain::acquire_next_image()
+	uint32_t Swapchain::acquire_next_image()
 	{
 		uint32_t image_index;
 		auto result = vkAcquireNextImageKHR(device, swap_chain, UINT64_MAX, semaphores.PresentComplete, (VkFence) nullptr, &image_index);
@@ -497,7 +468,7 @@ namespace Alabaster {
 		return image_index;
 	}
 
-	void VulkanSwapChain::find_image_format_and_color_space()
+	void Swapchain::find_image_format_and_color_space()
 	{
 		std::uint32_t format_count;
 		vk_check(vkGetPhysicalDeviceSurfaceFormatsKHR(GraphicsContext::the().physical_device(), surface, &format_count, NULL));

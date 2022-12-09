@@ -77,10 +77,10 @@ namespace SceneSystem {
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
 		std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
 		VkRenderPassCreateInfo render_pass_info = {};
@@ -204,7 +204,7 @@ namespace SceneSystem {
 		FramebufferSpecification fbs;
 		fbs.width = w;
 		fbs.height = h;
-		fbs.attachments = { ImageFormat::RGBA, ImageFormat::Depth32 };
+		fbs.attachments = { ImageFormat::RGBA, ImageFormat::DEPTH32F };
 		fbs.samples = 1;
 		fbs.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 		fbs.debug_name = "Geometry";

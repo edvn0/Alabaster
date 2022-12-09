@@ -3,7 +3,6 @@
 #include "core/Application.hpp"
 
 #include "core/Clock.hpp"
-#include "core/CPUProfiler.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/events/Event.hpp"
 #include "core/GUILayer.hpp"
@@ -13,25 +12,8 @@
 #include "core/Window.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
-#include "graphics/Swapchain.hpp"
-
-#include <cstddef>
-
-#define ALABASTER_USE_IMGUI 0
 
 namespace Alabaster {
-
-	static constexpr auto last_fifty = [](const auto& frametime_queue) -> double {
-		auto start = frametime_queue.size() - 1;
-		auto end = start - 300;
-
-		double average = 0;
-		for (std::size_t i = frametime_queue.size() - 1; i >= end; i--) {
-			average += frametime_queue[i];
-		}
-
-		return average / (start - end);
-	};
 
 	static Application* global_app;
 
@@ -121,9 +103,9 @@ namespace Alabaster {
 		on_shutdown();
 	}
 
-	VulkanSwapChain& Application::swapchain() { return *window->get_swapchain(); }
+	Swapchain& Application::swapchain() { return *window->get_swapchain(); }
 
-	VulkanSwapChain& Application::swapchain() const { return *window->get_swapchain(); }
+	Swapchain& Application::swapchain() const { return *window->get_swapchain(); }
 
 	void Application::render_imgui()
 	{

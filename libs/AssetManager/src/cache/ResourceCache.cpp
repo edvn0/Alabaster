@@ -30,7 +30,7 @@ namespace AssetManager {
 		return cache;
 	}
 
-	const Alabaster::Image& ResourceCache::texture(const std::string& name)
+	const Alabaster::Texture& ResourceCache::texture(const std::string& name)
 	{
 		const auto found = image_cache.get_from_cache(name);
 		if (!found) {

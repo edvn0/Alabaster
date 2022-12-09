@@ -10,39 +10,17 @@
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Image.hpp"
-#include "vulkan/vulkan_core.h"
+#include "platform/Vulkan/ImageUtilities.hpp"
 
 #include <memory>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
-
-	namespace Utils {
-		auto is_depth_format(ImageFormat format) { return format == ImageFormat::Depth32 || format == ImageFormat::Depth24Stencil8; }
-
-		auto vulkan_image_format(ImageFormat in)
-		{
-			switch (in) {
-			case ImageFormat::RGBA:
-				return VK_FORMAT_R8G8B8A8_SRGB;
-			case ImageFormat::RGB:
-				return VK_FORMAT_R8G8B8_SRGB;
-			case ImageFormat::SINGLE_CHANNEL:
-				return VK_FORMAT_R8_SRGB;
-			case ImageFormat::Depth32:
-				return VK_FORMAT_D32_SFLOAT;
-			case ImageFormat::Depth24Stencil8:
-				return VK_FORMAT_D24_UNORM_S8_UINT;
-
-			default:
-				throw AlabasterException("We do not support RBG/RBGA.");
-			};
-		}
-	}; // namespace Utils
 
 	Framebuffer::Framebuffer(const FramebufferSpecification& specification)
 		: spec(specification)
 	{
-		if (spec.width == 0) {
+		if (spec.width == 0 || spec.height == 0) {
 			const auto&& [w, h] = Application::the().get_window()->size();
 			width = w;
 			height = h;
@@ -51,41 +29,44 @@ namespace Alabaster {
 			height = spec.height * spec.scale;
 		}
 
-		// Create all image objects immediately so we can start referencing them
-		// elsewhere
-		uint32_t attachment_index = 0;
-		if (!spec.existing_framebuffer) {
-			for (auto& attachment_specification : spec.attachments) {
-				if (spec.existing_image && spec.existing_image->get_properties().layers > 1) {
-					if (Utils::is_depth_format(attachment_specification.format)) {
-						depth_image = spec.existing_image;
-					} else {
-						attachment_images.emplace_back(spec.existing_image);
-					}
-				} else if (spec.existing_images.find(attachment_index) != spec.existing_images.end()) {
-					if (!Utils::is_depth_format(attachment_specification.format)) {
-						attachment_images.emplace_back(); // This will be set later
-					}
-				} else if (Utils::is_depth_format(attachment_specification.format)) {
-					ImageProps props;
-					props.format = attachment_specification.format;
-					props.usage = ImageUsage::Attachment;
-					props.width = width * spec.scale;
-					props.height = height * spec.scale;
-					props.debug_name
-						= fmt::format("{0}-DepthAttachment{1}", spec.debug_name.empty() ? "Unnamed FB" : spec.debug_name, attachment_index);
-					depth_image = Image::create(props);
+		static constexpr auto initialise_attachments = [](const auto& w, const auto& h, const auto& fb_spec, const auto& attachment_specification,
+														   auto& fb_images, auto& fb_depth_image, auto& attachment_index) {
+			if (fb_spec.existing_image && fb_spec.existing_image->get_specification().layers > 1) {
+				if (Utilities::is_depth_format(attachment_specification.format)) {
+					fb_depth_image = fb_spec.existing_image;
 				} else {
-					ImageProps props;
-					props.format = attachment_specification.format;
-					props.usage = ImageUsage::Attachment;
-					props.width = width * spec.scale;
-					props.height = height * spec.scale;
-					props.debug_name
-						= fmt::format("{0}-ColorAttachment{1}", spec.debug_name.empty() ? "Unnamed FB" : spec.debug_name, attachment_index);
-					attachment_images.emplace_back(Image::create(props));
+					fb_images.emplace_back(fb_spec.existing_image);
 				}
-				attachment_index++;
+			} else if (fb_spec.existing_images.find(attachment_index) != fb_spec.existing_images.end()) {
+				if (!Utilities::is_depth_format(attachment_specification.format)) {
+					fb_images.emplace_back();
+				}
+			} else if (Utilities::is_depth_format(attachment_specification.format)) {
+				ImageSpecification props;
+				props.format = attachment_specification.format;
+				props.usage = ImageUsage::Attachment;
+				props.width = w * fb_spec.scale;
+				props.height = h * fb_spec.scale;
+				props.debug_name
+					= fmt::format("{0}-DepthAttachment{1}", fb_spec.debug_name.empty() ? "Unnamed FB" : fb_spec.debug_name, attachment_index);
+				fb_depth_image = Image::create(props);
+			} else {
+				ImageSpecification props;
+				props.format = attachment_specification.format;
+				props.usage = ImageUsage::Attachment;
+				props.width = w * fb_spec.scale;
+				props.height = h * fb_spec.scale;
+				props.debug_name
+					= fmt::format("{0}-ColorAttachment{1}", fb_spec.debug_name.empty() ? "Unnamed FB" : fb_spec.debug_name, attachment_index);
+				fb_images.emplace_back(Image::create(props));
+			}
+			attachment_index++;
+		};
+
+		if (!spec.existing_framebuffer) {
+			uint32_t attachment_index = 0;
+			for (auto& attachment_specification : spec.attachments) {
+				initialise_attachments(width, height, spec, attachment_specification, attachment_images, depth_image, attachment_index);
 			}
 		}
 
@@ -95,27 +76,30 @@ namespace Alabaster {
 
 	void Framebuffer::destroy()
 	{
+		destroyed = true;
+		release();
+	}
+
+	void Framebuffer::release()
+	{
 		if (frame_buffer) {
 			VkFramebuffer framebuffer = frame_buffer;
 
-			const auto device = GraphicsContext::the().device();
+			const auto& device = GraphicsContext::the().device();
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 
-			// Don't free the images if we don't own them
 			if (!spec.existing_framebuffer) {
 				uint32_t attachment_index = 0;
 				for (auto& image : attachment_images) {
 					if (spec.existing_images.find(attachment_index) != spec.existing_images.end())
 						continue;
 
-					// Only destroy deinterleaved image once and prevent clearing layer views on second framebuffer invalidation
-					// if (image->get_properties().layers == 1 || attachment_index == 0 && !image->get_layer_image_view(0))
-					//	image->Release();
+					if (image->get_specification().layers == 1 || ((attachment_index == 0) && !image->get_layer_image_view(0)))
+						image->release();
 					attachment_index++;
 				}
 
 				if (depth_image) {
-					// Do we own the depth image?
 					if (spec.existing_images.find((uint32_t)spec.attachments.size() - 1) == spec.existing_images.end())
 						depth_image->destroy();
 				}
@@ -148,9 +132,8 @@ namespace Alabaster {
 
 	void Framebuffer::invalidate()
 	{
-		CommandBuffer buffer { 1 };
-		buffer.begin();
-		destroy();
+		ImmediateCommandBuffer buffer;
+		release();
 
 		Allocator allocator("Framebuffer");
 		std::vector<VkAttachmentDescription> attachment_descriptions;
@@ -164,7 +147,7 @@ namespace Alabaster {
 
 		uint32_t attachment_index = 0;
 		for (auto attachment_specification : spec.attachments) {
-			if (Utils::is_depth_format(attachment_specification.format)) {
+			if (Utilities::is_depth_format(attachment_specification.format)) {
 				if (spec.existing_image) {
 					depth_image = spec.existing_image;
 				} else if (spec.existing_framebuffer) {
@@ -172,20 +155,20 @@ namespace Alabaster {
 					depth_image = existing_framebuffer->get_depth_image();
 				} else if (spec.existing_images.find(attachment_index) != spec.existing_images.end()) {
 					auto existing_image = spec.existing_images.at(attachment_index);
-					assert_that(
-						Utils::is_depth_format(existing_image->get_properties().format), "Trying to attach non-depth image as depth attachment");
+					assert_that(Utilities::is_depth_format(existing_image->get_specification().format),
+						"Trying to attach non-depth image as depth attachment");
 					depth_image = existing_image;
 				} else {
 					auto depth_attachment_image = depth_image;
-					auto& depth_props = depth_attachment_image->get_properties();
+					auto& depth_props = depth_attachment_image->get_specification();
 					depth_props.width = width * spec.scale;
 					depth_props.height = height * spec.scale;
-					depth_attachment_image->invalidate(buffer); // Create immediately
+					depth_attachment_image->invalidate(); // Create immediately
 				}
 
 				VkAttachmentDescription& attachment_description = attachment_descriptions.emplace_back();
 				attachment_description.flags = 0;
-				attachment_description.format = Utils::vulkan_image_format(attachment_specification.format);
+				attachment_description.format = Utilities::vulkan_image_format(attachment_specification.format);
 				attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
 				attachment_description.loadOp = spec.clear_depth_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 				attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
@@ -193,7 +176,7 @@ namespace Alabaster {
 				attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 				attachment_description.initialLayout
 					= spec.clear_depth_on_load ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-				if (attachment_specification.format == ImageFormat::Depth24Stencil8
+				if (attachment_specification.format == ImageFormat::DEPTH24STENCIL8
 					|| true) // Separate layouts requires a "separate layouts" flag to be enabled
 				{
 					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // TODO: if not sampling
@@ -215,12 +198,13 @@ namespace Alabaster {
 					color_attachment = attachment_images.emplace_back(existing_image);
 				} else if (spec.existing_images.find(attachment_index) != spec.existing_images.end()) {
 					auto existing_image = spec.existing_images[attachment_index];
-					assert_that(!Utils::is_depth_format(existing_image->get_properties().format), "Trying to attach depth image as color attachment");
+					assert_that(
+						!Utilities::is_depth_format(existing_image->get_specification().format), "Trying to attach depth image as color attachment");
 					color_attachment = existing_image;
 					attachment_images[attachment_index] = existing_image;
 				} else {
 					if (create_images) {
-						ImageProps props;
+						ImageSpecification props;
 						props.format = attachment_specification.format;
 						props.usage = ImageUsage::Attachment;
 						props.width = width * spec.scale;
@@ -228,25 +212,24 @@ namespace Alabaster {
 						color_attachment = attachment_images.emplace_back(Image::create(props));
 					} else {
 						auto image = attachment_images[attachment_index];
-						auto& props = image->get_properties();
+						auto& props = image->get_specification();
 						props.width = width * spec.scale;
 						props.height = height * spec.scale;
 						color_attachment = image;
-						if (color_attachment->get_properties().layers == 1)
-							color_attachment->invalidate(buffer);
+						if (color_attachment->get_specification().layers == 1)
+							color_attachment->invalidate();
 						else if (attachment_index == 0 && spec.existing_image_layers[0] == 0) {
-							color_attachment->invalidate(buffer); // Create immediately
-							// colorAttachment->RT_CreatePerSpecificLayerImageViews(spec.ExistingImageLayers);
+							color_attachment->invalidate();
+							color_attachment->create_per_specific_layer_image_views(spec.existing_image_layers);
+						} else if (attachment_index == 0) {
+							color_attachment->create_per_specific_layer_image_views(spec.existing_image_layers);
 						}
-						// } else if (attachment_index == 0) {
-						// 	//colorAttachment->RT_CreatePerSpecificLayerImageViews(spec.ExistingImageLayers);
-						// }
 					}
 				}
 
 				VkAttachmentDescription& attachment_description = attachment_descriptions.emplace_back();
 				attachment_description.flags = 0;
-				attachment_description.format = Utils::vulkan_image_format(attachment_specification.format);
+				attachment_description.format = Utilities::vulkan_image_format(attachment_specification.format);
 				attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
 				attachment_description.loadOp = spec.clear_colour_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
 				attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -333,8 +316,8 @@ namespace Alabaster {
 		std::vector<VkImageView> attachments(attachment_images.size());
 		for (uint32_t i = 0; i < attachment_images.size(); i++) {
 			auto image = attachment_images[i];
-			if (image->get_properties().layers > 1) {
-				// attachments[i] = image->GetLayerImageView(spec.ExistingImageLayers[i]);
+			if (image->get_specification().layers > 1) {
+				attachments[i] = image->get_layer_image_view(spec.existing_image_layers[i]);
 			} else {
 				attachments[i] = image->get_view();
 			}
@@ -351,8 +334,6 @@ namespace Alabaster {
 
 			assert_that(attachments.back());
 		}
-		buffer.end();
-		buffer.submit();
 
 		VkFramebufferCreateInfo framebuffer_create_info = {};
 		framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

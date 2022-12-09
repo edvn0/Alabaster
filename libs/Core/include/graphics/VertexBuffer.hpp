@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "graphics/Buffer.hpp"
+#include "core/Buffer.hpp"
 #include "graphics/Vertex.hpp"
 
 #include <vulkan/vulkan.h>

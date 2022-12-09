@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "core/Buffer.hpp"
 #include "graphics/Allocator.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "utilities/FileInputOutput.hpp"
@@ -12,6 +13,8 @@
 #include <cstdint>
 #include <filesystem>
 #include <functional>
+#include <glm/glm.hpp>
+#include <map>
 #include <memory>
 #include <optional>
 #include <vulkan/vulkan.h>
@@ -20,80 +23,133 @@ typedef struct VmaAllocation_T* VmaAllocation;
 
 namespace Alabaster {
 
+	enum class ImageFormat {
+		None = 0,
+		RED8UN,
+		RED8UI,
+		RED16UI,
+		RED32UI,
+		RED32F,
+		RG8,
+		RG16F,
+		RG32F,
+		RGB,
+		RGBA,
+		RGBA16F,
+		RGBA32F,
+
+		B10R11G11UF,
+
+		SRGB,
+
+		DEPTH32FSTENCIL8UINT,
+		DEPTH32F,
+		DEPTH24STENCIL8,
+
+		// Defaults
+		Depth = DEPTH24STENCIL8,
+	};
+
+	enum class ImageUsage { None = 0, Texture, Attachment, Storage };
+
+	enum class TextureWrap { None = 0, Clamp, Repeat };
+
+	enum class TextureFilter { None = 0, Linear, Nearest, Cubic };
+
+	enum class TextureType { None = 0, Texture2D, TextureCube };
+
+	struct TextureProperties {
+		std::string debug_name;
+		TextureWrap sampler_wrap { TextureWrap::Repeat };
+		TextureFilter SamplerFilter { TextureFilter::Linear };
+		bool generate_mips { true };
+		bool sRGB { false };
+		bool storage { false };
+	};
+
+	struct ImageSpecification {
+		std::string debug_name;
+
+		ImageFormat format = ImageFormat::RGBA;
+		ImageUsage usage = ImageUsage::Texture;
+		uint32_t width = 1;
+		uint32_t height = 1;
+		uint32_t mips = 1;
+		uint32_t layers = 1;
+	};
+
 	struct ImageInfo {
 		VkImage image { nullptr };
 		VkImageView view { nullptr };
 		VkSampler sampler { nullptr };
-		VkImageLayout layout;
 		VmaAllocation allocation { nullptr };
-	};
-
-	enum class ImageFormat : uint8_t { RGBA = 0, RGB, RBG, RBGA, SINGLE_CHANNEL, Depth32, Depth24Stencil8 };
-
-	enum class ImageUsage : uint8_t { Attachment = 0, Texture, Storage };
-
-	struct ImageProps {
-		std::optional<std::filesystem::path> path { std::nullopt };
-		std::uint32_t width;
-		std::uint32_t height;
-		std::uint32_t mips { 1 };
-		std::uint32_t layers { 1 };
-		std::uint32_t depth { 1 };
-		std::uint32_t channels { 3 };
-		ImageUsage usage { ImageUsage::Attachment };
-		ImageFormat format { ImageFormat::RGBA };
-		std::string debug_name { "Debug" };
 	};
 
 	class Image {
 	public:
-		Image(const std::filesystem::path& path, ImageFormat format = ImageFormat::RBGA);
-		explicit Image(const ImageProps& props);
-
-		void destroy();
-
-		const ImageInfo& operator*() const { return image_info; }
-
-		const VkDescriptorImageInfo vulkan_image_info() const
+		explicit Image(const ImageSpecification& specification) noexcept;
+		~Image()
 		{
-			VkDescriptorImageInfo info {};
-			info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			info.imageView = image_info.view;
-			info.sampler = image_info.sampler;
-			return info;
+			if (!destroyed)
+				destroy();
 		};
 
-		void invalidate(const std::unique_ptr<CommandBuffer>& buffer) { invalidate(*buffer); };
-		void invalidate(CommandBuffer& buffer);
+		void destroy();
+		void resize(const uint32_t width, const uint32_t height)
+		{
+			spec.width = width;
+			spec.height = height;
+			invalidate();
+		}
+		void resize(const glm::uvec2& size) { resize(size.x, size.y); }
+		void invalidate();
+		void release();
 
-		auto get_view() const { return image_info.view; }
-		auto get_sampler() const { return image_info.sampler; }
-		auto get_layout() const { return image_info.layout; }
+		uint32_t get_width() const { return spec.width; };
+		uint32_t get_height() const { return spec.height; };
+		glm::uvec2 get_size() const { return { spec.width, spec.height }; };
 
-		auto& get_properties() { return image_props; }
-		auto& get_properties() const { return image_props; }
+		float get_aspect_ratio() const { return static_cast<float>(spec.width) / static_cast<float>(spec.height); };
+
+		ImageSpecification& get_specification() { return spec; };
+		const ImageSpecification& get_specification() const { return spec; };
+
+		const auto& get_view() const { return info.view; }
+		const auto& get_sampler() const { return info.sampler; }
+		const auto& get_image() const { return info.image; }
+		auto& get_info() const { return info; }
+		auto& get_info() { return info; }
+
+		void create_per_layer_image_view();
+		VkImageView get_layer_image_view(uint32_t layer) { return per_layer_image_views[layer]; }
+		VkImageView get_mip_image_view(uint32_t mip);
+
+		Buffer get_buffer() const { return image_data; }
+		Buffer& get_buffer() { return image_data; }
+
+		uint64_t get_hash() const;
+
+		void update_descriptor();
+
+		const auto& get_descriptor_info() const { return descriptor_image_info; }
+		void create_per_specific_layer_image_views(const std::vector<uint32_t>& layer_indices);
 
 	private:
-		void invalidate(void* data);
-		void create_view();
-		void create_sampler();
+		ImageSpecification spec;
 
-	private:
-		ImageProps image_props;
-		ImageUsage image_usage;
-		ImageInfo image_info;
+		Buffer image_data;
 
-		VkFormat chosen_format;
+		ImageInfo info;
+
+		std::vector<VkImageView> per_layer_image_views;
+		std::map<uint32_t, VkImageView> per_mip_image_views;
+		VkDescriptorImageInfo descriptor_image_info {};
+		VkImageLayout layout;
 
 		bool destroyed { false };
 
-		uint8_t* pixel_data { nullptr };
-
-		std::function<void(Allocator&)> destruction = [](Allocator&) {};
-
 	public:
-		static std::shared_ptr<Image> create(const std::filesystem::path& filename) { return std::make_shared<Image>(filename); }
-		static std::shared_ptr<Image> create(ImageProps props) { return std::make_shared<Image>(props); }
+		static std::shared_ptr<Image> create(ImageSpecification spec) { return std::make_shared<Image>(spec); }
 	};
 
 } // namespace Alabaster

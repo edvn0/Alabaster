@@ -10,7 +10,6 @@
 #include "core/events/MouseEvent.hpp"
 #include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
-#include "graphics/Swapchain.hpp"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -64,7 +63,7 @@ namespace Alabaster {
 		user_data.width = width;
 		user_data.height = height;
 
-		swapchain = std::make_unique<VulkanSwapChain>();
+		swapchain = std::make_unique<Swapchain>();
 		swapchain->init(handle);
 
 		auto w = std::uint32_t(width);

@@ -2,6 +2,7 @@
 
 #include "graphics/Image.hpp"
 #include "graphics/Shader.hpp"
+#include "graphics/Texture.hpp"
 
 #include <optional>
 #include <string>
@@ -68,15 +69,15 @@ namespace AssetManager {
 		};
 	};
 
-	struct DefaultImageCrud : public CacheCreateRead<Alabaster::Image> {
-		virtual ~DefaultImageCrud() override = default;
+	struct DefaultTextureCrud : public CacheCreateRead<Alabaster::Texture> {
+		virtual ~DefaultTextureCrud() override = default;
 
-		const Alabaster::Image* get(const std::string& name, std::unordered_map<std::string, Alabaster::Image>& out) override
+		const Alabaster::Texture* get(const std::string& name, std::unordered_map<std::string, Alabaster::Texture>& out) override
 		{
 			return &out.at(name);
 		};
 
-		void create(const std::string& name, Alabaster::Image* data, std::unordered_map<std::string, Alabaster::Image>& out) override
+		void create(const std::string& name, Alabaster::Texture* data, std::unordered_map<std::string, Alabaster::Texture>& out) override
 		{
 			out.try_emplace(name, *data);
 		};
