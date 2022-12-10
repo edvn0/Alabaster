@@ -65,7 +65,6 @@ namespace Alabaster {
 
 		auto&& [vertices, indices] = load_model();
 
-		vertex_count = vertices.size();
 		index_count = indices.size();
 
 		vertex_buffer = VertexBuffer::create(std::move(vertices));

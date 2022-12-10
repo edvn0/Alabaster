@@ -13,8 +13,6 @@
 
 namespace Alabaster {
 
-	// static constexpr auto default_model =glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
 	class Mesh;
 	class Pipeline;
 	class VertexBuffer;
@@ -35,10 +33,10 @@ namespace Alabaster {
 	};
 
 	struct UBO {
-		alignas(16) glm::mat4 model;
-		alignas(16) glm::mat4 view;
-		alignas(16) glm::mat4 projection;
-		alignas(16) glm::mat4 view_projection;
+		glm::mat4 model;
+		glm::mat4 view;
+		glm::mat4 projection;
+		glm::mat4 view_projection;
 	};
 
 	struct PC {

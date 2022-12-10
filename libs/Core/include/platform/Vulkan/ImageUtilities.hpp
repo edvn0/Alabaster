@@ -339,7 +339,7 @@ namespace Alabaster::Utilities {
 	inline void transition_image_layout(
 		VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, CommandBuffer* buffer, VkImageSubresourceRange* range = nullptr)
 	{
-		const auto& command_buffer = buffer ? buffer->get_buffer() : ImmediateCommandBuffer();
+		const auto& command_buffer = buffer ? buffer->get_buffer() : ImmediateCommandBuffer { "Image Layout Transition" };
 
 		VkImageMemoryBarrier barrier {};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -394,7 +394,7 @@ namespace Alabaster::Utilities {
 
 	inline void copy_buffer_to_image(VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, CommandBuffer* cmd_buffer)
 	{
-		const auto command_buffer = cmd_buffer ? cmd_buffer->get_buffer() : ImmediateCommandBuffer();
+		const auto command_buffer = cmd_buffer ? cmd_buffer->get_buffer() : ImmediateCommandBuffer { "Image Copy" };
 
 		VkBufferImageCopy region {};
 		region.bufferOffset = 0;

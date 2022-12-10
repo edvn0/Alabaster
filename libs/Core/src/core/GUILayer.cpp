@@ -3,6 +3,7 @@
 #include "core/GUILayer.hpp"
 
 #include "core/Common.hpp"
+#include "core/events/KeyEvent.hpp"
 #include "core/Window.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
@@ -13,7 +14,6 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
-#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -78,6 +78,14 @@ namespace Alabaster {
 
 	void GUILayer::on_event(Event& event)
 	{
+		EventDispatcher dispatcher(event);
+		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& e) {
+			if (e.get_key_code() == Key::One) {
+				chosen = chosen == gui_renderpass ? Application::the().swapchain().get_render_pass() : gui_renderpass;
+			}
+			return false;
+		});
+
 		if (should_block) {
 			ImGuiIO& io = ImGui::GetIO();
 			event.handled |= event.is_in_category(EventCategoryMouse) & io.WantCaptureMouse;
@@ -138,12 +146,14 @@ namespace Alabaster {
 		ImGui::GetIO().Fonts->AddFontDefault();
 
 		{
-			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer());
+			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer("Fonts Texture"));
 
 			vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
 
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
+
+		chosen = gui_renderpass;
 
 		return true;
 	}
@@ -173,7 +183,7 @@ namespace Alabaster {
 
 		VkRenderPassBeginInfo render_pass_begin_info = {};
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_begin_info.renderPass = gui_renderpass;
+		render_pass_begin_info.renderPass = chosen;
 		render_pass_begin_info.renderArea.offset.x = 0;
 		render_pass_begin_info.renderArea.offset.y = 0;
 		render_pass_begin_info.renderArea.extent.width = width;
@@ -188,7 +198,7 @@ namespace Alabaster {
 		{
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-			inheritance_info.renderPass = gui_renderpass;
+			inheritance_info.renderPass = chosen;
 			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
 
 			VkCommandBufferBeginInfo cbi = {};

@@ -179,7 +179,7 @@ namespace Alabaster {
 			memcpy(dest_data, image_data.data, size);
 			allocator.unmap_memory(staging_buffer_allocation);
 
-			ImmediateCommandBuffer immediate_command_buffer;
+			ImmediateCommandBuffer immediate_command_buffer { "Texture Transition" };
 			immediate_command_buffer.add_destruction_callback([staging_buffer, staging_buffer_allocation](Allocator& allocator) {
 				allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
 			});
@@ -229,7 +229,7 @@ namespace Alabaster {
 			}
 
 		} else {
-			ImmediateCommandBuffer immediate_command_buffer;
+			ImmediateCommandBuffer immediate_command_buffer { "Texture Image Layout" };
 
 			VkImageSubresourceRange subresource_range = {};
 			subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -309,7 +309,7 @@ namespace Alabaster {
 
 		const auto& info = image->get_info();
 
-		ImmediateCommandBuffer immediate_command_buffer;
+		ImmediateCommandBuffer immediate_command_buffer { "Mip Generation" };
 
 		VkImageMemoryBarrier barrier = {};
 		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

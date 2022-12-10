@@ -132,7 +132,7 @@ namespace Alabaster {
 
 	void Framebuffer::invalidate()
 	{
-		ImmediateCommandBuffer buffer;
+		ImmediateCommandBuffer buffer { "Framebuffer Invalidation" };
 		release();
 
 		Allocator allocator("Framebuffer");

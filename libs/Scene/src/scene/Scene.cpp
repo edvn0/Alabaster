@@ -131,16 +131,16 @@ namespace SceneSystem {
 		for (std::uint32_t i = 0; i < 100; i++) {
 			Entity entity { this, fmt::format("Sphere-{}", i) };
 			entity.add_component<Component::Mesh>(sphere_model);
-			auto& transform = entity.get_component<Component::Transform>();
+			Component::Transform& transform = entity.get_component<Component::Transform>();
 			transform.position = sphere_vector3(30);
 			entity.add_component<Component::Texture>(glm::vec4(1.0f));
-			entity.add_component<Component::Pipeline>(viking_pipeline);
+			entity.add_component<Component::Pipeline>(sun_pipeline);
 		}
 
 		{
 			Entity floor { this, "Floor" };
 			floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
-			auto& floor_transform = floor.get_component<Component::Transform>();
+			Component::Transform& floor_transform = floor.get_component<Component::Transform>();
 			floor_transform.scale = { 200, 200, .2 };
 			floor_transform.position.y += 30;
 			floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
@@ -171,7 +171,7 @@ namespace SceneSystem {
 				Entity entity { this, fmt::format("Quad-{}", i) };
 				entity.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
 
-				auto& transform = entity.get_component<Component::Transform>();
+				Component::Transform& transform = entity.get_component<Component::Transform>();
 				transform.position = quad_data[i].pos;
 				transform.scale = quad_data[i].scale;
 				transform.rotation = glm::rotate(glm::mat4 { 1.0f }, quad_data[i].rotation, { 1, 0, 0 });

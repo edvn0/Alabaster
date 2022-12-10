@@ -2,7 +2,6 @@
 
 #include "cache/ShaderCache.hpp"
 
-#include "debug_break.h"
 #include "utilities/FileInputOutput.hpp"
 #include "utilities/FileSystem.hpp"
 

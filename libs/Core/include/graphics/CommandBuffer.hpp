@@ -44,6 +44,16 @@ namespace Alabaster {
 	private:
 		void init(std::uint32_t count = 0);
 
+	protected:
+		void set_allocator_name(std::string name)
+		{
+			if (!allocator)
+				allocator = std::make_unique<Allocator>(name);
+			else {
+				allocator->set_tag(name);
+			}
+		}
+
 	private:
 		VkCommandPool pool { nullptr };
 		VkCommandBuffer active { nullptr };
@@ -53,6 +63,7 @@ namespace Alabaster {
 		QueueChoice queue_choice;
 		bool is_primary { true };
 
+		std::unique_ptr<Allocator> allocator;
 		std::queue<DeallocationCallback> destruction_callbacks {};
 
 		bool owned_by_swapchain { false };
@@ -66,10 +77,11 @@ namespace Alabaster {
 
 	class ImmediateCommandBuffer final : public CommandBuffer {
 	public:
-		ImmediateCommandBuffer()
+		ImmediateCommandBuffer(std::string allocator_tag)
 			: CommandBuffer(1)
 		{
 			CommandBuffer::begin();
+			set_allocator_name(std::move(allocator_tag));
 		}
 
 		~ImmediateCommandBuffer() final

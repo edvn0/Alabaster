@@ -55,7 +55,7 @@ namespace Alabaster {
 		vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, vulkan_buffer);
 
-		ImmediateCommandBuffer immediate_command_buffer;
+		ImmediateCommandBuffer immediate_command_buffer { "Index Buffer" };
 		immediate_command_buffer.add_destruction_callback([staging_buffer, staging_buffer_allocation](Allocator& allocator) {
 			allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
 		});

@@ -2,6 +2,7 @@
 
 #include <effolkronium/random.hpp>
 #include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 
 namespace Alabaster {
 
@@ -14,9 +15,11 @@ namespace Alabaster {
 
 	inline glm::vec3 uniform_random_vec3()
 	{
-		return glm::vec3 { Random::get<std::normal_distribution<>>(), Random::get<std::normal_distribution<>>(),
-			Random::get<std::normal_distribution<>>() };
+		return glm::vec3 { Random::get<std::uniform_real_distribution<>>(), Random::get<std::uniform_real_distribution<>>(),
+			Random::get<std::uniform_real_distribution<>>() };
 	}
+
+	inline float uniform_float() { return Random::get<std::uniform_real_distribution<>>(); }
 
 	inline glm::vec3 uniform_random_vec3(auto&& from, auto&& to)
 	{
@@ -31,13 +34,19 @@ namespace Alabaster {
 
 	inline glm::vec3 sphere_vector3(float radius)
 	{
-		auto random_vec = uniform_random_vec3(-radius, radius);
-		while (glm::dot(random_vec, random_vec) > radius * radius) {
-			random_vec = uniform_random_vec3(-radius, radius);
-		}
-
-		glm::vec3 normalised = glm::normalize(random_vec);
-		return normalised * radius;
+		const auto u = uniform_float();
+		const auto v = uniform_float();
+		const auto theta = u * 2.0 * glm::pi<float>();
+		const auto phi = glm::acos(2.0 * v - 1.0);
+		const auto r = std::cbrt(uniform_float());
+		const auto sin_theta = glm::sin(theta);
+		const auto cos_theta = glm::cos(theta);
+		const auto sin_phi = glm::sin(phi);
+		const auto cos_phi = glm::cos(phi);
+		const auto x = r * sin_phi * cos_theta;
+		const auto y = r * sin_phi * sin_theta;
+		const auto z = r * cos_phi;
+		return { radius * x, radius * y, radius * z };
 	}
 
 } // namespace Alabaster

@@ -123,7 +123,7 @@ namespace Alabaster {
 		vk_check(vkCreateSampler(GraphicsContext::the().device(), &sampler_create_info, nullptr, &info.sampler));
 
 		if (spec.usage == ImageUsage::Storage) {
-			ImmediateCommandBuffer buffer;
+			ImmediateCommandBuffer buffer { "Storage Image Copy" };
 
 			VkImageSubresourceRange subresource_range {};
 			subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;

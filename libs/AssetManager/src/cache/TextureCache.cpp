@@ -15,7 +15,7 @@ namespace AssetManager {
 		using namespace Alabaster;
 		auto sorted_images_in_directory = FS::in_directory<std::string>(directory, include_extensions, true);
 
-		ImmediateCommandBuffer buffer;
+		ImmediateCommandBuffer buffer { "Texture Cache" };
 		ThreadPool pool { 8 };
 
 		// Load all images and obtain pixels from image data (png, jpg etc)
