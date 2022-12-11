@@ -1,8 +1,9 @@
 #pragma once
 
-#include "cache/ImageCache.hpp"
 #include "cache/ShaderCache.hpp"
+#include "cache/TextureCache.hpp"
 #include "graphics/Image.hpp"
+#include "graphics/Texture.hpp"
 
 #include <filesystem>
 
@@ -20,17 +21,17 @@ namespace AssetManager {
 		static ResourceCache& the();
 
 	public:
-		const Alabaster::Image& texture(const std::string& name);
+		const Alabaster::Texture& texture(const std::string& name);
 		const Alabaster::Shader& shader(const std::string& name);
 
 	private:
 		ResourceCache();
 
 	private:
-		ImageCache<Alabaster::Image> image_cache;
+		TextureCache<Alabaster::Texture> image_cache;
 		ShaderCache<Alabaster::Shader> shader_cache;
 	};
 
-	static inline auto& the() { return ResourceCache::the(); }
+	inline auto& the() { return ResourceCache::the(); }
 
 } // namespace AssetManager

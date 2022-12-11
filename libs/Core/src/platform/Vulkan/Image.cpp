@@ -6,6 +6,7 @@
 #include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
 #include "graphics/Allocator.hpp"
+#include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "platform/Vulkan/ImageUtilities.hpp"
 #include "utilities/FileInputOutput.hpp"
@@ -16,196 +17,248 @@
 
 namespace Alabaster {
 
-	Image::Image(const std::filesystem::path& path, ImageFormat format)
+	Image::Image(const ImageSpecification& specification) noexcept
+		: spec(specification)
 	{
-		Log::info("[Image] Creating image with path: {}", path.string());
-
-		int w, h, actual_channels;
-		uint8_t* data = stbi_load(path.string().data(), &w, &h, &actual_channels, STBI_rgb_alpha);
-		image_props.width = static_cast<std::uint32_t>(w);
-		image_props.height = static_cast<std::uint32_t>(h);
-		image_props.channels = static_cast<std::uint32_t>(STBI_rgb_alpha);
-		image_props.format = format;
-
-		Log::info("[Image] w: {}, h: {}, channels: {}", w, h, actual_channels);
-		invalidate(data);
-	}
-
-	Image::Image(const ImageProps& props)
-		: image_props(props)
-	{
-		assert_that(props.path, "You need to supply a path to an image file.");
-		const auto& path = props.path.value();
-
-		int w, h, actual_channels;
-		uint8_t* data = stbi_load(path.string().data(), &w, &h, &actual_channels, STBI_rgb_alpha);
-
-		assert_that(data != nullptr, "Image data is nullptr.");
-
-		image_props.width = static_cast<std::uint32_t>(w);
-		image_props.height = static_cast<std::uint32_t>(h);
-		image_props.channels = static_cast<std::uint32_t>(STBI_rgb_alpha);
-
-		Log::info("[Image] Creating image with path: {}\n\t[Image] Properties: {}x{}px, {} channels.", path.string(), w, h, actual_channels);
-
-		pixel_data = data;
-	}
-
-	void Image::invalidate(CommandBuffer& buffer)
-	{
-		if (!pixel_data) {
-			throw AlabasterException("Pixel data has not been loaded, either correctly, or at all.");
-		}
-
-		Allocator allocator("Image");
-
-		VkDeviceSize buffer_size = static_cast<VkDeviceSize>(image_props.width * image_props.height * image_props.channels);
-
-		VkBufferCreateInfo buffer_create_info {};
-		buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		buffer_create_info.size = buffer_size;
-		buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		VkBuffer staging_buffer;
-		VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
-
-		auto* dest = allocator.map_memory<stbi_uc>(staging_buffer_allocation);
-		std::memcpy(dest, pixel_data, buffer_size);
-		allocator.unmap_memory(staging_buffer_allocation);
-
-		stbi_image_free(pixel_data);
-
-		chosen_format = VK_FORMAT_R8G8B8A8_SRGB;
-
-		VkImageCreateInfo image_create_info = {};
-		image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		image_create_info.imageType = VK_IMAGE_TYPE_2D;
-		image_create_info.format = chosen_format;
-		image_create_info.extent.width = image_props.width;
-		image_create_info.extent.height = image_props.height;
-		image_create_info.extent.depth = 1;
-		image_create_info.mipLevels = image_props.mips;
-		image_create_info.arrayLayers = image_props.layers;
-		image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-		image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-		image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		image_create_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-		image_info.allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_HOST, image_info.image);
-
-		Utilities::transition_image_layout(image_info.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &buffer);
-		Utilities::copy_buffer_to_image(staging_buffer, image_info, image_props.width, image_props.height, &buffer);
-		Utilities::transition_image_layout(image_info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, &buffer);
-
-		buffer.add_destruction_callback([staging_buffer_allocation, staging_buffer](
-											Allocator& allocator) { allocator.destroy_buffer(staging_buffer, staging_buffer_allocation); });
-
-		Log::info("[Image] invalidated image: {}", image_props.path.value().string());
-		image_info.layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-		create_view();
-		create_sampler();
-	}
-
-	void Image::invalidate(void* data)
-	{
-		Allocator allocator("Image");
-
-		VkDeviceSize buffer_size = image_props.width * image_props.height * image_props.channels;
-
-		VkBufferCreateInfo buffer_create_info {};
-		buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		buffer_create_info.size = buffer_size;
-		buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-		buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-		VkBuffer staging_buffer;
-		VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
-
-		auto* dest = allocator.map_memory<stbi_uc>(staging_buffer_allocation);
-		std::memcpy(dest, data, buffer_size);
-		allocator.unmap_memory(staging_buffer_allocation);
-
-		stbi_image_free(data);
-
-		chosen_format = VK_FORMAT_R8G8B8A8_SRGB;
-
-		VkImageCreateInfo image_create_info = {};
-		image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-		image_create_info.imageType = VK_IMAGE_TYPE_2D;
-		image_create_info.format = chosen_format;
-		image_create_info.extent.width = image_props.width;
-		image_create_info.extent.height = image_props.height;
-		image_create_info.extent.depth = 1;
-		image_create_info.mipLevels = image_props.mips;
-		image_create_info.arrayLayers = image_props.layers;
-		image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-		image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-		image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		image_create_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
-		image_info.allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_HOST, image_info.image);
-
-		Utilities::transition_image_layout(image_info.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-		Utilities::copy_buffer_to_image(staging_buffer, image_info, image_props.width, image_props.height);
-		Utilities::transition_image_layout(image_info.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-
-		allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
-
-		create_view();
-		create_sampler();
-	}
-
-	void Image::create_view()
-	{
-		// VIEW SAMPLER
-
-		VkImageViewCreateInfo view_info = {};
-		view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-		view_info.viewType = image_props.layers > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
-		view_info.format = chosen_format;
-		view_info.flags = 0;
-		view_info.subresourceRange = {};
-		view_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		view_info.subresourceRange.baseMipLevel = 0;
-		view_info.subresourceRange.levelCount = image_props.mips;
-		view_info.subresourceRange.baseArrayLayer = 0;
-		view_info.subresourceRange.layerCount = image_props.layers;
-		view_info.image = image_info.image;
-		vkCreateImageView(GraphicsContext::the().device(), &view_info, nullptr, &image_info.view);
-	}
-
-	void Image::create_sampler()
-	{
-		VkSamplerCreateInfo sampler_info = {};
-		sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-		sampler_info.maxAnisotropy = 1.0f;
-		sampler_info.magFilter = VK_FILTER_LINEAR;
-		sampler_info.minFilter = VK_FILTER_LINEAR;
-		sampler_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-
-		sampler_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-		sampler_info.addressModeV = sampler_info.addressModeU;
-		sampler_info.addressModeW = sampler_info.addressModeU;
-		sampler_info.mipLodBias = 0.0f;
-		sampler_info.maxAnisotropy = 1.0f;
-		sampler_info.minLod = 0.0f;
-		sampler_info.maxLod = 100.0f;
-		sampler_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-		vk_check(vkCreateSampler(GraphicsContext::the().device(), &sampler_info, nullptr, &image_info.sampler));
+		assert_that(spec.width > 0 && spec.height > 0);
 	}
 
 	void Image::destroy()
 	{
-		vkDestroyImageView(GraphicsContext::the().device(), image_info.view, nullptr);
-		vkDestroySampler(GraphicsContext::the().device(), image_info.sampler, nullptr);
+		if (destroyed) {
+			return;
+		}
+		if (info.image) {
+			vkDestroyImageView(GraphicsContext::the().device(), info.view, nullptr);
+			vkDestroySampler(GraphicsContext::the().device(), info.sampler, nullptr);
 
-		Allocator allocator("VulkanImage2D");
-		allocator.destroy_image(image_info.image, image_info.allocation);
+			for (auto& view : per_layer_image_views) {
+				if (view)
+					vkDestroyImageView(GraphicsContext::the().device(), view, nullptr);
+			}
 
-		destruction(allocator);
-		destruction = nullptr;
+			Allocator allocator(fmt::format("Image-{}", spec.debug_name));
+			allocator.destroy_image(info.image, info.allocation);
 
-		if (image_props.path) {
-			Log::info("[Image] Destroying image {}.", (*image_props.path).string());
+			Log::warn("[Image] Destroy ImageView {}", (const void*)info.view);
+			per_layer_image_views.clear();
+		}
+		destroyed = true;
+	}
+
+	void Image::invalidate()
+	{
+		release();
+
+		Allocator allocator("Image2D");
+
+		VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT; // TODO: this (probably) shouldn't be implied
+		if (spec.usage == ImageUsage::Attachment) {
+			if (Utilities::is_depth_format(spec.format)) {
+				usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+			} else {
+				usage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+			}
+		} else if (spec.usage == ImageUsage::Texture) {
+			usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		} else if (spec.usage == ImageUsage::Storage) {
+			usage |= VK_IMAGE_USAGE_STORAGE_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+		}
+
+		VkImageAspectFlags aspect_mask = Utilities::is_depth_format(spec.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		if (spec.format == ImageFormat::DEPTH24STENCIL8)
+			aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+		VkFormat vulkan_format = Utilities::vulkan_image_format(spec.format);
+
+		VkImageCreateInfo image_create_info {};
+		image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+		image_create_info.imageType = VK_IMAGE_TYPE_2D;
+		image_create_info.format = vulkan_format;
+		image_create_info.extent.width = spec.width;
+		image_create_info.extent.height = spec.height;
+		image_create_info.extent.depth = 1;
+		image_create_info.mipLevels = spec.mips;
+		image_create_info.arrayLayers = spec.layers;
+		image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+		image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+		image_create_info.usage = usage;
+		info.allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, info.image);
+
+		VkImageViewCreateInfo image_view_create_info {};
+		image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+		image_view_create_info.viewType = spec.layers > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D;
+		image_view_create_info.format = vulkan_format;
+		image_view_create_info.flags = 0;
+		image_view_create_info.subresourceRange = {};
+		image_view_create_info.subresourceRange.aspectMask = aspect_mask;
+		image_view_create_info.subresourceRange.baseMipLevel = 0;
+		image_view_create_info.subresourceRange.levelCount = spec.mips;
+		image_view_create_info.subresourceRange.baseArrayLayer = 0;
+		image_view_create_info.subresourceRange.layerCount = spec.layers;
+		image_view_create_info.image = info.image;
+		vk_check(vkCreateImageView(GraphicsContext::the().device(), &image_view_create_info, nullptr, &info.view));
+
+		VkSamplerCreateInfo sampler_create_info {};
+		sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		sampler_create_info.maxAnisotropy = 1.0f;
+		if (Utilities::is_integer_based(spec.format)) {
+			sampler_create_info.magFilter = VK_FILTER_NEAREST;
+			sampler_create_info.minFilter = VK_FILTER_NEAREST;
+			sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
 		} else {
-			Log::info("[Image] Destroying image with dimensions [{} x {}].", image_props.width, image_props.height);
+			sampler_create_info.magFilter = VK_FILTER_LINEAR;
+			sampler_create_info.minFilter = VK_FILTER_LINEAR;
+			sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+		}
+
+		sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+		sampler_create_info.addressModeV = sampler_create_info.addressModeU;
+		sampler_create_info.addressModeW = sampler_create_info.addressModeU;
+		sampler_create_info.mipLodBias = 0.0f;
+		sampler_create_info.maxAnisotropy = 1.0f;
+		sampler_create_info.minLod = 0.0f;
+		sampler_create_info.maxLod = 100.0f;
+		sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+		vk_check(vkCreateSampler(GraphicsContext::the().device(), &sampler_create_info, nullptr, &info.sampler));
+
+		if (spec.usage == ImageUsage::Storage) {
+			ImmediateCommandBuffer buffer { "Storage Image Copy" };
+
+			VkImageSubresourceRange subresource_range {};
+			subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+			subresource_range.baseMipLevel = 0;
+			subresource_range.levelCount = spec.mips;
+			subresource_range.layerCount = spec.layers;
+
+			Utilities::transition_image_layout(info.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL, &buffer, &subresource_range);
+		}
+
+		update_descriptor();
+	}
+
+	void Image::release()
+	{
+		if (info.image == nullptr)
+			return;
+
+		vkDestroyImageView(GraphicsContext::the().device(), info.view, nullptr);
+		vkDestroySampler(GraphicsContext::the().device(), info.sampler, nullptr);
+
+		for (auto& view : per_mip_image_views) {
+			if (view.second)
+				vkDestroyImageView(GraphicsContext::the().device(), view.second, nullptr);
+		}
+		for (auto& view : per_layer_image_views) {
+			if (view)
+				vkDestroyImageView(GraphicsContext::the().device(), view, nullptr);
+		}
+		Allocator allocator(fmt::format("Image-{}", spec.debug_name));
+		allocator.destroy_image(info.image, info.allocation);
+		info.image = nullptr;
+		info.view = nullptr;
+		info.sampler = nullptr;
+		per_layer_image_views.clear();
+		per_mip_image_views.clear();
+	}
+
+	void Image::create_per_layer_image_view()
+	{
+
+		VkImageAspectFlags aspect_mask = Utilities::is_depth_format(spec.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		if (spec.format == ImageFormat::DEPTH24STENCIL8)
+			aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+		const VkFormat vulkan_format = Utilities::vulkan_image_format(spec.format);
+
+		per_layer_image_views.resize(spec.layers);
+		for (uint32_t layer = 0; layer < spec.layers; layer++) {
+			VkImageViewCreateInfo image_view_create_info = {};
+			image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			image_view_create_info.format = vulkan_format;
+			image_view_create_info.flags = 0;
+			image_view_create_info.subresourceRange = {};
+			image_view_create_info.subresourceRange.aspectMask = aspect_mask;
+			image_view_create_info.subresourceRange.baseMipLevel = 0;
+			image_view_create_info.subresourceRange.levelCount = spec.mips;
+			image_view_create_info.subresourceRange.baseArrayLayer = layer;
+			image_view_create_info.subresourceRange.layerCount = 1;
+			image_view_create_info.image = info.image;
+			vk_check(vkCreateImageView(GraphicsContext::the().device(), &image_view_create_info, nullptr, &per_layer_image_views[layer]));
+		}
+	}
+
+	VkImageView Image::get_mip_image_view(uint32_t mip)
+	{
+		if (per_mip_image_views.find(mip) == per_mip_image_views.end()) {
+			VkImageAspectFlags aspect_mask = Utilities::is_depth_format(spec.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+			if (spec.format == ImageFormat::DEPTH24STENCIL8)
+				aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+			VkFormat vulkan_format = Utilities::vulkan_image_format(spec.format);
+
+			VkImageViewCreateInfo image_view_create_info = {};
+			image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			image_view_create_info.format = vulkan_format;
+			image_view_create_info.flags = 0;
+			image_view_create_info.subresourceRange = {};
+			image_view_create_info.subresourceRange.aspectMask = aspect_mask;
+			image_view_create_info.subresourceRange.baseMipLevel = mip;
+			image_view_create_info.subresourceRange.levelCount = 1;
+			image_view_create_info.subresourceRange.baseArrayLayer = 0;
+			image_view_create_info.subresourceRange.layerCount = 1;
+			image_view_create_info.image = info.image;
+
+			vk_check(vkCreateImageView(GraphicsContext::the().device(), &image_view_create_info, nullptr, &per_mip_image_views[mip]));
+			return per_mip_image_views.at(mip);
+		}
+
+		return per_mip_image_views.at(mip);
+	}
+
+	void Image::update_descriptor()
+	{
+		if (spec.format == ImageFormat::DEPTH24STENCIL8 || spec.format == ImageFormat::DEPTH32F || spec.format == ImageFormat::DEPTH32FSTENCIL8UINT)
+			descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+		else if (spec.usage == ImageUsage::Storage)
+			descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+		else
+			descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+		if (spec.usage == ImageUsage::Storage)
+			descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+
+		descriptor_image_info.imageView = info.view;
+		descriptor_image_info.sampler = info.sampler;
+	}
+
+	void Image::create_per_specific_layer_image_views(const std::vector<uint32_t>& layer_indices)
+	{
+		VkImageAspectFlags aspect_mask = Utilities::is_depth_format(spec.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+		if (spec.format == ImageFormat::DEPTH24STENCIL8)
+			aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+
+		const VkFormat vulkan_format = Utilities::vulkan_image_format(spec.format);
+
+		if (per_layer_image_views.empty())
+			per_layer_image_views.resize(spec.layers);
+
+		for (uint32_t layer : layer_indices) {
+			VkImageViewCreateInfo image_view_create_info = {};
+			image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			image_view_create_info.format = vulkan_format;
+			image_view_create_info.flags = 0;
+			image_view_create_info.subresourceRange = {};
+			image_view_create_info.subresourceRange.aspectMask = aspect_mask;
+			image_view_create_info.subresourceRange.baseMipLevel = 0;
+			image_view_create_info.subresourceRange.levelCount = spec.mips;
+			image_view_create_info.subresourceRange.baseArrayLayer = layer;
+			image_view_create_info.subresourceRange.layerCount = 1;
+			image_view_create_info.image = info.image;
+			vk_check(vkCreateImageView(GraphicsContext::the().device(), &image_view_create_info, nullptr, &per_layer_image_views[layer]));
 		}
 	}
 

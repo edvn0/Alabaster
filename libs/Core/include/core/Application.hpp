@@ -14,10 +14,17 @@ namespace Alabaster {
 	class Window;
 	class GUILayer;
 
+	enum class SyncMode {
+		VSync,
+		Immediate,
+		Mailbox,
+	};
+
 	struct ApplicationArguments {
 		std::uint32_t width;
 		std::uint32_t height;
 		std::string name;
+		SyncMode sync_mode;
 	};
 
 	class Application {

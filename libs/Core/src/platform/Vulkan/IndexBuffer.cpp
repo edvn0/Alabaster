@@ -5,6 +5,7 @@
 #include "core/Logger.hpp"
 #include "core/Utilities.hpp"
 #include "graphics/Allocator.hpp"
+#include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
 
@@ -54,15 +55,14 @@ namespace Alabaster {
 		vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, vulkan_buffer);
 
-		auto copy_command = GraphicsContext::the().get_command_buffer();
+		ImmediateCommandBuffer immediate_command_buffer { "Index Buffer" };
+		immediate_command_buffer.add_destruction_callback([staging_buffer, staging_buffer_allocation](Allocator& allocator) {
+			allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
+		});
 
 		VkBufferCopy copy_region = {};
 		copy_region.size = index_data.size;
-		vkCmdCopyBuffer(copy_command, staging_buffer, vulkan_buffer, 1, &copy_region);
-
-		GraphicsContext::the().flush_command_buffer(copy_command);
-
-		allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
+		vkCmdCopyBuffer(immediate_command_buffer, staging_buffer, vulkan_buffer, 1, &copy_region);
 
 		const auto human_readable_size = Utilities::human_readable_size(buffer_size);
 		Log::info("[IndexBuffer] Initialised with size: {}", human_readable_size);

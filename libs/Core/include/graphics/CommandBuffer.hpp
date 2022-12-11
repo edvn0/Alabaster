@@ -1,7 +1,7 @@
 #pragma once
 
+#include "core/exceptions/AlabasterException.hpp"
 #include "graphics/Allocator.hpp"
-#include "vulkan/vulkan_core.h"
 
 #include <memory>
 #include <optional>
@@ -19,17 +19,17 @@ namespace Alabaster {
 
 	public:
 		explicit CommandBuffer(std::uint32_t count, QueueChoice queue_choice = QueueChoice::Graphics, bool is_primary = true);
-		~CommandBuffer();
+		virtual ~CommandBuffer();
 		void destroy();
 
+		virtual void begin() { begin(nullptr, true); };
 		void begin(VkCommandBufferBeginInfo* begin, bool should_start_cb);
-		void begin() { begin(nullptr, true); };
 		void begin(bool should_start_cb) { begin(nullptr, should_start_cb); };
 		void begin(VkCommandBufferBeginInfo* begin_info) { begin(begin_info, true); };
 
-		void end();
-		void end_with_no_reset();
-		void submit();
+		virtual void end();
+		virtual void end_with_no_reset();
+		virtual void submit();
 
 		auto& get_buffer() const { return active; }
 		auto& get_command_pool() const { return pool; }
@@ -37,11 +37,22 @@ namespace Alabaster {
 		auto& get_command_pool() { return pool; }
 
 		operator VkCommandBuffer() { return active; }
+		VkCommandBuffer operator*() { return active; }
 
 		void add_destruction_callback(DeallocationCallback&& cb) { destruction_callbacks.push(std::move(cb)); }
 
 	private:
 		void init(std::uint32_t count = 0);
+
+	protected:
+		void set_allocator_name(std::string name)
+		{
+			if (!allocator)
+				allocator = std::make_unique<Allocator>(name);
+			else {
+				allocator->set_tag(name);
+			}
+		}
 
 	private:
 		VkCommandPool pool { nullptr };
@@ -52,6 +63,7 @@ namespace Alabaster {
 		QueueChoice queue_choice;
 		bool is_primary { true };
 
+		std::unique_ptr<Allocator> allocator;
 		std::queue<DeallocationCallback> destruction_callbacks {};
 
 		bool owned_by_swapchain { false };
@@ -61,6 +73,26 @@ namespace Alabaster {
 
 	public:
 		static std::unique_ptr<CommandBuffer> from_swapchain() { return std::unique_ptr<CommandBuffer>(new CommandBuffer()); }
+	};
+
+	class ImmediateCommandBuffer final : public CommandBuffer {
+	public:
+		ImmediateCommandBuffer(std::string allocator_tag)
+			: CommandBuffer(1)
+		{
+			CommandBuffer::begin();
+			set_allocator_name(std::move(allocator_tag));
+		}
+
+		~ImmediateCommandBuffer() final
+		{
+			CommandBuffer::end();
+			CommandBuffer::submit();
+		}
+
+		void begin() override { throw AlabasterException("Cannot explicitly start an immediate command buffer. It is called in the constructor"); }
+		void end() override { throw AlabasterException("Cannot explicitly end an immediate command buffer. It is called in the destructor"); }
+		void submit() override { throw AlabasterException("Cannot explicitly submit an immediate command buffer. It is called in the destructor"); }
 	};
 
 } // namespace Alabaster

@@ -4,13 +4,7 @@
 
 #include "core/Application.hpp"
 #include "core/Common.hpp"
-#include "graphics/Camera.hpp"
 #include "graphics/CommandBuffer.hpp"
-#include "graphics/Pipeline.hpp"
-#include "graphics/Swapchain.hpp"
-#include "utilities/FileInputOutput.hpp"
-#include "utilities/FileSystem.hpp"
-#include "vulkan/vulkan_core.h"
 
 namespace Alabaster {
 

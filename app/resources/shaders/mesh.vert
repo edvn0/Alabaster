@@ -28,10 +28,15 @@ pc;
 
 layout(location = 0) out vec4 out_colour;
 layout(location = 1) out vec2 out_uvs;
+layout(location = 2) out vec3 out_normals;
+layout(location = 3) out vec4 out_position;
 
 void main()
 {
+	mat4 model_view = camera.view * pc.object_transform;
 	gl_Position = camera.view_proj * pc.object_transform * vec4(locations, 1.0);
 	out_colour = pc.object_colour;
 	out_uvs = uvs;
+	out_normals = vec3(model_view * vec4(normal, 0.0));
+	out_position = model_view * vec4(locations, 1.0);
 }

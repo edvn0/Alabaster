@@ -2,7 +2,6 @@
 
 #include "codes/KeyCode.hpp"
 #include "core/Application.hpp"
-#include "core/Common.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/events/KeyEvent.hpp"
 #include "core/events/MouseEvent.hpp"
@@ -67,7 +66,9 @@ namespace Alabaster {
 		swapchain->init(handle);
 
 		const auto&& [fb_w, fb_h] = framebuffer_extent();
-		swapchain->construct(fb_w, fb_h);
+		auto w = std::uint32_t(fb_w);
+		auto h = std::uint32_t(fb_h);
+		swapchain->create(&w, &h, arguments.sync_mode == SyncMode::VSync);
 
 		setup_events();
 	};
@@ -109,7 +110,6 @@ namespace Alabaster {
 	{
 		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow*, int, int) { Application::the().get_window()->resize_status = true; });
 
-		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int in_width, int in_height) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 

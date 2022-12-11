@@ -5,11 +5,8 @@
 #include "core/Application.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
-#include "graphics/Swapchain.hpp"
-#include "vulkan/vulkan_core.h"
 
-#include <cstddef>
-#include <utility>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -25,15 +22,15 @@ namespace Alabaster {
 		pool_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		vk_check(vkCreateCommandPool(GraphicsContext::the().device(), &pool_info, nullptr, &pool));
 
-		VkCommandBufferAllocateInfo cbai {};
-		cbai.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		cbai.commandPool = pool;
-		cbai.level = is_primary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
+		VkCommandBufferAllocateInfo command_buffer_allocate_info {};
+		command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		command_buffer_allocate_info.commandPool = pool;
+		command_buffer_allocate_info.level = is_primary ? VK_COMMAND_BUFFER_LEVEL_PRIMARY : VK_COMMAND_BUFFER_LEVEL_SECONDARY;
 		if (count == 0)
 			frames = Application::the().swapchain().get_image_count();
-		cbai.commandBufferCount = frames;
+		command_buffer_allocate_info.commandBufferCount = frames;
 		buffers.resize(frames);
-		vk_check(vkAllocateCommandBuffers(GraphicsContext::the().device(), &cbai, buffers.data()));
+		vk_check(vkAllocateCommandBuffers(GraphicsContext::the().device(), &command_buffer_allocate_info, buffers.data()));
 
 		VkFenceCreateInfo fence_create_info {};
 		fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
@@ -135,11 +132,14 @@ namespace Alabaster {
 
 		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frame_index], VK_TRUE, UINT64_MAX));
 
-		Allocator allocator("CommandBufferDe-allocator");
+		const auto has_callbacks = !destruction_callbacks.empty();
+		if (!has_callbacks)
+			return;
+
 		while (!destruction_callbacks.empty()) {
 			std::function<void(Allocator&)> cb = destruction_callbacks.front();
 			destruction_callbacks.pop();
-			cb(allocator);
+			cb(*allocator);
 		}
 	}
 

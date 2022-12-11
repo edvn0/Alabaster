@@ -34,17 +34,35 @@ int main(int argc, char** argv)
 	props.width = 4000;
 	props.height = 3000;
 	props.name = "Alabaster";
+	std::string sync_mode = "vsync";
 	po::parser parser;
 	parser["width"].abbreviation('w').description("The width of the window.").type(po::u32).fallback(std::uint32_t { 1600 }).bind(props.width);
 	parser["height"].abbreviation('h').description("The height of the window.").type(po::u32).fallback(std::uint32_t { 900 }).bind(props.height);
-	parser["name"].description("Name of the applicatin").type(po::string).fallback(std::string { "Alabaster" }).bind(props.name);
+	parser["name"].description("Name of the application").type(po::string).fallback(std::string { "Alabaster" }).bind(props.name);
+	parser["sync-mode"]
+		.abbreviation('m')
+		.description("Synchronization. Acceptable values are 'vsync', 'immediate' or 'mailbox'.")
+		.type(po::string)
+		.fallback(std::string { "vsync" })
+		.bind(sync_mode);
 
 	if (!parser(argc, argv)) {
 		Alabaster::Log::critical("Could not parse argument options.");
 		return 1;
 	}
 
-	Alabaster::Log::trace("{}, {}, {}", props.width, props.height, props.name);
+	if (equals_ignore_case(sync_mode, std::string("vsync"))) {
+		props.sync_mode = SyncMode::VSync;
+	}
+	if (equals_ignore_case(sync_mode, std::string("immediate"))) {
+		props.sync_mode = SyncMode::Immediate;
+	}
+	if (equals_ignore_case(sync_mode, std::string("mailbox"))) {
+		props.sync_mode = SyncMode::Mailbox;
+	}
+
+	Alabaster::Log::info(
+		"[EntryPoint] Width: {}, Height: {}, Name: {}, SyncMode: {}", props.width, props.height, props.name, enum_name(props.sync_mode));
 
 	Alabaster::IO::init_with_cwd(*root);
 

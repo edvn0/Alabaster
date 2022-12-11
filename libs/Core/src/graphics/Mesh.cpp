@@ -65,14 +65,13 @@ namespace Alabaster {
 
 		auto&& [vertices, indices] = load_model();
 
-		vertex_count = vertices.size();
 		index_count = indices.size();
 
 		vertex_buffer = VertexBuffer::create(std::move(vertices));
 		index_buffer = IndexBuffer::create(std::move(indices));
 		auto t1 = Clock::get_ms<float>() - t0;
 
-		Log::info("[Mesh] Model load took: {}ms", t1);
+		Log::info("[Mesh] Model with name [{}] load took: {}ms", path.string(), t1);
 	}
 
 	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)

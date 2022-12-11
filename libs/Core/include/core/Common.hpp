@@ -2,12 +2,29 @@
 
 #include "core/Logger.hpp"
 
+#include <algorithm>
 #include <array>
+#include <cctype>
 #include <debug_break.h>
 #include <limits>
 #include <magic_enum.hpp>
 
 namespace Alabaster {
+
+	template <typename T>
+	concept HasSizeAndIterator = requires(T t)
+	{
+		t.size();
+		t.begin();
+		t.end();
+	};
+
+	static constexpr auto equals_ignore_case(const HasSizeAndIterator auto& lhs, const HasSizeAndIterator auto& rhs)
+	{
+		if (lhs.size() != rhs.size())
+			return false;
+		return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), [](char a, char b) { return std::tolower(a) == std::tolower(b); });
+	}
 
 	static constexpr auto enum_name = [](auto&& in) { return magic_enum::enum_name(in); };
 	static constexpr auto non_empty = [](const auto& in) { return not in.empty(); };

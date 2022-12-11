@@ -20,36 +20,25 @@ namespace SceneSystem {
 
 	nlohmann::json::object_t SceneSerialiser::serialise_entity(Entity& entity)
 	{
-		auto object = nlohmann::json::object();
+		auto output_object = nlohmann::json::object();
 		if (entity.has_component<Component::Tag>()) {
-			serialise_component<Component::Tag> {}(entity, object);
+			serialise_component<Component::Tag> {}(entity, output_object);
 		}
 		if (entity.has_component<Component::Mesh>()) {
-			serialise_component<Component::Mesh> {}(entity, object);
+			serialise_component<Component::Mesh> {}(entity, output_object);
 		}
 		if (entity.has_component<Component::Texture>()) {
-			serialise_component<Component::Texture> {}(entity, object);
+			serialise_component<Component::Texture> {}(entity, output_object);
 		}
 		if (entity.has_component<Component::Transform>()) {
-			serialise_component<Component::Transform> {}(entity, object);
+			serialise_component<Component::Transform> {}(entity, output_object);
 		}
 		if (entity.has_component<Component::BasicGeometry>()) {
-			serialise_component<Component::BasicGeometry> {}(entity, object);
+			serialise_component<Component::BasicGeometry> {}(entity, output_object);
 		}
 
-		return object;
+		return output_object;
 	}
-
-	/**
-	 * Format:
-	 {
-		 scene_name: name,
-		 entities: [
-
-		 ]
-	 }
-	 *
-	 */
 
 	void SceneSerialiser::serialise_to_json()
 	{
@@ -64,7 +53,7 @@ namespace SceneSystem {
 		auto all_serialised_entities = json::object();
 		registry.each([scene = &scene, &all_serialised_entities, this](const entt::entity& entt_entity) {
 			Entity entity { scene, entt_entity };
-			json::object_t serialised_object = serialise_entity(entity);
+			const auto serialised_object = serialise_entity(entity);
 
 			all_serialised_entities[uuids::to_string(entity.get_component<Component::ID>().identifier)] = serialised_object;
 		});

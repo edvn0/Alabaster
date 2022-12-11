@@ -83,16 +83,4 @@ namespace Alabaster {
 		std::uint32_t size;
 	};
 
-	struct BufferSafe : public Buffer {
-		~BufferSafe() { release(); }
-
-		static BufferSafe copy(const void* data, std::uint32_t in_size)
-		{
-			BufferSafe buffer;
-			buffer.allocate(in_size);
-			std::memcpy(buffer.data, data, in_size);
-			return buffer;
-		}
-	};
-
 } // namespace Alabaster

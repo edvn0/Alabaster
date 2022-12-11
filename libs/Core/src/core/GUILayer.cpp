@@ -3,18 +3,17 @@
 #include "core/GUILayer.hpp"
 
 #include "core/Common.hpp"
+#include "core/events/KeyEvent.hpp"
 #include "core/Window.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
-#include "graphics/Swapchain.hpp"
 #include "vulkan/vulkan_core.h"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
-#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -26,7 +25,7 @@ namespace Alabaster {
 		color_attachment_desc.format = color;
 		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
 		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
 		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -59,10 +58,10 @@ namespace Alabaster {
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
 		std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
 		VkRenderPassCreateInfo render_pass_info = {};
@@ -79,6 +78,14 @@ namespace Alabaster {
 
 	void GUILayer::on_event(Event& event)
 	{
+		EventDispatcher dispatcher(event);
+		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& e) {
+			if (e.get_key_code() == Key::One) {
+				chosen = chosen == gui_renderpass ? Application::the().swapchain().get_render_pass() : gui_renderpass;
+			}
+			return false;
+		});
+
 		if (should_block) {
 			ImGuiIO& io = ImGui::GetIO();
 			event.handled |= event.is_in_category(EventCategoryMouse) & io.WantCaptureMouse;
@@ -139,14 +146,14 @@ namespace Alabaster {
 		ImGui::GetIO().Fonts->AddFontDefault();
 
 		{
-			const auto command_buffer = GraphicsContext::the().get_command_buffer();
-			ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
-			GraphicsContext::the().flush_command_buffer(command_buffer);
+			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer("Fonts Texture"));
 
 			vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
 
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
+
+		chosen = gui_renderpass;
 
 		return true;
 	}
@@ -176,7 +183,7 @@ namespace Alabaster {
 
 		VkRenderPassBeginInfo render_pass_begin_info = {};
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_begin_info.renderPass = gui_renderpass;
+		render_pass_begin_info.renderPass = chosen;
 		render_pass_begin_info.renderArea.offset.x = 0;
 		render_pass_begin_info.renderArea.offset.y = 0;
 		render_pass_begin_info.renderArea.extent.width = width;
@@ -191,7 +198,7 @@ namespace Alabaster {
 		{
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-			inheritance_info.renderPass = gui_renderpass;
+			inheritance_info.renderPass = chosen;
 			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
 
 			VkCommandBufferBeginInfo cbi = {};

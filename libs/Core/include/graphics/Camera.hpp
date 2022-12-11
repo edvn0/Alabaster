@@ -70,8 +70,9 @@ namespace Alabaster {
 
 	class EditorCamera : public Camera {
 	public:
-		EditorCamera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane);
-		void init();
+		EditorCamera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane,
+			EditorCamera* previous_camera = nullptr);
+		void init(EditorCamera* previous_camera = nullptr);
 
 		void focus(const glm::vec3& focus_point) final;
 		void on_update(float ts) final;
@@ -133,7 +134,7 @@ namespace Alabaster {
 
 	private:
 		glm::mat4 view_matrix;
-		glm::vec3 position, direction, focal_point;
+		glm::vec3 position = { 0, 3, -20 }, direction, focal_point;
 
 		float vertical_fov, aspect_ratio, near_clip, far_clip;
 
@@ -141,9 +142,9 @@ namespace Alabaster {
 		glm::vec2 initial_mouse_position {};
 
 		float distance;
-		float normal_speed { 0.002f };
+		float normal_speed { 2.0f };
 
-		float pitch, yaw;
+		float pitch = glm::radians(-30.0f), yaw = 0;
 		float pitch_delta {}, yaw_delta {};
 		glm::vec3 position_delta {};
 		glm::vec3 right_direction {};
@@ -154,8 +155,8 @@ namespace Alabaster {
 
 		std::uint32_t viewport_width { 1280 }, viewport_height { 720 };
 
-		constexpr static float min_speed { 0.005f };
-		constexpr static float max_speed { 0.020f };
+		constexpr static float min_speed { 0.5f };
+		constexpr static float max_speed { 6.0f };
 	};
 
 } // namespace Alabaster

@@ -1,5 +1,10 @@
 #pragma once
 
+#include "graphics/Swapchain.hpp"
+
+#include <functional>
+#include <memory>
+
 struct GLFWwindow;
 struct GLFWcursor;
 

@@ -17,8 +17,6 @@ namespace AssetManager {
 	public:
 		explicit ShaderReflector(std::string shader_file_name, const std::vector<std::uint32_t>& spirv);
 
-		const std::vector<VkPushConstantRange>& get_push_constant_range() const;
-
 	private:
 		std::unique_ptr<spirv_cross::CompilerGLSL> reflector;
 		ShaderReflectionData reflection_data;

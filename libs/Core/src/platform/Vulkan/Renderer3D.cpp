@@ -78,10 +78,10 @@ namespace Alabaster {
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
 		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
 		std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
 		VkRenderPassCreateInfo render_pass_info = {};
@@ -155,7 +155,7 @@ namespace Alabaster {
 		data.descriptor_sets.resize(image_count);
 		vk_check(vkAllocateDescriptorSets(GraphicsContext::the().device(), &alloc_info, data.descriptor_sets.data()));
 
-		const auto image_info = AssetManager::the().texture("viking_room").vulkan_image_info();
+		const auto image_info = AssetManager::the().texture("viking_room").get_descriptor_info();
 		for (std::size_t i = 0; i < image_count; i++) {
 			VkDescriptorBufferInfo buffer_info {};
 			buffer_info.buffer = data.uniforms[i]->get_buffer();
@@ -187,7 +187,7 @@ namespace Alabaster {
 		}
 	}
 
-	Renderer3D::Renderer3D(Camera& camera) noexcept
+	Renderer3D::Renderer3D(const std::shared_ptr<Camera>& camera) noexcept
 		: camera(camera)
 	{
 		data.sphere_model = Mesh::from_file("sphere.obj");
@@ -566,8 +566,8 @@ namespace Alabaster {
 		const auto image_index = Application::the().swapchain().frame();
 
 		UBO ubo {};
-		ubo.projection = camera.get_projection_matrix();
-		ubo.view = camera.get_view_matrix();
+		ubo.projection = camera->get_projection_matrix();
+		ubo.view = camera->get_view_matrix();
 		ubo.view_projection = ubo.projection * ubo.view;
 		ubo.model = model.has_value() ? *model : default_model;
 
@@ -576,7 +576,7 @@ namespace Alabaster {
 
 	void Renderer3D::destroy()
 	{
-		auto device = GraphicsContext::the().device();
+		const auto& device = GraphicsContext::the().device();
 
 		vkDestroyRenderPass(device, data.render_pass, nullptr);
 
@@ -586,6 +586,6 @@ namespace Alabaster {
 
 	const VkRenderPass& Renderer3D::get_render_pass() const { return data.render_pass; }
 
-	void Renderer3D::set_camera(Camera& cam) { camera = cam; }
+	void Renderer3D::set_camera(const std::shared_ptr<Camera>& cam) { camera = cam; }
 
 } // namespace Alabaster

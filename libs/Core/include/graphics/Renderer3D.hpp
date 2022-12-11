@@ -13,8 +13,6 @@
 
 namespace Alabaster {
 
-	// static constexpr auto default_model =glm::rotate(glm::mat4(1.0f), glm::radians(45.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-
 	class Mesh;
 	class Pipeline;
 	class VertexBuffer;
@@ -35,10 +33,10 @@ namespace Alabaster {
 	};
 
 	struct UBO {
-		alignas(16) glm::mat4 model;
-		alignas(16) glm::mat4 view;
-		alignas(16) glm::mat4 projection;
-		alignas(16) glm::mat4 view_projection;
+		glm::mat4 model;
+		glm::mat4 view;
+		glm::mat4 projection;
+		glm::mat4 view_projection;
 	};
 
 	struct PC {
@@ -50,7 +48,7 @@ namespace Alabaster {
 	};
 
 	struct RendererData {
-		static constexpr std::uint32_t max_vertices = 20000;
+		static constexpr std::uint32_t max_vertices = 4 * 100;
 		static constexpr std::uint32_t max_indices = 6 * max_vertices;
 		std::uint32_t draw_calls { 0 };
 
@@ -88,7 +86,7 @@ namespace Alabaster {
 
 	class Renderer3D {
 	public:
-		explicit Renderer3D(Camera& camera) noexcept;
+		explicit Renderer3D(const std::shared_ptr<Camera>& camera) noexcept;
 
 		void begin_scene();
 
@@ -117,7 +115,7 @@ namespace Alabaster {
 		void reset_stats();
 
 	public:
-		void set_camera(Camera& cam);
+		void set_camera(const std::shared_ptr<Camera>& cam);
 
 	public:
 		const VkRenderPass& get_render_pass() const;
@@ -136,7 +134,7 @@ namespace Alabaster {
 		void create_renderpass();
 
 	private:
-		Camera& camera;
+		std::shared_ptr<Camera> camera;
 		RendererData data;
 	};
 

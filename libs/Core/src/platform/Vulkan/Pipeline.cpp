@@ -47,7 +47,7 @@ namespace Alabaster {
 		spec.line_width = 1.0f;
 #endif
 
-		VkDevice device = GraphicsContext::the().device();
+		const auto& device = GraphicsContext::the().device();
 		const auto& shader = spec.shader;
 
 		VkPipelineLayoutCreateInfo pipeline_layout_create_info = {};

@@ -10,7 +10,6 @@
 #include "core/events/MouseEvent.hpp"
 #include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
-#include "graphics/Swapchain.hpp"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -66,7 +65,10 @@ namespace Alabaster {
 
 		swapchain = std::make_unique<Swapchain>();
 		swapchain->init(handle);
-		swapchain->construct(width, height);
+
+		auto w = std::uint32_t(width);
+		auto h = std::uint32_t(height);
+		swapchain->create(&w, &h, false);
 
 		setup_events();
 	};
@@ -83,6 +85,13 @@ namespace Alabaster {
 		int tw, th;
 		glfwGetWindowSize(handle, &tw, &th);
 		return { static_cast<std::uint32_t>(tw), static_cast<std::uint32_t>(th) };
+	}
+
+	const std::pair<float, float> Window::framebuffer_scale() const
+	{
+		float tw, th;
+		glfwGetWindowContentScale(handle, &tw, &th);
+		return { tw, th };
 	}
 
 	void Window::destroy()

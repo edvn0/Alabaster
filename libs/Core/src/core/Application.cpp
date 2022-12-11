@@ -3,7 +3,6 @@
 #include "core/Application.hpp"
 
 #include "core/Clock.hpp"
-#include "core/CPUProfiler.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/events/Event.hpp"
 #include "core/GUILayer.hpp"
@@ -13,25 +12,8 @@
 #include "core/Window.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
-#include "graphics/Swapchain.hpp"
-
-#include <cstddef>
-
-#define ALABASTER_USE_IMGUI 0
 
 namespace Alabaster {
-
-	static constexpr auto last_fifty = [](const auto& frametime_queue) -> double {
-		auto start = frametime_queue.size() - 1;
-		auto end = start - 300;
-
-		double average = 0;
-		for (std::size_t i = frametime_queue.size() - 1; i >= end; i--) {
-			average += frametime_queue[i];
-		}
-
-		return average / (start - end);
-	};
 
 	static Application* global_app;
 
@@ -66,6 +48,8 @@ namespace Alabaster {
 	{
 		using Map = std::map<std::string, Layer*>;
 		for (Map::iterator itr = layers.begin(); itr != layers.end();) {
+			Log::warn("[Application] Destroying layer: {}", (*itr).second->get_name());
+
 			itr->second->destroy();
 			itr->second->~Layer();
 			itr = layers.erase(itr);
@@ -89,7 +73,7 @@ namespace Alabaster {
 	{
 		on_init();
 
-		static int frametime_index = 0;
+		static std::size_t frametime_index = 0;
 		while (!window->should_close() && is_running) {
 			Timer<ClockGranularity::MILLIS, float> on_cpu;
 
@@ -110,7 +94,7 @@ namespace Alabaster {
 			frametime_queue[frametime_index] = cpu_time;
 			float time = Clock::get_ms<float>();
 			frame_time = time - last_frametime;
-			app_ts = frame_time;
+			app_ts = glm::min<float>(frame_time, 0.0333f);
 			last_frametime = time;
 
 			frametime_index = (frametime_index + 1) % frametime_queue.size();
@@ -125,7 +109,6 @@ namespace Alabaster {
 
 	void Application::render_imgui()
 	{
-
 		auto time_step = float(app_ts);
 		for (const auto& [key, layer] : layers) {
 			layer->ui(time_step);

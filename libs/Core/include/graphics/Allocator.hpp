@@ -20,8 +20,9 @@ namespace Alabaster {
 		void destroy_buffer(VkBuffer buffer, VmaAllocation allocation);
 
 		template <typename T> T* map_memory(VmaAllocation allocation);
-
 		void unmap_memory(VmaAllocation allocation);
+
+		void set_tag(std::string name) { tag = std::move(name); }
 
 		static void shutdown();
 

@@ -1,16 +1,16 @@
 #pragma once
 
 #include "cache/BaseCache.hpp"
-#include "graphics/Image.hpp"
+#include "graphics/Texture.hpp"
 
 #include <unordered_map>
 #include <unordered_set>
 
 namespace AssetManager {
 
-	template <class T> class ImageCache : public BaseCache<ImageCache, Alabaster::Image> {
+	template <class T> class TextureCache : public BaseCache<TextureCache, Alabaster::Texture> {
 	public:
-		ImageCache(std::unique_ptr<CacheCreateRead<T>> cache_crud = std::make_unique<DefaultImageCrud>())
+		TextureCache(std::unique_ptr<CacheCreateRead<T>> cache_crud = std::make_unique<DefaultTextureCrud>())
 			: cache_crud(std::move(cache_crud)) {};
 
 		void load_from_directory(
@@ -19,12 +19,12 @@ namespace AssetManager {
 	public:
 		void destroy_impl()
 		{
-			for (auto& [key, image] : images) {
-				image.destroy();
+			for (auto& [key, value] : images) {
+				value.destroy();
 			}
 		}
 
-		[[nodiscard]] std::optional<const Alabaster::Image*> get_from_cache_impl(const std::string& name)
+		[[nodiscard]] std::optional<const Alabaster::Texture*> get_from_cache_impl(const std::string& name)
 		{
 			if (images.contains(name)) {
 				return { cache_crud->get(name, images) };
@@ -32,7 +32,7 @@ namespace AssetManager {
 			return {};
 		}
 
-		[[nodiscard]] bool add_to_cache_impl(const std::string& name, Alabaster::Image* input)
+		[[nodiscard]] bool add_to_cache_impl(const std::string& name, Alabaster::Texture* input)
 		{
 			if (images.contains(name))
 				return false;
@@ -45,7 +45,7 @@ namespace AssetManager {
 		};
 
 	private:
-		std::unordered_map<std::string, Alabaster::Image> images;
+		std::unordered_map<std::string, Alabaster::Texture> images;
 		std::filesystem::path texture_path;
 		std::unique_ptr<CacheCreateRead<T>> cache_crud;
 

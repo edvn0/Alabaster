@@ -45,6 +45,10 @@ namespace Alabaster {
 		if (func != nullptr) {
 			func(instance, debug_messenger, allocator);
 		}
+#else
+		(void)instance;
+		(void)debug_messenger;
+		(void)allocator;
 #endif
 	}
 
