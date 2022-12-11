@@ -141,7 +141,7 @@ namespace Alabaster {
 		auto& swapchain = Application::the().get_window()->get_swapchain();
 		init_info.ImageCount = swapchain->get_image_count();
 		init_info.CheckVkResultFn = vk_check;
-		ImGui_ImplVulkan_Init(&init_info, gui_renderpass);
+		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
 
 		ImGui::GetIO().Fonts->AddFontDefault();
 
@@ -153,7 +153,7 @@ namespace Alabaster {
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
 
-		chosen = gui_renderpass;
+		chosen = swapchain->get_render_pass();
 
 		return true;
 	}

@@ -45,6 +45,7 @@ namespace SceneSystem {
 		std::shared_ptr<Alabaster::EditorCamera> scene_camera;
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
+		std::shared_ptr<Alabaster::Framebuffer> fb;
 
 		VkRenderPass first_renderpass { nullptr };
 

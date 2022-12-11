@@ -22,12 +22,13 @@
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 #include "serialisation/SceneSerialiser.hpp"
+#include "ui/ImGui.hpp"
 
 #include <imgui/imgui.h>
 
 namespace SceneSystem {
 
-	static glm::vec4 pos { -5, 5, 5, 1.0f };
+	static glm::vec4 pos { -5, 5, 15, 1.0f };
 	static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
 	static float ambience { 1.0f };
 
@@ -128,7 +129,7 @@ namespace SceneSystem {
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 		std::shared_ptr<Alabaster::Pipeline> sun_pipeline = Pipeline::create(sun_spec);
 
-		for (std::uint32_t i = 0; i < 100; i++) {
+		for (std::uint32_t i = 0; i < 1; i++) {
 			Entity entity { this, fmt::format("Sphere-{}", i) };
 			entity.add_component<Component::Mesh>(sphere_model);
 			Component::Transform& transform = entity.get_component<Component::Transform>();
@@ -155,17 +156,19 @@ namespace SceneSystem {
 				float rotation;
 			} quad_data[9];
 
-			quad_data[0] = { { 0, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[1] = { { 30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[2] = { { -30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			static constexpr auto rotation_angle = glm::radians(90.0f);
 
-			quad_data[3] = { { 0, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[4] = { { 30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[5] = { { -30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[0] = { { 0, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, rotation_angle };
+			quad_data[1] = { { 30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, rotation_angle };
+			quad_data[2] = { { -30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, rotation_angle };
 
-			quad_data[6] = { { 0, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[7] = { { 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+			quad_data[3] = { { 0, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, rotation_angle };
+			quad_data[4] = { { 30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, rotation_angle };
+			quad_data[5] = { { -30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, rotation_angle };
+
+			quad_data[6] = { { 0, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, rotation_angle };
+			quad_data[7] = { { 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, rotation_angle };
+			quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, rotation_angle };
 
 			for (std::uint32_t i = 0; i < 9; i++) {
 				Entity entity { this, fmt::format("Quad-{}", i) };
@@ -204,12 +207,12 @@ namespace SceneSystem {
 		FramebufferSpecification fbs;
 		fbs.width = w;
 		fbs.height = h;
-		fbs.attachments = { ImageFormat::RGBA, ImageFormat::DEPTH32F };
+		fbs.attachments = { ImageFormat::RGBA };
 		fbs.samples = 1;
 		fbs.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
-		fbs.debug_name = "Geometry";
+		fbs.debug_name = "Default FB";
 		fbs.clear_depth_on_load = false;
-		auto fb = Framebuffer::create(fbs);
+		fb = Framebuffer::create(fbs);
 	}
 
 	Scene::Scene()
@@ -269,7 +272,7 @@ namespace SceneSystem {
 
 			// End todo
 
-			scene_renderer->end_scene(command_buffer, first_renderpass);
+			scene_renderer->end_scene(command_buffer, fb);
 		}
 		command_buffer->submit();
 	}
@@ -301,7 +304,12 @@ namespace SceneSystem {
 		build_scene();
 	}
 
-	void Scene::ui(float) { }
+	void Scene::ui(float)
+	{
+		ImGui::Begin("Image");
+		Alabaster::UI::image(fb->get_image(), { 200, 200 });
+		ImGui::End();
+	}
 
 	void Scene::delete_entity(const std::string& tag)
 	{

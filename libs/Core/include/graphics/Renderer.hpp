@@ -11,6 +11,7 @@ namespace Alabaster {
 	class Mesh;
 	class Camera;
 	class EditorCamera;
+	class Framebuffer;
 	class Pipeline;
 	class CommandBuffer;
 
@@ -22,6 +23,8 @@ namespace Alabaster {
 	public:
 		static void begin();
 		static void begin_render_pass(const std::unique_ptr<CommandBuffer>& buffer, VkRenderPass render_pass, bool explicit_clear = false);
+		static void begin_render_pass(
+			const std::unique_ptr<CommandBuffer>& buffer, const std::shared_ptr<Framebuffer>& fb = nullptr, bool explicit_clear = false);
 		static void end_render_pass(const std::unique_ptr<CommandBuffer>& buffer);
 		static void end();
 

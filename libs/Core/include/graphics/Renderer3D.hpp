@@ -17,6 +17,7 @@ namespace Alabaster {
 	class Pipeline;
 	class VertexBuffer;
 	class IndexBuffer;
+	class Framebuffer;
 	class CommandBuffer;
 	class Camera;
 
@@ -107,6 +108,7 @@ namespace Alabaster {
 		void text(std::string text, glm::vec3 position, float font_size = 11.0f);
 
 		void end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, VkRenderPass target = nullptr);
+		void end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, const std::shared_ptr<Framebuffer>& target = nullptr);
 
 		void set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience = 1.0f);
 
@@ -124,6 +126,7 @@ namespace Alabaster {
 		void draw_quads(const std::unique_ptr<CommandBuffer>& command_buffer);
 		void draw_lines(const std::unique_ptr<CommandBuffer>& command_buffer);
 		void draw_meshes(const std::unique_ptr<CommandBuffer>& command_buffer);
+		void draw_all(const std::unique_ptr<CommandBuffer>& command_buffer);
 
 	private:
 		void flush();

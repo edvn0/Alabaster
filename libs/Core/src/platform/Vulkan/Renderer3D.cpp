@@ -7,6 +7,7 @@
 #include "core/Window.hpp"
 #include "graphics/Camera.hpp"
 #include "graphics/CommandBuffer.hpp"
+#include "graphics/Framebuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/IndexBuffer.hpp"
 #include "graphics/Mesh.hpp"
@@ -424,10 +425,8 @@ namespace Alabaster {
 		// Flush ignores these for now...
 	}
 
-	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, VkRenderPass target)
+	void Renderer3D::draw_all(const std::unique_ptr<CommandBuffer>& command_buffer)
 	{
-		const auto chosen_renderpass = target ? target : data.render_pass;
-		Renderer::begin_render_pass(command_buffer, chosen_renderpass);
 		if (data.quad_indices_submitted > 0) {
 			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.quad_vertices_submitted);
 
@@ -453,7 +452,20 @@ namespace Alabaster {
 		if (data.meshes_submitted > 0) {
 			draw_meshes(command_buffer);
 		}
+	}
 
+	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, const std::shared_ptr<Framebuffer>& target)
+	{
+		Renderer::begin_render_pass(command_buffer, target);
+		draw_all(command_buffer);
+		Renderer::end_render_pass(command_buffer);
+	}
+
+	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, VkRenderPass target)
+	{
+		const auto chosen_renderpass = target ? target : data.render_pass;
+		Renderer::begin_render_pass(command_buffer, chosen_renderpass);
+		draw_all(command_buffer);
 		Renderer::end_render_pass(command_buffer);
 	}
 
@@ -556,7 +568,7 @@ namespace Alabaster {
 				vkCmdBindIndexBuffer(*command_buffer, *ib, 0, VK_INDEX_TYPE_UINT32);
 			}
 
-			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
+			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(initial_mesh->get_index_count()), 1, 0, 0, 0);
 			data.draw_calls++;
 		}
 	}
