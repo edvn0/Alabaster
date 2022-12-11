@@ -171,8 +171,6 @@ namespace Alabaster::Utilities {
 		case ImageFormat::SRGB:
 		case ImageFormat::DEPTH24STENCIL8:
 			return false;
-		default:
-			throw AlabasterException("Test");
 		}
 		return false;
 	}
@@ -276,8 +274,6 @@ namespace Alabaster::Utilities {
 			return VK_FILTER_NEAREST;
 		case TextureFilter::Cubic:
 			return VK_FILTER_CUBIC_IMG;
-		default:
-			throw AlabasterException("We do not support this filter mode");
 		}
 		return (VkFilter)0;
 	}
@@ -303,8 +299,6 @@ namespace Alabaster::Utilities {
 			return width * height * 4 * sizeof(float);
 		case ImageFormat::B10R11G11UF:
 			return width * height * sizeof(float);
-		default:
-			throw AlabasterException("We do not support this image format as memory type.");
 		}
 		return 0;
 	}

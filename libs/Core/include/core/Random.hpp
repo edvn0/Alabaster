@@ -19,7 +19,7 @@ namespace Alabaster {
 			Random::get<std::uniform_real_distribution<>>() };
 	}
 
-	inline float uniform_float() { return Random::get<std::uniform_real_distribution<>>(); }
+	inline double uniform_double() { return Random::get<std::uniform_real_distribution<>>(); }
 
 	inline glm::vec3 uniform_random_vec3(auto&& from, auto&& to)
 	{
@@ -34,11 +34,11 @@ namespace Alabaster {
 
 	inline glm::vec3 sphere_vector3(float radius)
 	{
-		const auto u = uniform_float();
-		const auto v = uniform_float();
+		const auto u = uniform_double();
+		const auto v = uniform_double();
 		const auto theta = u * 2.0 * glm::pi<float>();
 		const auto phi = glm::acos(2.0 * v - 1.0);
-		const auto r = std::cbrt(uniform_float());
+		const auto r = std::cbrt(uniform_double());
 		const auto sin_theta = glm::sin(theta);
 		const auto cos_theta = glm::cos(theta);
 		const auto sin_phi = glm::sin(phi);

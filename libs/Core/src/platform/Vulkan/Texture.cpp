@@ -17,7 +17,7 @@ namespace Alabaster {
 		: path(path)
 		, properties(properties)
 	{
-		bool loaded = load_image(path);
+		bool loaded = load_image(path.string());
 		if (!loaded) {
 			load_image("Resources/Textures/ErrorTexture.png");
 		}
@@ -112,12 +112,12 @@ namespace Alabaster {
 		int w, h, channels;
 
 		if (stbi_is_hdr(in_path.c_str())) {
-			image_data.data = (byte*)stbi_loadf(path.c_str(), &w, &h, &channels, 4);
+			image_data.data = (byte*)stbi_loadf(path.string().c_str(), &w, &h, &channels, 4);
 			image_data.size = w * h * 4 * sizeof(float);
 			format = ImageFormat::RGBA32F;
 		} else {
 			// stbi_set_flip_vertically_on_load(1);
-			image_data.data = stbi_load(path.c_str(), &w, &h, &channels, 4);
+			image_data.data = stbi_load(path.string().c_str(), &w, &h, &channels, 4);
 			image_data.size = w * h * 4;
 			format = ImageFormat::RGBA;
 		}
@@ -305,8 +305,6 @@ namespace Alabaster {
 
 	void Texture::generate_mips()
 	{
-		auto vulkan_device = GraphicsContext::the().device();
-
 		const auto& info = image->get_info();
 
 		ImmediateCommandBuffer immediate_command_buffer { "Mip Generation" };

@@ -25,8 +25,8 @@ namespace Alabaster {
 			width = w;
 			height = h;
 		} else {
-			width = spec.width * spec.scale;
-			height = spec.height * spec.scale;
+			width = static_cast<std::uint32_t>(spec.width * spec.scale);
+			height = static_cast<std::uint32_t>(spec.height * spec.scale);
 		}
 
 		static constexpr auto initialise_attachments = [](const auto& w, const auto& h, const auto& fb_spec, const auto& attachment_specification,
@@ -45,8 +45,8 @@ namespace Alabaster {
 				ImageSpecification props;
 				props.format = attachment_specification.format;
 				props.usage = ImageUsage::Attachment;
-				props.width = w * fb_spec.scale;
-				props.height = h * fb_spec.scale;
+				props.width = static_cast<std::uint32_t>(w * fb_spec.scale);
+				props.height = static_cast<std::uint32_t>(h * fb_spec.scale);
 				props.debug_name
 					= fmt::format("{0}-DepthAttachment{1}", fb_spec.debug_name.empty() ? "Unnamed FB" : fb_spec.debug_name, attachment_index);
 				fb_depth_image = Image::create(props);
@@ -54,8 +54,8 @@ namespace Alabaster {
 				ImageSpecification props;
 				props.format = attachment_specification.format;
 				props.usage = ImageUsage::Attachment;
-				props.width = w * fb_spec.scale;
-				props.height = h * fb_spec.scale;
+				props.width = static_cast<std::uint32_t>(w * fb_spec.scale);
+				props.height = static_cast<std::uint32_t>(h * fb_spec.scale);
 				props.debug_name
 					= fmt::format("{0}-ColorAttachment{1}", fb_spec.debug_name.empty() ? "Unnamed FB" : fb_spec.debug_name, attachment_index);
 				fb_images.emplace_back(Image::create(props));
@@ -112,8 +112,8 @@ namespace Alabaster {
 		if (!force_recreate && (w == width && h == height))
 			return;
 
-		width = w * spec.scale;
-		height = h * spec.scale;
+		width = static_cast<std::uint32_t>(w * spec.scale);
+		height = static_cast<std::uint32_t>(h * spec.scale);
 		if (!spec.swap_chain_target) {
 			invalidate();
 		} else {
@@ -161,8 +161,8 @@ namespace Alabaster {
 				} else {
 					auto depth_attachment_image = depth_image;
 					auto& depth_props = depth_attachment_image->get_specification();
-					depth_props.width = width * spec.scale;
-					depth_props.height = height * spec.scale;
+					depth_props.width = static_cast<std::uint32_t>(width * spec.scale);
+					depth_props.height = static_cast<std::uint32_t>(height * spec.scale);
 					depth_attachment_image->invalidate(); // Create immediately
 				}
 
@@ -207,14 +207,14 @@ namespace Alabaster {
 						ImageSpecification props;
 						props.format = attachment_specification.format;
 						props.usage = ImageUsage::Attachment;
-						props.width = width * spec.scale;
-						props.height = height * spec.scale;
+						props.width = static_cast<std::uint32_t>(width * spec.scale);
+						props.height = static_cast<std::uint32_t>(height * spec.scale);
 						color_attachment = attachment_images.emplace_back(Image::create(props));
 					} else {
 						auto image = attachment_images[attachment_index];
 						auto& props = image->get_specification();
-						props.width = width * spec.scale;
-						props.height = height * spec.scale;
+						props.width = static_cast<std::uint32_t>(width * spec.scale);
+						props.height = static_cast<std::uint32_t>(height * spec.scale);
 						color_attachment = image;
 						if (color_attachment->get_specification().layers == 1)
 							color_attachment->invalidate();
