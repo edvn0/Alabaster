@@ -49,6 +49,7 @@ namespace Alabaster {
 
 	struct RendererData {
 		static constexpr std::uint32_t max_vertices = 4 * 100;
+		static constexpr std::uint32_t max_meshes = 200;
 		static constexpr std::uint32_t max_indices = 6 * max_vertices;
 		std::uint32_t draw_calls { 0 };
 
@@ -74,10 +75,10 @@ namespace Alabaster {
 		VkRenderPass render_pass;
 
 		std::uint32_t meshes_submitted { 0 };
-		std::array<Mesh*, 200> mesh;
-		std::array<glm::mat4, 200> mesh_transform {};
-		std::array<glm::vec4, 200> mesh_colour;
-		std::array<Pipeline*, 200> mesh_pipeline_submit;
+		std::array<Mesh*, max_meshes> mesh;
+		std::array<glm::mat4, max_meshes> mesh_transform {};
+		std::array<glm::vec4, max_meshes> mesh_colour;
+		std::array<Pipeline*, max_meshes> mesh_pipeline_submit;
 		std::shared_ptr<Pipeline> mesh_pipeline;
 
 		std::shared_ptr<Mesh> sphere_model;

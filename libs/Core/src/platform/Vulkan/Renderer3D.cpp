@@ -588,4 +588,5 @@ namespace Alabaster {
 
 	void Renderer3D::set_camera(const std::shared_ptr<Camera>& cam) { camera = cam; }
 
+
 } // namespace Alabaster
