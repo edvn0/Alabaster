@@ -16,13 +16,7 @@ namespace SceneSystem {
 	};
 
 	template <> struct serialise_component<Component::ID> {
-		void operator()(Entity& entity, auto& out)
-		{
-			auto id_object = nlohmann::json::object();
-			id_object["id"] = entity.get_component<Component::ID>().identifier;
-
-			out["id"] = id_object;
-		}
+		void operator()(Entity& entity, auto& out) { out["id"] = entity.get_component<Component::ID>().identifier; }
 	};
 
 	template <> struct serialise_component<Component::Tag> {
@@ -63,10 +57,10 @@ namespace SceneSystem {
 		void operator()(Entity& entity, auto& out)
 		{
 			auto transform = nlohmann::json::object();
-			const Component::Transform& t = entity.get_component<Component::Transform>();
-			transform["position"] = t.position;
-			transform["rotation"] = t.rotation;
-			transform["scale"] = t.scale;
+			const Component::Transform& entity_transform = entity.get_component<Component::Transform>();
+			transform["position"] = entity_transform.position;
+			transform["rotation"] = entity_transform.rotation;
+			transform["scale"] = entity_transform.scale;
 
 			out["transform"] = transform;
 		};

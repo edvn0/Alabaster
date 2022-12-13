@@ -24,11 +24,13 @@ namespace SceneSystem {
 
 	private:
 		void serialise_to_json();
-		nlohmann::json::object_t serialise_entity(Entity& entity);
+		nlohmann::json serialise_entity(Entity& entity);
 
 	private:
 		Scene& scene;
 		bool has_written { false };
 		nlohmann::json output_json {};
+		std::string time_stamp;
 	};
+
 } // namespace SceneSystem

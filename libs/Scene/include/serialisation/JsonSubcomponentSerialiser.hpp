@@ -18,10 +18,8 @@ namespace nlohmann {
 			j = arr;
 		}
 
-		static void from_json(const json& /*unnamed*/, type& opt) { opt = { 42.0, 42.0, 42.0 }; }
-
 		// preferred version
-		static type from_json(const json& /*unnamed*/) { return { 4.0, 5.0, 6.0 }; }
+		static type from_json(const json& in) { return { in[0].get<float>(), in[1].get<float>(), in[2].get<float>() }; }
 	};
 
 	template <> struct adl_serializer<glm::vec4> {
@@ -36,10 +34,8 @@ namespace nlohmann {
 			j = arr;
 		}
 
-		static void from_json(const json& /*unnamed*/, type& opt) { opt = { 42.0, 42.0, 42.0, 42.0 }; }
-
 		// preferred version
-		static type from_json(const json& /*unnamed*/) { return { 42.0, 42.0, 42.0, 42.0 }; }
+		static type from_json(const json& in) { return { in[0].get<float>(), in[1].get<float>(), in[2].get<float>(), in[3].get<float>() }; }
 	};
 
 	template <> struct adl_serializer<glm::vec3> {
@@ -53,10 +49,7 @@ namespace nlohmann {
 			j = arr;
 		}
 
-		static void from_json(const json& /*unnamed*/, type& opt) { opt = { 42.0, 42.0, 42.0 }; }
-
-		// preferred version
-		static type from_json(const json& /*unnamed*/) { return { 42.0, 42.0, 42.0 }; }
+		static type from_json(const json& in) { return { in[0].get<float>(), in[1].get<float>(), in[2].get<float>() }; }
 	};
 
 	template <> struct adl_serializer<glm::vec2> {
@@ -69,16 +62,7 @@ namespace nlohmann {
 			j = arr;
 		}
 
-		static void from_json(const json& /*unnamed*/, type& opt)
-		{
-			opt = {
-				42.0,
-				42.0,
-			};
-		}
-
-		// preferred version
-		static type from_json(const json& /*unnamed*/) { return { 42.0, 42.0 }; }
+		static type from_json(const json& in) { return { in[0].get<float>(), in[1].get<float>() }; }
 	};
 
 	template <> struct adl_serializer<glm::quat> {
@@ -93,10 +77,7 @@ namespace nlohmann {
 			j = arr;
 		}
 
-		static void from_json(const json& /*unnamed*/, type& opt) { opt = { 42.0, 42.0, 42.0, 42.0 }; }
-
-		// preferred version
-		static type from_json(const json& /*unnamed*/) { return { 42.0, 42.0, 42.0, 42.0 }; }
+		static type from_json(const json& in) { return { in[0].get<float>(), in[1].get<float>(), in[2].get<float>(), in[3].get<float>() }; }
 	};
 
 	template <> struct adl_serializer<uuids::uuid> {

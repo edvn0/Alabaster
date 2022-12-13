@@ -10,6 +10,8 @@
 
 namespace SceneSystem::Component {
 
+	template <typename T> inline constexpr std::string_view component_name;
+
 	struct ID {
 		uuids::uuid identifier;
 
@@ -19,6 +21,7 @@ namespace SceneSystem::Component {
 
 		std::string to_string() const;
 	};
+	template <> inline constexpr std::string_view component_name<Component::ID> = "id";
 
 	struct Tag {
 		std::string tag;
@@ -26,6 +29,7 @@ namespace SceneSystem::Component {
 		Tag(const std::string& tag);
 		~Tag() = default;
 	};
+	template <> inline constexpr std::string_view component_name<Component::Tag> = "tag";
 
 	struct Transform {
 		glm::vec3 position;
@@ -46,6 +50,7 @@ namespace SceneSystem::Component {
 			, rotation(std::forward<Rot>(rot))
 			, scale(std::forward<Scale>(scale)) {};
 	};
+	template <> inline constexpr std::string_view component_name<Component::Transform> = "transform";
 
 	struct Mesh {
 		std::shared_ptr<Alabaster::Mesh> mesh;
@@ -53,6 +58,7 @@ namespace SceneSystem::Component {
 		Mesh(const std::shared_ptr<Alabaster::Mesh>& mesh);
 		~Mesh() = default;
 	};
+	template <> inline constexpr std::string_view component_name<Component::Mesh> = "mesh";
 
 	struct Pipeline {
 		std::shared_ptr<Alabaster::Pipeline> pipeline = nullptr;
@@ -60,6 +66,7 @@ namespace SceneSystem::Component {
 		Pipeline(const std::shared_ptr<Alabaster::Pipeline>& pipeline);
 		~Pipeline() = default;
 	};
+	template <> inline constexpr std::string_view component_name<Component::Pipeline> = "pipeline";
 
 	enum class Geometry { Rect, Quad, Circle };
 
@@ -69,6 +76,7 @@ namespace SceneSystem::Component {
 		BasicGeometry(Geometry geometry)
 			: geometry(geometry) {};
 	};
+	template <> inline constexpr std::string_view component_name<Component::BasicGeometry> = "basic_geometry";
 
 	struct Texture {
 		glm::vec4 colour { 1.0f };
@@ -77,6 +85,7 @@ namespace SceneSystem::Component {
 			: colour() {};
 		~Texture() = default;
 	};
+	template <> inline constexpr std::string_view component_name<Component::Texture> = "texture";
 
 	struct Light {
 		bool is_light { true };
@@ -84,11 +93,13 @@ namespace SceneSystem::Component {
 		Light() = default;
 		~Light() = default;
 	};
+	template <> inline constexpr std::string_view component_name<Component::Light> = "light";
 
 	struct Camera {
 		Camera() = default;
 		~Camera() = default;
 	};
+	template <> inline constexpr std::string_view component_name<Component::Camera> = "camera";
 
 	namespace detail {
 		template <typename T, typename... U>

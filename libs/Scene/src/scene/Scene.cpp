@@ -21,6 +21,7 @@
 #include "graphics/Renderer3D.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
+#include "serialisation/SceneDeserialiser.hpp"
 #include "serialisation/SceneSerialiser.hpp"
 
 #include <imgui/imgui.h>
@@ -219,8 +220,11 @@ namespace SceneSystem {
 
 	Scene::~Scene()
 	{
-		scene_renderer->destroy();
-		vkDestroyRenderPass(Alabaster::GraphicsContext::the().device(), first_renderpass, nullptr);
+		if (scene_renderer)
+			scene_renderer->destroy();
+
+		if (first_renderpass)
+			vkDestroyRenderPass(Alabaster::GraphicsContext::the().device(), first_renderpass, nullptr);
 	};
 
 	void Scene::update(float ts)
@@ -283,7 +287,7 @@ namespace SceneSystem {
 			const auto vertical_fov = glm::degrees(scene_camera->get_vertical_fov());
 			scene_camera.reset(new Alabaster::EditorCamera(
 				vertical_fov, static_cast<float>(e.width()), static_cast<float>(e.height()), 0.1f, 1000.0f, scene_camera.get()));
-			this->scene_renderer->set_camera(scene_camera);
+			scene_renderer->set_camera(scene_camera);
 			return false;
 		});
 	}

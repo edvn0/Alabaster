@@ -13,7 +13,7 @@ namespace AssetManager {
 	void TextureCache<T>::load_from_directory(const std::filesystem::path& directory, std::unordered_set<std::string> include_extensions)
 	{
 		using namespace Alabaster;
-		auto sorted_images_in_directory = FS::in_directory<std::string>(directory, include_extensions, true);
+		auto sorted_images_in_directory = FS::in_directory<std::string, false>(directory, include_extensions, true);
 
 		ImmediateCommandBuffer buffer { "Texture Cache" };
 		ThreadPool pool { 8 };
