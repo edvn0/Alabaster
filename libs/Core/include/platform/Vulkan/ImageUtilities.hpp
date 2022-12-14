@@ -169,6 +169,7 @@ namespace Alabaster::Utilities {
 		case ImageFormat::RGBA16F:
 		case ImageFormat::RGB:
 		case ImageFormat::SRGB:
+		case ImageFormat::None:
 		case ImageFormat::DEPTH24STENCIL8:
 			return false;
 		}
@@ -274,6 +275,8 @@ namespace Alabaster::Utilities {
 			return VK_FILTER_NEAREST;
 		case TextureFilter::Cubic:
 			return VK_FILTER_CUBIC_IMG;
+		case TextureFilter::None:
+			return (VkFilter)0;
 		}
 		return (VkFilter)0;
 	}
@@ -299,6 +302,16 @@ namespace Alabaster::Utilities {
 			return width * height * 4 * sizeof(float);
 		case ImageFormat::B10R11G11UF:
 			return width * height * sizeof(float);
+		case ImageFormat::None:
+		case ImageFormat::RED32UI:
+		case ImageFormat::RG8:
+		case ImageFormat::RGB:
+		case ImageFormat::RGBA16F:
+		case ImageFormat::SRGB:
+		case ImageFormat::DEPTH32FSTENCIL8UINT:
+		case ImageFormat::DEPTH32F:
+		case ImageFormat::DEPTH24STENCIL8:
+			break;
 		}
 		return 0;
 	}

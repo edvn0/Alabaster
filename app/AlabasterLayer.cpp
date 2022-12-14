@@ -13,18 +13,12 @@
 #include <imgui.h>
 #include <optional>
 #include <string.h>
-#include <vulkan/vulkan.h>
 
 using namespace Alabaster;
 using namespace SceneSystem;
 using namespace Component;
 
-static std::uint32_t quads { 1 };
 static bool is_dockspace_open { true };
-
-static glm::vec4 pos { -5, 5, 5, 1.0f };
-static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
-static float ambience { 1.0f };
 
 static float font_size = 11.0f;
 static float frame_padding = 0.5f;
@@ -65,7 +59,7 @@ template <IsComponent T> static void draw_component(Entity& entity, const std::s
 	}
 }
 
-static void draw_vec3_control(const std::string& label, glm::vec3& values, float reset_value = 0.0f, float column_width = 100.0f)
+static void draw_three_component_vector(const std::string& label, glm::vec3& values, float reset_value = 0.0f, float column_width = 100.0f)
 {
 	ImGuiIO& io = ImGui::GetIO();
 	auto bold_font = io.Fonts->Fonts[0];
@@ -204,12 +198,12 @@ static bool color_picker(const char* label, glm::vec3& col)
 	if (ImGui::IsItemActive() && ImGui::GetIO().MouseDown[0]) {
 		ImVec2 mouse_pos_in_canvas = ImVec2(ImGui::GetIO().MousePos.x - picker_pos.x, ImGui::GetIO().MousePos.y - picker_pos.y);
 
-		/**/ if (mouse_pos_in_canvas.x < 0)
+		if (mouse_pos_in_canvas.x < 0)
 			mouse_pos_in_canvas.x = 0;
 		else if (mouse_pos_in_canvas.x >= sv_picker_size.x - 1)
 			mouse_pos_in_canvas.x = sv_picker_size.x - 1;
 
-		/**/ if (mouse_pos_in_canvas.y < 0)
+		if (mouse_pos_in_canvas.y < 0)
 			mouse_pos_in_canvas.y = 0;
 		else if (mouse_pos_in_canvas.y >= sv_picker_size.y - 1)
 			mouse_pos_in_canvas.y = sv_picker_size.y - 1;
@@ -225,9 +219,7 @@ static bool color_picker(const char* label, glm::vec3& col)
 	if ((ImGui::IsItemHovered() || ImGui::IsItemActive()) && ImGui::GetIO().MouseDown[0]) {
 		ImVec2 mouse_pos_in_canvas = ImVec2(ImGui::GetIO().MousePos.x - picker_pos.x, ImGui::GetIO().MousePos.y - picker_pos.y);
 
-		/* Previous horizontal bar will represent hue=1 (bottom) as hue=0 (top). Since both colors are red, we clamp at (-2, above edge) to avoid
-		 * visual continuities */
-		/**/ if (mouse_pos_in_canvas.y < 0)
+		if (mouse_pos_in_canvas.y < 0)
 			mouse_pos_in_canvas.y = 0;
 		else if (mouse_pos_in_canvas.y >= sv_picker_size.y - 2)
 			mouse_pos_in_canvas.y = sv_picker_size.y - 2;
@@ -589,9 +581,9 @@ void AlabasterLayer::ui(float ts)
 				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 				viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 
-				// UI::image(AssetManager::ResourceCache::the().texture("viking_room"), ImVec2 { viewport_size.x, viewport_size.y });
-
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
+
+				UI::image(AssetManager::the().texture("viking_room").get_image(), vp_size);
 
 				ImGui::End();
 			}
@@ -631,9 +623,9 @@ void AlabasterLayer::draw_components(Entity& entity)
 	ImGui::PopItemWidth();
 
 	draw_component<Component::Transform>(entity, "Transform", [](Component::Transform& component) {
-		draw_vec3_control("Translation", component.position);
+		draw_three_component_vector("Translation", component.position);
 		draw_four_component_vector("Rotation", component.rotation);
-		draw_vec3_control("Scale", component.scale, 1.0f);
+		draw_three_component_vector("Scale", component.scale, 1.0f);
 	});
 
 	draw_component<Component::Texture>(entity, "Texture", [](Component::Texture& component) { color_picker("Colour", component.colour); });
@@ -646,7 +638,7 @@ void AlabasterLayer::draw_entity_node(Entity& entity)
 	ImGuiTreeNodeFlags flags = ((selected_entity == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 	flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
 	const auto& id = entity.get_component<ID>();
-	bool opened = ImGui::TreeNodeEx(id.identifier.as_bytes().data(), flags, "%s", tag.c_str());
+	auto opened = ImGui::TreeNodeEx(id.identifier.as_bytes().data(), flags, "%s", tag.c_str());
 	if (ImGui::IsItemClicked()) {
 		selected_entity = entity;
 	}
@@ -660,8 +652,8 @@ void AlabasterLayer::draw_entity_node(Entity& entity)
 	}
 
 	if (opened) {
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-		bool opened = ImGui::TreeNodeEx((const char*)&entity.get_component<Component::ID>().identifier, flags, "%s", tag.c_str());
+		flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+		opened = ImGui::TreeNodeEx((const char*)&entity.get_component<Component::ID>().identifier, flags, "%s", tag.c_str());
 		if (opened)
 			ImGui::TreePop();
 		ImGui::TreePop();
