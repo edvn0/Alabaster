@@ -151,15 +151,15 @@ namespace Alabaster {
 				if (spec.existing_image) {
 					depth_image = spec.existing_image;
 				} else if (spec.existing_framebuffer) {
-					auto existing_framebuffer = spec.existing_framebuffer;
+					auto& existing_framebuffer = spec.existing_framebuffer;
 					depth_image = existing_framebuffer->get_depth_image();
 				} else if (spec.existing_images.find(attachment_index) != spec.existing_images.end()) {
-					auto existing_image = spec.existing_images.at(attachment_index);
+					auto& existing_image = spec.existing_images.at(attachment_index);
 					assert_that(Utilities::is_depth_format(existing_image->get_specification().format),
 						"Trying to attach non-depth image as depth attachment");
 					depth_image = existing_image;
 				} else {
-					auto depth_attachment_image = depth_image;
+					auto& depth_attachment_image = depth_image;
 					auto& depth_props = depth_attachment_image->get_specification();
 					depth_props.width = static_cast<std::uint32_t>(width * spec.scale);
 					depth_props.height = static_cast<std::uint32_t>(height * spec.scale);
@@ -191,11 +191,11 @@ namespace Alabaster {
 			} else {
 				std::shared_ptr<Image> color_attachment;
 				if (spec.existing_framebuffer) {
-					auto existing_framebuffer = spec.existing_framebuffer;
-					const auto existing_image = existing_framebuffer->get_image(attachment_index);
+					auto& existing_framebuffer = spec.existing_framebuffer;
+					const auto& existing_image = existing_framebuffer->get_image(attachment_index);
 					color_attachment = attachment_images.emplace_back(existing_image);
 				} else if (spec.existing_images.find(attachment_index) != spec.existing_images.end()) {
-					auto existing_image = spec.existing_images[attachment_index];
+					auto& existing_image = spec.existing_images[attachment_index];
 					assert_that(
 						!Utilities::is_depth_format(existing_image->get_specification().format), "Trying to attach depth image as color attachment");
 					color_attachment = existing_image;
@@ -209,7 +209,7 @@ namespace Alabaster {
 						props.height = static_cast<std::uint32_t>(height * spec.scale);
 						color_attachment = attachment_images.emplace_back(Image::create(props));
 					} else {
-						auto image = attachment_images[attachment_index];
+						auto& image = attachment_images[attachment_index];
 						auto& props = image->get_specification();
 						props.width = static_cast<std::uint32_t>(width * spec.scale);
 						props.height = static_cast<std::uint32_t>(height * spec.scale);
@@ -306,14 +306,14 @@ namespace Alabaster {
 		render_pass_info.pAttachments = attachment_descriptions.data();
 		render_pass_info.subpassCount = 1;
 		render_pass_info.pSubpasses = &subpass_description;
-		render_pass_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
-		render_pass_info.pDependencies = dependencies.data();
+		// render_pass_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
+		// render_pass_info.pDependencies = dependencies.data();
 
 		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &render_pass));
 
 		std::vector<VkImageView> attachments(attachment_images.size());
 		for (uint32_t i = 0; i < attachment_images.size(); i++) {
-			auto image = attachment_images[i];
+			auto& image = attachment_images[i];
 			if (image->get_specification().layers > 1) {
 				attachments[i] = image->get_layer_image_view(spec.existing_image_layers[i]);
 			} else {
@@ -323,12 +323,12 @@ namespace Alabaster {
 		}
 
 		if (depth_image) {
-			auto image = depth_image;
+			auto& image = depth_image;
 			if (spec.existing_image) {
 				assert_that(spec.existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");
-				// attachments.emplace_back(image->GetLayerImageView(spec.ExistingImageLayers[0]));
-			} else
+			} else {
 				attachments.emplace_back(image->get_view());
+			}
 
 			assert_that(attachments.back());
 		}

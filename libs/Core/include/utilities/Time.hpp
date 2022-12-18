@@ -8,6 +8,6 @@ namespace Alabaster::Time {
 
 	std::string formatted_time();
 
-	tm* local_time();
+	tm local_time();
 
 } // namespace Alabaster::Time

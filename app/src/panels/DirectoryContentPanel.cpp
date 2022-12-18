@@ -115,17 +115,19 @@ namespace App {
 			std::string filename_string = path.filename().string();
 
 			ImGui::PushID(filename_string.c_str());
-			const auto icon = is_directory(path) ? directory_icon : file_icon;
+			const auto& icon = is_directory(path) ? directory_icon : file_icon;
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-			const VkDescriptorImageInfo& image_info = icon.get_descriptor_info();
+			const auto& image_info = icon.get_descriptor_info();
 			Alabaster::UI::image(image_info, { thumbnail_size, thumbnail_size });
 
+#if 0
 			if (ImGui::BeginDragDropSource()) {
 				auto relative_path = std::filesystem::relative(path, Alabaster::IO::resources());
-				auto item_path = relative_path.c_str();
+				const char* item_path = relative_path.string().c_str();
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, (std::strlen(item_path) + 1) * sizeof(char));
 				ImGui::EndDragDropSource();
 			}
+#endif
 
 			ImGui::PopStyleColor();
 			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
@@ -145,20 +147,7 @@ namespace App {
 		ImGui::SliderFloat("Thumbnail Size", &thumbnail_size, 16, 512);
 		ImGui::SliderFloat("Padding", &padding, 0, 32);
 
-		// TODO: status bar
 		ImGui::End();
-
-		/*for (const auto& entry : current_directory_content) {
-
-			if (is_directory(entry)) {
-				if (ImGui::ArrowButton(entry.c_str(), ImGuiDir_Right)) {
-					traverse_down(entry);
-				}
-			} else {
-				ImGui::Text("%s", entry.filename().c_str());
-			}
-		}
-		ImGui::End();*/
 	}
 
 	void DirectoryContentPanel::on_event(Alabaster::Event& event) { }

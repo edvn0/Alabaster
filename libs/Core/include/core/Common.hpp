@@ -12,11 +12,12 @@
 namespace Alabaster {
 
 	template <typename T>
-	concept HasSizeAndIterator = requires(T t) {
-									 t.size();
-									 t.begin();
-									 t.end();
-								 };
+	concept HasSizeAndIterator = requires(T t)
+	{
+		t.size();
+		t.begin();
+		t.end();
+	};
 
 	static constexpr auto equals_ignore_case(const HasSizeAndIterator auto& lhs, const HasSizeAndIterator auto& rhs)
 	{

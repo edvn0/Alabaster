@@ -279,6 +279,8 @@ namespace Alabaster {
 		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass_description.colorAttachmentCount = 1;
 		subpass_description.pColorAttachments = &color_reference;
+		subpass_description.inputAttachmentCount = 0;
+		subpass_description.preserveAttachmentCount = 0;
 
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;

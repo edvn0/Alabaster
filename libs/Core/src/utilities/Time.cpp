@@ -2,13 +2,18 @@
 
 #include "utilities/Time.hpp"
 
+#ifdef ALABASTER_WINDOWS
+#include <time.h>
+#endif
+#include <algorithm>
+
 namespace Alabaster::Time {
 
 	std::string formatted_time()
 	{
 		const auto time = local_time();
 		std::stringstream ss;
-		ss << std::put_time(time, "%c %Z");
+		ss << std::put_time(&time, "%c %Z");
 
 		auto time_stamp { ss.str() };
 
@@ -18,10 +23,17 @@ namespace Alabaster::Time {
 		return time_stamp;
 	}
 
-	tm* local_time()
+	tm local_time()
 	{
-		const auto t = std::time(nullptr);
-		return std::localtime(&t);
+#ifdef ALABASTER_WINDOWS
+		struct tm newtime;
+		time_t now = time(0);
+		localtime_s(&newtime, &now);
+		return newtime;
+#else
+		auto t = time(nullptr);
+		return *std::localtime(t);
+#endif
 	}
 
 } // namespace Alabaster::Time

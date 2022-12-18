@@ -160,6 +160,8 @@ namespace SceneSystem {
 	{
 		if (scene_renderer)
 			scene_renderer->destroy();
+
+		framebuffer->destroy();
 	};
 
 	void Scene::update(float ts)

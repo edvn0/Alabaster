@@ -72,7 +72,7 @@ namespace SceneSystem {
 		auto& get_tag() { return get_component<Component::Tag>(); }
 
 	private:
-		Scene* scene;
+		Scene* scene { nullptr };
 		entt::entity entity_handle { entt::null };
 
 		friend Scene;

@@ -241,7 +241,7 @@ static bool color_picker(const char* label, glm::vec3& col)
 	col[0] = color.Value.x;
 	col[1] = color.Value.y;
 	col[2] = color.Value.z;
-	return value_changed | ImGui::ColorEdit3(label, glm::value_ptr(col));
+	return value_changed || ImGui::ColorEdit3(label, glm::value_ptr(col));
 }
 
 static bool color_picker(const char* label, glm::vec4& col)
@@ -354,7 +354,7 @@ static bool color_picker(const char* label, glm::vec4& col)
 	col[1] = color.Value.y;
 	col[2] = color.Value.z;
 	col[3] = color.Value.w;
-	return value_changed | ImGui::ColorEdit4(label, glm::value_ptr(col));
+	return value_changed || ImGui::ColorEdit4(label, glm::value_ptr(col));
 }
 
 static void draw_four_component_vector(const std::string& label, auto&& values, float reset_value = 0.0f, float column_width = 100.0f)
@@ -500,11 +500,8 @@ void AlabasterLayer::ui() { }
 void AlabasterLayer::ui(float ts)
 {
 	editor_scene->ui(ts);
-	for (const auto& panel : panels) {
-		panel->ui(ts);
-	}
 
-	static bool persistent = false;
+	static bool persistent = true;
 	bool opt_fullscreen = persistent;
 	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
@@ -525,6 +522,7 @@ void AlabasterLayer::ui(float ts)
 
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 	ImGui::Begin("DockSpace", &is_dockspace_open, window_flags);
+
 	ImGui::PopStyleVar();
 	{
 		if (opt_fullscreen)
@@ -554,6 +552,10 @@ void AlabasterLayer::ui(float ts)
 			}
 
 			ImGui::EndMenuBar();
+		}
+
+		for (const auto& panel : panels) {
+			panel->ui(ts);
 		}
 
 		{
@@ -610,8 +612,10 @@ void AlabasterLayer::ui(float ts)
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
-				// UI::image(*editor_scene->final_image(), vp_size);
-
+#if 0
+				const auto& img = editor_scene->final_image();
+				UI::image(*img, vp_size);
+#endif
 				ImGui::End();
 			}
 		}
@@ -680,7 +684,7 @@ void AlabasterLayer::draw_entity_node(Entity& entity)
 
 	if (opened) {
 		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-		bool opened = ImGui::TreeNodeEx((const char*)&entity.get_component<Component::ID>().identifier, flags, "%s", tag.c_str());
+		bool opened = ImGui::TreeNodeEx((const char*)&entity.get_component<ID>().identifier, flags, "%s", tag.c_str());
 		if (opened)
 			ImGui::TreePop();
 		ImGui::TreePop();
