@@ -1,8 +1,8 @@
 #pragma once
 
+#include "graphics/Framebuffer.hpp"
 #include "graphics/Image.hpp"
 #include "graphics/UniformBuffer.hpp"
-#include "vulkan/vulkan_core.h"
 
 #include <array>
 #include <glm/gtx/transform.hpp>
@@ -72,7 +72,7 @@ namespace Alabaster {
 		std::vector<VkDescriptorSet> descriptor_sets;
 		VkDescriptorSetLayout descriptor_set_layout;
 		VkDescriptorPool descriptor_pool;
-		VkRenderPass render_pass;
+		std::shared_ptr<Framebuffer> framebuffer;
 
 		std::uint32_t meshes_submitted { 0 };
 		std::array<Mesh*, max_meshes> mesh;
@@ -108,6 +108,7 @@ namespace Alabaster {
 		void text(std::string text, glm::vec3 position, float font_size = 11.0f);
 
 		void end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, VkRenderPass target = nullptr);
+		void end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, const std::shared_ptr<Framebuffer>& target);
 
 		void set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience = 1.0f);
 

@@ -38,78 +38,27 @@ namespace SceneSystem {
 		renderer->line(pos, pos + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
 	};
 
-	auto create_renderpass()
-	{
-		const auto&& [color, depth] = Alabaster::Application::the().swapchain().get_formats();
-
-		VkAttachmentDescription color_attachment_desc = {};
-		color_attachment_desc.format = color;
-		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentDescription depth_attachment_desc {};
-		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-		depth_attachment_desc.format = depth;
-		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		VkAttachmentReference color_reference = {};
-		color_reference.attachment = 0;
-		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference depth_reference = {};
-		depth_reference.attachment = 1;
-		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subpass_description = {};
-		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass_description.colorAttachmentCount = 1;
-		subpass_description.pColorAttachments = &color_reference;
-		subpass_description.pDepthStencilAttachment = &depth_reference;
-
-		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-		std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
-		VkRenderPassCreateInfo render_pass_info = {};
-		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_info.pAttachments = descriptions.data();
-		render_pass_info.attachmentCount = static_cast<std::uint32_t>(descriptions.size());
-		render_pass_info.pSubpasses = &subpass_description;
-		render_pass_info.subpassCount = 1;
-		render_pass_info.pDependencies = &dependency;
-		render_pass_info.dependencyCount = 1;
-
-		VkRenderPass pass;
-		Alabaster::vk_check(vkCreateRenderPass(Alabaster::GraphicsContext::the().device(), &render_pass_info, nullptr, &pass));
-		return pass;
-	}
-
 	void Scene::build_scene()
 	{
 		using namespace Alabaster;
-		first_renderpass = create_renderpass();
-
 		auto viking_room_model = Mesh::from_file("viking_room.obj");
 		auto sphere_model = Mesh::from_file("sphere.obj");
 		auto cube_model = Mesh::from_file("cube.obj");
 
-		PipelineSpecification viking_spec { .shader = AssetManager::ResourceCache::the().shader("viking"),
+		const auto&& [w, h] = Application::the().get_window()->size();
+		FramebufferSpecification fbs;
+		fbs.width = w;
+		fbs.height = h;
+		fbs.attachments = { ImageFormat::RGBA, ImageFormat::DEPTH32F };
+		fbs.samples = 1;
+		fbs.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+		fbs.debug_name = "Geometry";
+		fbs.clear_depth_on_load = false;
+		framebuffer = Framebuffer::create(fbs);
+
+		PipelineSpecification viking_spec { .shader = AssetManager::asset<Alabaster::Shader>("viking"),
 			.debug_name = "Viking Pipeline",
-			.render_pass = scene_renderer->get_render_pass(),
+			.render_pass = framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
@@ -118,9 +67,9 @@ namespace SceneSystem {
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 		std::shared_ptr<Alabaster::Pipeline> viking_pipeline = Pipeline::create(viking_spec);
 
-		PipelineSpecification sun_spec { .shader = AssetManager::ResourceCache::the().shader("mesh"),
+		PipelineSpecification sun_spec { .shader = AssetManager::asset<Alabaster::Shader>("mesh"),
 			.debug_name = "Sun Pipeline",
-			.render_pass = scene_renderer->get_render_pass(),
+			.render_pass = framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
@@ -129,7 +78,7 @@ namespace SceneSystem {
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 		std::shared_ptr<Alabaster::Pipeline> sun_pipeline = Pipeline::create(sun_spec);
 
-		for (std::uint32_t i = 0; i < 100; i++) {
+		for (std::uint32_t i = 0; i < 2; i++) {
 			Entity entity { this, fmt::format("Sphere-{}", i) };
 			entity.add_component<Component::Mesh>(sphere_model);
 			Component::Transform& transform = entity.get_component<Component::Transform>();
@@ -200,17 +149,6 @@ namespace SceneSystem {
 			auto& sun_transform = sun.get_transform();
 			sun_transform.scale = { 3, 3, 3 };
 		}
-
-		const auto&& [w, h] = Application::the().get_window()->size();
-		FramebufferSpecification fbs;
-		fbs.width = w;
-		fbs.height = h;
-		fbs.attachments = { ImageFormat::RGBA, ImageFormat::DEPTH32F };
-		fbs.samples = 1;
-		fbs.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
-		fbs.debug_name = "Geometry";
-		fbs.clear_depth_on_load = false;
-		auto fb = Framebuffer::create(fbs);
 	}
 
 	Scene::Scene()
@@ -222,9 +160,6 @@ namespace SceneSystem {
 	{
 		if (scene_renderer)
 			scene_renderer->destroy();
-
-		if (first_renderpass)
-			vkDestroyRenderPass(Alabaster::GraphicsContext::the().device(), first_renderpass, nullptr);
 	};
 
 	void Scene::update(float ts)
@@ -273,8 +208,9 @@ namespace SceneSystem {
 
 			// End todo
 
-			scene_renderer->end_scene(command_buffer, first_renderpass);
+			scene_renderer->end_scene(command_buffer, framebuffer);
 		}
+		command_buffer->end();
 		command_buffer->submit();
 	}
 
@@ -300,7 +236,7 @@ namespace SceneSystem {
 
 		scene_camera = std::make_shared<Alabaster::EditorCamera>(74.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
 		scene_renderer = std::make_unique<Alabaster::Renderer3D>(scene_camera);
-		command_buffer = Alabaster::CommandBuffer::from_swapchain();
+		command_buffer = std::make_unique<Alabaster::CommandBuffer>(3);
 
 		build_scene();
 	}
@@ -330,5 +266,7 @@ namespace SceneSystem {
 	void Scene::create_entity() { Entity entity { this }; }
 
 	void Scene::create_entity(std::string_view name) { Entity entity { this, std::string { name } }; }
+
+	const std::shared_ptr<Alabaster::Image>& Scene::final_image() const { return framebuffer->get_image(0); }
 
 } // namespace SceneSystem

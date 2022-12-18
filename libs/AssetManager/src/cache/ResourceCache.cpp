@@ -44,7 +44,16 @@ namespace AssetManager {
 	{
 		const auto found = shader_cache.get_from_cache(name);
 		if (!found) {
-			throw Alabaster::AlabasterException("Shader not found.");
+			try {
+				const auto could_add = shader_cache.add_to_cache(name, new Alabaster::Shader { name });
+				if (could_add) {
+					const auto other_found = shader_cache.get_from_cache(name);
+					return *other_found.value();
+				}
+			} catch (const Alabaster::AlabasterException& exc) {
+				throw Alabaster::AlabasterException(fmt::format(
+					"Tried finding shader with name {} in both cache and in {}/shaders, but to no avail.", name, Alabaster::IO::shaders().string()));
+			}
 		}
 
 		return *found.value();

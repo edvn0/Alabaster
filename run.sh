@@ -5,10 +5,28 @@ set -e
 current_dir="."
 build_folder="build"
 
-should_run=${1:OFF}
-build_testing=${2:OFF}
-clean_first=${3:OFF}
-build_type=${4:Debug}
+should_run="OFF"
+build_testing="OFF"
+clean_first="OFF"
+build_type="Debug"
+
+function alabaster_help() {
+  echo "Usage: run [ -r <ON/OFF> ] [ -t <ON/OFF> ] [ -c <ON/OFF> ] [ -b <Debug/Release/RelWithDebInfo/MinSizeRel> ] [ -h ]"
+}
+
+while getopts r:t:c:b:h flag
+do
+    case "${flag}" in
+        r) should_run=${OPTARG};;
+        t) build_testing=${OPTARG};;
+        c) clean_first=${OPTARG};;
+        b) build_type=${OPTARG};;
+        h) alabaster_help; exit 2;;
+        *) alabaster_help; exit 2;;
+    esac
+done
+
+printf "BuildType %s - Should Run %s - Clean First %s - Build Testing %s" "$build_type" "$should_run" "$clean_first" "$build_testing"
 
 if [ "$clean_first" = "ON" ]; then
 	rm -rf "$build_folder/app"
@@ -50,17 +68,19 @@ rm "$current_dir/compile_commands.json"
 ln -s "build/compile_commands.json" "$current_dir"
 
 run_tests() {
-	ctest -j10 --test-dir "build"
+  if [ "$build_type" == "Debug" ] && [ "$build_testing" == "ON" ]
+	then
+    ctest -j10 --test-dir "build"
+  fi;
 }
 
 run_app() {
 	pushd "$build_folder/app" || exit
-	"./AlabasterApp" "$@"
+	"./AlabasterApp"
 	popd || exit
 }
 
 run_tests
-shift 4
 if [ "$should_run" = "ON" ]; then
-	run_app "$@"
+	run_app
 fi

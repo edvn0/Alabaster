@@ -5,7 +5,7 @@ project(AlabasterApp)
 set(THIRD_PARTY ../third_party)
 
 file(GLOB_RECURSE sources main.cpp Alabaster.hpp AlabasterLayer.hpp
-	AlabasterLayer.cpp)
+	AlabasterLayer.cpp include/**.hpp src/**.cpp)
 
 find_program(CLANG_FORMAT "clang-format")
 
@@ -15,6 +15,8 @@ if(CLANG_FORMAT)
 	set(formattable_files ${sources})
 	list(APPEND formattable_files ${shaders})
 
+	message(STATUS ${formattable_files})
+
 	add_custom_target(clang-format-app COMMAND ${CLANG_FORMAT} -i -style=file
 		${formattable_files})
 endif()
@@ -23,7 +25,7 @@ add_executable(${PROJECT_NAME} ${sources})
 
 target_include_directories(
 	${PROJECT_NAME}
-	PRIVATE ${THIRD_PARTY}/debugbreak ${THIRD_PARTY}/magic_enum/include
+	PRIVATE include ${THIRD_PARTY}/debugbreak ${THIRD_PARTY}/magic_enum/include
 	${THIRD_PARTY}/glm ${THIRD_PARTY}/random/include)
 target_link_libraries(
 	${PROJECT_NAME} PRIVATE Alabaster::AssetManager Alabaster::Core

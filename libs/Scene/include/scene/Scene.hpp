@@ -36,6 +36,8 @@ namespace SceneSystem {
 
 		auto get_name() const { return Component::ID().identifier; }
 
+		const std::shared_ptr<Alabaster::Image>& final_image() const;
+
 	private:
 		void build_scene();
 
@@ -43,10 +45,9 @@ namespace SceneSystem {
 		entt::registry registry;
 
 		std::shared_ptr<Alabaster::EditorCamera> scene_camera;
+		std::shared_ptr<Alabaster::Framebuffer> framebuffer;
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
-
-		VkRenderPass first_renderpass { nullptr };
 
 		friend Entity;
 	};

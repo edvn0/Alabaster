@@ -8,6 +8,7 @@
 #include "AssetManager.hpp"
 #include "graphics/Camera.hpp"
 #include "graphics/Renderer.hpp"
+#include "panels/Panel.hpp"
 #include "scene/Scene.hpp"
 #include "SceneSystem.hpp"
 
@@ -46,6 +47,8 @@ private:
 
 private:
 	std::unique_ptr<SceneSystem::Scene> editor_scene;
+
+	std::vector<std::unique_ptr<App::Panel>> panels;
 
 	SceneSystem::Entity selected_entity {};
 

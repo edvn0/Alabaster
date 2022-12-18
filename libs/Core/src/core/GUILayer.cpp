@@ -2,12 +2,14 @@
 
 #include "core/GUILayer.hpp"
 
+#include "cache/ResourceCache.hpp"
 #include "core/Common.hpp"
 #include "core/events/KeyEvent.hpp"
 #include "core/Window.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
+#include "graphics/Shader.hpp"
 #include "vulkan/vulkan_core.h"
 
 #include <GLFW/glfw3.h>
@@ -17,75 +19,8 @@
 
 namespace Alabaster {
 
-	void GUILayer::create_renderpass()
-	{
-		const auto&& [color, depth] = Application::the().swapchain().get_formats();
-
-		VkAttachmentDescription color_attachment_desc = {};
-		color_attachment_desc.format = color;
-		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-		VkAttachmentDescription depth_attachment_desc {};
-		depth_attachment_desc.format = depth;
-		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
-		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference color_reference = {};
-		color_reference.attachment = 0;
-		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference depth_reference = {};
-		depth_reference.attachment = 1;
-		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subpass_description = {};
-		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass_description.colorAttachmentCount = 1;
-		subpass_description.pColorAttachments = &color_reference;
-		subpass_description.pDepthStencilAttachment = &depth_reference;
-
-		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-		std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
-		VkRenderPassCreateInfo render_pass_info = {};
-		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_info.pAttachments = descriptions.data();
-		render_pass_info.attachmentCount = static_cast<std::uint32_t>(descriptions.size());
-		render_pass_info.pSubpasses = &subpass_description;
-		render_pass_info.subpassCount = 1;
-		render_pass_info.pDependencies = &dependency;
-		render_pass_info.dependencyCount = 1;
-
-		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &gui_renderpass));
-	}
-
 	void GUILayer::on_event(Event& event)
 	{
-		EventDispatcher dispatcher(event);
-		dispatcher.dispatch<KeyPressedEvent>([this](KeyPressedEvent& e) {
-			if (e.get_key_code() == Key::One) {
-				chosen = chosen == gui_renderpass ? Application::the().swapchain().get_render_pass() : gui_renderpass;
-			}
-			return false;
-		});
-
 		if (should_block) {
 			ImGuiIO& io = ImGui::GetIO();
 			event.handled |= event.is_in_category(EventCategoryMouse) & io.WantCaptureMouse;
@@ -113,7 +48,6 @@ namespace Alabaster {
 
 		auto& vulkan_context = GraphicsContext::the();
 		auto device = vulkan_context.device();
-		create_renderpass();
 
 		// Create Descriptor Pool
 		VkDescriptorPoolSize pool_sizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 }, { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
@@ -141,7 +75,9 @@ namespace Alabaster {
 		auto& swapchain = Application::the().get_window()->get_swapchain();
 		init_info.ImageCount = swapchain->get_image_count();
 		init_info.CheckVkResultFn = vk_check;
-		ImGui_ImplVulkan_Init(&init_info, gui_renderpass);
+		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
+
+		// const auto shader = AssetManager::asset<Alabaster::Shader>("testtest");
 
 		ImGui::GetIO().Fonts->AddFontDefault();
 
@@ -152,8 +88,6 @@ namespace Alabaster {
 
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
-
-		chosen = gui_renderpass;
 
 		return true;
 	}
@@ -181,9 +115,15 @@ namespace Alabaster {
 
 		VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
 
+		VkCommandBufferBeginInfo begin_info = {};
+		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		begin_info.pNext = nullptr;
+		vkBeginCommandBuffer(draw_command_buffer, &begin_info);
+
 		VkRenderPassBeginInfo render_pass_begin_info = {};
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_begin_info.renderPass = chosen;
+		render_pass_begin_info.renderPass = swapchain->get_render_pass();
 		render_pass_begin_info.renderArea.offset.x = 0;
 		render_pass_begin_info.renderArea.offset.y = 0;
 		render_pass_begin_info.renderArea.extent.width = width;
@@ -198,7 +138,7 @@ namespace Alabaster {
 		{
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-			inheritance_info.renderPass = chosen;
+			inheritance_info.renderPass = swapchain->get_render_pass();
 			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
 
 			VkCommandBufferBeginInfo cbi = {};
@@ -269,7 +209,6 @@ namespace Alabaster {
 		ImGui::DestroyContext();
 		vk_check(vkDeviceWaitIdle(device));
 
-		vkDestroyRenderPass(device, gui_renderpass, nullptr);
 		vkDestroyDescriptorPool(device, imgui_descriptor_pool, nullptr);
 		Log::info("[GUILayer] Destroyed layer.");
 	};

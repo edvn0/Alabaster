@@ -6,6 +6,7 @@
 #include "graphics/Texture.hpp"
 
 #include <filesystem>
+#include <type_traits>
 
 namespace AssetManager {
 
@@ -33,5 +34,23 @@ namespace AssetManager {
 	};
 
 	inline auto& the() { return ResourceCache::the(); }
+
+	template <typename T> struct get_asset {
+		const T& operator()(const std::string& name)
+		{
+			(void)name;
+			return nullptr;
+		};
+	};
+
+	template <> struct get_asset<Alabaster::Texture> {
+		const Alabaster::Texture& operator()(const std::string& name) { return the().texture(name); }
+	};
+
+	template <> struct get_asset<Alabaster::Shader> {
+		const Alabaster::Shader& operator()(const std::string& name) { return the().shader(name); }
+	};
+
+	template <typename T> const auto& asset(const auto& name) { return get_asset<T>()(name); }
 
 } // namespace AssetManager

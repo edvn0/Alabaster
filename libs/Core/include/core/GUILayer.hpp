@@ -31,15 +31,10 @@ namespace Alabaster {
 		void end();
 
 	private:
-		void create_renderpass();
 		std::string_view name() override { return gui_layer_name; }
 
 	private:
 		VkDescriptorPool imgui_descriptor_pool { nullptr };
-		VkRenderPass gui_renderpass { nullptr };
-
-		VkRenderPass chosen { nullptr };
-
 		std::unique_ptr<CommandBuffer> imgui_command_buffer;
 
 		bool should_block { false };

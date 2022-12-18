@@ -90,12 +90,12 @@ namespace Alabaster {
 		std::uint32_t get_width() const { return width; };
 		std::uint32_t get_height() const { return height; };
 
-		std::shared_ptr<Image> get_image(std::uint32_t index = 0) const { return attachment_images[index]; }
-		std::shared_ptr<Image> get_depth_image() const { return depth_image; }
+		const std::shared_ptr<Image>& get_image(std::uint32_t index = 0) const { return attachment_images[index]; }
+		const std::shared_ptr<Image>& get_depth_image() const { return depth_image; }
 		size_t get_colour_attachment_count() const { return spec.swap_chain_target ? 1 : attachment_images.size(); }
 		bool has_depth_attachment() const { return depth_image != nullptr; }
-		VkRenderPass get_renderpass() const { return render_pass; }
-		VkFramebuffer get_framebuffer() const { return frame_buffer; }
+		const VkRenderPass& get_renderpass() const { return render_pass; }
+		const VkFramebuffer& get_framebuffer() const { return frame_buffer; }
 		const std::vector<VkClearValue>& get_clear_values() const { return clear_values; }
 
 		const FramebufferSpecification& get_specification() const { return spec; }

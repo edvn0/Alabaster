@@ -110,8 +110,6 @@ namespace Alabaster {
 		uint32_t queue_node_index = UINT32_MAX;
 		uint32_t width = 0, height = 0;
 
-		std::unique_ptr<DepthImage> depth_image;
-
 		VkSurfaceKHR surface;
 	};
 } // namespace Alabaster

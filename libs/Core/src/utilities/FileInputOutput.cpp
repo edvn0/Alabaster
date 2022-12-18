@@ -19,7 +19,9 @@ namespace Alabaster::IO {
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{
 		std::ifstream stream(filename, static_cast<unsigned int>(mode));
-		verify(stream);
+		if (!stream) {
+			throw AlabasterException("Could not open filestream to shader file.");
+		}
 
 		auto size = stream.tellg();
 		verify(size > 0, "Size of file must be greater than zero.");

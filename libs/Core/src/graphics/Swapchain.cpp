@@ -210,16 +210,6 @@ namespace Alabaster {
 			vk_check(vkCreateImageView(device, &color_attachment_view, nullptr, &images[i].ImageView));
 		}
 
-		if (depth_image) {
-			depth_image->destroy(device);
-		}
-
-		depth_image.reset(new DepthImage());
-
-		Utilities::create_image(
-			extent.width, extent.height, VK_FORMAT_D32_SFLOAT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, depth_image);
-		Utilities::create_image_view(VK_FORMAT_D32_SFLOAT, VK_IMAGE_ASPECT_DEPTH_BIT, depth_image);
-
 		{
 			for (auto& command_buffer : command_buffers)
 				vkDestroyCommandPool(device, command_buffer.CommandPool, nullptr);
@@ -271,8 +261,6 @@ namespace Alabaster {
 		submit_info.signalSemaphoreCount = 1;
 		submit_info.pSignalSemaphores = &semaphores.RenderComplete;
 
-		VkFormat depth_format = VK_FORMAT_D32_SFLOAT;
-
 		VkAttachmentDescription color_attachment_desc = {};
 		color_attachment_desc.format = color_format;
 		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -283,29 +271,14 @@ namespace Alabaster {
 		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-		VkAttachmentDescription depth_attachment_desc = {};
-		depth_attachment_desc.format = depth_format;
-		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
 		VkAttachmentReference color_reference = {};
 		color_reference.attachment = 0;
 		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference depth_reference = {};
-		depth_reference.attachment = 1;
-		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
 		VkSubpassDescription subpass_description = {};
 		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
 		subpass_description.colorAttachmentCount = 1;
 		subpass_description.pColorAttachments = &color_reference;
-		subpass_description.pDepthStencilAttachment = &depth_reference;
 
 		VkSubpassDependency dependency = {};
 		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -315,7 +288,7 @@ namespace Alabaster {
 		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-		std::array<VkAttachmentDescription, 2> attachments = { color_attachment_desc, depth_attachment_desc };
+		std::array<VkAttachmentDescription, 1> attachments = { color_attachment_desc };
 
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -346,9 +319,9 @@ namespace Alabaster {
 
 			framebuffers.resize(image_count);
 			for (uint32_t i = 0; i < framebuffers.size(); i++) {
-				VkImageView fb_attachments[2] = { images[i].ImageView, depth_image->view };
+				VkImageView fb_attachments[1] = { images[i].ImageView };
 				frame_buffer_create_info.pAttachments = fb_attachments;
-				frame_buffer_create_info.attachmentCount = 2;
+				frame_buffer_create_info.attachmentCount = 1;
 				vk_check(vkCreateFramebuffer(device, &frame_buffer_create_info, nullptr, &framebuffers[i]));
 			}
 		}
@@ -383,8 +356,6 @@ namespace Alabaster {
 			vkDestroyFence(device, fence, nullptr);
 
 		vkDestroySurfaceKHR(GraphicsContext::the().instance(), surface, nullptr);
-
-		depth_image->destroy(device);
 
 		vkDeviceWaitIdle(device);
 	}

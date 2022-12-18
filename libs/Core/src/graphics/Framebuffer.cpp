@@ -171,7 +171,7 @@ namespace Alabaster {
 				attachment_description.format = Utilities::vulkan_image_format(attachment_specification.format);
 				attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
 				attachment_description.loadOp = spec.clear_depth_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
-				attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE; // TODO: if sampling, needs to be store (otherwise DONT_CARE is fine)
+				attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 				attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 				attachment_description.initialLayout
@@ -179,18 +179,16 @@ namespace Alabaster {
 				if (attachment_specification.format == ImageFormat::DEPTH24STENCIL8
 					|| true) // Separate layouts requires a "separate layouts" flag to be enabled
 				{
-					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL; // TODO: if not sampling
-					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL; // TODO: if sampling
+					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 					depth_attachment_reference = { attachment_index, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };
 				} else {
-					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL; // TODO: if not sampling
-					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL; // TODO: if sampling
+					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
 					depth_attachment_reference = { attachment_index, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
 				}
 				clear_values[attachment_index].depthStencil = { spec.depth_clear_value, 0 };
 			} else {
-				// HZ_CORE_ASSERT(!spec.existing_image, "Not supported for color attachments");
-
 				std::shared_ptr<Image> color_attachment;
 				if (spec.existing_framebuffer) {
 					auto existing_framebuffer = spec.existing_framebuffer;
@@ -249,7 +247,7 @@ namespace Alabaster {
 
 		VkSubpassDescription subpass_description = {};
 		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass_description.colorAttachmentCount = uint32_t(color_attachment_references.size());
+		subpass_description.colorAttachmentCount = static_cast<std::uint32_t>(color_attachment_references.size());
 		subpass_description.pColorAttachments = color_attachment_references.data();
 		if (depth_image)
 			subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
@@ -338,7 +336,7 @@ namespace Alabaster {
 		VkFramebufferCreateInfo framebuffer_create_info = {};
 		framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
 		framebuffer_create_info.renderPass = render_pass;
-		framebuffer_create_info.attachmentCount = uint32_t(attachments.size());
+		framebuffer_create_info.attachmentCount = static_cast<std::uint32_t>(attachments.size());
 		framebuffer_create_info.pAttachments = attachments.data();
 		framebuffer_create_info.width = width;
 		framebuffer_create_info.height = height;

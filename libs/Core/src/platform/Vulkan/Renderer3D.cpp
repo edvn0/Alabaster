@@ -37,65 +37,6 @@ namespace Alabaster {
 		to_reset.push_constant = {};
 	}
 
-	void Renderer3D::create_renderpass()
-	{
-		const auto&& [color, depth] = Application::the().swapchain().get_formats();
-
-		VkAttachmentDescription color_attachment_desc = {};
-		color_attachment_desc.format = color;
-		color_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-		color_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		color_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-		color_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		color_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-		color_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-		VkAttachmentDescription depth_attachment_desc {};
-		depth_attachment_desc.format = depth;
-		depth_attachment_desc.samples = VK_SAMPLE_COUNT_1_BIT;
-		depth_attachment_desc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_attachment_desc.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment_desc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depth_attachment_desc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-		depth_attachment_desc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depth_attachment_desc.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference color_reference = {};
-		color_reference.attachment = 0;
-		color_reference.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-		VkAttachmentReference depth_reference = {};
-		depth_reference.attachment = 1;
-		depth_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-		VkSubpassDescription subpass_description = {};
-		subpass_description.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-		subpass_description.colorAttachmentCount = 1;
-		subpass_description.pColorAttachments = &color_reference;
-		subpass_description.pDepthStencilAttachment = &depth_reference;
-
-		VkSubpassDependency dependency = {};
-		dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-		dependency.dstSubpass = 0;
-		dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.srcAccessMask = 0;
-		dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-		dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-		std::array<VkAttachmentDescription, 2> descriptions { color_attachment_desc, depth_attachment_desc };
-		VkRenderPassCreateInfo render_pass_info = {};
-		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-		render_pass_info.pAttachments = descriptions.data();
-		render_pass_info.attachmentCount = static_cast<std::uint32_t>(descriptions.size());
-		render_pass_info.pSubpasses = &subpass_description;
-		render_pass_info.subpassCount = 1;
-		render_pass_info.pDependencies = &dependency;
-		render_pass_info.dependencyCount = 1;
-
-		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &data.render_pass));
-	}
-
 	void Renderer3D::create_descriptor_set_layout()
 	{
 		VkDescriptorSetLayoutBinding ubo_layout_binding {};
@@ -191,9 +132,18 @@ namespace Alabaster {
 		: camera(camera)
 	{
 		data.sphere_model = Mesh::from_file("sphere.obj");
+		const auto&& [w, h] = Application::the().get_window()->size();
+		FramebufferSpecification fbs;
+		fbs.width = w;
+		fbs.height = h;
+		fbs.attachments = { ImageFormat::RGBA, ImageFormat::DEPTH32F };
+		fbs.samples = 1;
+		fbs.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
+		fbs.debug_name = "Geometry";
+		fbs.clear_depth_on_load = false;
+		data.framebuffer = Framebuffer::create(fbs);
 
 		auto image_count = Application::the().swapchain().get_image_count();
-		create_renderpass();
 
 		VkDeviceSize uniform_buffer_size = sizeof(UBO);
 
@@ -209,7 +159,7 @@ namespace Alabaster {
 
 		PipelineSpecification quad_spec { .shader = AssetManager::the().shader("quad_light"),
 			.debug_name = "Quad Pipeline",
-			.render_pass = data.render_pass,
+			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
@@ -240,7 +190,7 @@ namespace Alabaster {
 		PipelineSpecification mesh_spec {
 			.shader = AssetManager::the().shader("mesh_light"),
 			.debug_name = "Mesh Pipeline",
-			.render_pass = data.render_pass,
+			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
@@ -253,7 +203,7 @@ namespace Alabaster {
 
 		PipelineSpecification line_spec { .shader = AssetManager::the().shader("line"),
 			.debug_name = "Line Pipeline",
-			.render_pass = data.render_pass,
+			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
@@ -424,9 +374,14 @@ namespace Alabaster {
 		// Flush ignores these for now...
 	}
 
+	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, const std::shared_ptr<Framebuffer>& target)
+	{
+		end_scene(command_buffer, target->get_renderpass());
+	}
+
 	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, VkRenderPass target)
 	{
-		const auto chosen_renderpass = target ? target : data.render_pass;
+		const auto chosen_renderpass = target ? target : data.framebuffer->get_renderpass();
 		Renderer::begin_render_pass(command_buffer, chosen_renderpass);
 		if (data.quad_indices_submitted > 0) {
 			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.quad_vertices_submitted);
@@ -578,13 +533,13 @@ namespace Alabaster {
 	{
 		const auto& device = GraphicsContext::the().device();
 
-		vkDestroyRenderPass(device, data.render_pass, nullptr);
+		data.framebuffer->destroy();
 
 		vkDestroyDescriptorPool(device, data.descriptor_pool, nullptr);
 		vkDestroyDescriptorSetLayout(device, data.descriptor_set_layout, nullptr);
 	}
 
-	const VkRenderPass& Renderer3D::get_render_pass() const { return data.render_pass; }
+	const VkRenderPass& Renderer3D::get_render_pass() const { return data.framebuffer->get_renderpass(); }
 
 	void Renderer3D::set_camera(const std::shared_ptr<Camera>& cam) { camera = cam; }
 

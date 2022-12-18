@@ -8,6 +8,7 @@
 #include "entity/Entity.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "imgui_internal.h"
+#include "panels/DirectoryContentPanel.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
@@ -453,11 +454,20 @@ bool AlabasterLayer::initialise()
 	editor_scene = std::make_unique<Scene>();
 	editor_scene->initialise();
 
+	panels.push_back(std::make_unique<App::DirectoryContentPanel>(IO::resources()));
+
+	for (const auto& panel : panels) {
+		panel->on_init();
+	}
 	return true;
 }
 
 void AlabasterLayer::on_event(Event& e)
 {
+	for (const auto& panel : panels) {
+		panel->on_event(e);
+	}
+
 	editor_scene->on_event(e);
 
 	EventDispatcher dispatch(e);
@@ -477,13 +487,22 @@ void AlabasterLayer::on_event(Event& e)
 	});
 }
 
-void AlabasterLayer::update(float ts) { editor_scene->update(ts); }
+void AlabasterLayer::update(float ts)
+{
+	editor_scene->update(ts);
+	for (const auto& panel : panels) {
+		panel->on_update(ts);
+	}
+}
 
 void AlabasterLayer::ui() { }
 
 void AlabasterLayer::ui(float ts)
 {
 	editor_scene->ui(ts);
+	for (const auto& panel : panels) {
+		panel->ui(ts);
+	}
 
 	static bool persistent = false;
 	bool opt_fullscreen = persistent;
@@ -589,9 +608,9 @@ void AlabasterLayer::ui(float ts)
 				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 				viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 
-				// UI::image(AssetManager::ResourceCache::the().texture("viking_room"), ImVec2 { viewport_size.x, viewport_size.y });
-
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
+
+				// UI::image(*editor_scene->final_image(), vp_size);
 
 				ImGui::End();
 			}
