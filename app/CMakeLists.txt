@@ -15,8 +15,6 @@ if(CLANG_FORMAT)
 	set(formattable_files ${sources})
 	list(APPEND formattable_files ${shaders})
 
-	message(STATUS ${formattable_files})
-
 	add_custom_target(clang-format-app COMMAND ${CLANG_FORMAT} -i -style=file
 		${formattable_files})
 endif()

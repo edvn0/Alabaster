@@ -32,7 +32,7 @@ namespace Alabaster::Time {
 		return newtime;
 #else
 		auto t = time(nullptr);
-		return *std::localtime(t);
+		return *std::localtime(&t);
 #endif
 	}
 

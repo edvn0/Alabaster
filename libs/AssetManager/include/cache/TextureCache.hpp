@@ -19,25 +19,25 @@ namespace AssetManager {
 	public:
 		void destroy_impl()
 		{
-			for (auto& [key, value] : images) {
+			for (auto& [key, value] : textures) {
 				value.destroy();
 			}
 		}
 
 		[[nodiscard]] std::optional<const Alabaster::Texture*> get_from_cache_impl(const std::string& name)
 		{
-			if (images.contains(name)) {
-				return { cache_crud->get(name, images) };
+			if (textures.contains(name)) {
+				return { cache_crud->get(name, textures) };
 			}
 			return {};
 		}
 
 		[[nodiscard]] bool add_to_cache_impl(const std::string& name, Alabaster::Texture* input)
 		{
-			if (images.contains(name))
+			if (textures.contains(name))
 				return false;
 			try {
-				cache_crud->create(name, input, images);
+				cache_crud->create(name, input, textures);
 			} catch (const std::exception& exc) {
 				throw Alabaster::AlabasterException(exc.what());
 			}
@@ -45,7 +45,7 @@ namespace AssetManager {
 		};
 
 	private:
-		std::unordered_map<std::string, Alabaster::Texture> images;
+		std::unordered_map<std::string, Alabaster::Texture> textures;
 		std::filesystem::path texture_path;
 		std::unique_ptr<CacheCreateRead<T>> cache_crud;
 

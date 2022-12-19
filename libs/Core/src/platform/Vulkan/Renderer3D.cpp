@@ -96,7 +96,7 @@ namespace Alabaster {
 		data.descriptor_sets.resize(image_count);
 		vk_check(vkAllocateDescriptorSets(GraphicsContext::the().device(), &alloc_info, data.descriptor_sets.data()));
 
-		const auto image_info = AssetManager::the().texture("viking_room").get_descriptor_info();
+		const auto image_info = AssetManager::the().texture("viking_room.png")->get_descriptor_info();
 		for (std::size_t i = 0; i < image_count; i++) {
 			VkDescriptorBufferInfo buffer_info {};
 			buffer_info.buffer = data.uniforms[i]->get_buffer();
@@ -140,7 +140,7 @@ namespace Alabaster {
 		fbs.samples = 1;
 		fbs.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 		fbs.debug_name = "Geometry";
-		fbs.clear_depth_on_load = false;
+		fbs.clear_depth_on_load = true;
 		data.framebuffer = Framebuffer::create(fbs);
 
 		auto image_count = Application::the().swapchain().get_image_count();
@@ -157,7 +157,7 @@ namespace Alabaster {
 
 		// QUAD STUFF
 
-		PipelineSpecification quad_spec { .shader = AssetManager::the().shader("quad_light"),
+		PipelineSpecification quad_spec { .shader = *AssetManager::the().shader("quad_light"),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -188,7 +188,7 @@ namespace Alabaster {
 		// END QUAD STUFF
 
 		PipelineSpecification mesh_spec {
-			.shader = AssetManager::the().shader("mesh_light"),
+			.shader = *AssetManager::the().shader("mesh_light"),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -201,7 +201,7 @@ namespace Alabaster {
 		data.mesh_pipeline = std::make_unique<Pipeline>(mesh_spec);
 		data.mesh_pipeline->invalidate();
 
-		PipelineSpecification line_spec { .shader = AssetManager::the().shader("line"),
+		PipelineSpecification line_spec { .shader = *AssetManager::the().shader("line"),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
@@ -376,13 +376,39 @@ namespace Alabaster {
 
 	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, const std::shared_ptr<Framebuffer>& target)
 	{
-		end_scene(command_buffer, target->get_renderpass());
+		Renderer::begin_render_pass(command_buffer, target);
+		if (data.quad_indices_submitted > 0) {
+			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.quad_vertices_submitted);
+
+			std::uint32_t size = vertex_count * sizeof(QuadVertex);
+			data.quad_vertex_buffer->set_data(data.quad_buffer.data(), size, 0);
+
+			draw_quads(command_buffer);
+
+			data.draw_calls++;
+		}
+
+		if (data.line_indices_submitted > 0) {
+			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.line_vertices_submitted);
+
+			std::uint32_t size = vertex_count * sizeof(LineVertex);
+			data.line_vertex_buffer->set_data(data.line_buffer.data(), size, 0);
+
+			draw_lines(command_buffer);
+
+			data.draw_calls++;
+		}
+
+		if (data.meshes_submitted > 0) {
+			draw_meshes(command_buffer);
+		}
+
+		Renderer::end_render_pass(command_buffer);
 	}
 
-	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, VkRenderPass target)
+	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer)
 	{
-		const auto chosen_renderpass = target ? target : data.framebuffer->get_renderpass();
-		Renderer::begin_render_pass(command_buffer, chosen_renderpass);
+		Renderer::begin_render_pass(command_buffer, data.framebuffer);
 		if (data.quad_indices_submitted > 0) {
 			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.quad_vertices_submitted);
 

@@ -69,4 +69,22 @@ namespace Alabaster::Utilities {
 	void copy_buffer_to_image(
 		VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, const std::unique_ptr<CommandBuffer>& cmd_buffer = nullptr);
 
+	const std::unordered_set<std::string>& image_extensions();
+
+	template <typename T> struct is_image_by_extension {
+		bool operator()(const T& path)
+		{
+			(void)path;
+			return false;
+		}
+	};
+
+	template <> struct is_image_by_extension<std::string> {
+		bool operator()(const std::string& path) { return image_extensions().contains(path); }
+	};
+
+	template <> struct is_image_by_extension<std::filesystem::path> {
+		bool operator()(const std::filesystem::path& path) { return image_extensions().contains(path.filename().extension().string()); }
+	};
+
 } // namespace Alabaster::Utilities

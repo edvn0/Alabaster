@@ -1,6 +1,7 @@
 # Prerequisites
 *.d
 
+
 .DS_Store
 
 Thumbs.db
@@ -60,3 +61,6 @@ compile_commands.json
 build/*
 
 app/resources/scene/*.json
+
+!./app/resources/editor
+

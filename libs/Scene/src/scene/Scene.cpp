@@ -53,10 +53,10 @@ namespace SceneSystem {
 		fbs.samples = 1;
 		fbs.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 		fbs.debug_name = "Geometry";
-		fbs.clear_depth_on_load = false;
+		fbs.clear_depth_on_load = true;
 		framebuffer = Framebuffer::create(fbs);
 
-		PipelineSpecification viking_spec { .shader = AssetManager::asset<Alabaster::Shader>("viking"),
+		PipelineSpecification viking_spec { .shader = *AssetManager::asset<Alabaster::Shader>("viking"),
 			.debug_name = "Viking Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -67,7 +67,7 @@ namespace SceneSystem {
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 		std::shared_ptr<Alabaster::Pipeline> viking_pipeline = Pipeline::create(viking_spec);
 
-		PipelineSpecification sun_spec { .shader = AssetManager::asset<Alabaster::Shader>("mesh"),
+		PipelineSpecification sun_spec { .shader = *AssetManager::asset<Alabaster::Shader>("mesh"),
 			.debug_name = "Sun Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
 			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
@@ -269,6 +269,6 @@ namespace SceneSystem {
 
 	void Scene::create_entity(std::string_view name) { Entity entity { this, std::string { name } }; }
 
-	const std::shared_ptr<Alabaster::Image>& Scene::final_image() const { return framebuffer->get_image(0); }
+	const std::shared_ptr<Alabaster::Image>& Scene::final_image() const { return framebuffer->get_image(); }
 
 } // namespace SceneSystem

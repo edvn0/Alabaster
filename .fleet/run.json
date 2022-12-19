@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "type": "command",
+            "name": "Build and run",
+            "program": "./run.sh",
+            "args": ["-r", "ON"],
+        },
+
+    ]
+}

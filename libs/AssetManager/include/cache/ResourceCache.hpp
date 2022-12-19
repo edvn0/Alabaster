@@ -22,21 +22,21 @@ namespace AssetManager {
 		static ResourceCache& the();
 
 	public:
-		const Alabaster::Texture& texture(const std::string& name);
-		const Alabaster::Shader& shader(const std::string& name);
+		const Alabaster::Texture* texture(const std::string& name);
+		const Alabaster::Shader* shader(const std::string& name);
 
 	private:
 		ResourceCache();
 
 	private:
-		TextureCache<Alabaster::Texture> image_cache;
+		TextureCache<Alabaster::Texture> texture_cache;
 		ShaderCache<Alabaster::Shader> shader_cache;
 	};
 
 	inline auto& the() { return ResourceCache::the(); }
 
 	template <typename T> struct get_asset {
-		const T& operator()(const std::string& name)
+		const T* operator()(const std::string& name)
 		{
 			(void)name;
 			return nullptr;
@@ -44,13 +44,20 @@ namespace AssetManager {
 	};
 
 	template <> struct get_asset<Alabaster::Texture> {
-		const Alabaster::Texture& operator()(const std::string& name) { return the().texture(name); }
+		const Alabaster::Texture* operator()(const std::string& name) { return the().texture(name); }
 	};
 
 	template <> struct get_asset<Alabaster::Shader> {
-		const Alabaster::Shader& operator()(const std::string& name) { return the().shader(name); }
+		const Alabaster::Shader* operator()(const std::string& name) { return the().shader(name); }
 	};
 
-	template <typename T> const auto& asset(const auto& name) { return get_asset<T>()(name); }
+	template <typename T> const T* asset(const auto& name)
+	{
+		try {
+			return get_asset<T>()(name);
+		} catch (const Alabaster::AlabasterException& e) {
+			return nullptr;
+		}
+	}
 
 } // namespace AssetManager

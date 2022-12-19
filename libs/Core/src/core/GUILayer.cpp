@@ -77,8 +77,6 @@ namespace Alabaster {
 		init_info.CheckVkResultFn = vk_check;
 		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
 
-		// const auto shader = AssetManager::asset<Alabaster::Shader>("testtest");
-
 		ImGui::GetIO().Fonts->AddFontDefault();
 
 		{

@@ -11,12 +11,6 @@
 
 namespace App {
 
-	struct FileView {
-		const char* name;
-		std::uint32_t name_size;
-		std::uint32_t file_size;
-	};
-
 	class DirectoryContentPanel : public Panel {
 	public:
 		DirectoryContentPanel(std::filesystem::path initial = "resources");

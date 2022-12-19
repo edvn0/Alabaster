@@ -1,4 +1,5 @@
 #pragma once
+
 namespace AssetManager {
 	class ThreadPool;
 	class ResourceCache;

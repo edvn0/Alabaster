@@ -5,6 +5,7 @@
 #include "core/Application.hpp"
 #include "core/Common.hpp"
 #include "graphics/CommandBuffer.hpp"
+#include "graphics/Framebuffer.hpp"
 
 namespace Alabaster {
 
@@ -24,6 +25,57 @@ namespace Alabaster {
 	{
 		verify(!frame_started);
 		frame_started = true;
+	}
+
+	void Renderer::begin_render_pass(const std::unique_ptr<CommandBuffer>& buffer, const std::shared_ptr<Framebuffer>& fb, bool explicit_clear)
+	{
+		const VkExtent2D extent = { fb->get_width(), fb->get_height() };
+
+		VkRenderPassBeginInfo render_pass_info {};
+		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		render_pass_info.renderPass = fb->get_renderpass();
+		render_pass_info.framebuffer = fb->get_framebuffer();
+		render_pass_info.renderArea.offset = { 0, 0 };
+		render_pass_info.renderArea.extent = extent;
+		render_pass_info.pClearValues = fb->get_clear_values().data();
+		render_pass_info.clearValueCount = static_cast<std::uint32_t>(fb->get_clear_values().size());
+
+		verify(*buffer, "[Renderer - Begin Render Pass] Command buffer is not active.");
+		vkCmdBeginRenderPass(*buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+		if (explicit_clear) {
+			std::array<VkClearAttachment, 2> clears;
+			auto& colour = clears[0];
+			colour.clearValue = fb->get_clear_values()[0];
+			colour.colorAttachment = 0;
+			colour.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+
+			auto& depth = clears[1];
+			depth.clearValue = fb->get_clear_values()[1];
+			depth.colorAttachment = 1;
+			depth.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+
+			VkClearRect clear_rect;
+			clear_rect.rect = render_pass_info.renderArea;
+			clear_rect.baseArrayLayer = 0;
+			clear_rect.layerCount = 1;
+
+			vkCmdClearAttachments(*buffer, 2, clears.data(), 1, &clear_rect);
+		}
+
+		VkViewport viewport {};
+		viewport.x = 0.0f;
+		viewport.y = 0.0f;
+		viewport.width = static_cast<float>(extent.width);
+		viewport.height = static_cast<float>(extent.height);
+		viewport.minDepth = 0.0f;
+		viewport.maxDepth = 1.0f;
+		vkCmdSetViewport(*buffer, 0, 1, &viewport);
+
+		VkRect2D scissor {};
+		scissor.offset = { 0, 0 };
+		scissor.extent = extent;
+		vkCmdSetScissor(*buffer, 0, 1, &scissor);
 	}
 
 	void Renderer::begin_render_pass(const std::unique_ptr<CommandBuffer>& buffer, VkRenderPass render_pass, bool explicit_clear)

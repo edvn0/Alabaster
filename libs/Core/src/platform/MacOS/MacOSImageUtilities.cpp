@@ -8,6 +8,12 @@
 
 namespace Alabaster::Utilities {
 
+	const std::unordered_set<std::string>& image_extensions()
+	{
+		static std::unordered_set<std::string> extensions { ".png", ".tga", ".jpg", ".jpeg" };
+		return extensions;
+	}
+
 	VkFilter vulkan_sampler_filter(TextureFilter filter)
 	{
 		switch (filter) {

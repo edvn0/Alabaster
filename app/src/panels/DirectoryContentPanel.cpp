@@ -6,7 +6,12 @@
 
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
+#include "platform/Vulkan/ImageUtilities.hpp"
 #include "utilities/FileInputOutput.hpp"
+
+#ifdef ALABASTER_WINDOWS
+#include <wchar.h>
+#endif
 
 namespace App {
 
@@ -19,8 +24,8 @@ namespace App {
 	DirectoryContentPanel::DirectoryContentPanel(std::filesystem::path initial)
 		: initial(initial)
 		, current(initial)
-		, directory_icon(AssetManager::asset<Alabaster::Texture>("directory_icon"))
-		, file_icon(AssetManager::asset<Alabaster::Texture>("file_icon"))
+		, directory_icon(*AssetManager::asset<Alabaster::Texture>("directory_icon.png"))
+		, file_icon(*AssetManager::asset<Alabaster::Texture>("file_icon.png"))
 	{
 	}
 
@@ -114,17 +119,29 @@ namespace App {
 			const auto& path = directory_entry;
 			std::string filename_string = path.filename().string();
 
-			ImGui::PushID(filename_string.c_str());
+			const auto& data = filename_string.data();
+			ImGui::PushID(data);
 			const auto& icon = is_directory(path) ? directory_icon : file_icon;
+			const auto is_image = Alabaster::Utilities::is_image_by_extension<std::filesystem::path>()(path);
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
 			const auto& image_info = icon.get_descriptor_info();
 			Alabaster::UI::image(image_info, { thumbnail_size, thumbnail_size });
 
+#ifdef ALABASTER_MACOS
 #if 0
 			if (ImGui::BeginDragDropSource()) {
 				auto relative_path = std::filesystem::relative(path, Alabaster::IO::resources());
-				const char* item_path = relative_path.string().c_str();
-				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, (std::strlen(item_path) + 1) * sizeof(char));
+				const char* item_path = relative_path.c_str();
+				const auto size = (std::strlen(item_path) + 1) * sizeof(char);
+				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, size);
+				ImGui::EndDragDropSource();
+			}
+#endif
+#else
+			if (ImGui::BeginDragDropSource()) {
+				auto relative_path = std::filesystem::relative(path, g_AssetPath);
+				const wchar_t* itemPath = relative_path.c_str();
+				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
 				ImGui::EndDragDropSource();
 			}
 #endif

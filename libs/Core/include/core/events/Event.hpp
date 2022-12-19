@@ -44,12 +44,24 @@ namespace Alabaster {
 	};
 
 #define EVENT_STATIC_CLASS_TYPE(type)                                                                                                                \
-	static EventType get_static_type() { return EventType::type; }                                                                                   \
-	virtual EventType get_event_type() const final { return get_static_type(); }                                                                     \
-	virtual std::string_view get_name() const final { return #type; }
+	static EventType get_static_type()                                                                                                               \
+	{                                                                                                                                                \
+		return EventType::type;                                                                                                                      \
+	}                                                                                                                                                \
+	virtual EventType get_event_type() const final                                                                                                   \
+	{                                                                                                                                                \
+		return get_static_type();                                                                                                                    \
+	}                                                                                                                                                \
+	virtual std::string_view get_name() const final                                                                                                  \
+	{                                                                                                                                                \
+		return #type;                                                                                                                                \
+	}
 
 #define EVENT_CLASS_CATEGORY(category)                                                                                                               \
-	virtual int get_category_flags() const final { return category; }
+	virtual int get_category_flags() const final                                                                                                     \
+	{                                                                                                                                                \
+		return category;                                                                                                                             \
+	}
 
 	class Event {
 	public:
@@ -64,8 +76,14 @@ namespace Alabaster {
 		inline bool is_in_category(EventCategory category) { return get_category_flags() & category; }
 	};
 
+	template <typename T>
+	concept HasHandledAndGetStaticType = requires(T t) {
+											 t.handled;
+											 T::get_static_type();
+										 };
+
 	class EventDispatcher {
-		template <typename T> using EventCallback = std::function<bool(T&)>;
+		template <HasHandledAndGetStaticType T> using EventCallback = std::function<bool(T&)>;
 
 	public:
 		EventDispatcher(Event& event)
@@ -73,7 +91,7 @@ namespace Alabaster {
 		{
 		}
 
-		template <typename T> bool dispatch(EventCallback<T> callback)
+		template <HasHandledAndGetStaticType T> bool dispatch(EventCallback<T> callback)
 		{
 			if (event.get_event_type() == T::get_static_type() && !event.handled) {
 				auto& cast = *static_cast<T*>(&event);

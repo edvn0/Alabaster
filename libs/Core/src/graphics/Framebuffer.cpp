@@ -306,8 +306,8 @@ namespace Alabaster {
 		render_pass_info.pAttachments = attachment_descriptions.data();
 		render_pass_info.subpassCount = 1;
 		render_pass_info.pSubpasses = &subpass_description;
-		// render_pass_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
-		// render_pass_info.pDependencies = dependencies.data();
+		render_pass_info.dependencyCount = static_cast<uint32_t>(dependencies.size());
+		render_pass_info.pDependencies = dependencies.data();
 
 		vk_check(vkCreateRenderPass(GraphicsContext::the().device(), &render_pass_info, nullptr, &render_pass));
 

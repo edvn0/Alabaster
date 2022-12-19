@@ -2,7 +2,22 @@
 
 #include <fmt/format.h>
 
-namespace Utilities {
+namespace Alabaster::Utilities {
+
+	template <typename T> auto split_into(const std::vector<T>& items, std::uint32_t batch_size = 8)
+	{
+		std::vector<std::vector<T>> batches;
+		const auto max_batches = std::ceilf(items.size() / static_cast<float>(batch_size));
+		batches.resize(static_cast<std::uint32_t>(max_batches));
+		for (size_t i = 0; i < items.size(); i += batch_size) {
+			auto last = std::min(items.size(), i + batch_size);
+			auto index = i / batch_size;
+			auto& vec = batches[index];
+			vec.reserve(last - i);
+			std::move(items.begin() + i, items.begin() + last, back_inserter(vec));
+		}
+		return batches;
+	}
 
 	enum class OutputSize : uint8_t { B = 0, KB = 1, MB = 2, GB = 3, TB = 4 };
 
@@ -35,4 +50,4 @@ namespace Utilities {
 			}
 		}
 	}
-} // namespace Utilities
+} // namespace Alabaster::Utilities

@@ -11,7 +11,7 @@ clean_first="OFF"
 build_type="Debug"
 
 function alabaster_help() {
-  echo "Usage: run [ -r <ON/OFF> ] [ -t <ON/OFF> ] [ -c <ON/OFF> ] [ -b <Debug/Release/RelWithDebInfo/MinSizeRel> ] [ -h ]"
+  echo "Usage: run [ -r <ON/*OFF> ] [ -t <ON/*OFF> ] [ -c <ON/*OFF> ] [ -b <*Debug/Release/RelWithDebInfo/MinSizeRel> ] [ -h ]"
 }
 
 while getopts r:t:c:b:h flag
@@ -25,8 +25,6 @@ do
         *) alabaster_help; exit 2;;
     esac
 done
-
-printf "BuildType %s - Should Run %s - Clean First %s - Build Testing %s" "$build_type" "$should_run" "$clean_first" "$build_testing"
 
 if [ "$clean_first" = "ON" ]; then
 	rm -rf "$build_folder/app"

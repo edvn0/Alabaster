@@ -612,10 +612,14 @@ void AlabasterLayer::ui(float ts)
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
-#if 0
-				const auto& img = editor_scene->final_image();
-				UI::image(*img, vp_size);
-#endif
+				static bool first = true;
+
+				if (first) {
+					const auto& img = editor_scene->final_image();
+					UI::image(*img, vp_size, { 0, 1 }, { 1, 0 });
+					first = false;
+				}
+
 				ImGui::End();
 			}
 		}
