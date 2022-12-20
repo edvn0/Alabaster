@@ -109,9 +109,10 @@ namespace App {
 		float cell_size = thumbnail_size + padding;
 
 		float panel_width = ImGui::GetContentRegionAvail().x;
-		int column_count = (int)(panel_width / cell_size);
-		if (column_count < 1)
+		auto column_count = static_cast<int>(panel_width / cell_size);
+		if (column_count < 1) {
 			column_count = 1;
+		}
 
 		ImGui::Columns(column_count, 0, false);
 
@@ -128,15 +129,13 @@ namespace App {
 			Alabaster::UI::image(image_info, { thumbnail_size, thumbnail_size });
 
 #ifdef ALABASTER_MACOS
-#if 0
-			if (ImGui::BeginDragDropSource()) {
+			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
 				auto relative_path = std::filesystem::relative(path, Alabaster::IO::resources());
 				const char* item_path = relative_path.c_str();
 				const auto size = (std::strlen(item_path) + 1) * sizeof(char);
 				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, size);
 				ImGui::EndDragDropSource();
 			}
-#endif
 #else
 			if (ImGui::BeginDragDropSource()) {
 				auto relative_path = std::filesystem::relative(path, g_AssetPath);
@@ -160,9 +159,6 @@ namespace App {
 		}
 
 		ImGui::Columns(1);
-
-		ImGui::SliderFloat("Thumbnail Size", &thumbnail_size, 16, 512);
-		ImGui::SliderFloat("Padding", &padding, 0, 32);
 
 		ImGui::End();
 	}

@@ -59,6 +59,12 @@ namespace Alabaster {
 		ImageFormat format = ImageFormat::None;
 
 		bool destroyed { false };
+
+	public:
+		static std::shared_ptr<Texture> from_filename(auto&& filename)
+		{
+			return std::make_shared<Texture>(IO::texture(filename), TextureProperties {});
+		}
 	};
 
 } // namespace Alabaster

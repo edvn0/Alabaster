@@ -3,6 +3,7 @@
 #include "core/GUILayer.hpp"
 
 #include "cache/ResourceCache.hpp"
+#include "core/Buffer.hpp"
 #include "core/Common.hpp"
 #include "core/events/KeyEvent.hpp"
 #include "core/Window.hpp"
@@ -77,7 +78,8 @@ namespace Alabaster {
 		init_info.CheckVkResultFn = vk_check;
 		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
 
-		ImGui::GetIO().Fonts->AddFontDefault();
+		const std::filesystem::path path = IO::font("FreePixel.ttf");
+		ImGui::GetIO().Fonts->AddFontFromFileTTF(path.c_str(), 14.0f);
 
 		{
 			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer("Fonts Texture"));

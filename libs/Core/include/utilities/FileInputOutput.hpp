@@ -9,6 +9,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <type_traits>
 #include <unordered_set>
 
 namespace Alabaster::IO {
@@ -18,19 +19,24 @@ namespace Alabaster::IO {
 	std::filesystem::path resources();
 	std::filesystem::path textures();
 	std::filesystem::path shaders();
+	std::filesystem::path models();
 	std::filesystem::path fonts();
 
 	template <typename Path = std::filesystem::path> std::filesystem::path shader(const Path& path)
 	{
-		return IO::resources() / std::filesystem::path { "shaders" } / std::filesystem::path { path };
+		return IO::shaders() / std::filesystem::path { path };
 	}
 	template <typename Path = std::filesystem::path> std::filesystem::path model(const Path& path)
 	{
-		return IO::resources() / std::filesystem::path { "models" } / std::filesystem::path { path };
+		return IO::models() / std::filesystem::path { path };
 	}
 	template <typename Path = std::filesystem::path> std::filesystem::path texture(const Path& path)
 	{
-		return IO::resources() / std::filesystem::path { "textures" } / std::filesystem::path { path };
+		return IO::textures() / std::filesystem::path { path };
+	}
+	template <typename Path = std::filesystem::path> std::filesystem::path font(const Path& path)
+	{
+		return IO::fonts() / std::filesystem::path { path };
 	}
 
 	template <typename Path = std::filesystem::path> std::filesystem::path scene(const Path& path)
@@ -111,7 +117,14 @@ namespace Alabaster::IO {
 		}
 	}
 
-	template <typename Printable> static inline bool write_file(const std::filesystem::path& filename, Printable& printable)
+	template <typename T>
+	concept Printable = requires(T t, std::ofstream& of) {
+							{
+								t.write_to(of)
+								} -> std::same_as<bool>;
+						};
+
+	static inline bool write_file(const std::filesystem::path& filename, Printable auto& printable)
 	{
 		std::ofstream output_stream(filename);
 		if (!output_stream) {
@@ -126,7 +139,7 @@ namespace Alabaster::IO {
 		return false;
 	}
 
-	template <typename Printable> static inline bool write_file(const std::filesystem::path& filename, const char* buffer, std::size_t size)
+	static inline bool write_file(const std::filesystem::path& filename, const char* buffer, std::size_t size)
 	{
 		std::ofstream output_stream(filename);
 		if (!output_stream) {

@@ -42,7 +42,6 @@ namespace Alabaster {
 		if (height == 0) {
 			bool loaded = load_image(data, width);
 			if (!loaded) {
-				// TODO(Yan): move this to asset manager
 				load_image("Resources/Textures/ErrorTexture.png");
 			}
 		} else if (data) {
@@ -356,16 +355,14 @@ namespace Alabaster {
 		}
 
 		// After the loop, all mip layers are in TRANSFER_SRC layout, so transition all to SHADER_READ
-		VkImageSubresourceRange subresourceRange = {};
-		subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		subresourceRange.layerCount = 1;
-		subresourceRange.levelCount = mip_levels;
+		VkImageSubresourceRange subresource_range = {};
+		subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		subresource_range.layerCount = 1;
+		subresource_range.levelCount = mip_levels;
 
 		Utilities::insert_image_memory_barrier(immediate_command_buffer, info.image, VK_ACCESS_TRANSFER_READ_BIT, VK_ACCESS_SHADER_READ_BIT,
 			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
-			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresourceRange);
-
-		GraphicsContext::the().flush_command_buffer(immediate_command_buffer);
+			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresource_range);
 	}
 
 } // namespace Alabaster

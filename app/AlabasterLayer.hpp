@@ -43,6 +43,9 @@ struct AlabasterLayer final : public Layer {
 	}
 
 private:
+	void handle_drag_drop();
+
+private:
 	std::string_view name() override { return "AlabasterLayer"; }
 
 private:

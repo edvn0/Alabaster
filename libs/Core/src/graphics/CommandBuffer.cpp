@@ -78,7 +78,7 @@ namespace Alabaster {
 
 	void CommandBuffer::begin(VkCommandBufferBeginInfo* begin, bool should_begin)
 	{
-		std::uint32_t frame_index = Renderer::current_frame();
+		std::uint32_t frame_index = get_buffer_index();
 
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -108,7 +108,7 @@ namespace Alabaster {
 		if (owned_by_swapchain)
 			return;
 
-		std::uint32_t frame_index = Renderer::current_frame();
+		std::uint32_t frame_index = get_buffer_index();
 
 		VkSubmitInfo submit_info {};
 		submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -141,6 +141,14 @@ namespace Alabaster {
 			destruction_callbacks.pop();
 			cb(*allocator);
 		}
+	}
+
+	std::uint32_t CommandBuffer::get_buffer_index() { return Renderer::current_frame(); }
+
+	std::uint32_t ImmediateCommandBuffer::get_buffer_index()
+	{
+		assert_that(buffers.size() == 1, "Immediate mode buffer should NEVER have more than one entry.");
+		return 0;
 	}
 
 } // namespace Alabaster

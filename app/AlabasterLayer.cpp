@@ -3,6 +3,8 @@
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
 #include "component/Component.hpp"
+#include "core/Common.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "core/GUILayer.hpp"
 #include "core/Logger.hpp"
 #include "entity/Entity.hpp"
@@ -612,13 +614,10 @@ void AlabasterLayer::ui(float ts)
 
 				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
 
-				static bool first = true;
+				const auto& img = editor_scene->final_image();
+				UI::image(*img, vp_size);
 
-				if (first) {
-					const auto& img = editor_scene->final_image();
-					UI::image(*img, vp_size, { 0, 1 }, { 1, 0 });
-					first = false;
-				}
+				handle_drag_drop();
 
 				ImGui::End();
 			}
@@ -626,6 +625,55 @@ void AlabasterLayer::ui(float ts)
 		ImGui::PopStyleVar();
 	}
 	ImGui::End();
+}
+
+namespace Filetype {
+	enum Filetypes { PNG, TTF, JPEG, JPG, SPV, VERT, FRAG, OBJ };
+}
+
+template <Filetype::Filetypes Type> struct handle_filetype {
+	void operator()(const std::filesystem::path& path) { Log::info("Filetype handler not implemented for {}", enum_name(Type)); };
+};
+
+template <> struct handle_filetype<Filetype::Filetypes::PNG> {
+	void operator()(const std::filesystem::path& path)
+	{
+		if (path.extension() != ".png")
+			return;
+
+		TextureProperties props;
+		const auto img = Alabaster::Texture::from_filename(path);
+		(void)img;
+		return;
+	}
+};
+
+void AlabasterLayer::handle_drag_drop()
+{
+	if (ImGui::BeginDragDropTarget()) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")) {
+			const char* path = static_cast<const char*>(payload->Data);
+			const auto fp = std::filesystem::path { path };
+
+			const auto filename = fp.filename();
+			const auto extension = filename.extension();
+
+			try {
+				handle_filetype<Filetype::Filetypes::PNG>()(filename);
+				handle_filetype<Filetype::Filetypes::TTF>()(filename);
+				handle_filetype<Filetype::Filetypes::JPEG>()(filename);
+				handle_filetype<Filetype::Filetypes::JPG>()(filename);
+				handle_filetype<Filetype::Filetypes::SPV>()(filename);
+				handle_filetype<Filetype::Filetypes::VERT>()(filename);
+				handle_filetype<Filetype::Filetypes::FRAG>()(filename);
+				handle_filetype<Filetype::Filetypes::OBJ>()(filename);
+
+			} catch (const AlabasterException& e) {
+				Log::info("[AlabasterLayer] {}", e.what());
+			}
+		}
+		ImGui::EndDragDropTarget();
+	}
 }
 
 void AlabasterLayer::draw_components(Entity& entity)

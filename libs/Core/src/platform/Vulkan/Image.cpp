@@ -122,8 +122,8 @@ namespace Alabaster {
 		sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
 		vk_check(vkCreateSampler(GraphicsContext::the().device(), &sampler_create_info, nullptr, &info.sampler));
 
-		ImmediateCommandBuffer buffer { "Image Transition" };
 		if (spec.usage == ImageUsage::Storage) {
+			ImmediateCommandBuffer buffer { "Image Transition" };
 			VkImageSubresourceRange subresource_range {};
 			subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			subresource_range.baseMipLevel = 0;

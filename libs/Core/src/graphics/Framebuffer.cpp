@@ -88,20 +88,26 @@ namespace Alabaster {
 			const auto& device = GraphicsContext::the().device();
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 
+			Log::info("[Framebuffer] Destroying framebuffer.");
+
 			if (!spec.existing_framebuffer) {
 				uint32_t attachment_index = 0;
 				for (auto& image : attachment_images) {
 					if (spec.existing_images.find(attachment_index) != spec.existing_images.end())
 						continue;
 
-					if (image->get_specification().layers == 1 || ((attachment_index == 0) && !image->get_layer_image_view(0)))
+					if (image->get_specification().layers == 1 || ((attachment_index == 0) && !image->get_layer_image_view(0))) {
 						image->release();
+						Log::info("[Framebuffer] Destroying framebuffer image.");
+					}
 					attachment_index++;
 				}
 
 				if (depth_image) {
-					if (spec.existing_images.find((uint32_t)spec.attachments.size() - 1) == spec.existing_images.end())
+					if (spec.existing_images.find((uint32_t)spec.attachments.size() - 1) == spec.existing_images.end()) {
 						depth_image->destroy();
+						Log::info("[Framebuffer] Destroying framebuffer depth image.");
+					}
 				}
 			}
 		}
@@ -132,7 +138,6 @@ namespace Alabaster {
 
 	void Framebuffer::invalidate()
 	{
-		ImmediateCommandBuffer buffer { "Framebuffer Invalidation" };
 		release();
 
 		Allocator allocator("Framebuffer");
