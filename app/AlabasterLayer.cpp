@@ -642,7 +642,7 @@ template <> struct handle_filetype<Filetype::Filetypes::PNG> {
 			return;
 
 		TextureProperties props;
-		const auto img = Alabaster::Texture::from_filename(path);
+		const auto img = Alabaster::Texture::from_filename(path, props);
 		(void)img;
 		return;
 	}
@@ -749,4 +749,10 @@ void AlabasterLayer::draw_entity_node(Entity& entity)
 	}
 }
 
-void AlabasterLayer::destroy() { editor_scene->shutdown(); }
+void AlabasterLayer::destroy()
+{
+	editor_scene->shutdown();
+	for (auto& panel : panels) {
+		panel->on_destroy();
+	}
+}

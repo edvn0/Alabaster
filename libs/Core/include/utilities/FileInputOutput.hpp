@@ -21,6 +21,7 @@ namespace Alabaster::IO {
 	std::filesystem::path shaders();
 	std::filesystem::path models();
 	std::filesystem::path fonts();
+	std::filesystem::path editor_resources();
 
 	template <typename Path = std::filesystem::path> std::filesystem::path shader(const Path& path)
 	{

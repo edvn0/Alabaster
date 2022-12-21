@@ -6,20 +6,11 @@
 
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
+#include "graphics/Texture.hpp"
 #include "platform/Vulkan/ImageUtilities.hpp"
 #include "utilities/FileInputOutput.hpp"
 
-#ifdef ALABASTER_WINDOWS
-#include <wchar.h>
-#endif
-
 namespace App {
-
-	struct path_hash {
-		std::size_t operator()(const std::filesystem::path& path) const { return std::hash<std::string> {}(canonical(path).string()); }
-	};
-
-	std::unordered_map<std::filesystem::path, std::vector<std::filesystem::path>, path_hash> path_and_content_cache;
 
 	DirectoryContentPanel::DirectoryContentPanel(std::filesystem::path initial)
 		: initial(initial)
@@ -100,7 +91,7 @@ namespace App {
 	{
 		ImGui::Begin("Directory Content");
 
-		if (ImGui::ArrowButton("GoUpOneLevel", ImGuiDir_Left)) {
+		if (ImGui::ArrowButton("##GoUpOneLevel", ImGuiDir_Left)) {
 			traverse_up();
 		}
 
@@ -122,35 +113,42 @@ namespace App {
 
 			const auto& data = filename_string.data();
 			ImGui::PushID(data);
-			const auto& icon = is_directory(path) ? directory_icon : file_icon;
+
 			const auto is_image = Alabaster::Utilities::is_image_by_extension<std::filesystem::path>()(path);
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-			const auto& image_info = icon.get_descriptor_info();
-			Alabaster::UI::image(image_info, { thumbnail_size, thumbnail_size });
 
-#ifdef ALABASTER_MACOS
-			if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID)) {
-				auto relative_path = std::filesystem::relative(path, Alabaster::IO::resources());
-				const char* item_path = relative_path.c_str();
-				const auto size = (std::strlen(item_path) + 1) * sizeof(char);
-				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, size);
-				ImGui::EndDragDropSource();
-			}
-#else
-			if (ImGui::BeginDragDropSource()) {
-				auto relative_path = std::filesystem::relative(path, g_AssetPath);
-				const wchar_t* itemPath = relative_path.c_str();
-				ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", itemPath, (wcslen(itemPath) + 1) * sizeof(wchar_t));
-				ImGui::EndDragDropSource();
-			}
-#endif
+			if (is_image) {
+				if (icons.contains(path.filename())) {
+					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+					const auto& image_info = icons[path.filename()]->get_descriptor_info();
+					Alabaster::UI::image(image_info, { thumbnail_size, thumbnail_size });
+					ImGui::PopStyleColor();
+				} else {
+					if (!do_not_try_icons.contains(path.filename())) {
+						try {
+							if (icons.size() >= icons_max_size) {
+								icons.clear();
+							}
 
-			ImGui::PopStyleColor();
-			if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left)) {
+							icons[path.filename()] = Alabaster::Texture::from_filename(path.filename());
+						} catch (const Alabaster::AlabasterException& e) {
+							Alabaster::Log::info(fmt::format("Could not create icon from image {}", path.filename().string()));
+							do_not_try_icons.emplace(path.filename());
+						}
+					} else {
+						draw_file_or_directory(path, { thumbnail_size, thumbnail_size });
+					}
+				}
+			} else {
+				draw_file_or_directory(path, { thumbnail_size, thumbnail_size });
+			}
+
+			Alabaster::UI::drag_drop(path);
+			Alabaster::UI::handle_double_click([&directory_entry, this] {
 				if (is_directory(directory_entry)) {
 					traverse_down(directory_entry);
 				}
-			}
+			});
+
 			ImGui::TextWrapped("%s", filename_string.c_str());
 
 			ImGui::NextColumn();
@@ -171,7 +169,15 @@ namespace App {
 		current_directory_content = path_and_content_cache[current];
 	}
 
-	void DirectoryContentPanel::on_destroy() { }
+	void DirectoryContentPanel::on_destroy()
+	{
+		for (auto it = icons.begin(); it != icons.end();) {
+			Alabaster::UI::remove_image(it->second->get_descriptor_info());
+			it->second->destroy();
+			it = icons.erase(it);
+		}
+		Alabaster::UI::empty_cache();
+	}
 
 	std::vector<std::filesystem::path> DirectoryContentPanel::get_files_in_directory(const std::filesystem::path& for_path)
 	{
@@ -180,6 +186,15 @@ namespace App {
 			found.push_back(entry.path());
 		}
 		return found;
+	}
+
+	void DirectoryContentPanel::draw_file_or_directory(const std::filesystem::path& path, const ImVec2& size)
+	{
+		const auto& icon = is_directory(path) ? directory_icon : file_icon;
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+		const auto& image_info = icon.get_descriptor_info();
+		Alabaster::UI::image(image_info, size);
+		ImGui::PopStyleColor();
 	}
 
 } // namespace App

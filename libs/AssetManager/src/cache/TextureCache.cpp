@@ -17,7 +17,7 @@ namespace AssetManager {
 		auto sorted_images_in_directory = FS::in_directory<std::filesystem::path, false>(directory, include_extensions, true);
 
 		ImmediateCommandBuffer buffer { "Texture Cache" };
-		ThreadPool pool { 2 };
+		ThreadPool pool { 8 };
 
 		const auto batches = Utilities::split_into(sorted_images_in_directory, 2);
 

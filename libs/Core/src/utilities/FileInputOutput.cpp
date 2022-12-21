@@ -16,6 +16,7 @@ namespace Alabaster::IO {
 	std::filesystem::path fonts() { return root / std::filesystem::path { "fonts" }; }
 	std::filesystem::path shaders() { return root / std::filesystem::path { "shaders" }; }
 	std::filesystem::path models() { return root / std::filesystem::path { "models" }; }
+	std::filesystem::path editor_resources() { return root / std::filesystem::path { "editor" }; }
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{

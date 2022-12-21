@@ -9,6 +9,14 @@
 
 #include <filesystem>
 
+extern "C" {
+struct ImVec2;
+}
+
+struct path_hash {
+	std::size_t operator()(const std::optional<std::filesystem::path>& path) const { return path ? std::filesystem::hash_value(path.value()) : 0; }
+};
+
 namespace App {
 
 	class DirectoryContentPanel : public Panel {
@@ -27,6 +35,7 @@ namespace App {
 
 		auto& get_current() { return current; }
 		std::vector<std::filesystem::path> get_files_in_directory(const std::filesystem::path& for_path);
+		void draw_file_or_directory(const std::filesystem::path& path, const ImVec2& size);
 
 	private:
 		const std::filesystem::path initial;
@@ -39,6 +48,12 @@ namespace App {
 		const Alabaster::Texture& file_icon;
 
 		std::vector<std::filesystem::path> current_directory_content;
+
+		static constexpr auto icons_max_size = 200;
+
+		std::unordered_map<std::filesystem::path, std::vector<std::filesystem::path>, path_hash> path_and_content_cache {};
+		std::unordered_map<std::filesystem::path, std::shared_ptr<Alabaster::Texture>, path_hash> icons {};
+		std::unordered_set<std::filesystem::path, path_hash> do_not_try_icons {};
 	};
 
 } // namespace App

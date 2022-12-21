@@ -19,7 +19,7 @@ namespace Alabaster {
 	{
 		bool loaded = load_image(path.string());
 		if (!loaded) {
-			load_image("Resources/Textures/ErrorTexture.png");
+			throw AlabasterException("Could not load image.");
 		}
 
 		ImageSpecification image_spec;
@@ -242,8 +242,8 @@ namespace Alabaster {
 		VkSamplerCreateInfo sampler {};
 		sampler.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
 		sampler.maxAnisotropy = 1.0f;
-		sampler.magFilter = Utilities::vulkan_sampler_filter(properties.SamplerFilter);
-		sampler.minFilter = Utilities::vulkan_sampler_filter(properties.SamplerFilter);
+		sampler.magFilter = Utilities::vulkan_sampler_filter(properties.sampler_filter);
+		sampler.minFilter = Utilities::vulkan_sampler_filter(properties.sampler_filter);
 		sampler.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 		sampler.addressModeU = Utilities::vulkan_sampler_wrap(properties.sampler_wrap);
 		sampler.addressModeV = Utilities::vulkan_sampler_wrap(properties.sampler_wrap);
@@ -346,7 +346,7 @@ namespace Alabaster {
 
 			// Blit from previous level
 			vkCmdBlitImage(immediate_command_buffer, info.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, info.image,
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &image_blit, Utilities::vulkan_sampler_filter(properties.SamplerFilter));
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &image_blit, Utilities::vulkan_sampler_filter(properties.sampler_filter));
 
 			// Prepare current mip level as image blit source for next level
 			Utilities::insert_image_memory_barrier(immediate_command_buffer, info.image, VK_ACCESS_TRANSFER_WRITE_BIT, VK_ACCESS_TRANSFER_READ_BIT,

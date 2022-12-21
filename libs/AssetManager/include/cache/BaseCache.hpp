@@ -49,13 +49,13 @@ namespace AssetManager {
 		friend Child<ItemType>;
 	};
 
-	template <typename T> struct CacheCreateRead {
-		virtual ~CacheCreateRead() = default;
+	template <typename T> struct cache_create_read {
+		virtual ~cache_create_read() = default;
 		virtual const T* get(const std::string& name, std::unordered_map<std::string, T>& out) = 0;
 		virtual void create(const std::string& name, T* data, std::unordered_map<std::string, T>& out) = 0;
 	};
 
-	struct DefaultShaderCrud : public CacheCreateRead<Alabaster::Shader> {
+	struct DefaultShaderCrud : public cache_create_read<Alabaster::Shader> {
 		virtual ~DefaultShaderCrud() override = default;
 
 		const Alabaster::Shader* get(const std::string& name, std::unordered_map<std::string, Alabaster::Shader>& out) override
@@ -69,7 +69,7 @@ namespace AssetManager {
 		};
 	};
 
-	struct DefaultTextureCrud : public CacheCreateRead<Alabaster::Texture> {
+	struct DefaultTextureCrud : public cache_create_read<Alabaster::Texture> {
 		virtual ~DefaultTextureCrud() override = default;
 
 		const Alabaster::Texture* get(const std::string& name, std::unordered_map<std::string, Alabaster::Texture>& out) override

@@ -14,6 +14,7 @@ namespace AssetManager {
 		shader_cache.load_from_directory(Alabaster::IO::shaders());
 		texture_cache.load_from_directory(Alabaster::IO::textures(), { ".png", ".tga", ".jpg", ".jpeg", ".bmp" });
 		texture_cache.load_from_directory(Alabaster::IO::fonts(), { ".png", ".tga", ".jpg", ".jpeg", ".bmp" });
+		texture_cache.load_from_directory(Alabaster::IO::editor_resources(), { "*" });
 	}
 
 	void ResourceCache::initialise() { the(); }

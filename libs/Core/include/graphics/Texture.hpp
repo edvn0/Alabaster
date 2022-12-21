@@ -65,6 +65,11 @@ namespace Alabaster {
 		{
 			return std::make_shared<Texture>(IO::texture(filename), TextureProperties {});
 		}
+
+		static std::shared_ptr<Texture> from_filename(auto&& filename, auto&& props)
+		{
+			return std::make_shared<Texture>(IO::texture(filename), props);
+		}
 	};
 
 } // namespace Alabaster

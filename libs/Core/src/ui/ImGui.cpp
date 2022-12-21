@@ -2,6 +2,8 @@
 
 #include "ui/ImGui.hpp"
 
+#include "codes/MouseCode.hpp"
+#include "graphics/GraphicsContext.hpp"
 #include "graphics/Image.hpp"
 #include "graphics/Texture.hpp"
 
@@ -75,5 +77,31 @@ namespace Alabaster::UI {
 	void image(const std::unique_ptr<Alabaster::Image>& img, const ImVec2& size) { image(*img, size, { 0, 0 }, { 1, 1 }); }
 
 	void image(const std::shared_ptr<Alabaster::Image>& img, const ImVec2& size) { image(*img, size, { 0, 0 }, { 1, 1 }); }
+
+	void empty_cache()
+	{
+		for (auto it = cached_views.begin(); it != cached_views.end();) {
+			it = cached_views.erase(it);
+		}
+	}
+
+	bool is_mouse_double_clicked(MouseCode code)
+	{
+		if (code == Mouse::Left) {
+			return ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
+		}
+		if (code == Mouse::Right) {
+			return ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Right);
+		}
+		return false;
+	}
+
+	bool is_item_hovered() { return ImGui::IsItemHovered(); }
+
+	void remove_image(const VkDescriptorImageInfo& info)
+	{
+		if (cached_views.contains(info.imageView))
+			ImGui_ImplVulkan_RemoveTexture(cached_views[info.imageView]);
+	}
 
 } // namespace Alabaster::UI

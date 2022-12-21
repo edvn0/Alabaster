@@ -61,9 +61,9 @@ namespace Alabaster {
 	struct TextureProperties {
 		std::string debug_name;
 		TextureWrap sampler_wrap { TextureWrap::Repeat };
-		TextureFilter SamplerFilter { TextureFilter::Linear };
+		TextureFilter sampler_filter { TextureFilter::Linear };
 		bool generate_mips { true };
-		bool sRGB { false };
+		bool srgb { false };
 		bool storage { false };
 	};
 
