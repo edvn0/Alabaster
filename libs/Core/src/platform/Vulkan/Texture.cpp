@@ -42,7 +42,7 @@ namespace Alabaster {
 		if (height == 0) {
 			bool loaded = load_image(data, width);
 			if (!loaded) {
-				load_image("Resources/Textures/ErrorTexture.png");
+				throw AlabasterException("Could not load image.");
 			}
 		} else if (data) {
 			auto size = (uint32_t)Utilities::get_memory_size(format, width, height);

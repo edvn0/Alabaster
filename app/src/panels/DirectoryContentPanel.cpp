@@ -109,7 +109,8 @@ namespace App {
 
 		for (auto& directory_entry : current_directory_content) {
 			const auto& path = directory_entry;
-			std::string filename_string = path.filename().string();
+			const auto filename = path.filename();
+			std::string filename_string = filename.string();
 
 			const auto& data = filename_string.data();
 			ImGui::PushID(data);
@@ -117,22 +118,22 @@ namespace App {
 			const auto is_image = Alabaster::Utilities::is_image_by_extension<std::filesystem::path>()(path);
 
 			if (is_image) {
-				if (icons.contains(path.filename())) {
+				if (icons.contains(filename)) {
 					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-					const auto& image_info = icons[path.filename()]->get_descriptor_info();
+					const auto& image_info = icons[filename]->get_descriptor_info();
 					Alabaster::UI::image(image_info, { thumbnail_size, thumbnail_size });
 					ImGui::PopStyleColor();
 				} else {
-					if (!do_not_try_icons.contains(path.filename())) {
+					if (!do_not_try_icons.contains(filename)) {
 						try {
 							if (icons.size() >= icons_max_size) {
 								icons.clear();
 							}
 
-							icons[path.filename()] = Alabaster::Texture::from_filename(path.filename());
+							icons[filename] = Alabaster::Texture::from_filename(filename);
 						} catch (const Alabaster::AlabasterException& e) {
-							Alabaster::Log::info(fmt::format("Could not create icon from image {}", path.filename().string()));
-							do_not_try_icons.emplace(path.filename());
+							Alabaster::Log::info("Could not create icon from image {}, will not try to display again.", filename.string());
+							do_not_try_icons.emplace(filename);
 						}
 					} else {
 						draw_file_or_directory(path, { thumbnail_size, thumbnail_size });

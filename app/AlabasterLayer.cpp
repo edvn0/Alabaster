@@ -11,6 +11,7 @@
 #include "graphics/CommandBuffer.hpp"
 #include "imgui_internal.h"
 #include "panels/DirectoryContentPanel.hpp"
+#include "vulkan/vulkan_core.h"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
@@ -24,6 +25,8 @@ using namespace Component;
 
 static std::uint32_t quads { 1 };
 static bool is_dockspace_open { true };
+
+static bool global_imgui_is_blocking { false };
 
 static glm::vec4 pos { -5, 5, 5, 1.0f };
 static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
@@ -473,6 +476,8 @@ void AlabasterLayer::on_event(Event& e)
 	editor_scene->on_event(e);
 
 	EventDispatcher dispatch(e);
+	dispatch.dispatch<MouseScrolledEvent>([](MouseScrolledEvent& event) { return global_imgui_is_blocking; });
+
 	dispatch.dispatch<KeyPressedEvent>([](KeyPressedEvent& key_event) {
 		const auto key_code = key_event.get_key_code();
 		if (key_code == Key::Escape) {
@@ -480,9 +485,14 @@ void AlabasterLayer::on_event(Event& e)
 			return true;
 		}
 
-		if (Input::key(Key::G)) {
+		if (key_code == Key::F) {
+			UI::empty_cache();
+			return false;
+		}
+
+		if (key_code == Key::G) {
 			Logger::cycle_levels();
-			return true;
+			return false;
 		}
 
 		return false;
@@ -597,30 +607,31 @@ void AlabasterLayer::ui(float ts)
 		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 { 0, 0 });
+		ImGui::Begin("Viewport");
 		{
-			ImGui::Begin("Viewport");
-			{
-				auto viewport_min_region = ImGui::GetWindowContentRegionMin();
-				auto viewport_max_region = ImGui::GetWindowContentRegionMax();
-				auto viewport_offset = ImGui::GetWindowPos();
-				viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
-				viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
+			auto viewport_min_region = ImGui::GetWindowContentRegionMin();
+			auto viewport_max_region = ImGui::GetWindowContentRegionMax();
+			auto viewport_offset = ImGui::GetWindowPos();
+			viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
+			viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
 
-				viewport_focused = ImGui::IsWindowFocused();
-				viewport_hovered = ImGui::IsWindowHovered();
+			viewport_focused = ImGui::IsWindowFocused();
+			viewport_hovered = ImGui::IsWindowHovered();
 
-				ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
-				viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
-
-				ImVec2 vp_size = ImVec2 { viewport_size.x, viewport_size.y };
-
-				const auto& img = editor_scene->final_image();
-				UI::image(*img, vp_size);
-
-				handle_drag_drop();
-
-				ImGui::End();
+			global_imgui_is_blocking = viewport_hovered;
+			if (viewport_hovered) {
+				Application::the().gui_layer().block_events();
 			}
+
+			ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
+			viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
+
+			const auto& img = editor_scene->final_image();
+			UI::image(*img, { viewport_size.x, viewport_size.y });
+
+			handle_drag_drop();
+
+			ImGui::End();
 		}
 		ImGui::PopStyleVar();
 	}

@@ -36,7 +36,7 @@ namespace AssetManager {
 	inline auto& the() { return ResourceCache::the(); }
 
 	template <typename T> struct get_asset {
-		const T* operator()(const std::string& name)
+		const T* operator()(auto&& name)
 		{
 			(void)name;
 			return nullptr;
@@ -44,11 +44,11 @@ namespace AssetManager {
 	};
 
 	template <> struct get_asset<Alabaster::Texture> {
-		const Alabaster::Texture* operator()(const std::string& name) { return the().texture(name); }
+		const Alabaster::Texture* operator()(auto&& name) { return the().texture(name); }
 	};
 
 	template <> struct get_asset<Alabaster::Shader> {
-		const Alabaster::Shader* operator()(const std::string& name) { return the().shader(name); }
+		const Alabaster::Shader* operator()(auto&& name) { return the().shader(name); }
 	};
 
 	template <typename T> const T* asset(const auto& name)

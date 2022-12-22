@@ -450,13 +450,13 @@ namespace Alabaster {
 		std::vector<VkSurfaceFormatKHR> surface_formats(format_count);
 		vk_check(vkGetPhysicalDeviceSurfaceFormatsKHR(GraphicsContext::the().physical_device(), surface, &format_count, surface_formats.data()));
 
-		if ((format_count == 1) && (surface_formats[0].format == VK_FORMAT_UNDEFINED)) {
-			color_format = VK_FORMAT_B8G8R8A8_SRGB;
+		if (format_count == 1) {
+			color_format = surface_formats[0].format;
 			color_space = surface_formats[0].colorSpace;
 		} else {
 			bool found_wanted_format = false;
 			for (auto&& surface_format : surface_formats) {
-				if (surface_format.format == VK_FORMAT_B8G8R8A8_SRGB) {
+				if (surface_format.format == VK_FORMAT_B8G8R8A8_UNORM) {
 					color_format = surface_format.format;
 					color_space = surface_format.colorSpace;
 					found_wanted_format = true;

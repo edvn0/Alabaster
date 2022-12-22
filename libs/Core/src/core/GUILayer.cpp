@@ -82,7 +82,7 @@ namespace Alabaster {
 		ImGui::GetIO().Fonts->AddFontFromFileTTF(path.c_str(), 14.0f);
 
 		{
-			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer("Fonts Texture"));
+			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer { "Fonts Texture" });
 
 			vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
 
