@@ -81,11 +81,9 @@ namespace Alabaster {
 
 		VkSwapchainKHR old_swapchain = swap_chain;
 
-		// Get physical device surface properties and formats
 		VkSurfaceCapabilitiesKHR surf_caps;
 		vk_check(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(GraphicsContext::the().physical_device(), surface, &surf_caps));
 
-		// Get available present modes
 		uint32_t present_mode_count;
 		vk_check(vkGetPhysicalDeviceSurfacePresentModesKHR(GraphicsContext::the().physical_device(), surface, &present_mode_count, NULL));
 		assert_that(present_mode_count > 0);
@@ -456,7 +454,7 @@ namespace Alabaster {
 		} else {
 			bool found_wanted_format = false;
 			for (auto&& surface_format : surface_formats) {
-				if (surface_format.format == VK_FORMAT_B8G8R8A8_UNORM) {
+				if (surface_format.format == VK_FORMAT_R8G8B8A8_SRGB) {
 					color_format = surface_format.format;
 					color_space = surface_format.colorSpace;
 					found_wanted_format = true;

@@ -55,7 +55,7 @@ namespace AssetManager {
 	{
 		try {
 			return get_asset<T>()(name);
-		} catch (const Alabaster::AlabasterException& e) {
+		} catch (const Alabaster::AlabasterException&) {
 			return nullptr;
 		}
 	}

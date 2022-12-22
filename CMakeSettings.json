@@ -1,0 +1,43 @@
+﻿{
+  "configurations": [
+    {
+      "name": "x64-Debug",
+      "generator": "Ninja",
+      "configurationType": "Debug",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "-j10",
+      "ctestCommandArgs": "",
+      "intelliSenseMode": "windows-msvc-x64",
+      "variables": [
+        {
+          "name": "SPIRV_CROSS_ENABLE_REFLECT",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "SPIRV_CROSS_ENABLE_MSL",
+          "value": "True",
+          "type": "BOOL"
+        },
+        {
+          "name": "SPIRV_CROSS_CLI",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "SPIRV_CROSS_ENABLE_CPP",
+          "value": "False",
+          "type": "BOOL"
+        },
+        {
+          "name": "SPIRV_CROSS_ENABLE_TESTS",
+          "value": "False",
+          "type": "BOOL"
+        }
+      ]
+    }
+  ]
+}

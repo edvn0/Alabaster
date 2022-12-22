@@ -151,9 +151,6 @@ namespace Alabaster {
 
 			layer->on_event(event);
 		};
-
-		if (event.handled)
-			return;
 	}
 
 	bool Application::on_window_change(WindowResizeEvent& e)

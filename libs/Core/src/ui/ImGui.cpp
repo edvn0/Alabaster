@@ -15,7 +15,7 @@ namespace Alabaster::UI {
 
 	void image(const VkDescriptorImageInfo& image_info, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1)
 	{
-		const auto image_view = image_info.imageView;
+		const auto& [sampler, image_view, layout] = image_info;
 		if (cached_views.contains(image_view)) {
 			const auto set = cached_views[image_view];
 			ImGui::Image(reinterpret_cast<ImU64>(set), size, uv0, uv1);
@@ -24,11 +24,10 @@ namespace Alabaster::UI {
 
 		if (!image_view)
 			return;
-		const auto texture_id = ImGui_ImplVulkan_AddTexture(image_info.sampler, image_view, image_info.imageLayout);
-		const auto as_imu64 = reinterpret_cast<ImU64>(texture_id);
-		ImGui::Image(as_imu64, size, uv0, uv1);
+		const auto texture_id = ImGui_ImplVulkan_AddTexture(sampler, image_view, layout);
+		ImGui::Image(reinterpret_cast<ImU64>(texture_id), size, uv0, uv1);
 
-		cached_views[image_info.imageView] = texture_id;
+		cached_views[image_view] = texture_id;
 	}
 
 	void image(const Image& img, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1)

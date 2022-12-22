@@ -8,6 +8,8 @@
 
 namespace Alabaster::Utilities {
 
+	static std::unordered_set<std::string> extensions = { ".png", ".jpg", ".jpeg", ".tga" };
+
 	VkFilter vulkan_sampler_filter(TextureFilter filter)
 	{
 		switch (filter) {
@@ -165,7 +167,7 @@ namespace Alabaster::Utilities {
 		case ImageFormat::RG32F:
 			return VK_FORMAT_R32G32_SFLOAT;
 		case ImageFormat::RGBA:
-			return VK_FORMAT_R8G8B8A8_UNORM;
+			return VK_FORMAT_R8G8B8A8_SRGB;
 		case ImageFormat::RGBA16F:
 			return VK_FORMAT_R16G16B16A16_SFLOAT;
 		case ImageFormat::RGBA32F:
@@ -443,5 +445,7 @@ namespace Alabaster::Utilities {
 	{
 		create_image(width, height, format, tiling, bits, image.get());
 	}
+
+	const std::unordered_set<std::string>& image_extensions() { return extensions; }
 
 } // namespace Alabaster::Utilities

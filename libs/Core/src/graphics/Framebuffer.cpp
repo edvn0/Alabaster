@@ -151,7 +151,7 @@ namespace Alabaster {
 			attachment_images.clear();
 
 		uint32_t attachment_index = 0;
-		for (auto attachment_specification : spec.attachments) {
+		for (auto& attachment_specification : spec.attachments) {
 			if (Utilities::is_depth_format(attachment_specification.format)) {
 				if (spec.existing_image) {
 					depth_image = spec.existing_image;

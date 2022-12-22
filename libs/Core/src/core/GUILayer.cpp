@@ -79,7 +79,7 @@ namespace Alabaster {
 		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
 
 		const std::filesystem::path path = IO::font("FreePixel.ttf");
-		ImGui::GetIO().Fonts->AddFontFromFileTTF(path.c_str(), 14.0f);
+		ImGui::GetIO().Fonts->AddFontFromFileTTF(path.string().c_str(), 14.0f);
 
 		{
 			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer { "Fonts Texture" });

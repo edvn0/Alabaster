@@ -23,7 +23,7 @@ namespace Alabaster::FS {
 			if constexpr (std::is_same_v<Output, std::filesystem::path>) {
 				output.push_back(static_cast<Output>(fd.path().string()));
 			} else {
-				output.push_back(static_cast<Output>(fd.path()));
+				output.push_back(static_cast<Output>(fd.path().string()));
 			};
 		};
 
