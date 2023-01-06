@@ -171,7 +171,7 @@ namespace Alabaster::Utilities {
 		case ImageFormat::RG32F:
 			return VK_FORMAT_R32G32_SFLOAT;
 		case ImageFormat::RGBA:
-			return VK_FORMAT_R8G8B8A8_UNORM;
+			return VK_FORMAT_R8G8B8A8_SRGB;
 		case ImageFormat::RGBA16F:
 			return VK_FORMAT_R16G16B16A16_SFLOAT;
 		case ImageFormat::RGBA32F:
@@ -187,7 +187,7 @@ namespace Alabaster::Utilities {
 		case ImageFormat::RGB:
 			return VK_FORMAT_R8G8B8_UNORM;
 		case ImageFormat::SRGB:
-			return VK_FORMAT_R8G8B8_SRGB;
+			return VK_FORMAT_R8G8B8_UNORM;
 		case ImageFormat::None:
 			break;
 		}
@@ -388,7 +388,10 @@ namespace Alabaster::Utilities {
 		return false;
 	}
 
-	uint32_t calculate_mip_count(uint32_t width, uint32_t height) { return (uint32_t)std::floor(std::log2(glm::min(width, height))) + 1; }
+	uint32_t calculate_mip_count(uint32_t width, uint32_t height)
+	{
+		return static_cast<std::uint32_t>(std::floor(std::log2(glm::min(width, height))) + 1);
+	}
 
 	uint32_t get_image_memory_size(ImageFormat format, uint32_t width, uint32_t height) { return width * height * get_image_format_bpp(format); }
 

@@ -121,8 +121,8 @@ namespace Alabaster {
 		auto& get_info() { return info; }
 
 		void create_per_layer_image_view();
-		VkImageView get_layer_image_view(uint32_t layer) { return per_layer_image_views[layer]; }
-		VkImageView get_mip_image_view(uint32_t mip);
+		VkImageView get_layer_image_view(std::uint32_t layer) { return per_layer_image_views[layer]; }
+		VkImageView get_mip_image_view(std::uint32_t mip);
 
 		Buffer get_buffer() const { return image_data; }
 		Buffer& get_buffer() { return image_data; }
@@ -132,7 +132,7 @@ namespace Alabaster {
 		void update_descriptor();
 
 		const auto& get_descriptor_info() const { return descriptor_image_info; }
-		void create_per_specific_layer_image_views(const std::vector<uint32_t>& layer_indices);
+		void create_per_specific_layer_image_views(const std::vector<std::uint32_t>& layer_indices);
 
 	private:
 		ImageSpecification spec;

@@ -163,15 +163,15 @@ namespace Alabaster {
 
 	void Image::create_per_layer_image_view()
 	{
-
 		VkImageAspectFlags aspect_mask = Utilities::is_depth_format(spec.format) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
-		if (spec.format == ImageFormat::DEPTH24STENCIL8)
+		if (spec.format == ImageFormat::DEPTH24STENCIL8) {
 			aspect_mask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+		}
 
 		const VkFormat vulkan_format = Utilities::vulkan_image_format(spec.format);
 
 		per_layer_image_views.resize(spec.layers);
-		for (uint32_t layer = 0; layer < spec.layers; layer++) {
+		for (std::uint32_t layer = 0; layer < spec.layers; layer++) {
 			VkImageViewCreateInfo image_view_create_info = {};
 			image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
 			image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;

@@ -8,6 +8,7 @@
 #include "graphics/Texture.hpp"
 
 #include <imgui_impl_vulkan.h>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster::UI {
 
@@ -52,7 +53,16 @@ namespace Alabaster::UI {
 
 	void image(const std::shared_ptr<Alabaster::Image>& img, const ImVec2& size) { image(*img, size, { 0, 0 }, { 1, 1 }); }
 
-	void empty_cache() { cached_views.clear(); }
+	void empty_cache()
+	{
+		for (auto it = cached_views.begin(); it != cached_views.end();) {
+			const auto entry = *it;
+			const auto& [key, value] = entry;
+			ImGui_ImplVulkan_RemoveTexture(value);
+			vkDestroyImageView(GraphicsContext::the().device(), key, nullptr);
+			it = cached_views.erase(it);
+		}
+	}
 
 	bool is_mouse_double_clicked(MouseCode code)
 	{

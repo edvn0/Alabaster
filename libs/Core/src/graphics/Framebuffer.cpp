@@ -104,7 +104,7 @@ namespace Alabaster {
 				}
 
 				if (depth_image) {
-					if (spec.existing_images.find((uint32_t)spec.attachments.size() - 1) == spec.existing_images.end()) {
+					if (spec.existing_images.find(spec.attachments.size() - 1) == spec.existing_images.end()) {
 						depth_image->destroy();
 						Log::info("[Framebuffer] Destroying framebuffer depth image.");
 					}
@@ -176,7 +176,7 @@ namespace Alabaster {
 				attachment_description.format = Utilities::vulkan_image_format(attachment_specification.format);
 				attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
 				attachment_description.loadOp = spec.clear_depth_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
-				attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+				attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 				attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 				attachment_description.initialLayout
