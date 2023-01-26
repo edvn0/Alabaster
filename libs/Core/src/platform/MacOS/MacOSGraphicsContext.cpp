@@ -1,8 +1,8 @@
 #include "av_pch.hpp"
 
 #include "core/Common.hpp"
-#include "core/exceptions/AlabasterException.hpp"
 #include "core/Logger.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "graphics/GraphicsContext.hpp"
 
 #include <GLFW/glfw3.h>

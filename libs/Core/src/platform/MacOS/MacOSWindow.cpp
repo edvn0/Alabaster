@@ -2,12 +2,12 @@
 
 #include "codes/KeyCode.hpp"
 #include "core/Application.hpp"
+#include "core/Logger.hpp"
+#include "core/Window.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/events/KeyEvent.hpp"
 #include "core/events/MouseEvent.hpp"
 #include "core/exceptions/AlabasterException.hpp"
-#include "core/Logger.hpp"
-#include "core/Window.hpp"
 #include "graphics/Swapchain.hpp"
 
 #include <GLFW/glfw3.h>

@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "graphics/Texture.hpp"
 #include "Panel.hpp"
+#include "graphics/Texture.hpp"
 
 #include <filesystem>
 

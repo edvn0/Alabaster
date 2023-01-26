@@ -1,7 +1,7 @@
 #pragma once
 
-#include "codes/KeyCode.hpp"
 #include "Event.hpp"
+#include "codes/KeyCode.hpp"
 
 #include <sstream>
 

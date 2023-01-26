@@ -19,8 +19,6 @@ IncludeCategories:
     - Regex: ".*"
       Priority: 4
 NamespaceIndentation: All
-SortIncludes: CaseInsensitive
-SortUsingDeclarations: true
 Standard: c++20
 TabWidth: 4
 UseTab: Always

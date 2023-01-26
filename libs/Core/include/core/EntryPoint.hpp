@@ -7,10 +7,10 @@
 
 extern Alabaster::Application* Alabaster::create(const Alabaster::ApplicationArguments& props);
 
+#include <ProgramOptions.hxx>
 #include <any>
 #include <filesystem>
 #include <memory>
-#include <ProgramOptions.hxx>
 #include <system_error>
 
 int main(int argc, char** argv)

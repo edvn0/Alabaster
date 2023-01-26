@@ -4,11 +4,11 @@
 
 #include "codes/KeyCode.hpp"
 #include "core/Application.hpp"
+#include "core/Input.hpp"
+#include "core/Logger.hpp"
 #include "core/events/Event.hpp"
 #include "core/events/KeyEvent.hpp"
 #include "core/events/MouseEvent.hpp"
-#include "core/Input.hpp"
-#include "core/Logger.hpp"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE

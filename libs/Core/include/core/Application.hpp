@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/Common.hpp"
-#include "core/events/ApplicationEvent.hpp"
 #include "core/Layer.hpp"
+#include "core/events/ApplicationEvent.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Swapchain.hpp"
 

@@ -4,8 +4,8 @@
 
 #include "core/Application.hpp"
 #include "core/Common.hpp"
-#include "core/exceptions/AlabasterException.hpp"
 #include "core/Window.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "graphics/Allocator.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
@@ -115,7 +115,8 @@ namespace Alabaster {
 
 	void Framebuffer::resize(uint32_t w, uint32_t h, bool force_recreate)
 	{
-		if (!force_recreate && (w == width && h == height))
+		const auto size_was_changed = w == width && h == height;
+		if (!force_recreate && size_was_changed)
 			return;
 
 		width = static_cast<std::uint32_t>(w * spec.scale);
@@ -168,7 +169,7 @@ namespace Alabaster {
 					auto& depth_props = depth_attachment_image->get_specification();
 					depth_props.width = static_cast<std::uint32_t>(width * spec.scale);
 					depth_props.height = static_cast<std::uint32_t>(height * spec.scale);
-					depth_attachment_image->invalidate(); // Create immediately
+					depth_attachment_image->invalidate();
 				}
 
 				VkAttachmentDescription& attachment_description = attachment_descriptions.emplace_back();
@@ -181,9 +182,7 @@ namespace Alabaster {
 				attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 				attachment_description.initialLayout
 					= spec.clear_depth_on_load ? VK_IMAGE_LAYOUT_UNDEFINED : VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-				if (attachment_specification.format == ImageFormat::DEPTH24STENCIL8
-					|| true) // Separate layouts requires a "separate layouts" flag to be enabled
-				{
+				if (attachment_specification.format == ImageFormat::DEPTH24STENCIL8 || true) {
 					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 					depth_attachment_reference = { attachment_index, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL };

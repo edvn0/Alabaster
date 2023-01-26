@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/Common.hpp"
-#include "core/exceptions/AlabasterException.hpp"
 #include "core/OpenMode.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 
 #include <algorithm>
 #include <filesystem>

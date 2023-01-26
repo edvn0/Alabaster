@@ -1,7 +1,7 @@
 #pragma once
 
-#include "component/Component.hpp"
 #include "CoreForward.hpp"
+#include "component/Component.hpp"
 #include "graphics/Camera.hpp"
 #include "uuid.h"
 

@@ -3,13 +3,13 @@
 #include "core/Application.hpp"
 
 #include "core/Clock.hpp"
-#include "core/events/ApplicationEvent.hpp"
-#include "core/events/Event.hpp"
 #include "core/GUILayer.hpp"
 #include "core/Input.hpp"
 #include "core/Logger.hpp"
 #include "core/Timer.hpp"
 #include "core/Window.hpp"
+#include "core/events/ApplicationEvent.hpp"
+#include "core/events/Event.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
 

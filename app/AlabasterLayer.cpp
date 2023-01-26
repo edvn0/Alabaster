@@ -4,9 +4,9 @@
 #include "AssetManager.hpp"
 #include "component/Component.hpp"
 #include "core/Common.hpp"
-#include "core/exceptions/AlabasterException.hpp"
 #include "core/GUILayer.hpp"
 #include "core/Logger.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "entity/Entity.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "imgui_internal.h"
@@ -678,7 +678,6 @@ void AlabasterLayer::handle_drag_drop()
 				handle_filetype<Filetype::Filetypes::VERT>()(filename);
 				handle_filetype<Filetype::Filetypes::FRAG>()(filename);
 				handle_filetype<Filetype::Filetypes::OBJ>()(filename);
-
 			} catch (const AlabasterException& e) {
 				Log::info("[AlabasterLayer] {}", e.what());
 			}

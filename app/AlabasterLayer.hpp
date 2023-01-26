@@ -6,11 +6,11 @@
 
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
+#include "SceneSystem.hpp"
 #include "graphics/Camera.hpp"
 #include "graphics/Renderer.hpp"
 #include "panels/Panel.hpp"
 #include "scene/Scene.hpp"
-#include "SceneSystem.hpp"
 
 #include <glm/glm.hpp>
 #include <memory>

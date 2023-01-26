@@ -1,13 +1,13 @@
 #pragma once
 
 #include "core/Application.hpp"
+#include "core/Input.hpp"
+#include "core/Random.hpp"
+#include "core/Window.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/events/Event.hpp"
 #include "core/events/KeyEvent.hpp"
 #include "core/events/MouseEvent.hpp"
-#include "core/Input.hpp"
-#include "core/Random.hpp"
-#include "core/Window.hpp"
 #include "glm/geometric.hpp"
 #include "graphics/Camera.hpp"
 #include "graphics/CommandBuffer.hpp"
