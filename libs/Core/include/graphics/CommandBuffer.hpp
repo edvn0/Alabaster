@@ -34,8 +34,8 @@ namespace Alabaster {
 		virtual std::uint32_t get_buffer_index();
 
 		auto& get_buffer() const { return active; }
-		auto& get_command_pool() const { return pool; }
 		auto& get_buffer() { return active; }
+		auto& get_command_pool() const { return pool; }
 		auto& get_command_pool() { return pool; }
 
 		operator VkCommandBuffer() { return active; }
@@ -83,7 +83,7 @@ namespace Alabaster {
 		ImmediateCommandBuffer(std::string allocator_tag)
 			: CommandBuffer(1)
 		{
-			begin();
+			CommandBuffer::begin();
 			set_allocator_name(std::move(allocator_tag));
 		}
 
@@ -95,8 +95,9 @@ namespace Alabaster {
 
 		std::uint32_t get_buffer_index() final;
 
-		void end() final { throw AlabasterException("Cannot explicitly end an immediate command buffer. It is called in the destructor"); }
-		void submit() final { throw AlabasterException("Cannot explicitly submit an immediate command buffer. It is called in the destructor"); }
+		void begin() final { throw AlabasterException("Cannot explicitly begin an immediate command buffer. It is called in the constructor."); }
+		void end() final { throw AlabasterException("Cannot explicitly end an immediate command buffer. It is called in the destructor."); }
+		void submit() final { throw AlabasterException("Cannot explicitly submit an immediate command buffer. It is called in the destructor."); }
 	};
 
 } // namespace Alabaster

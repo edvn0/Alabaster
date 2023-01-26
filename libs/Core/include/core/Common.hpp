@@ -117,7 +117,7 @@ namespace Alabaster {
 
 #ifdef ALABASTER_DEBUG
 
-	template <typename VkResult> static inline constexpr auto vk_check(VkResult result) -> void
+	template <typename VkResult> static inline constexpr auto vk_check(VkResult result) -> decltype(auto)
 	{
 		VkResult err = result;
 		if (err) {
