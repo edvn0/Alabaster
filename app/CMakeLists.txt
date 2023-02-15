@@ -46,4 +46,7 @@ add_custom_command(
 	${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/resources
 	$<TARGET_FILE_DIR:AlabasterApp>/resources)
 
-add_dependencies(${PROJECT_NAME} clang-format-app)
+
+if(CLANG_FORMAT)
+    add_dependencies(${PROJECT_NAME} clang-format-app)
+endif()

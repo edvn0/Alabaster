@@ -84,4 +84,6 @@ endif()
 add_subdirectory(tests)
 
 # #endif()
+if(CLANG_FORMAT)
 add_dependencies(${PROJECT_NAME} clang-format-scene)
+endif()

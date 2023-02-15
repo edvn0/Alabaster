@@ -109,4 +109,6 @@ add_custom_target(
 
 add_dependencies(${PROJECT_NAME} compile_all_shaders)
 
+if(CLANG_FORMAT)
 add_dependencies(${PROJECT_NAME} clang-format-lib)
+endif()
