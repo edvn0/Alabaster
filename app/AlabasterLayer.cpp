@@ -638,16 +638,8 @@ void AlabasterLayer::ui(float ts)
 	ImGui::End();
 }
 
-namespace Filetype {
-	enum Filetypes { PNG, TTF, JPEG, JPG, SPV, VERT, FRAG, OBJ };
-}
-
-template <Filetype::Filetypes Type> struct handle_filetype {
-	void operator()(const std::filesystem::path& path) { Log::info("Filetype handler not implemented for {}", enum_name(Type)); };
-};
-
 template <> struct handle_filetype<Filetype::Filetypes::PNG> {
-	void operator()(const std::filesystem::path& path)
+	void operator()(std::unique_ptr<SceneSystem::Scene>& scene, const std::filesystem::path& path) const
 	{
 		if (path.extension() != ".png")
 			return;
@@ -663,21 +655,21 @@ void AlabasterLayer::handle_drag_drop()
 {
 	if (ImGui::BeginDragDropTarget()) {
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")) {
-			const char* path = static_cast<const char*>(payload->Data);
+			const auto* path = static_cast<const char*>(payload->Data);
 			const auto fp = std::filesystem::path { path };
 
 			const auto filename = fp.filename();
 			const auto extension = filename.extension();
 
 			try {
-				handle_filetype<Filetype::Filetypes::PNG>()(filename);
-				handle_filetype<Filetype::Filetypes::TTF>()(filename);
-				handle_filetype<Filetype::Filetypes::JPEG>()(filename);
-				handle_filetype<Filetype::Filetypes::JPG>()(filename);
-				handle_filetype<Filetype::Filetypes::SPV>()(filename);
-				handle_filetype<Filetype::Filetypes::VERT>()(filename);
-				handle_filetype<Filetype::Filetypes::FRAG>()(filename);
-				handle_filetype<Filetype::Filetypes::OBJ>()(filename);
+				handle_filetype<Filetype::Filetypes::PNG> {}(editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::TTF> {}(editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::JPEG> {}(editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::JPG> {}(editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::SPV> {}(editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::VERT> {}(editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::FRAG> {}(editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::OBJ> {}(editor_scene, filename);
 			} catch (const AlabasterException& e) {
 				Log::info("[AlabasterLayer] {}", e.what());
 			}
@@ -691,11 +683,11 @@ void AlabasterLayer::draw_components(Entity& entity)
 	if (entity.has_component<Component::Tag>()) {
 		auto& tag = entity.get_component<Component::Tag>().tag;
 
-		char buffer[500];
-		std::memset(buffer, 0, sizeof(buffer));
-		tag.copy(buffer, 499);
-		buffer[499] = '\0';
-		if (ImGui::InputText("##Tag", buffer, sizeof(buffer))) {
+		std::string buffer;
+		buffer.reserve(500);
+		std::memset(buffer.data(), 0, sizeof(buffer));
+		tag.copy(buffer.data(), 499);
+		if (ImGui::InputText("##Tag", buffer.data(), sizeof(buffer))) {
 			tag = std::string(buffer);
 		}
 	}
@@ -726,7 +718,7 @@ void AlabasterLayer::draw_components(Entity& entity)
 
 void AlabasterLayer::draw_entity_node(Entity& entity)
 {
-	auto& tag = entity.get_component<Component::Tag>().tag;
+	const auto& tag = entity.get_tag().tag;
 
 	ImGuiTreeNodeFlags flags = ((selected_entity == entity) ? ImGuiTreeNodeFlags_Selected : 0) | ImGuiTreeNodeFlags_OpenOnArrow;
 	flags |= ImGuiTreeNodeFlags_SpanAvailWidth;
@@ -745,9 +737,9 @@ void AlabasterLayer::draw_entity_node(Entity& entity)
 	}
 
 	if (opened) {
-		ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-		bool opened = ImGui::TreeNodeEx((const char*)&entity.get_component<ID>().identifier, flags, "%s", tag.c_str());
-		if (opened)
+		ImGuiTreeNodeFlags opened_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+		bool was_opened = ImGui::TreeNodeEx((const char*)&entity.get_component<ID>().identifier, opened_flags, "%s", tag.c_str());
+		if (was_opened)
 			ImGui::TreePop();
 		ImGui::TreePop();
 	}

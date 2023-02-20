@@ -132,7 +132,7 @@ namespace Alabaster {
 			throw std::runtime_error("Validation layer support requested but could not be given.");
 		}
 
-		VkApplicationInfo application_info {};
+		VkApplicationInfo application_info = {};
 		application_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		application_info.pApplicationName = "Alabaster";
 		application_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -140,7 +140,7 @@ namespace Alabaster {
 		application_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 		application_info.apiVersion = VK_API_VERSION_1_1;
 
-		VkInstanceCreateInfo instance_info {};
+		VkInstanceCreateInfo instance_info = {};
 		instance_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 		instance_info.pApplicationInfo = &application_info;
 
@@ -154,7 +154,8 @@ namespace Alabaster {
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
 		// extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-		instance_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+
+		// instance_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 		instance_info.enabledExtensionCount = static_cast<std::uint32_t>(extensions.size());
 		instance_info.ppEnabledExtensionNames = extensions.data();
 
@@ -168,7 +169,7 @@ namespace Alabaster {
 
 			VkDebugUtilsMessengerCreateInfoEXT debug_create_info {};
 			populate_debug_messenger(debug_create_info);
-			instance_info.pNext = static_cast<VkDebugUtilsMessengerCreateInfoEXT*>(&debug_create_info);
+			instance_info.pNext = &debug_create_info;
 		}
 
 		vk_check(vkCreateInstance(&instance_info, nullptr, &vk_instance));

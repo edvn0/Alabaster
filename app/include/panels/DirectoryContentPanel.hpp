@@ -35,7 +35,7 @@ namespace App {
 
 		auto& get_current() { return current; }
 		std::vector<std::filesystem::path> get_files_in_directory(const std::filesystem::path& for_path);
-		void draw_file_or_directory(const std::filesystem::path& path, const ImVec2& size);
+		void draw_file_or_directory(const std::filesystem::path& path, const ImVec2& size) const;
 
 	private:
 		const std::filesystem::path initial;

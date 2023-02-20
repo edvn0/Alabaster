@@ -105,9 +105,9 @@ namespace App {
 			column_count = 1;
 		}
 
-		ImGui::Columns(column_count, 0, false);
+		ImGui::Columns(column_count, nullptr, false);
 
-		for (auto& directory_entry : current_directory_content) {
+		for (const auto& directory_entry : current_directory_content) {
 			const auto& path = directory_entry;
 			const auto filename = path.filename();
 			std::string filename_string = filename.string();
@@ -189,7 +189,7 @@ namespace App {
 		return found;
 	}
 
-	void DirectoryContentPanel::draw_file_or_directory(const std::filesystem::path& path, const ImVec2& size)
+	void DirectoryContentPanel::draw_file_or_directory(const std::filesystem::path& path, const ImVec2& size) const
 	{
 		const auto& icon = is_directory(path) ? directory_icon : file_icon;
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));

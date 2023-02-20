@@ -20,7 +20,12 @@ namespace Alabaster::IO {
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{
+#ifdef ALABASTER_WINDOWS
+		(void)mode;
+		std::ifstream stream(filename, std::ios::in | std::ios::ate);
+#else
 		std::ifstream stream(filename, static_cast<unsigned int>(mode));
+#endif
 		if (!stream) {
 			throw AlabasterException("Could not open filestream to shader file.");
 		}

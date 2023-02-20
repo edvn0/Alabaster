@@ -48,7 +48,9 @@ namespace SceneSystem::Component {
 		Transform(Pos&& pos, Rot&& rot, Scale&& scale) noexcept
 			: position(std::forward<Pos>(pos))
 			, rotation(std::forward<Rot>(rot))
-			, scale(std::forward<Scale>(scale)) {};
+			, scale(std::forward<Scale>(scale))
+		{
+		}
 	};
 	template <> inline constexpr std::string_view component_name<Component::Transform> = "transform";
 
@@ -101,12 +103,12 @@ namespace SceneSystem::Component {
 	};
 	template <> inline constexpr std::string_view component_name<Component::Camera> = "camera";
 
-	namespace detail {
+	namespace Detail {
 		template <typename T, typename... U>
 		concept IsAnyOf = (std::same_as<T, U> || ...);
 	}
 
 	template <typename T>
-	concept IsComponent = detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light>;
+	concept IsComponent = Detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light>;
 
 } // namespace SceneSystem::Component

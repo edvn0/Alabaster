@@ -31,7 +31,6 @@ namespace Alabaster {
 
 	bool GUILayer::initialise()
 	{
-
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;

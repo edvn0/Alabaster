@@ -19,7 +19,7 @@
         },
         {
           "name": "SPIRV_CROSS_ENABLE_MSL",
-          "value": "True",
+          "value": "False",
           "type": "BOOL"
         },
         {

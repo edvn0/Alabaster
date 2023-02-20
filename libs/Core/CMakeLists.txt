@@ -68,10 +68,10 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/av_pch.hpp)
 
 if(MSVC)
-	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /wd4201)
+	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /wd4201 "/MP")
 else()
 	target_compile_options(
-		${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Werror
+		${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wno-shadow -Werror
 		-Wno-nullability-extension)
 endif()
 
@@ -85,15 +85,11 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
 endif()
 
 if(${ALABASTER_OS} STREQUAL "Windows")
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS /wd4201)
+	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
 elseif(${ALABASTER_OS} STREQUAL "MacOS")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
 elseif(${ALABASTER_OS} STREQUAL "Linux")
     target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
-endif()
-
-if(MSVC)
-	target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
 
 if(BUILD_TESTING)

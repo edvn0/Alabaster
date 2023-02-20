@@ -36,7 +36,7 @@ namespace Alabaster {
 	void SimpleCamera::on_event(Event& event)
 	{
 		EventDispatcher dispatcher(event);
-		dispatcher.dispatch<MouseScrolledEvent>([=](MouseScrolledEvent& event) {
+		dispatcher.dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& event) -> bool {
 			glm::vec3 cam_front;
 			cam_front.x = -cos(glm::radians(rotation.x)) * sin(glm::radians(rotation.y));
 			cam_front.y = sin(glm::radians(rotation.x));

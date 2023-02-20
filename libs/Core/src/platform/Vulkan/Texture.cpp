@@ -9,10 +9,6 @@
 
 namespace Alabaster {
 
-	//////////////////////////////////////////////////////////////////////////////////
-	// Texture2D
-	//////////////////////////////////////////////////////////////////////////////////
-
 	Texture::Texture(const std::filesystem::path& path, const TextureProperties properties)
 		: path(path)
 		, properties(properties)
@@ -161,9 +157,6 @@ namespace Alabaster {
 		if (image_data) {
 			VkDeviceSize size = image_data.size;
 
-			VkMemoryAllocateInfo mem_alloc_info {};
-			mem_alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-
 			Allocator allocator("Texture2D - Staging");
 
 			VkBufferCreateInfo buffer_create_info {};
@@ -307,12 +300,6 @@ namespace Alabaster {
 		const auto& info = image->get_info();
 
 		ImmediateCommandBuffer immediate_command_buffer { "Mip Generation" };
-
-		VkImageMemoryBarrier barrier = {};
-		barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-		barrier.image = info.image;
-		barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-		barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
 
 		const auto mip_levels = get_mip_level_count();
 		for (uint32_t i = 1; i < mip_levels; i++) {

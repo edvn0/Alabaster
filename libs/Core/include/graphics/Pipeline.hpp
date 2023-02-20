@@ -20,8 +20,8 @@ namespace Alabaster {
 		VkPrimitiveTopology topology;
 		bool depth_test { true };
 		bool depth_write { true };
-		VertexBufferLayout vertex_layout;
-		VertexBufferLayout instance_layout;
+		VertexBufferLayout vertex_layout {};
+		VertexBufferLayout instance_layout {};
 		std::optional<PushConstantRanges> ranges { std::nullopt };
 		std::vector<VkDescriptorSetLayout> descriptor_set_layouts {};
 		float line_width { 1.0f };

@@ -151,10 +151,7 @@ namespace SceneSystem {
 		}
 	}
 
-	Scene::Scene()
-		: registry()
-	{
-	}
+	Scene::Scene() { }
 
 	Scene::~Scene()
 	{

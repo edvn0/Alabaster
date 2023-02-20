@@ -62,9 +62,8 @@ compile_commands.json
 *.app
 
 # Folders
-build/*
+build*
 
 app/resources/scene/*.json
 
 !./app/resources/editor
-

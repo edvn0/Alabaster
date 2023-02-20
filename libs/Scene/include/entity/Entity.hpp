@@ -16,7 +16,7 @@ namespace SceneSystem {
 		explicit Entity(Scene* scene, std::string name = "Unnamed entity");
 		explicit Entity(const std::unique_ptr<Scene>& scene, std::string name = "Unnamed entity");
 		explicit Entity(const std::shared_ptr<Scene>& scene, std::string name = "Unnamed entity");
-		~Entity() {};
+		~Entity() = default;
 
 		Entity(const Entity& other);
 		Entity& operator=(const Entity& other)
@@ -67,7 +67,8 @@ namespace SceneSystem {
 
 		bool operator!=(const Entity& other) const { return !(*this == other); }
 
-	public:
+		auto& get_transform() const { return get_component<Component::Transform>(); }
+		auto& get_tag() const { return get_component<Component::Tag>(); }
 		auto& get_transform() { return get_component<Component::Transform>(); }
 		auto& get_tag() { return get_component<Component::Tag>(); }
 

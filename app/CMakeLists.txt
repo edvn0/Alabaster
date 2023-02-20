@@ -29,14 +29,16 @@ target_link_libraries(
 	${PROJECT_NAME} PRIVATE Alabaster::AssetManager Alabaster::Core
 	Alabaster::SceneSystem spdlog imgui)
 
-if(WIN32)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS /wd4201)
-elseif(APPLE)
+if(${ALABASTER_OS} STREQUAL "Windows")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
+elseif(${ALABASTER_OS} STREQUAL "MacOS")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
+elseif(${ALABASTER_OS} STREQUAL "Linux")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
 endif()
 
 if(MSVC)
-	target_compile_options(${PROJECT_NAME} PRIVATE "/MP" /wd4201)
+	target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
 
 add_custom_command(

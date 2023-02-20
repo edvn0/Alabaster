@@ -15,13 +15,15 @@
 #include <imgui.h>
 
 namespace Alabaster {
-	static inline const void initialize_window_library()
+
+	static inline void initialize_window_library()
 	{
 		int success = glfwInit();
 		if (!success) {
 			throw AlabasterException();
 		}
 	};
+
 	Window::~Window() = default;
 
 	Window::Window(const ApplicationArguments& arguments)
@@ -45,11 +47,11 @@ namespace Alabaster {
 
 		glfwSetWindowUserPointer(handle, &user_data);
 
-		static constexpr auto set_and_get_window_size = [](GLFWwindow* handle, std::uint32_t w, std::uint32_t h) {
-			glfwSetWindowSize(handle, static_cast<int>(w), static_cast<int>(h));
+		static constexpr auto set_and_get_window_size = [](GLFWwindow* glfw_handle, std::uint32_t w, std::uint32_t h) {
+			glfwSetWindowSize(glfw_handle, static_cast<int>(w), static_cast<int>(h));
 
 			int actual_w, actual_h;
-			glfwGetWindowSize(handle, &actual_w, &actual_h);
+			glfwGetWindowSize(glfw_handle, &actual_w, &actual_h);
 			return std::make_tuple(actual_w, actual_h);
 		};
 
@@ -109,13 +111,13 @@ namespace Alabaster {
 		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow*, int w, int h) { Application::the().resize(w, h); });
 
 		// Set GLFW callbacks
-		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int width, int height) {
+		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int new_width, int new_height) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
-			WindowResizeEvent event((std::uint32_t)width, (std::uint32_t)height);
+			WindowResizeEvent event((std::uint32_t)new_width, (std::uint32_t)new_height);
 			data.callback(event);
-			data.width = width;
-			data.height = height;
+			data.width = new_width;
+			data.height = new_height;
 		});
 
 		glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {

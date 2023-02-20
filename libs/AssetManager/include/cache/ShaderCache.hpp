@@ -43,8 +43,7 @@ namespace AssetManager {
 		std::vector<std::pair<std::filesystem::path, std::filesystem::path>> extract_into_pairs_of_shaders(
 			const std::vector<std::string>& sorted_shaders_in_directory);
 
-	private:
-		std::unordered_map<std::string, Alabaster::Shader> shaders;
+		std::unordered_map<std::string, Alabaster::Shader, AssetManager::StringHash, std::equal_to<>> shaders;
 		std::unique_ptr<cache_create_read<T>> cache_crud;
 
 		friend BaseCache;

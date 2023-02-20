@@ -10,13 +10,12 @@ namespace AssetManager {
 
 	template <class T> class TextureCache : public BaseCache<TextureCache, Alabaster::Texture> {
 	public:
-		TextureCache(std::unique_ptr<cache_create_read<T>> cache_crud = std::make_unique<DefaultTextureCrud>())
+		explicit TextureCache(std::unique_ptr<cache_create_read<T>> cache_crud = std::make_unique<DefaultTextureCrud>())
 			: cache_crud(std::move(cache_crud)) {};
 
-		void load_from_directory(
-			const std::filesystem::path& texture_path, std::unordered_set<std::string> include_extensions = { ".tga", ".png", ".jpeg", ".jpg" });
+		void load_from_directory(const std::filesystem::path& texture_path,
+			std::unordered_set<std::string, StringHash, std::equal_to<>> include_extensions = { ".tga", ".png", ".jpeg", ".jpg" });
 
-	public:
 		void destroy_impl()
 		{
 			for (auto it = textures.begin(); it != textures.end();) {
@@ -46,7 +45,7 @@ namespace AssetManager {
 		};
 
 	private:
-		std::unordered_map<std::string, Alabaster::Texture> textures;
+		std::unordered_map<std::string, Alabaster::Texture, StringHash, std::equal_to<>> textures;
 		std::filesystem::path texture_path;
 		std::unique_ptr<cache_create_read<T>> cache_crud;
 

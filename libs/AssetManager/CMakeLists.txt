@@ -43,16 +43,15 @@ target_link_libraries(
 	Alabaster::Core
 	shaderc
 	spirv-cross-core
-	spirv-cross-msl
 	spirv-cross-glsl)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/am_pch.hpp)
 
 if(MSVC)
-	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /wd4201)
+	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
 else()
 	target_compile_options(
-		${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror
+    ${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wno-shadow -Werror
 		-Wno-nullability-extension)
 endif()
 
@@ -65,10 +64,12 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_RELEASE)
 endif()
 
-if(WIN32)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS /wd4201)
-elseif(APPLE)
+if(${ALABASTER_OS} STREQUAL "Windows")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
+elseif(${ALABASTER_OS} STREQUAL "MacOS")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
+elseif(${ALABASTER_OS} STREQUAL "Linux")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
 endif()
 
 if(MSVC)

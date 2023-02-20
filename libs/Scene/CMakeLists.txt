@@ -57,7 +57,7 @@ if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /wd4201)
 else()
 	target_compile_options(
-		${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Werror
+		${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wno-shadow -Werror
 		-Wno-nullability-extension)
 endif()
 
@@ -70,10 +70,12 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_RELEASE)
 endif()
 
-if(WIN32)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS /wd4201)
-elseif(APPLE)
+if(${ALABASTER_OS} STREQUAL "Windows")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
+elseif(${ALABASTER_OS} STREQUAL "MacOS")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
+elseif(${ALABASTER_OS} STREQUAL "Linux")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
 endif()
 
 if(MSVC)

@@ -11,8 +11,10 @@ if(WIN32)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(ALABASTER_OS "MacOS")
 else()
-    set(ALABASTER_OS "Linux")
+  	set(ALABASTER_OS "Linux")
 endif()
+
+message(STATUS "ALABASTER: Chosen OS: ${ALABASTER_OS}")
 
 if(CMAKE_GENERATOR STREQUAL Xcode)
 	set(XCODE_SCHEME_ENABLE_GPU_API_VALIDATION ON)

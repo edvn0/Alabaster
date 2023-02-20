@@ -51,18 +51,18 @@ int main(int argc, char** argv)
 		return 1;
 	}
 
-	if (equals_ignore_case(sync_mode, std::string("vsync"))) {
-		props.sync_mode = SyncMode::VSync;
+	if (Alabaster::equals_ignore_case(sync_mode, std::string("vsync"))) {
+		props.sync_mode = Alabaster::SyncMode::VSync;
 	}
-	if (equals_ignore_case(sync_mode, std::string("immediate"))) {
-		props.sync_mode = SyncMode::Immediate;
+	if (Alabaster::equals_ignore_case(sync_mode, std::string("immediate"))) {
+		props.sync_mode = Alabaster::SyncMode::Immediate;
 	}
-	if (equals_ignore_case(sync_mode, std::string("mailbox"))) {
-		props.sync_mode = SyncMode::Mailbox;
+	if (Alabaster::equals_ignore_case(sync_mode, std::string("mailbox"))) {
+		props.sync_mode = Alabaster::SyncMode::Mailbox;
 	}
 
 	Alabaster::Log::info(
-		"[EntryPoint] Width: {}, Height: {}, Name: {}, SyncMode: {}", props.width, props.height, props.name, enum_name(props.sync_mode));
+		"[EntryPoint] Width: {}, Height: {}, Name: {}, SyncMode: {}", props.width, props.height, props.name, magic_enum::enum_name(props.sync_mode));
 
 	Alabaster::IO::init_with_cwd(*root);
 
