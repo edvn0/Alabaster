@@ -2,12 +2,21 @@
 
 #include <fmt/format.h>
 
+#ifdef ALABASTER_LINUX
+#include <cmath>
+#endif
+
 namespace Alabaster::Utilities {
 
 	template <typename T> auto split_into(const std::vector<T>& items, std::uint32_t batch_size = 8)
 	{
 		std::vector<std::vector<T>> batches;
+#ifdef ALABASTER_LINUX
+		const auto max_batches = ::ceilf(items.size() / static_cast<float>(batch_size));
+#else
 		const auto max_batches = std::ceilf(items.size() / static_cast<float>(batch_size));
+#endif // ALABASTER_LINUX
+
 		batches.resize(static_cast<std::uint32_t>(max_batches));
 		for (size_t i = 0; i < items.size(); i += batch_size) {
 			auto last = std::min(items.size(), i + batch_size);

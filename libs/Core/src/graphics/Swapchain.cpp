@@ -456,7 +456,7 @@ namespace Alabaster {
 		} else {
 			bool found_wanted_format = false;
 			for (auto&& surface_format : surface_formats) {
-				if (surface_format.format == VK_FORMAT_B8G8R8A8_SRGB) {
+				if (surface_format.format == VK_FORMAT_R8G8B8A8_UNORM) {
 					color_format = surface_format.format;
 					color_space = surface_format.colorSpace;
 					found_wanted_format = true;

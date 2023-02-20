@@ -52,9 +52,7 @@ jobs:
               shell: cmake -P {0}
               run: |
                   if ("${{ runner.os }}" STREQUAL "Linux")
-                    execute_process(COMMAND apt-get install libxinerama-dev)
-                    execute_process(COMMAND apt-get install libxcursor-dev)
-                    execute_process(COMMAND apt-get install libxi-dev)
+                    execute_process(COMMAND sudo apt-get install libxinerama-dev libxcursor-dev libxi-dev)
                   endif()
             - name: Download Ninja and CMake
               shell: cmake -P {0}

@@ -8,8 +8,10 @@ project(
 if(WIN32)
 	set(FT_DISABLE_HARFBUZZ ON)
 	set(ALABASTER_OS "Windows")
-else()
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(ALABASTER_OS "MacOS")
+else()
+    set(ALABASTER_OS "Linux")
 endif()
 
 if(CMAKE_GENERATOR STREQUAL Xcode)

@@ -75,8 +75,8 @@ if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
 
-# #if(BUILD_TESTING)
 add_subdirectory(tests)
 
-# #endif()
-add_dependencies(${PROJECT_NAME} clang-format-shader-compiler)
+if(CLANG_FORMAT)
+	add_dependencies(${PROJECT_NAME} clang-format-shader-compiler)
+endif()

@@ -9,15 +9,17 @@ should_run="OFF"
 build_testing="OFF"
 clean_first="OFF"
 build_type="Debug"
+generator="Ninja"
 
 function alabaster_help() {
-  echo "Usage: run [ -r <ON/*OFF> ] [ -t <ON/*OFF> ] [ -c <ON/*OFF> ] [ -b <*Debug/Release/RelWithDebInfo/MinSizeRel> ] [ -h ]"
+  echo "Usage: run [ -r <ON/*OFF> ] [ -t <ON/*OFF> ] [ -c <ON/*OFF> ] [ -b <*Debug/Release/RelWithDebInfo/MinSizeRel> ] [ -g <*Ninja/VS/<CMake Generator freetext>> ] [ -h ]"
 }
 
-while getopts r:t:c:b:h flag
+while getopts g:r:t:c:b:h flag
 do
     case "${flag}" in
-        r) should_run=${OPTARG};;
+	g) generator=${OPTARG};;
+	r) should_run=${OPTARG};;
         t) build_testing=${OPTARG};;
         c) clean_first=${OPTARG};;
         b) build_type=${OPTARG};;
@@ -33,8 +35,16 @@ if [ "$clean_first" = "ON" ]; then
 	echo "Cleaned Alabaster::libs folder"
 fi
 
+if [ "$generator" = "VS" ]; then
+	export CMAKE_GENERATOR="Visual Studio 17 2022"
+elif [ "$generator" = "Ninja" ]; then
+	export CMAKE_GENERATOR="Ninja"
+else
+	# This may just straight up fail
+	export CMAKE_GENERATOR="$generator"
+fi;
+
 cmake -B "$build_folder" \
-	-G Ninja \
 	-D GLFW_INSTALL=OFF \
 	-D GLFW_BUILD_DOCS=OFF \
 	-D GLFW_BUILD_TESTS=OFF \
@@ -62,8 +72,10 @@ cmake -B "$build_folder" \
 
 cmake --build "$build_folder"
 
-rm "$current_dir/compile_commands.json"
-ln -s "build/compile_commands.json" "$current_dir"
+if [ "$generator" = "Ninja" ]; then
+	rm "$current_dir/compile_commands.json"
+	ln -s "build/compile_commands.json" "$current_dir"
+fi
 
 run_tests() {
   if [ "$build_type" == "Debug" ] && [ "$build_testing" == "ON" ]
@@ -73,8 +85,14 @@ run_tests() {
 }
 
 run_app() {
-	pushd "$build_folder/app" || exit
-	"./AlabasterApp"
+	local appName="AlabasterApp";
+	if [ "$generator" = "VS" ]; then
+		appName="AlabasterApp.exe"
+	fi;
+
+	local appDirectory="$(find ./build -type f -name "$appName" | xargs dirname)"
+	pushd "$appDirectory" || exit
+	"./$appName"
 	popd || exit
 }
 
