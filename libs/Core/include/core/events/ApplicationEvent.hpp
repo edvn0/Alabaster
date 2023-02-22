@@ -5,8 +5,6 @@
 #include <sstream>
 
 namespace Alabaster {
-
-	// TODO: Should this store previous size?
 	class WindowResizeEvent : public Event {
 	public:
 		WindowResizeEvent(unsigned int width, unsigned int height)
@@ -33,8 +31,8 @@ namespace Alabaster {
 
 	class WindowMinimizeEvent : public Event {
 	public:
-		WindowMinimizeEvent(bool minimized)
-			: minimized(minimized)
+		WindowMinimizeEvent(bool is_minimized)
+			: minimized(is_minimized)
 		{
 		}
 
@@ -56,9 +54,9 @@ namespace Alabaster {
 
 	class WindowTitleBarHitTestEvent : public Event {
 	public:
-		WindowTitleBarHitTestEvent(int x, int y)
-			: x(x)
-			, y(y)
+		WindowTitleBarHitTestEvent(int x_pos, int y_pos)
+			: x(x_pos)
+			, y(y_pos)
 		{
 		}
 

@@ -11,7 +11,8 @@
 namespace AssetManager {
 
 	template <class T>
-	void TextureCache<T>::load_from_directory(const std::filesystem::path& directory, std::unordered_set<std::string> include_extensions)
+	void TextureCache<T>::load_from_directory(
+		const std::filesystem::path& directory, std::unordered_set<std::string, StringHash, std::equal_to<>> include_extensions)
 	{
 		using namespace Alabaster;
 		auto sorted_images_in_directory = FS::in_directory<std::filesystem::path, false>(directory, include_extensions, true);

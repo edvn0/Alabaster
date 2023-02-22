@@ -32,10 +32,10 @@ namespace SceneSystem {
 	static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
 	static float ambience { 1.0f };
 
-	static constexpr auto axes = [](const auto& renderer, auto&& pos) {
-		renderer->line(pos, pos + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
-		renderer->line(pos, pos + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
-		renderer->line(pos, pos + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
+	static constexpr auto axes = [](const auto& renderer, auto&& position) {
+		renderer->line(position, position + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
+		renderer->line(position, position + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
+		renderer->line(position, position + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
 	};
 
 	void Scene::build_scene()
@@ -65,7 +65,7 @@ namespace SceneSystem {
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
-		std::shared_ptr<Alabaster::Pipeline> viking_pipeline = Pipeline::create(viking_spec);
+		auto viking_pipeline = Pipeline::create(viking_spec);
 
 		PipelineSpecification sun_spec { .shader = *AssetManager::asset<Alabaster::Shader>("mesh"),
 			.debug_name = "Sun Pipeline",
@@ -76,9 +76,9 @@ namespace SceneSystem {
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
-		std::shared_ptr<Alabaster::Pipeline> sun_pipeline = Pipeline::create(sun_spec);
+		auto sun_pipeline = Pipeline::create(sun_spec);
 
-		for (std::uint32_t i = 0; i < 2; i++) {
+		for (std::uint32_t i = 0; i < 20; i++) {
 			Entity entity { this, fmt::format("Sphere-{}", i) };
 			entity.add_component<Component::Mesh>(sphere_model);
 			Component::Transform& transform = entity.get_component<Component::Transform>();
@@ -151,10 +151,7 @@ namespace SceneSystem {
 		}
 	}
 
-	Scene::Scene()
-		: registry()
-	{
-	}
+	Scene::Scene() { }
 
 	Scene::~Scene()
 	{
@@ -162,7 +159,7 @@ namespace SceneSystem {
 			scene_renderer->destroy();
 
 		framebuffer->destroy();
-	};
+	}
 
 	void Scene::update(float ts)
 	{

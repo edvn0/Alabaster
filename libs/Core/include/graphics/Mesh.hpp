@@ -20,7 +20,7 @@ namespace Alabaster {
 		using Vertices = std::vector<Vertex>;
 
 	public:
-		explicit Mesh(const std::filesystem::path& path);
+		explicit Mesh(const std::filesystem::path& input_path);
 		Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices);
 		~Mesh();
 

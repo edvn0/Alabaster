@@ -5,8 +5,8 @@
 #include "core/Logger.hpp"
 #include "core/exceptions/AlabasterException.hpp"
 #include "graphics/PushConstantRange.hpp"
-#include "spirv_cross/spirv.hpp"
 
+#include <spirv-cross/spirv.hpp>
 #include <spirv-cross/spirv_glsl.hpp>
 #include <spirv-cross/spirv_reflect.hpp>
 
@@ -31,9 +31,8 @@ namespace AssetManager {
 		}
 
 		for (const auto& resource : resources.uniform_buffers) {
-			auto active_buffers = reflector->get_active_buffer_ranges(resource.id);
 
-			if (active_buffers.empty())
+			if (auto active_buffers = reflector->get_active_buffer_ranges(resource.id); active_buffers.empty())
 				break;
 
 			// Discard unused buffers from headers
@@ -50,7 +49,7 @@ namespace AssetManager {
 		}
 
 		// Get all sampled images in the shader.
-		for (auto& resource : resources.push_constant_buffers) {
+		for (const auto& resource : resources.push_constant_buffers) {
 			const auto& buffer_name = resource.name;
 			auto& buffer_type = reflector->get_type(resource.base_type_id);
 			auto buffer_size = static_cast<std::uint32_t>(reflector->get_declared_struct_size(buffer_type));

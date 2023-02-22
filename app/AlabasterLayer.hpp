@@ -13,42 +13,46 @@
 #include "scene/Scene.hpp"
 
 #include <glm/glm.hpp>
+#include <magic_enum.hpp>
 #include <memory>
 
-using namespace Alabaster;
+namespace Filetype {
+	enum class Filetypes : std::uint8_t { PNG = 0, TTF, JPEG, JPG, SPV, VERT, FRAG, OBJ };
+}
 
-struct AlabasterLayer final : public Layer {
-	~AlabasterLayer() override {};
-	AlabasterLayer() {
-
+template <Filetype::Filetypes Type = Filetype::Filetypes::PNG> struct handle_filetype {
+	void operator()(std::unique_ptr<SceneSystem::Scene>& scene, [[maybe_unused]] const std::filesystem::path& path) const
+	{
+		Alabaster::Log::info("Filetype handler not implemented for {}", magic_enum::enum_name(Type));
 	};
+};
 
-	void update(float ts) final;
-	void ui(float ts) final;
-	void ui() final;
-	bool initialise() final;
-	void destroy() final;
-	void on_event(Event& event) final;
+struct AlabasterLayer final : public Alabaster::Layer {
+	~AlabasterLayer() override = default;
+	AlabasterLayer() = default;
+
+	void update(float ts) override;
+	void ui(float ts) override;
+	void ui() override;
+	bool initialise() override;
+	void destroy() override;
+	void on_event(Alabaster::Event& event) override;
 
 	void draw_entity_node(SceneSystem::Entity& entity);
 	void draw_components(SceneSystem::Entity& entity);
 	template <SceneSystem::Component::IsComponent T> void display_add_component_entry(const std::string& entry_name)
 	{
-		if (!selected_entity.has_component<T>()) {
-			if (ImGui::MenuItem(entry_name.c_str())) {
-				selected_entity.add_component<T>();
-				ImGui::CloseCurrentPopup();
-			}
+		if (!selected_entity.has_component<T>() && ImGui::MenuItem(entry_name.c_str())) {
+			selected_entity.add_component<T>();
+			ImGui::CloseCurrentPopup();
 		}
 	}
 
 private:
 	void handle_drag_drop();
 
-private:
 	std::string_view name() override { return "AlabasterLayer"; }
 
-private:
 	std::unique_ptr<SceneSystem::Scene> editor_scene;
 
 	std::vector<std::unique_ptr<App::Panel>> panels;

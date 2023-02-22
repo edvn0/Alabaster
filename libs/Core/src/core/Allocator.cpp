@@ -31,8 +31,8 @@ namespace Alabaster {
 		return *data_impl;
 	}
 
-	Allocator::Allocator(const std::string& tag)
-		: tag(tag)
+	Allocator::Allocator(const std::string& allocator_tag)
+		: tag(allocator_tag)
 	{
 	}
 

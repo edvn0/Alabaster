@@ -104,7 +104,8 @@ namespace Alabaster {
 				}
 
 				if (depth_image) {
-					if (spec.existing_images.find(static_cast<std::uint32_t>(spec.attachments.size() - 1)) == spec.existing_images.end()) {
+					const auto potential_attachment_index = static_cast<std::uint32_t>(spec.attachments.size() - 1);
+					if (spec.existing_images.find(potential_attachment_index) == spec.existing_images.end()) {
 						depth_image->destroy();
 						Log::info("[Framebuffer] Destroying framebuffer depth image.");
 					}

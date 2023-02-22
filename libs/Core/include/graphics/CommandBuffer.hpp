@@ -18,7 +18,7 @@ namespace Alabaster {
 		using DeallocationCallback = std::function<void(Allocator&)>;
 
 	public:
-		explicit CommandBuffer(std::uint32_t count, QueueChoice queue_choice = QueueChoice::Graphics, bool is_primary = true);
+		explicit CommandBuffer(std::uint32_t count, QueueChoice choice = QueueChoice::Graphics, bool primary = true);
 		virtual ~CommandBuffer();
 		void destroy();
 

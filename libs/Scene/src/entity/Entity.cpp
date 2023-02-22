@@ -4,9 +4,9 @@
 
 namespace SceneSystem {
 
-	Entity::Entity(Scene* scene, entt::entity entity_handle, std::string name)
-		: scene(scene)
-		, entity_handle(entity_handle == entt::null ? scene->registry.create() : entity_handle)
+	Entity::Entity(Scene* input_scene, entt::entity handle, std::string name)
+		: scene(input_scene)
+		, entity_handle(handle == entt::null ? scene->registry.create() : handle)
 	{
 		if (entity_handle == entt::null) {
 			add_component<Component::Tag>(name);
@@ -26,10 +26,13 @@ namespace SceneSystem {
 		}
 	}
 
-	Entity::Entity(const std::unique_ptr<Scene>& scene, std::string name)
-		: Entity(scene.get(), entt ::null, name) {};
-	Entity::Entity(const std::shared_ptr<Scene>& scene, std::string name)
-		: Entity(scene.get(), entt ::null, name) {};
-	Entity::Entity(Scene* scene, std::string name)
-		: Entity(scene, entt ::null, name) {};
+	Entity::Entity(const std::unique_ptr<Scene>& in_scene, std::string in_name)
+		: Entity(in_scene.get(), entt ::null, in_name) {}
+
+	Entity::Entity(const std::shared_ptr<Scene>& in_scene, std::string in_name)
+		: Entity(in_scene.get(), entt ::null, in_name) {}
+
+	Entity::Entity(Scene* in_scene, std::string in_name)
+		: Entity(in_scene, entt ::null, in_name) {}
+        
 } // namespace SceneSystem

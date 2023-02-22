@@ -3,6 +3,7 @@
 #include "graphics/Image.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/Texture.hpp"
+#include "utilities/StringHash.hpp"
 
 #include <optional>
 #include <string>
@@ -45,39 +46,42 @@ namespace AssetManager {
 	private:
 		auto& child() { return *static_cast<Child<ItemType>*>(this); }
 
-	private:
 		friend Child<ItemType>;
 	};
 
 	template <typename T> struct cache_create_read {
 		virtual ~cache_create_read() = default;
-		virtual const T* get(const std::string& name, std::unordered_map<std::string, T>& out) = 0;
-		virtual void create(const std::string& name, T* data, std::unordered_map<std::string, T>& out) = 0;
+		virtual const T* get(const std::string& name, std::unordered_map<std::string, T, AssetManager::StringHash, std::equal_to<>>& out) = 0;
+		virtual void create(const std::string& name, T* data, std::unordered_map<std::string, T, AssetManager::StringHash, std::equal_to<>>& out) = 0;
 	};
 
 	struct DefaultShaderCrud : public cache_create_read<Alabaster::Shader> {
-		virtual ~DefaultShaderCrud() override = default;
+		~DefaultShaderCrud() override = default;
 
-		const Alabaster::Shader* get(const std::string& name, std::unordered_map<std::string, Alabaster::Shader>& out) override
+		const Alabaster::Shader* get(
+			const std::string& name, std::unordered_map<std::string, Alabaster::Shader, AssetManager::StringHash, std::equal_to<>>& out) override
 		{
 			return &out.at(name);
 		};
 
-		void create(const std::string& name, Alabaster::Shader* data, std::unordered_map<std::string, Alabaster::Shader>& out) override
+		void create(const std::string& name, Alabaster::Shader* data,
+			std::unordered_map<std::string, Alabaster::Shader, AssetManager::StringHash, std::equal_to<>>& out) override
 		{
 			out.try_emplace(name, *data);
 		};
 	};
 
 	struct DefaultTextureCrud : public cache_create_read<Alabaster::Texture> {
-		virtual ~DefaultTextureCrud() override = default;
+		~DefaultTextureCrud() override = default;
 
-		const Alabaster::Texture* get(const std::string& name, std::unordered_map<std::string, Alabaster::Texture>& out) override
+		const Alabaster::Texture* get(
+			const std::string& name, std::unordered_map<std::string, Alabaster::Texture, AssetManager::StringHash, std::equal_to<>>& out) override
 		{
 			return &out.at(name);
 		};
 
-		void create(const std::string& name, Alabaster::Texture* data, std::unordered_map<std::string, Alabaster::Texture>& out) override
+		void create(const std::string& name, Alabaster::Texture* data,
+			std::unordered_map<std::string, Alabaster::Texture, AssetManager::StringHash, std::equal_to<>>& out) override
 		{
 			out.try_emplace(name, *data);
 		};

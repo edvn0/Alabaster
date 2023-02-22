@@ -31,7 +31,6 @@ namespace Alabaster {
 
 	bool GUILayer::initialise()
 	{
-
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -103,7 +102,7 @@ namespace Alabaster {
 	{
 		ImGui::Render();
 
-		static constexpr VkClearColorValue clear_colour { { 0.1f, 0.1f, 0.1f, 1.0f } };
+		static constexpr VkClearColorValue clear_colour { { 0.1f, 0.1f, 0.1f, 0.0f } };
 
 		const auto& swapchain = Application::the().get_window()->get_swapchain();
 		std::array<VkClearValue, 2> clear_values {};
@@ -211,6 +210,6 @@ namespace Alabaster {
 
 		vkDestroyDescriptorPool(device, imgui_descriptor_pool, nullptr);
 		Log::info("[GUILayer] Destroyed layer.");
-	};
+	}
 
 } // namespace Alabaster

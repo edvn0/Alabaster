@@ -15,8 +15,8 @@ namespace Alabaster {
 
 	struct FramebufferTextureSpecification {
 		FramebufferTextureSpecification() = default;
-		FramebufferTextureSpecification(ImageFormat format)
-			: format(format)
+		FramebufferTextureSpecification(ImageFormat input_format)
+			: format(input_format)
 		{
 		}
 
@@ -27,8 +27,8 @@ namespace Alabaster {
 
 	struct FramebufferAttachmentSpecification {
 		FramebufferAttachmentSpecification() = default;
-		FramebufferAttachmentSpecification(const std::initializer_list<FramebufferTextureSpecification>& attachments)
-			: attachments(attachments)
+		FramebufferAttachmentSpecification(const std::initializer_list<FramebufferTextureSpecification>& in_attachments)
+			: attachments(in_attachments)
 		{
 		}
 

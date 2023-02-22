@@ -8,7 +8,6 @@
 #include "graphics/Allocator.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "utilities/FileInputOutput.hpp"
-#include "vulkan/vulkan_core.h"
 
 #include <cstdint>
 #include <filesystem>

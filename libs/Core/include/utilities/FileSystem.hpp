@@ -1,5 +1,7 @@
 #pragma once
 
+#include "cache/BaseCache.hpp"
+
 #include <filesystem>
 #include <string>
 #include <type_traits>
@@ -9,7 +11,8 @@
 namespace Alabaster::FS {
 
 	template <typename Output = std::string, bool Recursive = false>
-	std::vector<Output> in_directory(const std::filesystem::path& path, std::unordered_set<std::string> extensions, bool sorted)
+	std::vector<Output> in_directory(
+		const std::filesystem::path& path, std::unordered_set<std::string, AssetManager::StringHash, std::equal_to<>> extensions, bool sorted)
 	{
 		static constexpr auto entry_to_string = [](const auto& input) { return input.path().extension().string(); };
 		static auto should_include = [&extensions](const auto& input) {

@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.21)
 project(SceneSystem)
 
 find_package(Vulkan REQUIRED)
-
-file(GLOB_RECURSE sources scene_pch.hpp Scene.hpp include/**.hpp src/**.cpp)
-
 find_program(CLANG_FORMAT "clang-format")
+
+set(THIRD_PARTY_DIR ../../third_party/)
+file(GLOB_RECURSE sources scene_pch.hpp Scene.hpp include/**.hpp src/**.cpp)
 
 if(CLANG_FORMAT)
 	set(formattable_files ${sources})
@@ -18,7 +18,13 @@ endif()
 add_library(${PROJECT_NAME} ${sources})
 add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
-set(THIRD_PARTY_DIR ../../third_party/)
+if(${ALABASTER_OS} STREQUAL "Windows")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
+elseif(${ALABASTER_OS} STREQUAL "MacOS")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
+elseif(${ALABASTER_OS} STREQUAL "Linux")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
+endif()
 
 target_include_directories(
 	${PROJECT_NAME}
@@ -34,6 +40,7 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/entt/single_include
 	${THIRD_PARTY_DIR}/json/single_include
 	${THIRD_PARTY_DIR}/stduuid/include
+    ${THIRD_PARTY_DIR}/gsl/include
 	../Core/include/
 	../AssetManager/include/
 	INTERFACE ${Vulkan_INCLUDE_DIRS}
@@ -50,6 +57,13 @@ target_link_libraries(
 	stduuid
 	Alabaster::Core
 	Alabaster::AssetManager)
+
+if(MINGW)
+    target_link_libraries(
+	    ${PROJECT_NAME}
+	    PRIVATE  -static-libgcc -static-libstdc++)
+endif()
+
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/scene_pch.hpp)
 
@@ -70,18 +84,12 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_RELEASE)
 endif()
 
-if(WIN32)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS /wd4201)
-elseif(APPLE)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
-endif()
-
 if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
 
-# #if(BUILD_TESTING)
 add_subdirectory(tests)
 
-# #endif()
-add_dependencies(${PROJECT_NAME} clang-format-scene)
+if(CLANG_FORMAT)
+	add_dependencies(${PROJECT_NAME} clang-format-scene)
+endif()

@@ -45,10 +45,12 @@ namespace SceneSystem::Component {
 		glm::mat4 to_matrix() const;
 
 		template <typename Pos, typename Rot, typename Scale>
-		Transform(Pos&& pos, Rot&& rot, Scale&& scale) noexcept
+		Transform(Pos&& pos, Rot&& rot, Scale&& scl) noexcept
 			: position(std::forward<Pos>(pos))
 			, rotation(std::forward<Rot>(rot))
-			, scale(std::forward<Scale>(scale)) {};
+			, scale(std::forward<Scale>(scl))
+		{
+		}
 	};
 	template <> inline constexpr std::string_view component_name<Component::Transform> = "transform";
 
@@ -73,8 +75,8 @@ namespace SceneSystem::Component {
 	struct BasicGeometry {
 		Geometry geometry;
 
-		BasicGeometry(Geometry geometry)
-			: geometry(geometry) {};
+		BasicGeometry(Geometry geom)
+			: geometry(geom) {};
 	};
 	template <> inline constexpr std::string_view component_name<Component::BasicGeometry> = "basic_geometry";
 
@@ -101,12 +103,12 @@ namespace SceneSystem::Component {
 	};
 	template <> inline constexpr std::string_view component_name<Component::Camera> = "camera";
 
-	namespace detail {
+	namespace Detail {
 		template <typename T, typename... U>
 		concept IsAnyOf = (std::same_as<T, U> || ...);
 	}
 
 	template <typename T>
-	concept IsComponent = detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light>;
+	concept IsComponent = Detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light>;
 
 } // namespace SceneSystem::Component

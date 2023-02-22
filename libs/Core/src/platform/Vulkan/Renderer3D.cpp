@@ -128,8 +128,8 @@ namespace Alabaster {
 		}
 	}
 
-	Renderer3D::Renderer3D(const std::shared_ptr<Camera>& camera) noexcept
-		: camera(camera)
+	Renderer3D::Renderer3D(const std::shared_ptr<Camera>& cam) noexcept
+		: camera(cam)
 	{
 		data.sphere_model = Mesh::from_file("sphere.obj");
 		const auto&& [w, h] = Application::the().get_window()->size();
@@ -217,7 +217,7 @@ namespace Alabaster {
 			line_indices[i] = i;
 		}
 		data.line_index_buffer = IndexBuffer::create(line_indices);
-	};
+	}
 
 	void Renderer3D::begin_scene()
 	{

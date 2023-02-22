@@ -8,9 +8,9 @@
 
 namespace Alabaster {
 
-	UniformBuffer::UniformBuffer(std::uint32_t size, std::uint32_t binding)
-		: size(size)
-		, binding(binding)
+	UniformBuffer::UniformBuffer(std::uint32_t in_size, std::uint32_t in_binding)
+		: size(in_size)
+		, binding(in_binding)
 	{
 		invalidate();
 	}

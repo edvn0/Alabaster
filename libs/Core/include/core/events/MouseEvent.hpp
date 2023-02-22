@@ -33,9 +33,9 @@ namespace Alabaster {
 
 	class MouseScrolledEvent : public Event {
 	public:
-		MouseScrolledEvent(float x_offset, float y_offset)
-			: x_offset(x_offset)
-			, y_offset(y_offset)
+		MouseScrolledEvent(float x, float y)
+			: x_offset(x)
+			, y_offset(y)
 		{
 		}
 
@@ -61,8 +61,8 @@ namespace Alabaster {
 
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 	protected:
-		MouseButtonEvent(MouseCode button)
-			: button(button)
+		MouseButtonEvent(MouseCode button_code)
+			: button(button_code)
 		{
 		}
 
@@ -71,8 +71,8 @@ namespace Alabaster {
 
 	class MouseButtonPressedEvent : public MouseButtonEvent {
 	public:
-		MouseButtonPressedEvent(MouseCode button)
-			: MouseButtonEvent(button)
+		MouseButtonPressedEvent(MouseCode button_code)
+			: MouseButtonEvent(button_code)
 		{
 		}
 
@@ -88,8 +88,8 @@ namespace Alabaster {
 
 	class MouseButtonReleasedEvent : public MouseButtonEvent {
 	public:
-		MouseButtonReleasedEvent(MouseCode button)
-			: MouseButtonEvent(button)
+		MouseButtonReleasedEvent(MouseCode button_code)
+			: MouseButtonEvent(button_code)
 		{
 		}
 

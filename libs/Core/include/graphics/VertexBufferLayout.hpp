@@ -52,12 +52,12 @@ namespace Alabaster {
 
 		VertexBufferElement() = default;
 
-		VertexBufferElement(ShaderDataType type, const std::string& name, bool normalised = false)
-			: name(name)
+		VertexBufferElement(ShaderDataType type, const std::string& input_name, bool is_normalised = false)
+			: name(input_name)
 			, shader_data_type(type)
 			, size(shader_data_type_size(type))
 			, offset(0)
-			, normalised(normalised)
+			, normalised(is_normalised)
 		{
 		}
 
@@ -100,8 +100,8 @@ namespace Alabaster {
 	public:
 		VertexBufferLayout() { }
 
-		explicit VertexBufferLayout(const std::initializer_list<VertexBufferElement>& elements)
-			: elements(elements)
+		explicit VertexBufferLayout(const std::initializer_list<VertexBufferElement>& input_elements)
+			: elements(input_elements)
 		{
 			calculate_offsets_and_strides();
 		}

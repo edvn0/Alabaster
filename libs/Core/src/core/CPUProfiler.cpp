@@ -19,13 +19,13 @@ namespace Alabaster {
 	};
 
 	template <typename FloatLike>
-	CPUProfiler<FloatLike>::CPUProfiler(std::string_view tag, std::string_view dir)
-		: tag(tag)
-		, dir(dir)
+	CPUProfiler<FloatLike>::CPUProfiler(std::string_view input_tag, std::string_view directory)
+		: tag(input_tag)
+		, dir(directory)
 	{
 		start_time = Clock::get_ms<FloatLike>();
 		file_name = std::string { tag } + ".prof";
-	};
+	}
 
 	template <typename FloatLike> CPUProfiler<FloatLike>::~CPUProfiler() { }
 

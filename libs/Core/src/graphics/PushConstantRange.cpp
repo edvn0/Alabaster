@@ -33,6 +33,6 @@ namespace Alabaster {
 			output_ranges.push_back(out);
 			offset += range.size;
 		}
-	};
+	}
 
 } // namespace Alabaster

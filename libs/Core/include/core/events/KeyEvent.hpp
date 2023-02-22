@@ -13,8 +13,8 @@ namespace Alabaster {
 
 		EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 	protected:
-		KeyEvent(KeyCode keycode)
-			: key_code(keycode)
+		KeyEvent(KeyCode kc)
+			: key_code(kc)
 		{
 		}
 
@@ -23,9 +23,9 @@ namespace Alabaster {
 
 	class KeyPressedEvent : public KeyEvent {
 	public:
-		KeyPressedEvent(KeyCode keycode, int repeat_count)
-			: KeyEvent(keycode)
-			, repeat_count(repeat_count)
+		KeyPressedEvent(KeyCode kc, int repeat)
+			: KeyEvent(kc)
+			, repeat_count(repeat)
 		{
 		}
 
@@ -45,8 +45,8 @@ namespace Alabaster {
 
 	class KeyReleasedEvent : public KeyEvent {
 	public:
-		KeyReleasedEvent(KeyCode keycode)
-			: KeyEvent(keycode)
+		KeyReleasedEvent(KeyCode kc)
+			: KeyEvent(kc)
 		{
 		}
 

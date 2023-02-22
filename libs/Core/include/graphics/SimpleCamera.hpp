@@ -11,7 +11,7 @@ namespace Alabaster {
 
 	class SimpleCamera : public Camera {
 	public:
-		SimpleCamera(CameraType type, float aspect, float near, float far, float fov);
+		SimpleCamera(CameraType camera_type, float aspect_ratio, float near, float far, float fov);
 
 		void on_event(Event& event) final;
 		void on_update(float ts) final;

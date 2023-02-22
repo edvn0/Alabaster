@@ -58,8 +58,8 @@ namespace Alabaster {
 		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, vulkan_buffer);
 
 		ImmediateCommandBuffer immediate_command_buffer { "Vertex Buffer" };
-		immediate_command_buffer.add_destruction_callback([staging_buffer, staging_buffer_allocation](Allocator& allocator) {
-			allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
+		immediate_command_buffer.add_destruction_callback([staging_buffer, staging_buffer_allocation](Allocator& alloc) {
+			alloc.destroy_buffer(staging_buffer, staging_buffer_allocation);
 		});
 
 		VkBufferCopy copy_region = {};

@@ -5,12 +5,16 @@ project(
 	VERSION 0.0.1
 	LANGUAGES CXX)
 
-if(WIN32)
+if(WIN32 AND NOT MINGW)
 	set(FT_DISABLE_HARFBUZZ ON)
 	set(ALABASTER_OS "Windows")
-else()
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(ALABASTER_OS "MacOS")
+else()
+  	set(ALABASTER_OS "Linux")
 endif()
+
+message(STATUS "ALABASTER: Chosen OS: ${ALABASTER_OS}")
 
 if(CMAKE_GENERATOR STREQUAL Xcode)
 	set(XCODE_SCHEME_ENABLE_GPU_API_VALIDATION ON)

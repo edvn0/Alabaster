@@ -10,8 +10,8 @@ namespace AssetManager {
 
 	template <class T> class ShaderCache : public BaseCache<ShaderCache, Alabaster::Shader> {
 	public:
-		ShaderCache(std::unique_ptr<cache_create_read<T>> cache_crud = std::make_unique<DefaultShaderCrud>())
-			: cache_crud(std::move(cache_crud)) {};
+		ShaderCache(std::unique_ptr<cache_create_read<T>> in_cache_crud = std::make_unique<DefaultShaderCrud>())
+			: cache_crud(std::move(in_cache_crud)) {};
 
 		void load_from_directory(const std::filesystem::path& shader_directory_path);
 
@@ -43,8 +43,7 @@ namespace AssetManager {
 		std::vector<std::pair<std::filesystem::path, std::filesystem::path>> extract_into_pairs_of_shaders(
 			const std::vector<std::string>& sorted_shaders_in_directory);
 
-	private:
-		std::unordered_map<std::string, Alabaster::Shader> shaders;
+		std::unordered_map<std::string, Alabaster::Shader, AssetManager::StringHash, std::equal_to<>> shaders;
 		std::unique_ptr<cache_create_read<T>> cache_crud;
 
 		friend BaseCache;

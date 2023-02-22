@@ -20,23 +20,23 @@
 
 namespace Alabaster {
 
-	SimpleCamera::SimpleCamera(CameraType type, float aspect, float near, float far, float fov)
-		: type(type)
+	SimpleCamera::SimpleCamera(CameraType camera_type, float aspect_ratio, float near, float far, float fov)
+		: type(camera_type)
 		, field_of_view(fov)
 		, near_plane(near)
 		, far_plane(far)
-		, aspect(aspect)
+		, aspect(aspect_ratio)
 	{
 		set_perspective(fov, aspect, near, far);
 		set_position({ 0, 3, -5 });
 		set_rotation({ -30, 0, 0 });
 		update_view_matrix();
-	};
+	}
 
-	void SimpleCamera::on_event(Event& event)
+	void SimpleCamera::on_event(Event& camera_event)
 	{
-		EventDispatcher dispatcher(event);
-		dispatcher.dispatch<MouseScrolledEvent>([=](MouseScrolledEvent& event) {
+		EventDispatcher dispatcher(camera_event);
+		dispatcher.dispatch<MouseScrolledEvent>([this](MouseScrolledEvent& event) -> bool {
 			glm::vec3 cam_front;
 			cam_front.x = -cos(glm::radians(rotation.x)) * sin(glm::radians(rotation.y));
 			cam_front.y = sin(glm::radians(rotation.x));
@@ -131,7 +131,7 @@ namespace Alabaster {
 		far_plane = in_far_plane;
 		aspect = aspect_ratio;
 		matrices.perspective = glm::perspective(field_of_view, aspect, near_plane, far_plane);
-	};
+	}
 
 	void SimpleCamera::update_aspect_ratio(float aspect_ratio)
 	{
@@ -160,7 +160,8 @@ namespace Alabaster {
 	{
 		position = translate;
 		update_view_matrix();
-	};
+	}
+
 	void SimpleCamera::translate(glm::vec3 delta)
 	{
 		position += delta;
@@ -191,5 +192,5 @@ namespace Alabaster {
 		view_position = glm::vec4(position, 0.0f);
 
 		updated = true;
-	};
-}; // namespace Alabaster
+	}
+} // namespace Alabaster

@@ -10,7 +10,7 @@ namespace Alabaster {
 
 	static auto* get_window() { return Application::the().get_window()->native(); }
 
-	bool Input::key(KeyCode key) { return glfwGetKey(get_window(), static_cast<int>(key)) == GLFW_PRESS; };
+	bool Input::key(KeyCode key) { return glfwGetKey(get_window(), static_cast<int>(key)) == GLFW_PRESS; }
 
 	bool Input::mouse(MouseCode key) { return glfwGetMouseButton(get_window(), static_cast<int>(key)) == GLFW_PRESS; }
 

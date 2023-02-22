@@ -23,13 +23,13 @@ namespace SceneSystem {
 		return glm::translate(glm::mat4(1.0f), position) * glm::mat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
 	}
 
-	Component::Mesh::Mesh(const std::shared_ptr<Alabaster::Mesh>& mesh)
-		: mesh(mesh)
+	Component::Mesh::Mesh(const std::shared_ptr<Alabaster::Mesh>& in_mesh)
+		: mesh(in_mesh)
 	{
 	}
 
-	Component::Pipeline::Pipeline(const std::shared_ptr<Alabaster::Pipeline>& pipeline)
-		: pipeline(pipeline)
+	Component::Pipeline::Pipeline(const std::shared_ptr<Alabaster::Pipeline>& in_pipeline)
+		: pipeline(in_pipeline)
 	{
 	}
 
@@ -38,8 +38,8 @@ namespace SceneSystem {
 	{
 	}
 
-	Component::Tag::Tag(const std::string& tag)
-		: tag(tag)
+	Component::Tag::Tag(const std::string& in_tag)
+		: tag(in_tag)
 	{
 	}
 
