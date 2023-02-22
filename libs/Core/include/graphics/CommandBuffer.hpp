@@ -23,9 +23,9 @@ namespace Alabaster {
 		void destroy();
 
 		virtual void begin() { begin(nullptr, true); };
-		void begin(VkCommandBufferBeginInfo* begin, bool should_start_cb);
-		void begin(bool should_start_cb) { begin(nullptr, should_start_cb); };
-		void begin(VkCommandBufferBeginInfo* begin_info) { begin(begin_info, true); };
+		virtual void begin(VkCommandBufferBeginInfo* begin, bool should_start_cb);
+		virtual void begin(bool should_start_cb) { begin(nullptr, should_start_cb); };
+		virtual void begin(VkCommandBufferBeginInfo* begin_info) { begin(begin_info, true); };
 
 		virtual void end();
 		virtual void end_with_no_reset();
@@ -43,9 +43,6 @@ namespace Alabaster {
 
 		void add_destruction_callback(DeallocationCallback&& cb) { destruction_callbacks.push(std::move(cb)); }
 
-	private:
-		void init(std::uint32_t count = 0);
-
 	protected:
 		void set_allocator_name(std::string name)
 		{
@@ -56,13 +53,14 @@ namespace Alabaster {
 			}
 		}
 
-	protected:
 		VkCommandPool pool { nullptr };
 		VkCommandBuffer active { nullptr };
 		std::vector<VkCommandBuffer> buffers;
 		std::vector<VkFence> fences;
 
 	private:
+		void init(std::uint32_t count = 0);
+
 		QueueChoice queue_choice;
 		bool is_primary { true };
 
@@ -75,7 +73,7 @@ namespace Alabaster {
 		CommandBuffer();
 
 	public:
-		static std::unique_ptr<CommandBuffer> from_swapchain() { return std::unique_ptr<CommandBuffer>(new CommandBuffer()); }
+		static std::unique_ptr<CommandBuffer> from_swapchain() { return std::unique_ptr<CommandBuffer>(new CommandBuffer()); };
 	};
 
 	class ImmediateCommandBuffer final : public CommandBuffer {
@@ -87,17 +85,17 @@ namespace Alabaster {
 			set_allocator_name(std::move(allocator_tag));
 		}
 
-		~ImmediateCommandBuffer() final
+		~ImmediateCommandBuffer() override
 		{
 			CommandBuffer::end();
 			CommandBuffer::submit();
 		}
 
-		std::uint32_t get_buffer_index() final;
+		std::uint32_t get_buffer_index() override;
 
-		void begin() final { throw AlabasterException("Cannot explicitly begin an immediate command buffer. It is called in the constructor."); }
-		void end() final { throw AlabasterException("Cannot explicitly end an immediate command buffer. It is called in the destructor."); }
-		void submit() final { throw AlabasterException("Cannot explicitly submit an immediate command buffer. It is called in the destructor."); }
+		void begin() override { throw AlabasterException("Cannot explicitly begin an immediate command buffer. It is called in the constructor."); }
+		void end() override { throw AlabasterException("Cannot explicitly end an immediate command buffer. It is called in the destructor."); }
+		void submit() override { throw AlabasterException("Cannot explicitly submit an immediate command buffer. It is called in the destructor."); }
 	};
 
 } // namespace Alabaster

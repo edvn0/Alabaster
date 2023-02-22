@@ -82,7 +82,7 @@ namespace SceneSystem {
 		auto json_entities = data["entities"];
 
 		for (const auto& json_entity : json_entities) {
-			auto created_entity = Entity { &out, "Unnamed entity" };
+			auto created_entity = out.create_entity("Unnamed entity");
 			if (json_entity.is_object()) {
 				handle_component<Mesh>(json_entity, created_entity);
 				handle_component<Transform>(json_entity, created_entity);

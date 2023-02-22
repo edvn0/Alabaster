@@ -60,6 +60,7 @@ cmake -B "$build_and_generator_folder" \
     -D BUILD_TESTING="$build_testing" \
     -D ENABLE_HLSL=ON \
     -D ENABLE_CTEST=OFF \
+    -D ENTT_BUILD_TESTING=OFF \
     -D Random_BuildTests=OFF \
     -D BUILD_SHARED_LIBS=OFF \
     -D SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS=OFF \
@@ -79,7 +80,7 @@ cmake -B "$build_and_generator_folder" \
     -D UUID_USING_CXX20_SPAN=ON \
     -S "$current_dir"
 
-cmake --build "$build_and_generator_folder"
+cmake --build "$build_and_generator_folder" --parallel 10
 
 if [ "$generator" = "Ninja" ]; then
     if [ -f "$current_dir/compile_commands.json" ]; then
@@ -91,7 +92,7 @@ fi
 
 run_tests() {
     if [ "$build_type" == "Debug" ] && [ "$build_testing" == "ON" ]; then
-        ctest -j10 --test-dir "$build_and_generator_folder"
+        ctest -j10 -C Debug --test-dir "$build_and_generator_folder"
     fi
 }
 

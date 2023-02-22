@@ -5,16 +5,27 @@ project(
 	VERSION 0.0.1
 	LANGUAGES CXX)
 
-if(WIN32 AND NOT MINGW)
+if(WIN32)
 	set(FT_DISABLE_HARFBUZZ ON)
 	set(ALABASTER_OS "Windows")
+
+    if (MINGW)
+        set(ALABASTER_COMPILER "MinGW")
+    elseif(MSVC)
+        set(ALABASTER_COMPILER "MSVC")
+    else()
+        message(FATAL_ERROR "Only MinGW (g++) and MSVC are supported")
+    endif()
+
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(ALABASTER_OS "MacOS")
+    set(ALABASTER_COMPILER "clang")
 else()
   	set(ALABASTER_OS "Linux")
+    set(ALABASTER_COMPILER "gnu")
 endif()
 
-message(STATUS "ALABASTER: Chosen OS: ${ALABASTER_OS}")
+message(STATUS "ALABASTER: Chosen OS: ${ALABASTER_OS}, chosen compiler: ${ALABASTER_COMPILER}")
 
 if(CMAKE_GENERATOR STREQUAL Xcode)
 	set(XCODE_SCHEME_ENABLE_GPU_API_VALIDATION ON)

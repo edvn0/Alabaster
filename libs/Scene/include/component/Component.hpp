@@ -16,7 +16,7 @@ namespace SceneSystem::Component {
 		uuids::uuid identifier;
 
 		ID();
-		ID(uuids::uuid id);
+		explicit ID(uuids::uuid id);
 		~ID() = default;
 
 		std::string to_string() const;
@@ -24,8 +24,9 @@ namespace SceneSystem::Component {
 	template <> inline constexpr std::string_view component_name<Component::ID> = "id";
 
 	struct Tag {
-		std::string tag;
+		std::string tag = "Empty entity";
 
+		Tag() = default;
 		Tag(const std::string& tag);
 		~Tag() = default;
 	};
@@ -57,7 +58,8 @@ namespace SceneSystem::Component {
 	struct Mesh {
 		std::shared_ptr<Alabaster::Mesh> mesh;
 
-		Mesh(const std::shared_ptr<Alabaster::Mesh>& mesh);
+		Mesh() = default;
+		explicit Mesh(const std::shared_ptr<Alabaster::Mesh>& mesh);
 		~Mesh() = default;
 	};
 	template <> inline constexpr std::string_view component_name<Component::Mesh> = "mesh";
@@ -65,7 +67,8 @@ namespace SceneSystem::Component {
 	struct Pipeline {
 		std::shared_ptr<Alabaster::Pipeline> pipeline = nullptr;
 
-		Pipeline(const std::shared_ptr<Alabaster::Pipeline>& pipeline);
+		Pipeline() = default;
+		explicit Pipeline(const std::shared_ptr<Alabaster::Pipeline>& pipeline);
 		~Pipeline() = default;
 	};
 	template <> inline constexpr std::string_view component_name<Component::Pipeline> = "pipeline";
@@ -73,16 +76,17 @@ namespace SceneSystem::Component {
 	enum class Geometry { Rect, Quad, Circle };
 
 	struct BasicGeometry {
-		Geometry geometry;
+		Geometry geometry = Geometry::Quad;
 
-		BasicGeometry(Geometry geom)
+		BasicGeometry() = default;
+		explicit BasicGeometry(Geometry geom)
 			: geometry(geom) {};
 	};
 	template <> inline constexpr std::string_view component_name<Component::BasicGeometry> = "basic_geometry";
 
 	struct Texture {
 		glm::vec4 colour { 1.0f };
-		Texture(glm::vec4 col);
+		explicit Texture(glm::vec4 col);
 		Texture()
 			: colour() {};
 		~Texture() = default;

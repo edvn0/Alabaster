@@ -54,14 +54,14 @@ namespace Alabaster {
 			layers.emplace(layer->name(), std::move(layer));
 		}
 
-		void pop_layer(std::string name)
+		void pop_layer(const std::string& name)
 		{
 			verify(layers.contains(name), "Layer map did not contain name " + name + ".");
 
 			auto found_it = layers.find(name);
 			verify(found_it != layers.end());
 
-			auto& [key, layer] = *found_it;
+			const auto& [key, layer] = *found_it;
 			layer->destroy();
 			layers.erase(key);
 		}

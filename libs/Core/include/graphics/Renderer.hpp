@@ -2,9 +2,9 @@
 
 #include "graphics/RenderQueue.hpp"
 
-typedef struct VkPipeline_T* VkPipeline;
-typedef struct VkRenderPass_T* VkRenderPass;
-typedef struct VkPipelineLayout_T* VkPipelineLayout;
+using VkPipeline = struct VkPipeline_T*;
+using VkRenderPass = struct VkRenderPass_T*;
+using VkPipelineLayout = struct VkPipelineLayout_T*;
 
 namespace Alabaster {
 
@@ -20,7 +20,6 @@ namespace Alabaster {
 		static void init();
 		static void shutdown();
 
-	public:
 		static void begin();
 		static void begin_render_pass(const std::unique_ptr<CommandBuffer>& buffer, VkRenderPass render_pass, bool explicit_clear = false);
 		static void begin_render_pass(
@@ -30,7 +29,6 @@ namespace Alabaster {
 
 		static std::uint32_t current_frame();
 
-	public:
 		static RenderQueue& resource_release_queue(std::uint32_t index);
 
 	private:

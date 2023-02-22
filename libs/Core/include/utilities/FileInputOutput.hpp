@@ -119,12 +119,11 @@ namespace Alabaster::IO {
 	}
 
 	template <typename T>
-	concept Printable = requires(T t, std::ofstream& of)
-	{
-		{
-			t.write_to(of)
-			} -> std::same_as<bool>;
-	};
+	concept Printable = requires(T t, std::ofstream& of) {
+							{
+								t.write_to(of)
+								} -> std::same_as<bool>;
+						};
 
 	static inline bool write_file(const std::filesystem::path& filename, Printable auto& printable)
 	{

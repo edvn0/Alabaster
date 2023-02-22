@@ -172,9 +172,8 @@ namespace Alabaster {
 			allocator.unmap_memory(staging_buffer_allocation);
 
 			ImmediateCommandBuffer immediate_command_buffer { "Texture Transition" };
-			immediate_command_buffer.add_destruction_callback([staging_buffer, staging_buffer_allocation](Allocator& alloc) {
-				alloc.destroy_buffer(staging_buffer, staging_buffer_allocation);
-			});
+			immediate_command_buffer.add_destruction_callback(
+				[staging_buffer, staging_buffer_allocation](Allocator& alloc) { alloc.destroy_buffer(staging_buffer, staging_buffer_allocation); });
 
 			VkImageSubresourceRange subresource_range = {};
 			subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;

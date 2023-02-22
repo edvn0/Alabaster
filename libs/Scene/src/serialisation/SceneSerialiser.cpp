@@ -47,11 +47,11 @@ namespace SceneSystem {
 		output_json["scene_name"] = fmt::format("{}", time_stamp);
 
 		std::vector<Entity> entities;
-		registry.each([scene = &scene, &entities](const auto entity) { entities.push_back(Entity { scene, entity }); });
+		registry.each([scene = &scene, &entities](const auto entity) { entities.push_back(scene->create_entity(entity)); });
 
 		auto all_serialised_entities = json::array();
 		registry.each([scene = &scene, &all_serialised_entities, this](const entt::entity& entt_entity) {
-			Entity entity { scene, entt_entity };
+			auto entity = scene->create_entity(entt_entity);
 			const auto serialised_object = serialise_entity(entity);
 
 			all_serialised_entities.push_back(serialised_object);

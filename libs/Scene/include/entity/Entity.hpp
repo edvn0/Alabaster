@@ -12,19 +12,14 @@ namespace SceneSystem {
 	class Entity {
 	public:
 		Entity() = default;
-		explicit Entity(Scene* scene, entt::entity entity_handle, std::string name = "Unnamed entity");
-		explicit Entity(Scene* scene, std::string name = "Unnamed entity");
-		explicit Entity(const std::unique_ptr<Scene>& scene, std::string name = "Unnamed entity");
-		explicit Entity(const std::shared_ptr<Scene>& scene, std::string name = "Unnamed entity");
+		explicit Entity(Scene* scene, entt::entity entity_handle, const std::string& name = "Unnamed entity");
+		explicit Entity(Scene* scene, const std::string& name = "Unnamed entity");
+		explicit Entity(const std::unique_ptr<Scene>& scene, const std::string& name = "Unnamed entity");
+		explicit Entity(const std::shared_ptr<Scene>& scene, const std::string& name = "Unnamed entity");
 		~Entity() = default;
 
 		Entity(const Entity& other);
-		Entity& operator=(const Entity& other)
-		{
-			scene = other.scene;
-			entity_handle = other.entity_handle;
-			return *this;
-		}
+		Entity& operator=(const Entity& other) = default;
 
 		template <Component::IsComponent... T> bool has_any() { return scene->registry.any_of<T...>(entity_handle); }
 
@@ -54,18 +49,28 @@ namespace SceneSystem {
 
 		template <Component::IsComponent T, typename... Args> void add_component(Args&&... args)
 		{
+			if (has_component<T>())
+				return;
+
 			scene->registry.emplace<T>(entity_handle, std::forward<Args>(args)...);
 		}
 
-		template <Component::IsComponent T, typename... Args> void add_component() { scene->registry.emplace<T>(entity_handle); }
+		template <Component::IsComponent T, typename... Args> void add_component()
+		{
+			if (has_component<T>())
+				return;
+
+			scene->registry.emplace<T>(entity_handle);
+		}
+
+		template <Component::IsComponent T, typename... Args> T& emplace_component() { return scene->registry.emplace<T>(entity_handle); }
 
 		template <Component::IsComponent T> auto remove_component() { scene->registry.remove<T>(entity_handle); }
 
-		operator bool() const { return entity_handle != entt::null; }
-
 		bool operator==(const Entity& other) const { return entity_handle == other.entity_handle && scene == other.scene; }
 
-		bool operator!=(const Entity& other) const { return !(*this == other); }
+		bool is_valid() const { return is_valid(entity_handle); }
+		template <typename Handle> bool is_valid(Handle&& handle) const { return std::forward<Handle>(handle) != entt::null; }
 
 		auto& get_transform() const { return get_component<Component::Transform>(); }
 		auto& get_tag() const { return get_component<Component::Tag>(); }
