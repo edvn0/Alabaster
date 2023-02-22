@@ -29,6 +29,13 @@ target_link_libraries(
 	${PROJECT_NAME} PRIVATE Alabaster::AssetManager Alabaster::Core
 	Alabaster::SceneSystem spdlog imgui)
 
+if(MINGW)
+    target_link_libraries(
+	    ${PROJECT_NAME}
+	    PRIVATE  -static-libgcc -static-libstdc++)
+endif()
+
+
 if(${ALABASTER_OS} STREQUAL "Windows")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
 elseif(${ALABASTER_OS} STREQUAL "MacOS")

@@ -69,19 +69,23 @@ cmake -B "$build_and_generator_folder" \
     -D SPIRV_CROSS_ENABLE_TESTS=OFF \
     -D SPIRV_CROSS_ENABLE_GLSL=ON \
     -D SPIRV_CROSS_ENABLE_HLSL=OFF \
-    -D SPIRV_CROSS_ENABLE_MSL=ON \
+    -D SPIRV_CROSS_ENABLE_MSL=OFF \
     -D SPIRV_CROSS_ENABLE_CPP=OFF \
     -D SPIRV_CROSS_ENABLE_REFLECT=OFF \
     -D SPIRV_CROSS_ENABLE_C_API=OFF \
     -D SPIRV_CROSS_ENABLE_UTIL=OFF \
     -D SPIRV_CROSS_SKIP_INSTALL=ON \
+    -D SPDLOG_FMT_EXTERNAL=ON \
     -S "$current_dir"
 
 cmake --build "$build_and_generator_folder"
 
 if [ "$generator" = "Ninja" ]; then
-    rm "$current_dir/compile_commands.json"
-    ln -s "build/compile_commands.json" "$current_dir"
+    if [ -f "$current_dir/compile_commands.json" ]; then
+      rm "$current_dir/compile_commands.json"
+    fi;
+    
+    ln -s "$build_and_generator_folder/compile_commands.json" "$current_dir/compile_commands.json"
 fi
 
 run_tests() {
@@ -92,12 +96,15 @@ run_tests() {
 
 run_app() {
     local appName="AlabasterApp"
-    if [ "$generator" = "VS" ]; then
-        appName="AlabasterApp.exe"
-    fi
+    if [ "$OSTYPE" == "cygwin" ] || [ "$OSTYPE" == "msys" ]; then
+      appName="AlabasterApp.exe"
+    fi;
 
     local appDirectory="$(find "$build_and_generator_folder" -type f -name "$appName" | xargs dirname)"
+ 
+    echo "$appDirectory"
     pushd "$appDirectory" || exit
+    pwd
     "./$appName"
     popd || exit
 }

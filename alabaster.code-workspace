@@ -26,6 +26,7 @@
         }
     ],
     "settings": {
+        "git.detectSubmodulesLimit": 20,
         "gitlens.advanced.messages": {
             "suppressCommitHasNoPreviousCommitWarning": false,
             "suppressCommitNotFoundWarning": false,

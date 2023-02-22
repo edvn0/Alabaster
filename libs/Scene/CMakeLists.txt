@@ -50,6 +50,13 @@ target_link_libraries(
 	stduuid
 	Alabaster::Core
 	Alabaster::AssetManager)
+
+if(MINGW)
+    target_link_libraries(
+	    ${PROJECT_NAME}
+	    PRIVATE  -static-libgcc -static-libstdc++)
+endif()
+
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/scene_pch.hpp)
 
