@@ -76,32 +76,33 @@ cmake -B "$build_and_generator_folder" \
     -D SPIRV_CROSS_ENABLE_UTIL=OFF \
     -D SPIRV_CROSS_SKIP_INSTALL=ON \
     -D SPDLOG_FMT_EXTERNAL=ON \
+    -D UUID_USING_CXX20_SPAN=ON \
     -S "$current_dir"
 
 cmake --build "$build_and_generator_folder"
 
 if [ "$generator" = "Ninja" ]; then
     if [ -f "$current_dir/compile_commands.json" ]; then
-      rm "$current_dir/compile_commands.json"
-    fi;
-    
+        rm "$current_dir/compile_commands.json"
+    fi
+
     ln -s "$build_and_generator_folder/compile_commands.json" "$current_dir/compile_commands.json"
 fi
 
 run_tests() {
     if [ "$build_type" == "Debug" ] && [ "$build_testing" == "ON" ]; then
-        ctest -j10 --test-dir "build"
+        ctest -j10 --test-dir "$build_and_generator_folder"
     fi
 }
 
 run_app() {
     local appName="AlabasterApp"
     if [ "$OSTYPE" == "cygwin" ] || [ "$OSTYPE" == "msys" ]; then
-      appName="AlabasterApp.exe"
-    fi;
+        appName="AlabasterApp.exe"
+    fi
 
     local appDirectory="$(find "$build_and_generator_folder" -type f -name "$appName" | xargs dirname)"
- 
+
     echo "$appDirectory"
     pushd "$appDirectory" || exit
     pwd

@@ -24,7 +24,7 @@ namespace Alabaster::IO {
 		(void)mode;
 		std::ifstream stream(filename, std::ios::in | std::ios::ate);
 #else
-		std::ifstream stream(filename, static_cast<unsigned int>(mode));
+		std::ifstream stream(filename, static_cast<std::ios_base::openmode>(mode));
 #endif
 		if (!stream) {
 			throw AlabasterException("Could not open filestream to shader file.");

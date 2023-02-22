@@ -22,7 +22,7 @@ namespace Alabaster {
 		if (!success) {
 			throw AlabasterException();
 		}
-	};
+	}
 
 	Window::~Window() = default;
 
@@ -50,9 +50,9 @@ namespace Alabaster {
 		static constexpr auto set_and_get_window_size = [](GLFWwindow* glfw_handle, std::uint32_t w, std::uint32_t h) {
 			glfwSetWindowSize(glfw_handle, static_cast<int>(w), static_cast<int>(h));
 
-			int actual_w, actual_h;
-			glfwGetWindowSize(glfw_handle, &actual_w, &actual_h);
-			return std::make_tuple(actual_w, actual_h);
+			int found_w, found_h;
+			glfwGetWindowSize(glfw_handle, &found_w, &found_h);
+			return std::make_tuple(found_w, found_h);
 		};
 
 		const auto&& [calc_w, calc_h] = set_and_get_window_size(handle, actual_w, actual_h);
@@ -73,7 +73,7 @@ namespace Alabaster {
 		swapchain->create(&w, &h, false);
 
 		setup_events();
-	};
+	}
 
 	const std::pair<int, int> Window::framebuffer_extent() const
 	{

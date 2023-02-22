@@ -45,10 +45,10 @@ namespace SceneSystem::Component {
 		glm::mat4 to_matrix() const;
 
 		template <typename Pos, typename Rot, typename Scale>
-		Transform(Pos&& pos, Rot&& rot, Scale&& scale) noexcept
+		Transform(Pos&& pos, Rot&& rot, Scale&& scl) noexcept
 			: position(std::forward<Pos>(pos))
 			, rotation(std::forward<Rot>(rot))
-			, scale(std::forward<Scale>(scale))
+			, scale(std::forward<Scale>(scl))
 		{
 		}
 	};
@@ -75,8 +75,8 @@ namespace SceneSystem::Component {
 	struct BasicGeometry {
 		Geometry geometry;
 
-		BasicGeometry(Geometry geometry)
-			: geometry(geometry) {};
+		BasicGeometry(Geometry geom)
+			: geometry(geom) {};
 	};
 	template <> inline constexpr std::string_view component_name<Component::BasicGeometry> = "basic_geometry";
 

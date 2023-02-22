@@ -53,6 +53,7 @@ jobs:
               run: |
                   if ("${{ runner.os }}" STREQUAL "Linux")
                     execute_process(COMMAND sudo apt-get install libxinerama-dev libxcursor-dev libxi-dev)
+                    execute_process(COMMAND sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev)
                   endif()
             - name: Download Ninja and CMake
               shell: cmake -P {0}

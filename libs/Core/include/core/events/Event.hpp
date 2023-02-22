@@ -75,8 +75,8 @@ namespace Alabaster {
 		template <HasHandledAndGetStaticType T> using EventCallback = std::function<bool(T&)>;
 
 	public:
-		EventDispatcher(Event& event)
-			: event(event)
+		EventDispatcher(Event& consumed_event)
+			: event(consumed_event)
 		{
 		}
 

@@ -12,11 +12,11 @@
 
 namespace SceneSystem {
 
-	SceneSerialiser::SceneSerialiser(Scene& scene) noexcept
-		: scene(scene)
+	SceneSerialiser::SceneSerialiser(Scene& input_scene) noexcept
+		: scene(input_scene)
 	{
 		serialise_to_json();
-	};
+	}
 
 	template <Component::IsComponent T> static constexpr auto handle_component_serialisation(auto& entity, auto& json)
 	{

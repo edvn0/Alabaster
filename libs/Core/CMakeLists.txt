@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.21)
 project(Core)
 
 find_package(Vulkan REQUIRED)
-
 find_package(Python3 COMPONENTS Interpreter)
 
 file(GLOB_RECURSE sources av_pch.hpp Alabaster.hpp include/**.hpp src/**.cpp)
@@ -30,6 +29,14 @@ endif()
 add_library(${PROJECT_NAME} ${sources})
 add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
+if(${ALABASTER_OS} STREQUAL "Windows")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
+elseif(${ALABASTER_OS} STREQUAL "MacOS")
+	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
+elseif(${ALABASTER_OS} STREQUAL "Linux")
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
+endif()
+
 set(THIRD_PARTY_DIR ../../third_party/)
 
 target_include_directories(
@@ -49,6 +56,7 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/stb
 	${THIRD_PARTY_DIR}/tinyobjloader
 	${THIRD_PARTY_DIR}/VulkanMemoryAllocator/include
+    ${THIRD_PARTY_DIR}/gsl/include
 	INTERFACE ${Vulkan_INCLUDE_DIRS}
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../AssetManager/include)
 
@@ -78,7 +86,7 @@ if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /wd4201 "/MP")
 else()
 	target_compile_options(
-		${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wno-shadow -Werror
+		${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Werror
 		-Wno-nullability-extension)
 endif()
 
@@ -89,14 +97,6 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
 	"RelWithDebInfo")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_PROFILE)
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_RELEASE)
-endif()
-
-if(${ALABASTER_OS} STREQUAL "Windows")
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
-elseif(${ALABASTER_OS} STREQUAL "MacOS")
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
-elseif(${ALABASTER_OS} STREQUAL "Linux")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
 endif()
 
 if(BUILD_TESTING)

@@ -67,7 +67,7 @@ namespace Alabaster {
 			ui_layer = static_cast<GUILayer*>(layers.at("GUILayer"));
 		}
 		return *ui_layer;
-	};
+	}
 
 	void Application::run()
 	{

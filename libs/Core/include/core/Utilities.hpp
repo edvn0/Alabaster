@@ -38,17 +38,16 @@ namespace Alabaster::Utilities {
 		} else if (size_bytes > threshold_b_to_kb) {
 			return fmt::format("{}kB", to_float / 1000.0f);
 		} else {
-			using enum Alabaster::Utilities::OutputSize;
-			if constexpr (output_size == KB) {
+			if constexpr (output_size == OutputSize::KB) {
 				return fmt::format("{}kB", to_float / 1000.0f);
 			}
-			if constexpr (output_size == MB) {
+			if constexpr (output_size == OutputSize::MB) {
 				return fmt::format("{}mB", to_float / 1e6f);
 			}
-			if constexpr (output_size == GB) {
+			if constexpr (output_size == OutputSize::GB) {
 				return fmt::format("{}gB", to_float / 1e8);
 			}
-			if constexpr (output_size == TB) {
+			if constexpr (output_size == OutputSize::TB) {
 				return fmt::format("{}tB", to_float / 1e12);
 			}
 		}

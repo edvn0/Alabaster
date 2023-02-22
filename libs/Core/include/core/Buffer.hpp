@@ -15,17 +15,17 @@ namespace Alabaster {
 		{
 		}
 
-		Buffer(void* data, std::uint32_t size)
-			: data(data)
-			, size(size)
+		Buffer(void* in_data, std::uint32_t in_size)
+			: data(in_data)
+			, size(in_size)
 		{
 		}
 
-		static Buffer copy(const void* data, std::uint32_t in_size)
+		static Buffer copy(const void* in_data, std::uint32_t in_size)
 		{
 			Buffer buffer;
 			buffer.allocate(in_size);
-			std::memcpy(buffer.data, data, in_size);
+			std::memcpy(buffer.data, in_data, in_size);
 			return buffer;
 		}
 

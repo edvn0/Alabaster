@@ -29,8 +29,8 @@ namespace Alabaster {
 
 	class Pipeline {
 	public:
-		explicit Pipeline(PipelineSpecification spec)
-			: spec(std::move(spec)) {};
+		explicit Pipeline(PipelineSpecification pipe_spec)
+			: spec(std::move(pipe_spec)) {};
 		~Pipeline()
 		{
 			if (!destroyed)

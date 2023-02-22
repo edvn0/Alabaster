@@ -32,10 +32,10 @@ namespace SceneSystem {
 	static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
 	static float ambience { 1.0f };
 
-	static constexpr auto axes = [](const auto& renderer, auto&& pos) {
-		renderer->line(pos, pos + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
-		renderer->line(pos, pos + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
-		renderer->line(pos, pos + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
+	static constexpr auto axes = [](const auto& renderer, auto&& position) {
+		renderer->line(position, position + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
+		renderer->line(position, position + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
+		renderer->line(position, position + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
 	};
 
 	void Scene::build_scene()
@@ -159,7 +159,7 @@ namespace SceneSystem {
 			scene_renderer->destroy();
 
 		framebuffer->destroy();
-	};
+	}
 
 	void Scene::update(float ts)
 	{

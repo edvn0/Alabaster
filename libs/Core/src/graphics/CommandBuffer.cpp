@@ -47,9 +47,9 @@ namespace Alabaster {
 		init(3);
 	}
 
-	CommandBuffer::CommandBuffer(std::uint32_t count, QueueChoice choice, bool is_primary)
+	CommandBuffer::CommandBuffer(std::uint32_t count, QueueChoice choice, bool primary)
 		: queue_choice(choice)
-		, is_primary(is_primary)
+		, is_primary(primary)
 	{
 		init(count);
 	}

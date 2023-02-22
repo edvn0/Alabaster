@@ -56,12 +56,12 @@ namespace Alabaster {
 		return std::make_tuple(vertices, indices);
 	}
 
-	Mesh::Mesh(const std::filesystem::path& path)
-		: path(path)
+	Mesh::Mesh(const std::filesystem::path& input_path)
+		: path(input_path)
 	{
 		auto t0 = Clock::get_ms<float>();
-		verify(IO::exists(path), fmt::format("{} did not exist.", path.string()));
-		verify(IO::is_file(path), fmt::format("{} is not a file.", path.string()));
+		verify(IO::exists(input_path), fmt::format("{} did not exist.", input_path.string()));
+		verify(IO::is_file(input_path), fmt::format("{} is not a file.", input_path.string()));
 
 		auto&& [vertices, indices] = load_model();
 
@@ -71,7 +71,7 @@ namespace Alabaster {
 		index_buffer = IndexBuffer::create(std::move(indices));
 		auto t1 = Clock::get_ms<float>() - t0;
 
-		Log::info("[Mesh] Model with name [{}] load took: {}ms", path.string(), t1);
+		Log::info("[Mesh] Model with name [{}] load took: {}ms", input_path.string(), t1);
 	}
 
 	Mesh::Mesh(const std::vector<Vertex>& vertices, const std::vector<Index>& indices)

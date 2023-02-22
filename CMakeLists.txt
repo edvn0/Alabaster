@@ -5,7 +5,7 @@ project(
 	VERSION 0.0.1
 	LANGUAGES CXX)
 
-if(WIN32)
+if(WIN32 AND NOT MINGW)
 	set(FT_DISABLE_HARFBUZZ ON)
 	set(ALABASTER_OS "Windows")
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")

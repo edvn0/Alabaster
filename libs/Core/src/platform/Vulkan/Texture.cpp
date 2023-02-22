@@ -9,9 +9,9 @@
 
 namespace Alabaster {
 
-	Texture::Texture(const std::filesystem::path& path, const TextureProperties properties)
-		: path(path)
-		, properties(properties)
+	Texture::Texture(const std::filesystem::path& tex_path, const TextureProperties props)
+		: path(tex_path)
+		, properties(props)
 	{
 		bool loaded = load_image(path.string());
 		if (!loaded) {
@@ -29,11 +29,11 @@ namespace Alabaster {
 		invalidate();
 	}
 
-	Texture::Texture(ImageFormat format, uint32_t width, uint32_t height, const void* data, const TextureProperties properties)
-		: width(width)
-		, height(height)
-		, properties(properties)
-		, format(format)
+	Texture::Texture(ImageFormat input_format, uint32_t w, uint32_t h, const void* data, const TextureProperties props)
+		: width(w)
+		, height(h)
+		, properties(props)
+		, format(input_format)
 	{
 		if (height == 0) {
 			bool loaded = load_image(data, width);
@@ -41,10 +41,10 @@ namespace Alabaster {
 				throw AlabasterException("Could not load image.");
 			}
 		} else if (data) {
-			auto size = (uint32_t)Utilities::get_memory_size(format, width, height);
+			auto size = static_cast<std::uint32_t>(Utilities::get_memory_size(format, width, height));
 			image_data = Buffer::copy(data, size);
 		} else {
-			auto size = (uint32_t)Utilities::get_memory_size(format, width, height);
+			auto size = static_cast<std::uint32_t>(Utilities::get_memory_size(format, width, height));
 			image_data.allocate(size);
 			image_data.zero_initialise();
 		}
@@ -172,8 +172,8 @@ namespace Alabaster {
 			allocator.unmap_memory(staging_buffer_allocation);
 
 			ImmediateCommandBuffer immediate_command_buffer { "Texture Transition" };
-			immediate_command_buffer.add_destruction_callback([staging_buffer, staging_buffer_allocation](Allocator& allocator) {
-				allocator.destroy_buffer(staging_buffer, staging_buffer_allocation);
+			immediate_command_buffer.add_destruction_callback([staging_buffer, staging_buffer_allocation](Allocator& alloc) {
+				alloc.destroy_buffer(staging_buffer, staging_buffer_allocation);
 			});
 
 			VkImageSubresourceRange subresource_range = {};

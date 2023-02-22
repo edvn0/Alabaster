@@ -79,9 +79,18 @@ namespace Alabaster {
 			return "VK_ERROR_FRAGMENTATION";
 		case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
 			return "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS";
-		case VK_PIPELINE_COMPILE_REQUIRED:
-			return "VK_PIPELINE_COMPILE_REQUIRED";
-		case VK_ERROR_SURFACE_LOST_KHR:
+#ifdef ALABASTER_LINUX
+        case VK_PIPELINE_COMPILE_REQUIRED_EXT:
+			return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
+        case VK_ERROR_NOT_PERMITTED_EXT:
+			return "VK_ERROR_NOT_PERMITTED_EXT";
+#else
+        case VK_PIPELINE_COMPILE_REQUIRED_EXT:
+			return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
+        case VK_ERROR_NOT_PERMITTED_EXT:
+			return "VK_ERROR_NOT_PERMITTED_EXT";
+#endif
+        case VK_ERROR_SURFACE_LOST_KHR:
 			return "VK_ERROR_SURFACE_LOST_KHR";
 		case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
 			return "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR";
@@ -97,8 +106,6 @@ namespace Alabaster {
 			return "VK_ERROR_INVALID_SHADER_NV";
 		case VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT:
 			return "VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT";
-		case VK_ERROR_NOT_PERMITTED_KHR:
-			return "VK_ERROR_NOT_PERMITTED_KHR";
 		case VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT:
 			return "VK_ERROR_FULL_SCREEN_EXCLUSIVE_MODE_LOST_EXT";
 		case VK_THREAD_IDLE_KHR:
@@ -134,7 +141,7 @@ namespace Alabaster {
 			Log::info("[VkCheck] Vulkan failed with error: {}", vk_result(result));
 			debug_break();
 		}
-	};
+	}
 
 	template <typename PositiveCondition> static inline constexpr auto verify(PositiveCondition&& happy) -> void
 	{
@@ -142,7 +149,7 @@ namespace Alabaster {
 		if (not result) {
 			Log::error("Verification failed.");
 		}
-	};
+	}
 
 	template <typename PositiveCondition> static inline constexpr auto verify(PositiveCondition&& happy, std::string_view message) -> void
 	{
@@ -150,7 +157,7 @@ namespace Alabaster {
 		if (not result) {
 			Log::error("Verification failed. Message: {}", message);
 		}
-	};
+	}
 
 	template <typename PositiveCondition> static inline constexpr auto assert_that(PositiveCondition&& happy) -> void
 	{
@@ -159,7 +166,7 @@ namespace Alabaster {
 			Log::error("Assertion failed.");
 			debug_break();
 		}
-	};
+	}
 
 	template <typename PositiveCondition> static inline constexpr auto assert_that(PositiveCondition&& happy, std::string_view message) -> void
 	{
@@ -168,19 +175,19 @@ namespace Alabaster {
 			Log::error("Assertion failed. Message: {}", message);
 			debug_break();
 		}
-	};
+	}
 
 #else
 
-	template <typename VkResult> static constexpr auto vk_check(VkResult) -> void {};
+	template <typename VkResult> static constexpr auto vk_check(VkResult) -> void {}
 
-	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&) -> void {};
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&) -> void {}
 
-	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&, std::string_view) -> void {};
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&, std::string_view) -> void {}
 
-	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&) -> void {};
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&) -> void {}
 
-	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&, std::string_view) -> void {};
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&, std::string_view) -> void {}
 
 #endif
 
