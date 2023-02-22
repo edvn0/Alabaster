@@ -42,8 +42,8 @@ namespace Alabaster {
 	}
 
 	CommandBuffer::CommandBuffer()
+		: owned_by_swapchain(true)
 	{
-		owned_by_swapchain = true;
 		init(3);
 	}
 

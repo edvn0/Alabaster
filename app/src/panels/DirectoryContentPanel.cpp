@@ -87,11 +87,13 @@ namespace App {
 		}
 	}
 
+	bool DirectoryContentPanel::can_traverse_up() const { return current != initial && depth_from_initial > 0; }
+
 	void DirectoryContentPanel::ui(float ts)
 	{
 		ImGui::Begin("Directory Content");
 
-		if (ImGui::ArrowButton("##GoUpOneLevel", ImGuiDir_Left)) {
+		if (can_traverse_up() && ImGui::ArrowButton("##GoUpOneLevel", ImGuiDir_Left)) {
 			traverse_up();
 		}
 
@@ -180,7 +182,7 @@ namespace App {
 		Alabaster::UI::empty_cache();
 	}
 
-	std::vector<std::filesystem::path> DirectoryContentPanel::get_files_in_directory(const std::filesystem::path& for_path)
+	std::vector<std::filesystem::path> DirectoryContentPanel::get_files_in_directory(const std::filesystem::path& for_path) const
 	{
 		std::vector<std::filesystem::path> found;
 		for (const auto& entry : std::filesystem::directory_iterator { for_path }) {

@@ -15,9 +15,10 @@
 				"third_party/*",
 				"C:\\VulkanSDK\\**"
 			],
-			"compilerPath": "cl.exe",
+			"compileCommands": "${workspaceFolder}/compile_commands.json",
+			"compilerPath": "/usr/bin/clang++",
 			"cStandard": "c17",
-			"intelliSenseMode": "windows-msvc-x64",
+			"intelliSenseMode": "macos-clang-x64",
 			"configurationProvider": "ms-vscode.cmake-tools"
 		}
 	],

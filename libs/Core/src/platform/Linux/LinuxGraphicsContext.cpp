@@ -7,7 +7,6 @@
 
 #include <GLFW/glfw3.h>
 #include <magic_enum.hpp>
-#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -167,8 +166,12 @@ namespace Alabaster {
 			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
 
+#ifdef ALABASTER_MACOS
+#ifndef ALABASTER_IS_BUILD_TOOL
 		extensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
 		instance_info.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+#endif
+#endif
 		instance_info.enabledExtensionCount = static_cast<std::uint32_t>(extensions.size());
 		instance_info.ppEnabledExtensionNames = extensions.data();
 

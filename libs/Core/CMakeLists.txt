@@ -7,18 +7,42 @@ find_package(Python3 COMPONENTS Interpreter)
 
 file(GLOB_RECURSE sources av_pch.hpp Alabaster.hpp include/**.hpp src/**.cpp)
 
-message(STATUS "Alabaster chosen OS: ${ALABASTER_OS}")
+if(${ALABASTER_OS} STREQUAL "Windows")
+    list(FILTER sources EXCLUDE REGEX MacOS*)
+    list(FILTER sources EXCLUDE REGEX Linux*)
+    list(FILTER sources EXCLUDE REGEX MSVC*)
+    list(FILTER sources EXCLUDE REGEX MinGW*)
 
-if(ALABASTER_OS STREQUAL "MacOS")
-	list(FILTER sources EXCLUDE REGEX Windows*)
-	list(APPEND sources
-		${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MacOS/MacOSWindow.cpp)
-else()
-	list(FILTER sources EXCLUDE REGEX MacOS*)
+    if (ALABASTER_COMPILER STREQUAL "MinGW")
+        file(GLOB_RECURSE compilerSpecificSources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MinGW/MinGWUI.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MinGW/**.cpp")
+        list(APPEND sources ${compilerSpecificSources})
+        list(FILTER sources EXCLUDE REGEX MSVC)
+    elseif(ALABASTER_COMPILER STREQUAL "MSVC")
+        file(GLOB_RECURSE compilerSpecificSources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MSVC/MSVCUI.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MSVC/**.cpp")
+        list(APPEND sources ${compilerSpecificSources})
+        list(FILTER sources EXCLUDE REGEX MinGW)
+    endif()
+elseif(${ALABASTER_OS} STREQUAL "MacOS")
+    list(FILTER sources EXCLUDE REGEX Windows*)
+    list(FILTER sources EXCLUDE REGEX Linux*)
+    list(FILTER sources EXCLUDE REGEX MSVC*)
+    list(FILTER sources EXCLUDE REGEX MinGW*)
+
+    # Windows includes 'Window'...
+    list(APPEND sources
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MacOS/MacOSWindow.cpp)
+elseif(${ALABASTER_OS} STREQUAL "Linux")
+    list(FILTER sources EXCLUDE REGEX MacOS*)
+    list(FILTER sources EXCLUDE REGEX Windows*)
+    list(FILTER sources EXCLUDE REGEX MSVC*)
+    list(FILTER sources EXCLUDE REGEX MinGW*)
+
+    # Windows includes 'Window'...
+    list(APPEND sources
+        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Linux/LinuxWindow.cpp)
 endif()
 
 find_program(CLANG_FORMAT "clang-format")
-
 if(CLANG_FORMAT)
 	set(formattable_files ${sources})
 
@@ -31,10 +55,17 @@ add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 if(${ALABASTER_OS} STREQUAL "Windows")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
+    if (${ALABASTER_COMPILER} STREQUAL "MinGW")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_COMPILER_MINGW)
+    elseif(${ALABASTER_COMPILER} STREQUAL "MSVC")
+        target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_COMPILER_MSVC)
+    endif()
 elseif(${ALABASTER_OS} STREQUAL "MacOS")
 	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_COMPILER_CLANG)
 elseif(${ALABASTER_OS} STREQUAL "Linux")
     target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_COMPILER_GNU)
 endif()
 
 set(THIRD_PARTY_DIR ../../third_party/)
@@ -74,9 +105,7 @@ target_link_libraries(
 	effolkronium_random)
 
 if(MINGW)
-    target_link_libraries(
-	    ${PROJECT_NAME}
-	    PRIVATE  -static-libgcc -static-libstdc++)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
 endif()
 
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)

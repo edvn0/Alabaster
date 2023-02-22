@@ -26,6 +26,7 @@ namespace App {
 
 		bool traverse_down(const std::filesystem::path into_directory, bool force_reload = false);
 		bool traverse_up(bool force_reload = false);
+		bool can_traverse_up() const;
 
 		void on_update(float ts) override;
 		void ui(float ts) override;
@@ -34,7 +35,7 @@ namespace App {
 		void on_destroy() override;
 
 		auto& get_current() { return current; }
-		std::vector<std::filesystem::path> get_files_in_directory(const std::filesystem::path& for_path);
+		std::vector<std::filesystem::path> get_files_in_directory(const std::filesystem::path& for_path) const;
 		void draw_file_or_directory(const std::filesystem::path& path, const ImVec2& size) const;
 
 	private:

@@ -3,9 +3,11 @@
 #include "CoreForward.hpp"
 #include "component/Component.hpp"
 #include "graphics/Camera.hpp"
-#include "uuid.h"
+#include "graphics/CommandBuffer.hpp"
+#include "graphics/Renderer3D.hpp"
 
 #include <entt/entt.hpp>
+#include <uuid.h>
 #include <vulkan/vulkan.h>
 
 namespace SceneSystem {
@@ -14,7 +16,7 @@ namespace SceneSystem {
 
 	class Scene {
 	public:
-		Scene();
+		Scene() noexcept;
 		~Scene();
 
 		void update(float ts);
@@ -23,16 +25,21 @@ namespace SceneSystem {
 		void shutdown();
 		void ui(float ts);
 
-	public:
+		void draw_entities_in_scene(float ts);
+
 		void delete_entity(const std::string& tag);
 		void delete_entity(const uuids::uuid& uuid);
 		void delete_entity(const Entity& entity);
-		void create_entity();
-		void create_entity(std::string_view name);
+		Entity create_entity(const std::string& name);
+		Entity create_entity(const Entity& name);
+		Entity create_entity(entt::entity name);
+
 		const auto& get_registry() const { return registry; }
+		auto& get_registry() { return registry; }
 
 		template <Component::IsComponent... T> auto all_with() { return registry.view<T...>(); }
-		void for_each_entity(auto&& func) { registry.each(func); }
+
+		template <typename Func> void for_each_entity(Func&& func) { registry.each(std::forward<Func>(func)); }
 
 		auto get_name() const { return Component::ID().identifier; }
 
@@ -41,7 +48,6 @@ namespace SceneSystem {
 	private:
 		void build_scene();
 
-	private:
 		entt::registry registry;
 
 		std::shared_ptr<Alabaster::EditorCamera> scene_camera;

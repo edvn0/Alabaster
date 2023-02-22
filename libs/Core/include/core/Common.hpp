@@ -16,12 +16,11 @@
 namespace Alabaster {
 
 	template <typename T>
-	concept HasSizeAndIterator = requires(T t)
-	{
-		t.size();
-		t.begin();
-		t.end();
-	};
+	concept HasSizeAndIterator = requires(T t) {
+									 t.size();
+									 t.begin();
+									 t.end();
+								 };
 
 	static constexpr auto equals_ignore_case(const HasSizeAndIterator auto& lhs, const HasSizeAndIterator auto& rhs)
 	{
@@ -80,17 +79,17 @@ namespace Alabaster {
 		case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
 			return "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS";
 #ifdef ALABASTER_LINUX
-        case VK_PIPELINE_COMPILE_REQUIRED_EXT:
+		case VK_PIPELINE_COMPILE_REQUIRED_EXT:
 			return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
-        case VK_ERROR_NOT_PERMITTED_EXT:
+		case VK_ERROR_NOT_PERMITTED_EXT:
 			return "VK_ERROR_NOT_PERMITTED_EXT";
 #else
-        case VK_PIPELINE_COMPILE_REQUIRED_EXT:
+		case VK_PIPELINE_COMPILE_REQUIRED_EXT:
 			return "VK_PIPELINE_COMPILE_REQUIRED_EXT";
-        case VK_ERROR_NOT_PERMITTED_EXT:
+		case VK_ERROR_NOT_PERMITTED_EXT:
 			return "VK_ERROR_NOT_PERMITTED_EXT";
 #endif
-        case VK_ERROR_SURFACE_LOST_KHR:
+		case VK_ERROR_SURFACE_LOST_KHR:
 			return "VK_ERROR_SURFACE_LOST_KHR";
 		case VK_ERROR_NATIVE_WINDOW_IN_USE_KHR:
 			return "VK_ERROR_NATIVE_WINDOW_IN_USE_KHR";
@@ -126,10 +125,7 @@ namespace Alabaster {
 	};
 
 	template <typename T>
-	concept has_empty = requires(T t)
-	{
-		t.empty();
-	};
+	concept has_empty = requires(T t) { t.empty(); };
 	static constexpr auto non_empty = [](const has_empty auto& in) { return not in.empty(); };
 
 #ifdef ALABASTER_DEBUG
@@ -179,15 +175,15 @@ namespace Alabaster {
 
 #else
 
-	template <typename VkResult> static constexpr auto vk_check(VkResult) -> void {}
+	template <typename VkResult> static constexpr auto vk_check(VkResult) -> void { }
 
-	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&) -> void {}
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&) -> void { }
 
-	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&, std::string_view) -> void {}
+	template <typename PositiveCondition> static constexpr auto verify(PositiveCondition&&, std::string_view) -> void { }
 
-	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&) -> void {}
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&) -> void { }
 
-	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&, std::string_view) -> void {}
+	template <typename PositiveCondition> static constexpr auto assert_that(PositiveCondition&&, std::string_view) -> void { }
 
 #endif
 

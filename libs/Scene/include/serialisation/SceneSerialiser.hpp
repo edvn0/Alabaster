@@ -26,7 +26,6 @@ namespace SceneSystem {
 		void serialise_to_json();
 		nlohmann::json serialise_entity(Entity& entity);
 
-	private:
 		Scene& scene;
 		bool has_written { false };
 		nlohmann::json output_json {};

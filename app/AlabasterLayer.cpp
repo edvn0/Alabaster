@@ -476,7 +476,7 @@ void AlabasterLayer::on_event(Event& e)
 	editor_scene->on_event(e);
 
 	EventDispatcher dispatch(e);
-	dispatch.dispatch<MouseScrolledEvent>([](MouseScrolledEvent& event) { return global_imgui_is_blocking; });
+	dispatch.dispatch<MouseScrolledEvent>([](MouseScrolledEvent&) { return global_imgui_is_blocking; });
 
 	dispatch.dispatch<KeyPressedEvent>([](KeyPressedEvent& key_event) {
 		const auto key_code = key_event.get_key_code();
@@ -573,8 +573,8 @@ void AlabasterLayer::ui(float ts)
 		{
 			ImGui::Begin("Scene Hierarchy");
 
-			editor_scene->for_each_entity([&](auto entity_id) {
-				Entity entity { editor_scene.get(), entity_id };
+			editor_scene->for_each_entity([this](auto entity_id) {
+				auto entity = editor_scene->create_entity(entity_id);
 				draw_entity_node(entity);
 			});
 
@@ -589,7 +589,7 @@ void AlabasterLayer::ui(float ts)
 			ImGui::End();
 
 			ImGui::Begin("Properties");
-			if (selected_entity) {
+			if (selected_entity.is_valid()) {
 				draw_components(selected_entity);
 			}
 

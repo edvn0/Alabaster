@@ -19,10 +19,14 @@ namespace Alabaster {
 	struct PushConstantRange {
 		constexpr PushConstantRange(PushConstantKind in_flags, std::uint32_t in_size)
 			: size(in_size)
-			, flags(in_flags) {}
+			, flags(in_flags)
+		{
+		}
 		constexpr PushConstantRange()
 			: size(0)
-			, flags(PushConstantKind::Both) {}
+			, flags(PushConstantKind::Both)
+		{
+		}
 
 		std::uint32_t size;
 		PushConstantKind flags;
