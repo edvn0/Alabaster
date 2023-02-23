@@ -8,34 +8,31 @@
 
 namespace AssetManager {
 
-	template <class T> class ShaderCache : public BaseCache<ShaderCache, Alabaster::Shader> {
+	class ShaderCache : public BaseCache<Alabaster::Shader> {
 	public:
-		ShaderCache(std::unique_ptr<cache_create_read<T>> in_cache_crud = std::make_unique<DefaultShaderCrud>())
-			: cache_crud(std::move(in_cache_crud)) {};
-
 		void load_from_directory(const std::filesystem::path& shader_directory_path);
 
-	public:
-		void destroy_impl()
+		void destroy() override
 		{
 			for (auto& [key, shader] : shaders) {
 				shader.destroy();
 			}
 		}
 
-		[[nodiscard]] virtual std::optional<const Alabaster::Shader*> get_from_cache_impl(const std::string& name)
+		[[nodiscard]] std::optional<const Alabaster::Shader*> get_from_cache(const std::string& name) override
 		{
-			if (shaders.contains(name))
-				return cache_crud->get(name, shaders);
+			if (shaders.contains(name)) {
+				return { &shaders.at(name) };
+			}
 			return {};
 		}
 
-		[[nodiscard]] virtual bool add_to_cache_impl(const std::string& name, Alabaster::Shader* input)
+		[[nodiscard]] bool add_to_cache(const std::string& name, Alabaster::Shader* input) override
 		{
 			if (shaders.contains(name)) {
 				return false;
 			}
-			cache_crud->create(name, input, shaders);
+			shaders.try_emplace(name, *input);
 			return true;
 		};
 
@@ -43,10 +40,7 @@ namespace AssetManager {
 		std::vector<std::pair<std::filesystem::path, std::filesystem::path>> extract_into_pairs_of_shaders(
 			const std::vector<std::string>& sorted_shaders_in_directory);
 
-		std::unordered_map<std::string, Alabaster::Shader, AssetManager::StringHash, std::equal_to<>> shaders;
-		std::unique_ptr<cache_create_read<T>> cache_crud;
-
-		friend BaseCache;
+		StringMap<Alabaster::Shader> shaders;
 	};
 
 } // namespace AssetManager

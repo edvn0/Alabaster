@@ -63,7 +63,7 @@ namespace Alabaster {
 
 		VkBufferCopy copy_region = {};
 		copy_region.size = buffer_size;
-		vkCmdCopyBuffer(immediate_command_buffer, staging_buffer, vulkan_buffer, 1, &copy_region);
+		vkCmdCopyBuffer(immediate_command_buffer.get_buffer(), staging_buffer, vulkan_buffer, 1, &copy_region);
 
 		const auto human_readable_size = Utilities::human_readable_size(buffer_size);
 		Log::info("[VertexBuffer] Initialised with size: {}", human_readable_size);
@@ -88,6 +88,10 @@ namespace Alabaster {
 		std::memcpy(vertex_data.data, (uint8_t*)buffer + offset, size);
 		offline_set_data(vertex_data.data, size, offset);
 	}
+
+	VkBuffer VertexBuffer::get_vulkan_buffer() const { return vulkan_buffer; }
+
+	VkBuffer VertexBuffer::operator*() const { return vulkan_buffer; }
 
 	void VertexBuffer::offline_set_data(const void* buffer, std::uint32_t size, std::uint32_t offset)
 	{

@@ -55,11 +55,4 @@ namespace Alabaster {
 		allocator.unmap_memory(allocation);
 	}
 
-	UniformBuffer::~UniformBuffer()
-	{
-		if (!destroyed) {
-			destroy();
-		}
-	}
-
 } // namespace Alabaster

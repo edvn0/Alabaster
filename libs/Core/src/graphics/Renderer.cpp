@@ -27,7 +27,7 @@ namespace Alabaster {
 		frame_started = true;
 	}
 
-	void Renderer::begin_render_pass(const std::unique_ptr<CommandBuffer>& buffer, const std::shared_ptr<Framebuffer>& fb, bool explicit_clear)
+	void Renderer::begin_render_pass(const CommandBuffer& buffer, const std::shared_ptr<Framebuffer>& fb, bool explicit_clear)
 	{
 		const VkExtent2D extent = { fb->get_width(), fb->get_height() };
 
@@ -40,8 +40,8 @@ namespace Alabaster {
 		render_pass_info.pClearValues = fb->get_clear_values().data();
 		render_pass_info.clearValueCount = static_cast<std::uint32_t>(fb->get_clear_values().size());
 
-		verify(*buffer, "[Renderer - Begin Render Pass] Command buffer is not active.");
-		vkCmdBeginRenderPass(*buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+		verify(buffer.get_buffer(), "[Renderer - Begin Render Pass] Command buffer is not active.");
+		vkCmdBeginRenderPass(buffer.get_buffer(), &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
 		if (explicit_clear) {
 			std::array<VkClearAttachment, 2> clears;
@@ -60,7 +60,7 @@ namespace Alabaster {
 			clear_rect.baseArrayLayer = 0;
 			clear_rect.layerCount = 1;
 
-			vkCmdClearAttachments(*buffer, 2, clears.data(), 1, &clear_rect);
+			vkCmdClearAttachments(buffer.get_buffer(), 2, clears.data(), 1, &clear_rect);
 		}
 
 		VkViewport viewport {};
@@ -70,15 +70,15 @@ namespace Alabaster {
 		viewport.height = static_cast<float>(extent.height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(*buffer, 0, 1, &viewport);
+		vkCmdSetViewport(buffer.get_buffer(), 0, 1, &viewport);
 
 		VkRect2D scissor {};
 		scissor.offset = { 0, 0 };
 		scissor.extent = extent;
-		vkCmdSetScissor(*buffer, 0, 1, &scissor);
+		vkCmdSetScissor(buffer.get_buffer(), 0, 1, &scissor);
 	}
 
-	void Renderer::begin_render_pass(const std::unique_ptr<CommandBuffer>& buffer, VkRenderPass render_pass, bool explicit_clear)
+	void Renderer::begin_render_pass(const CommandBuffer& buffer, VkRenderPass render_pass, bool explicit_clear)
 	{
 		const auto& swapchain = Application::the().swapchain();
 		const auto extent = swapchain.swapchain_extent();
@@ -96,8 +96,8 @@ namespace Alabaster {
 
 		render_pass_info.clearValueCount = static_cast<std::uint32_t>(clear_values.size());
 		render_pass_info.pClearValues = clear_values.data();
-		verify(*buffer, "[Renderer - Begin Render Pass] Command buffer is not active.");
-		vkCmdBeginRenderPass(*buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+		verify(buffer.get_buffer(), "[Renderer - Begin Render Pass] Command buffer is not active.");
+		vkCmdBeginRenderPass(buffer.get_buffer(), &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
 
 		if (explicit_clear) {
 			std::array<VkClearAttachment, 2> clears;
@@ -116,7 +116,7 @@ namespace Alabaster {
 			clear_rect.baseArrayLayer = 0;
 			clear_rect.layerCount = 1;
 
-			vkCmdClearAttachments(*buffer, 2, clears.data(), 1, &clear_rect);
+			vkCmdClearAttachments(buffer.get_buffer(), 2, clears.data(), 1, &clear_rect);
 		}
 
 		VkViewport viewport {};
@@ -126,15 +126,15 @@ namespace Alabaster {
 		viewport.height = static_cast<float>(extent.height);
 		viewport.minDepth = 0.0f;
 		viewport.maxDepth = 1.0f;
-		vkCmdSetViewport(*buffer, 0, 1, &viewport);
+		vkCmdSetViewport(buffer.get_buffer(), 0, 1, &viewport);
 
 		VkRect2D scissor {};
 		scissor.offset = { 0, 0 };
 		scissor.extent = extent;
-		vkCmdSetScissor(*buffer, 0, 1, &scissor);
+		vkCmdSetScissor(buffer.get_buffer(), 0, 1, &scissor);
 	}
 
-	void Renderer::end_render_pass(const std::unique_ptr<CommandBuffer>& buffer) { vkCmdEndRenderPass(*buffer); }
+	void Renderer::end_render_pass(const CommandBuffer& buffer) { vkCmdEndRenderPass(buffer.get_buffer()); }
 
 	std::uint32_t Renderer::current_frame() { return Application::the().swapchain().frame(); }
 

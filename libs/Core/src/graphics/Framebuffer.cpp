@@ -65,7 +65,7 @@ namespace Alabaster {
 
 		if (!spec.existing_framebuffer) {
 			uint32_t attachment_index = 0;
-			for (auto& attachment_specification : spec.attachments) {
+			for (const auto& attachment_specification : spec.attachments) {
 				initialise_attachments(width, height, spec, attachment_specification, attachment_images, depth_image, attachment_index);
 			}
 		}
@@ -82,34 +82,37 @@ namespace Alabaster {
 
 	void Framebuffer::release()
 	{
-		if (frame_buffer) {
-			VkFramebuffer framebuffer = frame_buffer;
+		if (!frame_buffer) {
+			return;
+		}
 
-			const auto& device = GraphicsContext::the().device();
-			vkDestroyFramebuffer(device, framebuffer, nullptr);
+		VkFramebuffer framebuffer = frame_buffer;
 
-			Log::info("[Framebuffer] Destroying framebuffer.");
+		const auto& device = GraphicsContext::the().device();
+		vkDestroyFramebuffer(device, framebuffer, nullptr);
 
-			if (!spec.existing_framebuffer) {
-				uint32_t attachment_index = 0;
-				for (auto& image : attachment_images) {
-					if (spec.existing_images.find(attachment_index) != spec.existing_images.end())
-						continue;
+		Log::info("[Framebuffer] Destroying framebuffer.");
 
-					if (image->get_specification().layers == 1 || ((attachment_index == 0) && !image->get_layer_image_view(0))) {
-						image->release();
-						Log::info("[Framebuffer] Destroying framebuffer image.");
-					}
-					attachment_index++;
-				}
+		if (spec.existing_framebuffer)
+			return;
 
-				if (depth_image) {
-					const auto potential_attachment_index = static_cast<std::uint32_t>(spec.attachments.size() - 1);
-					if (spec.existing_images.find(potential_attachment_index) == spec.existing_images.end()) {
-						depth_image->destroy();
-						Log::info("[Framebuffer] Destroying framebuffer depth image.");
-					}
-				}
+		uint32_t attachment_index = 0;
+		for (const auto& image : attachment_images) {
+			if (spec.existing_images.contains(attachment_index))
+				continue;
+
+			if (image->get_specification().layers == 1 || attachment_index == 0) {
+				image->release();
+				Log::info("[Framebuffer] Destroying framebuffer image.");
+			}
+			attachment_index++;
+		}
+
+		if (depth_image) {
+			const auto potential_attachment_index = static_cast<std::uint32_t>(spec.attachments.size() - 1);
+			if (!spec.existing_images.contains(potential_attachment_index)) {
+				depth_image->destroy();
+				Log::info("[Framebuffer] Destroying framebuffer depth image.");
 			}
 		}
 	}
@@ -132,7 +135,7 @@ namespace Alabaster {
 			clear_values.emplace_back().color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 		}
 
-		for (auto& callback : resize_callbacks)
+		for (const auto& callback : resize_callbacks)
 			callback(*this);
 	}
 
@@ -153,20 +156,20 @@ namespace Alabaster {
 			attachment_images.clear();
 
 		uint32_t attachment_index = 0;
-		for (auto& attachment_specification : spec.attachments) {
+		for (auto const& attachment_specification : spec.attachments) {
 			if (Utilities::is_depth_format(attachment_specification.format)) {
 				if (spec.existing_image) {
 					depth_image = spec.existing_image;
 				} else if (spec.existing_framebuffer) {
-					auto& existing_framebuffer = spec.existing_framebuffer;
+					const auto& existing_framebuffer = spec.existing_framebuffer;
 					depth_image = existing_framebuffer->get_depth_image();
 				} else if (spec.existing_images.find(attachment_index) != spec.existing_images.end()) {
-					auto& existing_image = spec.existing_images.at(attachment_index);
+					const auto& existing_image = spec.existing_images.at(attachment_index);
 					assert_that(Utilities::is_depth_format(existing_image->get_specification().format),
 						"Trying to attach non-depth image as depth attachment");
 					depth_image = existing_image;
 				} else {
-					auto& depth_attachment_image = depth_image;
+					const auto& depth_attachment_image = depth_image;
 					auto& depth_props = depth_attachment_image->get_specification();
 					depth_props.width = static_cast<std::uint32_t>(width * spec.scale);
 					depth_props.height = static_cast<std::uint32_t>(height * spec.scale);
@@ -196,11 +199,11 @@ namespace Alabaster {
 			} else {
 				std::shared_ptr<Image> color_attachment;
 				if (spec.existing_framebuffer) {
-					auto& existing_framebuffer = spec.existing_framebuffer;
+					const auto& existing_framebuffer = spec.existing_framebuffer;
 					const auto& existing_image = existing_framebuffer->get_image(attachment_index);
 					color_attachment = attachment_images.emplace_back(existing_image);
-				} else if (spec.existing_images.find(attachment_index) != spec.existing_images.end()) {
-					auto& existing_image = spec.existing_images[attachment_index];
+				} else if (spec.existing_images.contains(attachment_index)) {
+					const auto& existing_image = spec.existing_images[attachment_index];
 					assert_that(
 						!Utilities::is_depth_format(existing_image->get_specification().format), "Trying to attach depth image as color attachment");
 					color_attachment = existing_image;
@@ -214,7 +217,7 @@ namespace Alabaster {
 						props.height = static_cast<std::uint32_t>(height * spec.scale);
 						color_attachment = attachment_images.emplace_back(Image::create(props));
 					} else {
-						auto& image = attachment_images[attachment_index];
+						const auto& image = attachment_images[attachment_index];
 						auto& props = image->get_specification();
 						props.width = static_cast<std::uint32_t>(width * spec.scale);
 						props.height = static_cast<std::uint32_t>(height * spec.scale);
@@ -259,50 +262,43 @@ namespace Alabaster {
 
 		std::vector<VkSubpassDependency> dependencies;
 		if (attachment_images.size()) {
-			{
-				VkSubpassDependency& dependency = dependencies.emplace_back();
-				dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-				dependency.dstSubpass = 0;
-				dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-				dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-				dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-				dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-				dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-			}
-			{
-				VkSubpassDependency& dependency = dependencies.emplace_back();
-				dependency.srcSubpass = 0;
-				dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
-				dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-				dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-				dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-				dependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-				dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-			}
+			VkSubpassDependency& dependency = dependencies.emplace_back();
+			dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+			dependency.dstSubpass = 0;
+			dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+
+			VkSubpassDependency& subpass = dependencies.emplace_back();
+			subpass.srcSubpass = 0;
+			subpass.dstSubpass = VK_SUBPASS_EXTERNAL;
+			subpass.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+			subpass.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+			subpass.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			subpass.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			subpass.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 		}
 
 		if (depth_image) {
-			{
-				VkSubpassDependency& dependency = dependencies.emplace_back();
-				dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-				dependency.dstSubpass = 0;
-				dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-				dependency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-				dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-				dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-				dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-			}
+			VkSubpassDependency& dependency = dependencies.emplace_back();
+			dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+			dependency.dstSubpass = 0;
+			dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			dependency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+			dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-			{
-				VkSubpassDependency& dependency = dependencies.emplace_back();
-				dependency.srcSubpass = 0;
-				dependency.dstSubpass = VK_SUBPASS_EXTERNAL;
-				dependency.srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-				dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-				dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-				dependency.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-				dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-			}
+			VkSubpassDependency& subpass = dependencies.emplace_back();
+			subpass.srcSubpass = 0;
+			subpass.dstSubpass = VK_SUBPASS_EXTERNAL;
+			subpass.srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+			subpass.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			subpass.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+			subpass.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			subpass.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 		}
 
 		VkRenderPassCreateInfo render_pass_info = {};
@@ -318,8 +314,7 @@ namespace Alabaster {
 
 		std::vector<VkImageView> attachments(attachment_images.size());
 		for (uint32_t i = 0; i < attachment_images.size(); i++) {
-			auto& image = attachment_images[i];
-			if (image->get_specification().layers > 1) {
+			if (const auto& image = attachment_images[i]; image->get_specification().layers > 1) {
 				attachments[i] = image->get_layer_image_view(spec.existing_image_layers[i]);
 			} else {
 				attachments[i] = image->get_view();
@@ -328,7 +323,7 @@ namespace Alabaster {
 		}
 
 		if (depth_image) {
-			auto& image = depth_image;
+			const auto& image = depth_image;
 			if (spec.existing_image) {
 				assert_that(spec.existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");
 			} else {

@@ -40,6 +40,7 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/entt/single_include
 	${THIRD_PARTY_DIR}/json/single_include
 	${THIRD_PARTY_DIR}/stduuid/include
+  ${THIRD_PARTY_DIR}/glfw/include
     ${THIRD_PARTY_DIR}/gsl/include
 	../Core/include/
 	../AssetManager/include/

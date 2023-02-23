@@ -10,7 +10,7 @@ namespace Alabaster {
 
 	enum class ClockGranularity : unsigned int { SECONDS = 0, MILLIS = 1, NANOS = 2 };
 
-	template <ClockGranularity in = ClockGranularity::MILLIS, typename FloatLike = double> class Timer {
+	template <typename FloatLike = double, ClockGranularity in = ClockGranularity::MILLIS> class Timer {
 	public:
 		Timer()
 		{
@@ -27,7 +27,7 @@ namespace Alabaster {
 
 		FloatLike elapsed()
 		{
-			constexpr auto out = [](auto&& f, auto&& start) { return static_cast<FloatLike>(f() - static_cast<FloatLike>(start)); };
+			constexpr auto out = [](auto&& f, auto start) { return static_cast<FloatLike>(f() - static_cast<FloatLike>(start)); };
 			if constexpr (in == ClockGranularity::SECONDS) {
 				return out(Clock::get_seconds<FloatLike>, start_time);
 			} else if constexpr (in == ClockGranularity::MILLIS) {
@@ -41,5 +41,8 @@ namespace Alabaster {
 		FloatLike start_time { 0.0 };
 		ClockGranularity granularity { ClockGranularity::MILLIS };
 	};
+
+	template class Timer<float, ClockGranularity::MILLIS>;
+	template class Timer<double, ClockGranularity::MILLIS>;
 
 } // namespace Alabaster

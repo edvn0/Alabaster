@@ -30,7 +30,7 @@ namespace AssetManager {
 		return true;
 	};
 
-	template <class T> void ShaderCache<T>::load_from_directory(const std::filesystem::path& shader_directory)
+	void ShaderCache::load_from_directory(const std::filesystem::path& shader_directory)
 	{
 		using namespace Alabaster::FS;
 		auto all_files_in_shaders = in_directory<std::string, false>(shader_directory, { ".vert", ".frag" }, true);
@@ -70,8 +70,7 @@ namespace AssetManager {
 		}
 	}
 
-	template <typename T>
-	std::vector<std::pair<std::filesystem::path, std::filesystem::path>> ShaderCache<T>::extract_into_pairs_of_shaders(
+	std::vector<std::pair<std::filesystem::path, std::filesystem::path>> ShaderCache::extract_into_pairs_of_shaders(
 		const std::vector<std::string>& sorted_shaders_in_directory)
 	{
 		Alabaster::assert_that(check_is_sorted(sorted_shaders_in_directory, [](auto&& a, auto&& b) { return b > a; }), "Input vector is not sorted.");
@@ -116,7 +115,5 @@ namespace AssetManager {
 
 		return shader_pairs;
 	}
-
-	template class ShaderCache<Alabaster::Shader>;
 
 } // namespace AssetManager

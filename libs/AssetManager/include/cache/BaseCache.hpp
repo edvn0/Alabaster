@@ -35,56 +35,15 @@ namespace AssetManager {
 		}
 	};
 
-	template <template <class> class Child, class ItemType> class BaseCache {
+	template <typename T> using StringMap = std::unordered_map<std::string, T, StringHash, std::equal_to<>>;
+
+	template <typename T> class BaseCache {
 	public:
-		[[nodiscard]] std::optional<const ItemType*> get_from_cache(const std::string& item_name) { return child().get_from_cache_impl(item_name); }
+		virtual ~BaseCache() = default;
 
-		[[nodiscard]] bool add_to_cache(const std::string& name, ItemType* input) { return child().add_to_cache_impl(name, input); };
-
-		void destroy() { child().destroy_impl(); }
-
-	private:
-		auto& child() { return *static_cast<Child<ItemType>*>(this); }
-
-		friend Child<ItemType>;
-	};
-
-	template <typename T> struct cache_create_read {
-		virtual ~cache_create_read() = default;
-		virtual const T* get(const std::string& name, std::unordered_map<std::string, T, AssetManager::StringHash, std::equal_to<>>& out) = 0;
-		virtual void create(const std::string& name, T* data, std::unordered_map<std::string, T, AssetManager::StringHash, std::equal_to<>>& out) = 0;
-	};
-
-	struct DefaultShaderCrud : public cache_create_read<Alabaster::Shader> {
-		~DefaultShaderCrud() override = default;
-
-		const Alabaster::Shader* get(
-			const std::string& name, std::unordered_map<std::string, Alabaster::Shader, AssetManager::StringHash, std::equal_to<>>& out) override
-		{
-			return &out.at(name);
-		};
-
-		void create(const std::string& name, Alabaster::Shader* data,
-			std::unordered_map<std::string, Alabaster::Shader, AssetManager::StringHash, std::equal_to<>>& out) override
-		{
-			out.try_emplace(name, *data);
-		};
-	};
-
-	struct DefaultTextureCrud : public cache_create_read<Alabaster::Texture> {
-		~DefaultTextureCrud() override = default;
-
-		const Alabaster::Texture* get(
-			const std::string& name, std::unordered_map<std::string, Alabaster::Texture, AssetManager::StringHash, std::equal_to<>>& out) override
-		{
-			return &out.at(name);
-		};
-
-		void create(const std::string& name, Alabaster::Texture* data,
-			std::unordered_map<std::string, Alabaster::Texture, AssetManager::StringHash, std::equal_to<>>& out) override
-		{
-			out.try_emplace(name, *data);
-		};
+		[[nodiscard]] virtual std::optional<const T*> get_from_cache(const std::string& item_name) = 0;
+		[[nodiscard]] virtual bool add_to_cache(const std::string& name, T* input) = 0;
+		virtual void destroy() = 0;
 	};
 
 } // namespace AssetManager

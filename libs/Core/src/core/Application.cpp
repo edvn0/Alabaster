@@ -25,7 +25,7 @@ namespace Alabaster {
 
 		global_app = this;
 		window = std::make_unique<Window>(args);
-		window->set_event_callback([this](Event& e) { on_event(e); });
+		window->set_event_callback([this](Event& event) { on_event(event); });
 
 		push_layer(new GUILayer());
 
@@ -46,12 +46,11 @@ namespace Alabaster {
 
 	void Application::stop()
 	{
-		using Map = std::map<std::string, Layer*>;
-		for (Map::iterator itr = layers.begin(); itr != layers.end();) {
-			Log::warn("[Application] Destroying layer: {}", (*itr).second->get_name());
+		for (auto itr = layers.begin(); itr != layers.end();) {
+			const auto& [name, layer] = *itr;
+			Log::warn("[Application] Destroying layer: {}", layer->get_name());
 
-			itr->second->destroy();
-			itr->second->~Layer();
+			layer->destroy();
 			itr = layers.erase(itr);
 		}
 		Log::info("[Application] Stopping.");
@@ -75,7 +74,7 @@ namespace Alabaster {
 
 		static std::size_t frametime_index = 0;
 		while (!window->should_close() && is_running) {
-			Timer<ClockGranularity::MILLIS, float> on_cpu;
+			Timer<float> on_cpu;
 
 			window->update();
 
@@ -150,12 +149,13 @@ namespace Alabaster {
 				return;
 
 			layer->on_event(event);
-		};
+		}
 	}
 
 	bool Application::on_window_change(WindowResizeEvent& e)
 	{
-		const std::uint32_t width = e.width(), height = e.height();
+		const auto width = e.width();
+		const auto height = e.height();
 		if (width == 0 || height == 0) {
 			return false;
 		}

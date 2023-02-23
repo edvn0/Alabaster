@@ -2,7 +2,6 @@
 
 #include "core/GUILayer.hpp"
 
-#include "cache/ResourceCache.hpp"
 #include "core/Buffer.hpp"
 #include "core/Common.hpp"
 #include "core/Window.hpp"
@@ -17,15 +16,16 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
+#include <utilities/FileInputOutput.hpp>
 
 namespace Alabaster {
 
 	void GUILayer::on_event(Event& event)
 	{
 		if (should_block) {
-			ImGuiIO& io = ImGui::GetIO();
-			event.handled |= event.is_in_category(EventCategoryMouse) & io.WantCaptureMouse;
-			event.handled |= event.is_in_category(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+			const ImGuiIO& io = ImGui::GetIO();
+			event.handled |= event.is_in_category(EventCategoryMouse) && io.WantCaptureMouse;
+			event.handled |= event.is_in_category(EventCategoryKeyboard) && io.WantCaptureKeyboard;
 		}
 	}
 
@@ -50,17 +50,20 @@ namespace Alabaster {
 		auto device = vulkan_context.device();
 
 		// Create Descriptor Pool
-		VkDescriptorPoolSize pool_sizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 }, { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 }, { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 }, { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 }, { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
-			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 } };
+		std::array<VkDescriptorPoolSize, 11> pool_sizes = { VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 }, VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 }, VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 }, VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 }, VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 } };
+		const auto size = static_cast<std::uint32_t>(pool_sizes.size());
 		VkDescriptorPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-		pool_info.maxSets = 100 * IM_ARRAYSIZE(pool_sizes);
-		pool_info.poolSizeCount = static_cast<std::uint32_t>(IM_ARRAYSIZE(pool_sizes));
-		pool_info.pPoolSizes = pool_sizes;
+		pool_info.maxSets = 100 * size;
+		pool_info.poolSizeCount = size;
+		pool_info.pPoolSizes = pool_sizes.data();
 		vk_check(vkCreateDescriptorPool(device, &pool_info, nullptr, &imgui_descriptor_pool));
 
 		// Setup Platform/Renderer bindings
@@ -77,11 +80,11 @@ namespace Alabaster {
 		init_info.CheckVkResultFn = vk_check;
 		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
 
-		const std::filesystem::path path = IO::font("FreePixel.ttf");
+		const std::filesystem::path path = Alabaster::IO::font("FreePixel.ttf");
 		ImGui::GetIO().Fonts->AddFontFromFileTTF(path.string().c_str(), 14.0f);
 
 		{
-			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer { "Fonts Texture" });
+			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer { "Fonts Texture" }.get_buffer());
 
 			vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
 
@@ -91,23 +94,24 @@ namespace Alabaster {
 		return true;
 	}
 
-	void GUILayer::begin()
+	void GUILayer::begin() const
 	{
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 	}
 
-	void GUILayer::end()
+	void GUILayer::end() const
 	{
 		ImGui::Render();
 
 		static constexpr VkClearColorValue clear_colour { { 0.1f, 0.1f, 0.1f, 0.0f } };
+		static constexpr VkClearDepthStencilValue depth_stencil_clear { .depth = 1.0f, .stencil = 0 };
 
 		const auto& swapchain = Application::the().get_window()->get_swapchain();
 		std::array<VkClearValue, 2> clear_values {};
 		clear_values[0].color = clear_colour;
-		clear_values[1].depthStencil = { .depth = 1.0f, .stencil = 0 };
+		clear_values[1].depthStencil = depth_stencil_clear;
 
 		std::uint32_t width = swapchain->get_width();
 		std::uint32_t height = swapchain->get_height();
@@ -134,6 +138,7 @@ namespace Alabaster {
 		vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
 		const auto& imgui_buffer = imgui_command_buffer;
+		const auto& command_buffer = imgui_buffer->get_buffer();
 		{
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
@@ -153,27 +158,30 @@ namespace Alabaster {
 			viewport.width = static_cast<float>(width);
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
-			vkCmdSetViewport(*imgui_buffer, 0, 1, &viewport);
+			vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 
 			VkRect2D scissor = {};
 			scissor.extent.width = width;
 			scissor.extent.height = height;
 			scissor.offset.x = 0;
 			scissor.offset.y = 0;
-			vkCmdSetScissor(*imgui_buffer, 0, 1, &scissor);
+			vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-			static float scale_x { -1.0f }, scale_y { -1.0f };
+			static float scale_x { -1.0f };
+			static float scale_y { -1.0f };
+			static bool scaled_already { false };
 
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
-			if (scale_x == -1.0f && scale_y == -1.0f) {
+			if (!scaled_already) {
 				const auto&& [sx, sy] = Application::the().get_window()->framebuffer_scale();
 				scale_x = sx;
 				scale_y = sy;
+				scaled_already = true;
 			}
 
 			main_draw_data->FramebufferScale = { scale_x, scale_y };
 			// UI scale and translate via push constants
-			ImGui_ImplVulkan_RenderDrawData(main_draw_data, *imgui_buffer);
+			ImGui_ImplVulkan_RenderDrawData(main_draw_data, command_buffer);
 
 			imgui_buffer->end_with_no_reset();
 		}
@@ -184,18 +192,14 @@ namespace Alabaster {
 
 		vk_check(vkEndCommandBuffer(draw_command_buffer));
 
-		ImGuiIO& io = ImGui::GetIO();
+		const ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 		}
 	}
 
-	void GUILayer::ui() { }
-
 	void GUILayer::ui(float) { }
-
-	GUILayer::~GUILayer() = default;
 
 	void GUILayer::destroy()
 	{

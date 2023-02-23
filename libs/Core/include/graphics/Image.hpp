@@ -87,11 +87,6 @@ namespace Alabaster {
 	class Image {
 	public:
 		explicit Image(const ImageSpecification& specification) noexcept;
-		~Image()
-		{
-			if (!destroyed)
-				destroy();
-		};
 
 		void destroy();
 		void resize(const uint32_t width, const uint32_t height)

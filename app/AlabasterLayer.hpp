@@ -20,47 +20,39 @@ namespace Filetype {
 	enum class Filetypes : std::uint8_t { PNG = 0, TTF, JPEG, JPG, SPV, VERT, FRAG, OBJ };
 }
 
-template <Filetype::Filetypes Type = Filetype::Filetypes::PNG> struct handle_filetype {
-	void operator()(std::unique_ptr<SceneSystem::Scene>& scene, [[maybe_unused]] const std::filesystem::path& path) const
+template <Filetype::Filetypes Type> struct handle_filetype {
+	using Scene = SceneSystem::Scene;
+	void operator()(Scene& scene, [[maybe_unused]] const std::filesystem::path& path) const
 	{
 		Alabaster::Log::info("Filetype handler not implemented for {}", magic_enum::enum_name(Type));
 	};
 };
 
-struct AlabasterLayer final : public Alabaster::Layer {
-	~AlabasterLayer() override = default;
+class AlabasterLayer final : public Alabaster::Layer {
+public:
 	AlabasterLayer() = default;
+	~AlabasterLayer() override = default;
 
 	void update(float ts) override;
 	void ui(float ts) override;
-	void ui() override;
+	void ui() override {};
 	bool initialise() override;
 	void destroy() override;
 	void on_event(Alabaster::Event& event) override;
 
-	void draw_entity_node(SceneSystem::Entity& entity);
-	void draw_components(SceneSystem::Entity& entity);
-	template <SceneSystem::Component::IsComponent T> void display_add_component_entry(const std::string& entry_name)
-	{
-		if (!selected_entity.has_component<T>() && ImGui::MenuItem(entry_name.c_str())) {
-			selected_entity.add_component<T>();
-			ImGui::CloseCurrentPopup();
-		}
-	}
-
 private:
 	void handle_drag_drop();
+	void menu_bar() const;
+	void viewport();
 
 	std::string_view name() override { return "AlabasterLayer"; }
 
 	std::unique_ptr<SceneSystem::Scene> editor_scene;
-
 	std::vector<std::unique_ptr<App::Panel>> panels;
-
 	SceneSystem::Entity selected_entity {};
 
 	glm::vec2 viewport_size = { 0.0f, 0.0f };
-	glm::vec2 viewport_bounds[2] = { { 0.0f, 0.0f }, { 0.0f, 0.0f } };
+	std::array<glm::vec2, 2> viewport_bounds = { glm::vec2 { 0.0f, 0.0f }, glm::vec2 { 0.0f, 0.0f } };
 	bool viewport_focused { false };
 	bool viewport_hovered { false };
 };

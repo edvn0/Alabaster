@@ -10,8 +10,6 @@
 
 namespace AssetManager {
 
-	template <typename T> class ShaderCache;
-
 	class ShaderCompiler {
 	public:
 		ShaderCompiler() = default;
@@ -22,8 +20,5 @@ namespace AssetManager {
 	private:
 		std::tuple<std::vector<std::uint32_t>, std::vector<std::uint32_t>> compile_to_spirv(
 			const std::string& name, const std::filesystem::path& vertex, const std::filesystem::path& fragment) const;
-
-	private:
-		friend ShaderCache<Alabaster::Shader>;
 	};
 } // namespace AssetManager

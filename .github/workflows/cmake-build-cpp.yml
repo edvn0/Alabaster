@@ -12,7 +12,7 @@ jobs:
         name: "${{ matrix.config.name }}"
         runs-on: "${{ matrix.config.os }}"
         strategy:
-            fail-fast: true
+            fail-fast: false
             matrix:
                 config:
                     - name: Windows Latest MSVC
@@ -22,10 +22,15 @@ jobs:
                       cxx: cl
                       environment_script: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Auxiliary/Build/vcvars64.bat
                     - name: Ubuntu Latest GCC
-                      artifact: Linux.7z
+                      artifact: Linux-GCC.7z
                       os: ubuntu-latest
                       cc: gcc
                       cxx: g++
+                    - name: MacOS Latest Clang
+                      artifact: MacOS-Clang.7z
+                      os: macos-latest
+                      cc: clang
+                      cxx: clang++
         steps:
             - uses: actions/checkout@v3
               with:
@@ -33,10 +38,6 @@ jobs:
             - uses: actions/setup-python@v4
               with:
                   python-version: "3.x"
-            - name: Get dependencies for shaderc
-              shell: bash
-              run: |
-                  python third_party/shaderc/utils/git-sync-deps
             - name: Install Linux Dependencies
               shell: cmake -P {0}
               run: |
@@ -60,7 +61,11 @@ jobs:
                     set(ninja_suffix "linux.zip")
                     set(cmake_suffix "linux-x86_64.tar.gz")
                     set(cmake_dir "cmake-${cmake_version}-linux-x86_64/bin")
-                  endif()
+                  elseif ("${{ runner.os }}" STREQUAL "macOS")
+                     set(ninja_suffix "mac.zip")
+                     set(cmake_suffix "macos-universal.tar.gz")
+                     set(cmake_dir "cmake-${cmake_version}-macos-universal/CMake.app/Contents/bin")
+                   endif()
 
                   set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
                   file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
@@ -103,6 +108,10 @@ jobs:
                   path: ".ccache"
                   key: "${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
                   restore-keys: "${{ matrix.config.name }}-ccache-\n"
+            - name: Get dependencies for shaderc
+              shell: bash
+              run: |
+                  python third_party/shaderc/utils/git-sync-deps
             - name: Prepare Vulkan SDK
               uses: edvn0/setup-vulkan-sdk@v1.3.0
               with:
@@ -167,6 +176,19 @@ jobs:
                       -D SPIRV_CROSS_ENABLE_C_API=OFF
                       -D SPIRV_CROSS_ENABLE_UTIL=OFF
                       -D SPIRV_CROSS_SKIP_INSTALL=ON
+                      -D SHADERC_SKIP_INSTALL=ON
+                      -D SHADERC_SKIP_TESTS=ON
+                      -D SHADERC_SKIP_EXAMPLES=ON
+                      -D SHADERC_SKIP_COPYRIGHT_CHECK=ON
+                      -D SHADERC_ENABLE_WERROR_COMPILE=OFF
+                      -D SKIP_SPIRV_TOOLS_INSTALL=ON
+                      -D SPIRV_BUILD_FUZZER=OFF
+                      -D SPIRV_BUILD_LIBFUZZER_TARGETS=OFF
+                      -D SPIRV_WERROR=OFF
+                      -D SPIRV_WARN_EVERYTHING=OFF
+                      -D SPIRV_COLOR_TERMINAL=OFF
+                      -D SPIRV_TOOLS_LIBRARY_TYPE=STATIC
+                      -D SPIRV_TOOLS_BUILD_STATIC=OFF
                       -D SPDLOG_FMT_EXTERNAL=ON
                       -D UUID_USING_CXX20_SPAN=ON
                     RESULT_VARIABLE result
@@ -202,7 +224,7 @@ jobs:
                   execute_process(COMMAND ccache -z)
 
                   execute_process(
-                    COMMAND cmake --build build -j10
+                    COMMAND cmake --build build --parallel 20
                     RESULT_VARIABLE result
                     OUTPUT_VARIABLE output
                     ERROR_VARIABLE output
@@ -286,12 +308,18 @@ jobs:
             fail-fast: false
             matrix:
                 config:
-                    - name: Windows Latest MSVC
-                      artifact: Windows-MSVC.7z
-                      os: ubuntu-latest
-                    - name: Ubuntu Latest GCC
-                      artifact: Linux.7z
-                      os: ubuntu-latest
+                     - name: Windows Latest MSVC
+                       artifact: Windows-MSVC.7z
+                       os: ubuntu-latest
+                     - name: Windows Latest MinGW
+                       artifact: Windows-MinGW.7z
+                       os: ubuntu-latest
+                     - name: Ubuntu Latest GCC
+                       artifact: Linux.7z
+                       os: ubuntu-latest
+                     - name: macOS Latest Clang
+                       artifact: macOS.7z
+                       os: ubuntu-latest
         needs: release
         steps:
             - name: Download artifact
@@ -318,3 +346,4 @@ jobs:
                   asset_path: "./${{ matrix.config.artifact }}"
                   asset_name: "${{ matrix.config.artifact }}"
                   asset_content_type: application/x-gtar
+

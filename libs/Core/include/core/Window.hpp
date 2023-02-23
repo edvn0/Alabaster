@@ -31,7 +31,7 @@ namespace Alabaster {
 		GLFWwindow* native() { return handle; }
 		GLFWwindow* native() const { return handle; }
 
-		void set_event_callback(const EventCallback& cb);
+		void set_event_callback(const EventCallback& cb) { user_data.callback = cb; }
 
 		const std::unique_ptr<Swapchain>& get_swapchain() { return swapchain; }
 		const std::unique_ptr<Swapchain>& get_swapchain() const { return swapchain; }
@@ -44,12 +44,11 @@ namespace Alabaster {
 
 		bool was_resized() const { return resize_status; }
 		void reset_resize_status() { resize_status = false; }
-		bool resize_status { false };
 
 	private:
 		void setup_events();
 
-	private:
+		bool resize_status { false };
 		std::uint32_t width;
 		std::uint32_t height;
 
@@ -58,11 +57,13 @@ namespace Alabaster {
 			std::uint32_t height;
 
 			EventCallback callback;
-		} user_data;
+		};
+
+		UserData user_data;
 
 		std::unique_ptr<Swapchain> swapchain;
 		GLFWwindow* handle;
-		GLFWcursor* imgui_mouse_cursors[9];
+		std::array<GLFWcursor*, 9> imgui_mouse_cursors;
 	};
 
 } // namespace Alabaster

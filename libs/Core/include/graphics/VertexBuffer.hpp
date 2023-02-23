@@ -7,9 +7,8 @@
 #include "core/Buffer.hpp"
 #include "graphics/Vertex.hpp"
 
-#include <vulkan/vulkan.h>
-
-typedef struct VmaAllocation_T* VmaAllocation;
+using VkBuffer = struct VkBuffer_T*;
+using VmaAllocation = struct VmaAllocation_T*;
 
 namespace Alabaster {
 
@@ -20,27 +19,21 @@ namespace Alabaster {
 		VertexBuffer(const void* data, std::uint32_t size);
 		VertexBuffer(const void* data, std::size_t size);
 
-		~VertexBuffer()
-		{
-			if (!destroyed)
-				destroy();
-		}
-
 		void destroy();
 
 		void set_data(const void* data, std::uint32_t size, std::uint32_t offset);
 
-		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
-
-		VkBuffer operator*() const { return vulkan_buffer; }
+		VkBuffer get_vulkan_buffer() const;
+		VkBuffer operator*() const;
 
 	private:
 		void offline_set_data(const void* buffer, std::uint32_t size, std::uint32_t offset);
 
 	public:
-		inline static std::unique_ptr<VertexBuffer> create(std::vector<Vertex>&& vertices)
+		inline static std::unique_ptr<VertexBuffer> create(std::vector<Vertex>&& vs)
 		{
-			const std::uint32_t size = static_cast<std::uint32_t>(vertices.size() * sizeof(Vertex));
+			const auto&& vertices = std::move(vs);
+			const auto size = static_cast<std::uint32_t>(vertices.size() * sizeof(Vertex));
 			return std::make_unique<VertexBuffer>(vertices.data(), size);
 		}
 

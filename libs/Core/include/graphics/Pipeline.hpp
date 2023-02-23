@@ -10,6 +10,21 @@
 #include <vulkan/vulkan.h>
 
 namespace Alabaster {
+
+	enum class Topology : std::uint8_t {
+		PointList = 0,
+		LineList = 1,
+		LineStrip = 2,
+		TriangleList = 3,
+		TriangleStrip = 4,
+		TriangleFan = 5,
+		AdjacencyLineList = 6,
+		AdjacencyLineStrip = 7,
+		AdjacencyTriangleList = 8,
+		AdjacencyTriangleStrip = 9,
+		PatchList = 10,
+	};
+
 	struct PipelineSpecification {
 		Shader shader;
 		bool shader_owned_by_pipeline { false };
@@ -17,7 +32,7 @@ namespace Alabaster {
 		VkRenderPass render_pass { nullptr };
 		bool wireframe { false };
 		bool backface_culling { false };
-		VkPrimitiveTopology topology;
+		Topology topology = Topology::TriangleList;
 		bool depth_test { true };
 		bool depth_write { true };
 		VertexBufferLayout vertex_layout {};
@@ -31,11 +46,6 @@ namespace Alabaster {
 	public:
 		explicit Pipeline(PipelineSpecification pipe_spec)
 			: spec(std::move(pipe_spec)) {};
-		~Pipeline()
-		{
-			if (!destroyed)
-				destroy();
-		};
 
 		void destroy();
 
@@ -50,7 +60,6 @@ namespace Alabaster {
 		bool operator!=(const Pipeline& other) const { return pipeline != other.pipeline; }
 		bool operator()(const Pipeline* other) const { return spec.debug_name < other->spec.debug_name; }
 
-	public:
 		inline static std::shared_ptr<Pipeline> create(PipelineSpecification spec)
 		{
 			auto pipeline = std::make_shared<Pipeline>(spec);

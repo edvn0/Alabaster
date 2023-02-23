@@ -120,7 +120,7 @@ namespace Alabaster {
 		populate_debug_messenger(create_info);
 
 		if (create_debug_messenger(vk_instance, &create_info, nullptr, &debug_messenger) != VK_SUCCESS) {
-			throw std::runtime_error("failed to set up debug messenger!");
+			throw AlabasterException("Failed to set up debug messenger!");
 		}
 	}
 
@@ -129,7 +129,7 @@ namespace Alabaster {
 		bool enable_layers = !requested_validation_layers.empty();
 
 		if (enable_layers && check_validation_support()) {
-			throw std::runtime_error("Validation layer support requested but could not be given.");
+			throw AlabasterException("Validation layer support requested but could not be given.");
 		}
 
 		VkApplicationInfo application_info = {};

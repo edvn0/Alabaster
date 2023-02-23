@@ -38,7 +38,7 @@ namespace Alabaster {
 		auto& get_command_pool() const { return pool; }
 		auto& get_command_pool() { return pool; }
 
-		operator VkCommandBuffer() { return active; }
+		explicit operator VkCommandBuffer() { return active; }
 		VkCommandBuffer operator*() { return active; }
 
 		void add_destruction_callback(DeallocationCallback&& cb) { destruction_callbacks.push(std::move(cb)); }
@@ -78,7 +78,7 @@ namespace Alabaster {
 
 	class ImmediateCommandBuffer final : public CommandBuffer {
 	public:
-		ImmediateCommandBuffer(std::string allocator_tag)
+		explicit ImmediateCommandBuffer(std::string allocator_tag)
 			: CommandBuffer(1)
 		{
 			CommandBuffer::begin();

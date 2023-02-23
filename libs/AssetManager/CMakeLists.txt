@@ -50,8 +50,9 @@ target_link_libraries(
 	effolkronium_random
 	Alabaster::Core
 	shaderc
-	spirv-cross-core
-	spirv-cross-glsl)
+    spirv-cross-core
+    spirv-cross-glsl
+)
 
 if(MINGW)
     target_link_libraries(

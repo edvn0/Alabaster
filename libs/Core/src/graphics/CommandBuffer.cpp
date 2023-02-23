@@ -132,8 +132,7 @@ namespace Alabaster {
 
 		vk_check(vkWaitForFences(GraphicsContext::the().device(), 1, &fences[frame_index], VK_TRUE, UINT64_MAX));
 
-		const auto has_callbacks = !destruction_callbacks.empty();
-		if (!has_callbacks)
+		if (destruction_callbacks.empty())
 			return;
 
 		while (!destruction_callbacks.empty()) {

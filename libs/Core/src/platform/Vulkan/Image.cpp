@@ -144,9 +144,9 @@ namespace Alabaster {
 		vkDestroyImageView(GraphicsContext::the().device(), info.view, nullptr);
 		vkDestroySampler(GraphicsContext::the().device(), info.sampler, nullptr);
 
-		for (auto& view : per_mip_image_views) {
-			if (view.second)
-				vkDestroyImageView(GraphicsContext::the().device(), view.second, nullptr);
+		for (auto& [k, img] : per_mip_image_views) {
+			if (img)
+				vkDestroyImageView(GraphicsContext::the().device(), img, nullptr);
 		}
 		for (auto& view : per_layer_image_views) {
 			if (view)
