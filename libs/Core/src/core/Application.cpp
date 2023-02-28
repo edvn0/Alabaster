@@ -76,7 +76,7 @@ namespace Alabaster {
 		static std::size_t frametime_index = 0;
 		while (!window->should_close() && is_running) {
 			Timer<ClockGranularity::MILLIS, float> on_cpu;
-
+            
 			window->update();
 
 			swapchain().begin_frame();
