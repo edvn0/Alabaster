@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.21)
 
 project(AssetManager)
 
-find_package(Vulkan REQUIRED)
+find_package(Vulkan REQUIRED COMPONENTS SPIRV-Cross)
 find_program(CLANG_FORMAT "clang-format")
 
 set(THIRD_PARTY_DIR ../../third_party/)
@@ -50,9 +50,8 @@ target_link_libraries(
 	effolkronium_random
 	Alabaster::Core
 	shaderc
-	spirv-cross-core
-	spirv-cross-glsl)
-
+    Vulkan::SPIRV-Cross
+    )
 if(MINGW)
     target_link_libraries(
 	    ${PROJECT_NAME}
