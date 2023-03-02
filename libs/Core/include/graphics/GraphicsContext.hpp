@@ -12,15 +12,12 @@ namespace Alabaster {
 		void operator=(const GraphicsContext&) = delete;
 		GraphicsContext(GraphicsContext&&) = delete;
 
-	private:
-		GraphicsContext();
+		explicit GraphicsContext();
 		~GraphicsContext() = default;
-
-	public:
 		static inline GraphicsContext& the()
 		{
-			static GraphicsContext context;
-			return context;
+			static auto context = std::make_unique<GraphicsContext>();
+			return *context;
 		}
 
 		void destroy();
@@ -67,7 +64,7 @@ namespace Alabaster {
 			std::optional<std::uint32_t> present;
 			std::optional<std::uint32_t> compute;
 
-			bool is_complete() { return graphics && present && compute; }
+			bool is_complete() const { return graphics && present && compute; }
 		};
 
 		enum class QueueType { Graphics = 0, Present, Compute };

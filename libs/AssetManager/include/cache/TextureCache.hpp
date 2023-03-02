@@ -8,36 +8,37 @@
 
 namespace AssetManager {
 
-	template <class T> class TextureCache : public BaseCache<TextureCache, Alabaster::Texture> {
+	class TextureCache : public BaseCache<Alabaster::Texture> {
 	public:
-		explicit TextureCache(std::unique_ptr<cache_create_read<T>> in_cache_crud = std::make_unique<DefaultTextureCrud>())
-			: cache_crud(std::move(in_cache_crud)) {};
+		TextureCache() = default;
+		~TextureCache() override = default;
 
 		void load_from_directory(const std::filesystem::path& texture_path,
-			std::unordered_set<std::string, StringHash, std::equal_to<>> include_extensions = { ".tga", ".png", ".jpeg", ".jpg" });
+			const std::unordered_set<std::string, StringHash, std::equal_to<>>& include_extensions = { ".tga", ".png", ".jpeg", ".jpg" });
 
-		void destroy_impl()
+		void destroy() override
 		{
 			for (auto it = textures.begin(); it != textures.end();) {
 				it->second.destroy();
 				it = textures.erase(it);
 			}
+			textures.clear();
 		}
 
-		[[nodiscard]] std::optional<const Alabaster::Texture*> get_from_cache_impl(const std::string& name)
+		[[nodiscard]] std::optional<const Alabaster::Texture*> get_from_cache(const std::string& name) override
 		{
 			if (textures.contains(name)) {
-				return { cache_crud->get(name, textures) };
+				return { &textures.at(name) };
 			}
 			return {};
 		}
 
-		[[nodiscard]] bool add_to_cache_impl(const std::string& name, Alabaster::Texture* input)
+		[[nodiscard]] bool add_to_cache(const std::string& name, Alabaster::Texture* input) override
 		{
 			if (textures.contains(name))
 				return false;
 			try {
-				cache_crud->create(name, input, textures);
+				textures.try_emplace(name, *input);
 			} catch (const std::exception& exc) {
 				throw Alabaster::AlabasterException(exc.what());
 			}
@@ -45,11 +46,8 @@ namespace AssetManager {
 		};
 
 	private:
-		std::unordered_map<std::string, Alabaster::Texture, StringHash, std::equal_to<>> textures;
+		StringMap<Alabaster::Texture> textures;
 		std::filesystem::path texture_path;
-		std::unique_ptr<cache_create_read<T>> cache_crud;
-
-		friend BaseCache;
 	};
 
 } // namespace AssetManager

@@ -238,19 +238,11 @@
         "version": "0.2.0",
         "configurations": [
             {
-                "type": "lldb",
                 "request": "launch",
                 "preLaunchTask": "build",
                 "name": "Debug",
                 "program": "${workspaceFolder:Alabaster}/build/app/AlabasterApp",
-                "args": [
-                    "--width",
-                    "1600",
-                    "--height",
-                    "900",
-                    "--name",
-                    "Alabaster"
-                ],
+                "args": [],
                 "cwd": "${workspaceFolder:Alabaster}/build/app"
             }
         ]
@@ -263,18 +255,7 @@
                 "command": [
                     "./run.sh"
                 ],
-                "args": [
-                    "OFF",
-                    "ON",
-                    "OFF",
-                    "Debug",
-                    "--width",
-                    "1600",
-                    "--height",
-                    "900",
-                    "--name",
-                    "Alabaster"
-                ],
+                "args": [],
                 "type": "process",
                 "group": "build",
                 "options": {

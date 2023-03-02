@@ -78,11 +78,6 @@ namespace Alabaster {
 	class Framebuffer {
 	public:
 		explicit Framebuffer(const FramebufferSpecification& w);
-		~Framebuffer()
-		{
-			if (!destroyed)
-				destroy();
-		}
 
 		void resize(uint32_t width, uint32_t height, bool force_recreate = false);
 		void add_resize_callback(const std::function<void(Framebuffer&)>& func);
@@ -120,9 +115,6 @@ namespace Alabaster {
 		VkFramebuffer frame_buffer { nullptr };
 
 		std::vector<std::function<void(Framebuffer&)>> resize_callbacks;
-
-		bool destroyed { false };
-
 	public:
 		static std::shared_ptr<Framebuffer> create(const FramebufferSpecification& spec) { return std::make_shared<Framebuffer>(spec); }
 	};

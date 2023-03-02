@@ -21,41 +21,36 @@ namespace AssetManager {
 
 		static ResourceCache& the();
 
-	public:
 		const Alabaster::Texture* texture(const std::string& name);
 		const Alabaster::Shader* shader(const std::string& name);
 
 	private:
 		ResourceCache();
 
-	private:
-		TextureCache<Alabaster::Texture> texture_cache;
-		ShaderCache<Alabaster::Shader> shader_cache;
+		TextureCache texture_cache;
+		ShaderCache shader_cache;
 	};
 
 	inline auto& the() { return ResourceCache::the(); }
 
 	template <typename T> struct get_asset {
-		const T* operator()(auto&& name)
-		{
-			(void)name;
-			return nullptr;
-		};
+		const T* operator()(auto&& name) const;
 	};
 
 	template <> struct get_asset<Alabaster::Texture> {
-		const Alabaster::Texture* operator()(auto&& name) { return the().texture(name); }
+		const Alabaster::Texture* operator()(auto&& name) const { return the().texture(name); }
 	};
 
 	template <> struct get_asset<Alabaster::Shader> {
-		const Alabaster::Shader* operator()(auto&& name) { return the().shader(name); }
+		const Alabaster::Shader* operator()(auto&& name) const { return the().shader(name); }
 	};
 
 	template <typename T> const T* asset(const auto& name)
 	{
 		try {
 			return get_asset<T>()(name);
-		} catch (const Alabaster::AlabasterException&) {
+		} catch (const Alabaster::AlabasterException& exc) {
+			Alabaster::Log::info("Could not find asset with name {}. Exception: {}", name, exc.what());
 			return nullptr;
 		}
 	}

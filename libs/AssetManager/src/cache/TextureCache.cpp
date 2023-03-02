@@ -10,9 +10,8 @@
 
 namespace AssetManager {
 
-	template <class T>
-	void TextureCache<T>::load_from_directory(
-		const std::filesystem::path& directory, std::unordered_set<std::string, StringHash, std::equal_to<>> include_extensions)
+	void TextureCache::load_from_directory(
+		const std::filesystem::path& directory, const std::unordered_set<std::string, StringHash, std::equal_to<>>& include_extensions)
 	{
 		using namespace Alabaster;
 		auto sorted_images_in_directory = FS::in_directory<std::filesystem::path, false>(directory, include_extensions, true);
@@ -33,18 +32,11 @@ namespace AssetManager {
 					spec.debug_name = image_name;
 
 					std::unique_lock lock { single_entry };
-					const auto&& [key, val]
-						= textures.try_emplace(image_name, std::filesystem::path { entry }, spec); // Push into image/texture cache
-
-					if (!val) {
-						Alabaster::Log::info("Could not insert {} into map, already exists.", entry.string());
-					}
+					textures.try_emplace(image_name, std::filesystem::path { entry }, spec);
 				}
 			});
 		}
 		pool.stop(true);
 	}
-
-	template class TextureCache<Alabaster::Texture>;
 
 } // namespace AssetManager

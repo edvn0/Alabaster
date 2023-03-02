@@ -5,13 +5,13 @@
 #include "graphics/Renderer.hpp"
 #include "graphics/Renderer3D.hpp"
 
-extern Alabaster::Application* Alabaster::create(const Alabaster::ApplicationArguments& props);
-
 #include <ProgramOptions.hxx>
 #include <any>
 #include <filesystem>
 #include <memory>
 #include <system_error>
+
+extern Alabaster::Application* Alabaster::create(const Alabaster::ApplicationArguments& props);
 
 int main(int argc, char** argv)
 {
@@ -31,8 +31,8 @@ int main(int argc, char** argv)
 	std::filesystem::path defaults_path = cwd / std::filesystem::path { "resources" } / std::filesystem::path { "cli_defaults.yml" };
 
 	Alabaster::ApplicationArguments props;
-	props.width = 4000;
-	props.height = 3000;
+	props.width = 1280;
+	props.height = 720;
 	props.name = "Alabaster";
 	std::string sync_mode = "vsync";
 	po::parser parser;
@@ -78,8 +78,8 @@ int main(int argc, char** argv)
 	} catch (const std::system_error& e) {
 		Alabaster::Log::error("{}", e.what());
 	}
-	Alabaster::Renderer::shutdown();
 	AssetManager::ResourceCache::the().shutdown();
+	Alabaster::Renderer::shutdown();
 	Alabaster::Allocator::shutdown();
 
 	delete app;

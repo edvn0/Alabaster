@@ -55,14 +55,12 @@ namespace Alabaster {
 
 		std::uint32_t quad_indices_submitted { 0 };
 		std::uint32_t quad_vertices_submitted { 0 };
-		std::shared_ptr<Pipeline> quad_pipeline;
 		std::array<QuadVertex, max_vertices> quad_buffer;
 		std::unique_ptr<VertexBuffer> quad_vertex_buffer;
 		std::unique_ptr<IndexBuffer> quad_index_buffer;
 
 		std::uint32_t line_indices_submitted { 0 };
 		std::uint32_t line_vertices_submitted { 0 };
-		std::shared_ptr<Pipeline> line_pipeline;
 		std::array<LineVertex, max_vertices> line_buffer;
 		std::unique_ptr<VertexBuffer> line_vertex_buffer;
 		std::unique_ptr<IndexBuffer> line_index_buffer;
@@ -79,10 +77,11 @@ namespace Alabaster {
 		std::array<glm::mat4, max_meshes> mesh_transform {};
 		std::array<glm::vec4, max_meshes> mesh_colour;
 		std::array<Pipeline*, max_meshes> mesh_pipeline_submit;
-		std::shared_ptr<Pipeline> mesh_pipeline;
 
 		std::shared_ptr<Mesh> sphere_model;
 		PC push_constant;
+
+		std::unordered_map<std::string_view, Pipeline*> pipelines;
 	};
 
 	class Renderer3D {
@@ -93,7 +92,7 @@ namespace Alabaster {
 
 		void quad(const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
 			float rotation_degrees = 0.0f);
-		void quad(glm::mat4 transform, const glm::vec4& colour);
+		void quad(const glm::mat4& transform, const glm::vec4& colour);
 
 		void mesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Pipeline>& pipeline = nullptr, const glm::vec3& pos = { 0, 0, 0 },
 			const glm::mat4& rotation_matrix = glm::mat4 { 1.0f }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
@@ -112,14 +111,11 @@ namespace Alabaster {
 
 		void set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience = 1.0f);
 
-	public:
 		void destroy();
 		void reset_stats();
 
-	public:
 		void set_camera(const std::shared_ptr<Camera>& cam);
 
-	public:
 		const VkRenderPass& get_render_pass() const;
 
 	private:
@@ -127,7 +123,6 @@ namespace Alabaster {
 		void draw_lines(const std::unique_ptr<CommandBuffer>& command_buffer);
 		void draw_meshes(const std::unique_ptr<CommandBuffer>& command_buffer);
 
-	private:
 		void flush();
 		void update_uniform_buffers(const std::optional<glm::mat4>& model = {});
 		void create_descriptor_set_layout();
@@ -135,7 +130,6 @@ namespace Alabaster {
 		void create_descriptor_sets();
 		void create_renderpass();
 
-	private:
 		std::shared_ptr<Camera> camera;
 		RendererData data;
 	};

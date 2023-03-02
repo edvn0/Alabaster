@@ -129,7 +129,7 @@ namespace Alabaster {
 		bool enable_layers = !requested_validation_layers.empty();
 
 		if (enable_layers && check_validation_support()) {
-			throw std::runtime_error("Validation layer support requested but could not be given.");
+			throw AlabasterException("Validation layer support requested but could not be given.");
 		}
 
 		VkApplicationInfo application_info = {};

@@ -59,7 +59,7 @@ namespace SceneSystem {
 		PipelineSpecification viking_spec { .shader = *AssetManager::asset<Alabaster::Shader>("viking"),
 			.debug_name = "Viking Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
-			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.topology = Topology::TriangleList,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
@@ -70,7 +70,7 @@ namespace SceneSystem {
 		PipelineSpecification sun_spec { .shader = *AssetManager::asset<Alabaster::Shader>("mesh"),
 			.debug_name = "Sun Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
-			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.topology = Topology::TriangleList,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
@@ -159,6 +159,8 @@ namespace SceneSystem {
 
 	Scene::~Scene()
 	{
+		registry.clear();
+
 		if (scene_renderer)
 			scene_renderer->destroy();
 

@@ -38,29 +38,16 @@ namespace Alabaster {
 		}
 
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-		glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, false);
 		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
 
 		handle = glfwCreateWindow(static_cast<int>(arguments.width), static_cast<int>(arguments.height), arguments.name.data(), nullptr, nullptr);
-		int actual_w, actual_h;
-		glfwGetWindowSize(handle, &actual_w, &actual_h);
+
+		int found_w;
+		int found_h;
+		glfwGetWindowSize(handle, &found_w, &found_h);
 
 		glfwSetWindowUserPointer(handle, &user_data);
-
-		static constexpr auto set_and_get_window_size = [](GLFWwindow* glfw_handle, std::uint32_t w, std::uint32_t h) {
-			glfwSetWindowSize(glfw_handle, static_cast<int>(w), static_cast<int>(h));
-
-			int found_w, found_h;
-			glfwGetWindowSize(glfw_handle, &found_w, &found_h);
-			return std::make_tuple(found_w, found_h);
-		};
-
-		const auto&& [calc_w, calc_h] = set_and_get_window_size(handle, actual_w, actual_h);
-
-		width = calc_w;
-		height = calc_h;
-
-		Log::info("[Window] Window size is {} by {}", width, height);
+		Log::info("[Window] Window size is {} by {}. Requested was: {} by {}", found_w, found_h, width, height);
 
 		user_data.width = width;
 		user_data.height = height;
@@ -70,7 +57,7 @@ namespace Alabaster {
 
 		auto w = std::uint32_t(width);
 		auto h = std::uint32_t(height);
-		swapchain->create(&w, &h, false);
+		swapchain->create(&w, &h, arguments.sync_mode == SyncMode::VSync);
 
 		setup_events();
 	}

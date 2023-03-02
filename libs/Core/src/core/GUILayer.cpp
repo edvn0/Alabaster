@@ -2,7 +2,6 @@
 
 #include "core/GUILayer.hpp"
 
-#include "cache/ResourceCache.hpp"
 #include "core/Buffer.hpp"
 #include "core/Common.hpp"
 #include "core/Window.hpp"
@@ -17,6 +16,7 @@
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
+#include <utilities/FileInputOutput.hpp>
 
 namespace Alabaster {
 
@@ -77,7 +77,7 @@ namespace Alabaster {
 		init_info.CheckVkResultFn = vk_check;
 		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
 
-		const std::filesystem::path path = IO::font("FreePixel.ttf");
+		const std::filesystem::path path = Alabaster::IO::font("FreePixel.ttf");
 		ImGui::GetIO().Fonts->AddFontFromFileTTF(path.string().c_str(), 14.0f);
 
 		{
@@ -162,7 +162,8 @@ namespace Alabaster {
 			scissor.offset.y = 0;
 			vkCmdSetScissor(*imgui_buffer, 0, 1, &scissor);
 
-			static float scale_x { -1.0f }, scale_y { -1.0f };
+			static float scale_x { -1.0f };
+			static float scale_y { -1.0f };
 
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
 			if (scale_x == -1.0f && scale_y == -1.0f) {
@@ -184,7 +185,7 @@ namespace Alabaster {
 
 		vk_check(vkEndCommandBuffer(draw_command_buffer));
 
-		ImGuiIO& io = ImGui::GetIO();
+		const ImGuiIO& io = ImGui::GetIO();
 		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();

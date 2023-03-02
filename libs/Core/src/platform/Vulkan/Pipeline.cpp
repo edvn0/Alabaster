@@ -77,7 +77,7 @@ namespace Alabaster {
 
 		VkPipelineInputAssemblyStateCreateInfo input_assembly_state = {};
 		input_assembly_state.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-		input_assembly_state.topology = spec.topology;
+		input_assembly_state.topology = static_cast<VkPrimitiveTopology>(spec.topology);
 		input_assembly_state.primitiveRestartEnable = VK_FALSE;
 
 		VkPipelineRasterizationStateCreateInfo rasterisation_state = {};
@@ -121,7 +121,7 @@ namespace Alabaster {
 		std::vector<VkDynamicState> dynamic_state_enables;
 		dynamic_state_enables.push_back(VK_DYNAMIC_STATE_VIEWPORT);
 		dynamic_state_enables.push_back(VK_DYNAMIC_STATE_SCISSOR);
-		if (spec.topology == VK_PRIMITIVE_TOPOLOGY_LINE_LIST || spec.topology == VK_PRIMITIVE_TOPOLOGY_LINE_STRIP || spec.wireframe) {
+		if (spec.topology == Topology::LineList || spec.topology == Topology::LineStrip || spec.wireframe) {
 			dynamic_state_enables.push_back(VK_DYNAMIC_STATE_LINE_WIDTH);
 		}
 

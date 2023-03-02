@@ -90,7 +90,7 @@ namespace Alabaster {
 		VkDescriptorSetAllocateInfo alloc_info {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
 		alloc_info.descriptorPool = data.descriptor_pool;
-		alloc_info.descriptorSetCount = static_cast<std::uint32_t>(image_count);
+		alloc_info.descriptorSetCount = image_count;
 		alloc_info.pSetLayouts = layouts.data();
 
 		data.descriptor_sets.resize(image_count);
@@ -160,16 +160,17 @@ namespace Alabaster {
 		PipelineSpecification quad_spec { .shader = *AssetManager::the().shader("quad_light"),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
-			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.topology = Topology::TriangleList,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 				VertexBufferElement(ShaderDataType::Float3, "normals"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
-		data.quad_pipeline = std::make_unique<Pipeline>(quad_spec);
-		data.quad_pipeline->invalidate();
+		auto quad_pipeline = new Pipeline(quad_spec);
+		quad_pipeline->invalidate();
+		data.pipelines["quad"] = std::move(quad_pipeline);
 
-		data.quad_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(QuadVertex));
-		data.line_vertex_buffer = VertexBuffer::create(data.max_vertices * sizeof(LineVertex));
+		data.quad_vertex_buffer = VertexBuffer::create(RendererData::max_vertices * sizeof(QuadVertex));
+		data.line_vertex_buffer = VertexBuffer::create(RendererData::max_vertices * sizeof(LineVertex));
 
 		std::vector<std::uint32_t> quad_indices;
 		quad_indices.resize(RendererData::max_indices);
@@ -191,25 +192,27 @@ namespace Alabaster {
 			.shader = *AssetManager::the().shader("mesh_light"),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
-			.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+			.topology = Topology::TriangleList,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) },
 		};
-		data.mesh_pipeline = std::make_unique<Pipeline>(mesh_spec);
-		data.mesh_pipeline->invalidate();
+		auto mesh_pipeline = new Pipeline(mesh_spec);
+		mesh_pipeline->invalidate();
+		data.pipelines["mesh"] = std::move(mesh_pipeline);
 
 		PipelineSpecification line_spec { .shader = *AssetManager::the().shader("line"),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
-			.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST,
+			.topology = Topology::LineList,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
 			.line_width = 2.0f };
-		data.line_pipeline = std::make_unique<Pipeline>(line_spec);
-		data.line_pipeline->invalidate();
+		auto line_pipeline = new Pipeline(line_spec);
+		line_pipeline->invalidate();
+		data.pipelines["line"] = std::move(line_pipeline);
 
 		std::vector<std::uint32_t> line_indices;
 		line_indices.resize(RendererData::max_indices);
@@ -263,7 +266,7 @@ namespace Alabaster {
 		data.quad_indices_submitted += 6;
 	}
 
-	void Renderer3D::quad(glm::mat4 transform, const glm::vec4& colour)
+	void Renderer3D::quad(const glm::mat4& transform, const glm::vec4& colour)
 	{
 		static constexpr std::size_t quad_vertex_count = 4;
 		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
@@ -308,7 +311,7 @@ namespace Alabaster {
 		data.mesh_transform[data.meshes_submitted] = std::move(transform);
 		data.mesh_colour[data.meshes_submitted] = colour;
 		data.mesh[data.meshes_submitted] = mesh.get();
-		data.mesh_pipeline_submit[data.meshes_submitted] = pipeline ? pipeline.get() : data.mesh_pipeline.get();
+		data.mesh_pipeline_submit[data.meshes_submitted] = pipeline ? pipeline.get() : data.pipelines["mesh"];
 		data.meshes_submitted++;
 	}
 
@@ -317,7 +320,7 @@ namespace Alabaster {
 		data.mesh_transform[data.meshes_submitted] = std::move(transform);
 		data.mesh_colour[data.meshes_submitted] = colour;
 		data.mesh[data.meshes_submitted] = mesh.get();
-		data.mesh_pipeline_submit[data.meshes_submitted] = data.mesh_pipeline.get();
+		data.mesh_pipeline_submit[data.meshes_submitted] = data.pipelines["mesh"];
 		data.meshes_submitted++;
 	}
 
@@ -443,13 +446,14 @@ namespace Alabaster {
 		const auto& vb = data.quad_vertex_buffer;
 		const auto& ib = data.quad_index_buffer;
 		const auto& descriptor = data.descriptor_sets[Renderer::current_frame()];
-		const auto& pipeline = data.quad_pipeline;
+		const auto& pipeline = data.pipelines["quad"];
 		const auto index_count = data.quad_indices_submitted;
 
 		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
 		const auto& pc = data.push_constant;
-		vkCmdPushConstants(*command_buffer, data.quad_pipeline->get_vulkan_pipeline_layout(),
+		vkCmdPushConstants(
+			*command_buffer, pipeline->get_vulkan_pipeline_layout(),
 			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
 		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
@@ -472,7 +476,7 @@ namespace Alabaster {
 		const auto& vb = data.line_vertex_buffer;
 		const auto& ib = data.line_index_buffer;
 		const auto& descriptor = data.descriptor_sets[Renderer::current_frame()];
-		const auto& pipeline = data.line_pipeline;
+		const auto& pipeline = data.pipelines["line"];
 		const auto index_count = data.line_indices_submitted;
 
 		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
@@ -500,11 +504,11 @@ namespace Alabaster {
 	{
 		const VkDescriptorSet& descriptor = data.descriptor_sets[Renderer::current_frame()];
 
-		Pipeline* initial_pipeline = nullptr;
-		VkPipelineLayout initial_layout = nullptr;
-		Mesh* initial_mesh = nullptr;
+		Pipeline* initial_pipeline = data.mesh_pipeline_submit[0];
+		VkPipelineLayout initial_layout = initial_pipeline->get_vulkan_pipeline_layout();
+		Mesh* initial_mesh = data.mesh[0];
 
-		for (std::uint32_t i = 0; i < data.meshes_submitted; i++) {
+		for (std::uint32_t i = 1; i < data.meshes_submitted; i++) {
 			const auto& mesh = data.mesh[i];
 			const auto& vb = mesh->get_vertex_buffer();
 			const auto& ib = mesh->get_index_buffer();
@@ -558,6 +562,11 @@ namespace Alabaster {
 	void Renderer3D::destroy()
 	{
 		const auto& device = GraphicsContext::the().device();
+
+		for (const auto& [key, pipeline] : data.pipelines) {
+			pipeline->destroy();
+		}
+		data.pipelines.clear();
 
 		data.framebuffer->destroy();
 
