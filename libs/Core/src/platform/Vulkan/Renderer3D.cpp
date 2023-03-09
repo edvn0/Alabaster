@@ -269,10 +269,9 @@ namespace Alabaster {
 	void Renderer3D::quad(const glm::mat4& transform, const glm::vec4& colour)
 	{
 		static constexpr std::size_t quad_vertex_count = 4;
-		static constexpr std::array<glm::vec2, 4> texture_coordinates
-			= { glm::vec2 { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		static constexpr std::array <glm::vec4, 4> quad_positions
-			= { glm::vec4{ -0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { -0.5f, 0.5f, 0.0f, 1.0f } };
+		static constexpr std::array<glm::vec2, 4> texture_coordinates = { glm::vec2 { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		static constexpr std::array<glm::vec4, 4> quad_positions
+			= { glm::vec4 { -0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { -0.5f, 0.5f, 0.0f, 1.0f } };
 		static constexpr glm::vec4 quad_normal = glm::vec4 { 0, 0, 1, 0 };
 
 		if (data.quad_indices_submitted >= RendererData::max_indices) {
@@ -453,8 +452,7 @@ namespace Alabaster {
 		vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
 		const auto& pc = data.push_constant;
-		vkCmdPushConstants(
-			command_buffer.get_buffer(), pipeline->get_vulkan_pipeline_layout(),
+		vkCmdPushConstants(command_buffer.get_buffer(), pipeline->get_vulkan_pipeline_layout(),
 			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
 		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
@@ -509,7 +507,7 @@ namespace Alabaster {
 		VkPipelineLayout initial_layout = initial_pipeline->get_vulkan_pipeline_layout();
 		const Mesh* initial_mesh = data.mesh[0];
 
-		for (std::uint32_t i = 1; i < data.meshes_submitted; i++) {
+		for (std::uint32_t i = 0; i < data.meshes_submitted; i++) {
 			const auto& mesh = data.mesh[i];
 			const auto& vb = mesh->get_vertex_buffer();
 			const auto& ib = mesh->get_index_buffer();
@@ -520,8 +518,8 @@ namespace Alabaster {
 			data.push_constant.object_transform = mesh_transform;
 			data.push_constant.object_colour = mesh_colour;
 			const auto& pc = data.push_constant;
-			vkCmdPushConstants(command_buffer.get_buffer(), pipeline->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
-				sizeof(PC), &pc);
+			vkCmdPushConstants(command_buffer.get_buffer(), pipeline->get_vulkan_pipeline_layout(),
+				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
 			if (initial_layout != pipeline->get_vulkan_pipeline_layout()) {
 				initial_layout = pipeline->get_vulkan_pipeline_layout();

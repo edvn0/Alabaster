@@ -31,8 +31,8 @@ int main(int argc, char** argv)
 	std::filesystem::path defaults_path = cwd / std::filesystem::path { "resources" } / std::filesystem::path { "cli_defaults.yml" };
 
 	Alabaster::ApplicationArguments props;
-	props.width = 1280;
-	props.height = 720;
+	props.width = 1600;
+	props.height = 900;
 	props.name = "Alabaster";
 	std::string sync_mode = "vsync";
 	po::parser parser;

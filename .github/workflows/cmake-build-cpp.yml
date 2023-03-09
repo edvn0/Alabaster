@@ -117,7 +117,7 @@ jobs:
               uses: edvn0/setup-vulkan-sdk@v1.3.0
               with:
                   vulkan-query-version: latest
-                  vulkan-components: Vulkan-Headers, Vulkan-Loader, SPIRV-Cross, Glslang, SPIRV-Tools
+                  vulkan-components: Vulkan-Headers, Vulkan-Loader, SPIRV-Cross, Glslang
                   vulkan-use-cache: true
             - name: Configure
               shell: cmake -P {0}
