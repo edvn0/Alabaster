@@ -21,7 +21,7 @@ namespace Filetype {
 }
 
 template <Filetype::Filetypes Type = Filetype::Filetypes::PNG> struct handle_filetype {
-	void operator()(std::unique_ptr<SceneSystem::Scene>& scene, [[maybe_unused]] const std::filesystem::path& path) const
+	void operator()(SceneSystem::Scene& scene, [[maybe_unused]] const std::filesystem::path& path) const
 	{
 		Alabaster::Log::info("Filetype handler not implemented for {}", magic_enum::enum_name(Type));
 	};
@@ -40,13 +40,13 @@ struct AlabasterLayer final : public Alabaster::Layer {
 
 private:
 	void handle_drag_drop();
+	void menu_bar() const;
+	void viewport();
 
 	std::string_view name() override { return "AlabasterLayer"; }
 
 	std::unique_ptr<SceneSystem::Scene> editor_scene;
-
 	std::vector<std::unique_ptr<App::Panel>> panels;
-
 	SceneSystem::Entity selected_entity {};
 
 	glm::vec2 viewport_size = { 0.0f, 0.0f };

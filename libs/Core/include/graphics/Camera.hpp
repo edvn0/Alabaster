@@ -28,14 +28,14 @@ namespace Alabaster {
 		virtual void on_update(float) {};
 		virtual void on_event(Event&) {};
 
-		virtual const glm::vec3 get_position() const = 0;
+		virtual glm::vec3 get_position() const = 0;
 
 		virtual const glm::mat4& get_projection_matrix() const { return projection_matrix; }
 		virtual const glm::mat4& get_view_matrix() const { return view_matrix; }
 		virtual const glm::mat4& get_unreversed_projection_matrix() const { return unreversed_projection_matrix; }
-		const glm::mat4 get_view_projection() const { return get_projection_matrix() * get_view_matrix(); }
+		glm::mat4 get_view_projection() const { return get_projection_matrix() * get_view_matrix(); }
 
-		void set_projection_matrix(const glm::mat4 projection, const glm::mat4 unreversed_projection)
+		void set_projection_matrix(const glm::mat4& projection, const glm::mat4& unreversed_projection)
 		{
 			projection_matrix = projection;
 			unreversed_projection_matrix = unreversed_projection;
@@ -98,14 +98,13 @@ namespace Alabaster {
 		}
 
 		const glm::mat4& get_view_matrix() const override { return view_matrix; }
-		glm::mat4 get_view_projection() const { return get_projection_matrix() * view_matrix; }
 		glm::mat4 get_un_reversed_view_projection() const { return get_unreversed_projection_matrix() * view_matrix; }
 
 		glm::vec3 get_up_direction() const;
 		glm::vec3 get_right_direction() const;
 		glm::vec3 get_forward_direction() const;
 
-		const glm::vec3 get_position() const override { return position; }
+		glm::vec3 get_position() const override { return position; }
 
 		glm::quat get_orientation() const;
 
@@ -132,13 +131,15 @@ namespace Alabaster {
 		float rotation_speed() const;
 		float zoom_speed() const;
 
-	private:
 		glm::mat4 view_matrix;
 		glm::vec3 position = { 0, 0, -20 };
 		glm::vec3 direction;
-		glm::vec3 focal_point;
+		glm::vec3 focal_point {0.0f};
 
-		float vertical_fov, aspect_ratio, near_clip, far_clip;
+		float vertical_fov;
+		float aspect_ratio;
+		float near_clip;
+		float far_clip;
 
 		bool active = false;
 		glm::vec2 initial_mouse_position {};
@@ -146,8 +147,10 @@ namespace Alabaster {
 		float distance;
 		float normal_speed { 2.0f };
 
-		float pitch = glm::radians(-30.0f), yaw = 0;
-		float pitch_delta {}, yaw_delta {};
+		float pitch = glm::radians(-30.0f);
+		float yaw = 0;
+		float pitch_delta {};
+		float yaw_delta {};
 		glm::vec3 position_delta {};
 		glm::vec3 right_direction {};
 
@@ -155,7 +158,8 @@ namespace Alabaster {
 
 		float min_focus_distance { 100.0f };
 
-		std::uint32_t viewport_width { 1280 }, viewport_height { 720 };
+		std::uint32_t viewport_width { 1280 };
+		std::uint32_t viewport_height { 720 };
 
 		constexpr static float min_speed { 0.5f };
 		constexpr static float max_speed { 6.0f };

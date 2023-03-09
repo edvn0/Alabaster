@@ -217,7 +217,9 @@ namespace SceneSystem {
 		const auto mouse_pos = Alabaster::Input::mouse_position();
 		const auto size = viewport_size;
 
-		const auto mouse_x_in_viewport = mouse_pos.x;
+		const auto vp_x = viewport_bounds[0].x;
+
+		const auto mouse_x_in_viewport = mouse_pos.x - vp_x;
 		const auto mouse_y_in_viewport = mouse_pos.y - 20; // Menubar size
 
 		float x = (2.0f * mouse_x_in_viewport) / size.x - 1.0f;
@@ -238,12 +240,12 @@ namespace SceneSystem {
 		const auto camera_position = scene_camera->get_position();
 		auto mesh_view
 			= registry.view<const Component::Tag, Component::Transform, const Component::Mesh, Component::Texture, const Component::Pipeline>();
-		mesh_view.each([&camera_position, &ray_wor](const Component::Tag& tag, const Component::Transform& transform,
-						   const Component::Mesh&, Component::Texture& texture, const Component::Pipeline&) {
+		mesh_view.each([&camera_position, &ray_wor](const Component::Tag& tag, const Component::Transform& transform, const Component::Mesh&,
+						   Component::Texture& texture, const Component::Pipeline&) {
 			if (tag.tag.starts_with("Sphere")) {
 				float t_dist = 0.0f;
 				if (ray_sphere(camera_position, ray_wor, transform, t_dist)) {
-					texture.colour = { 1, 0, 0, 0 };
+					texture.colour = { 1, 0, 0, 1 };
 				}
 			}
 		});
@@ -257,14 +259,12 @@ namespace SceneSystem {
 
 		scene_camera->on_update(ts);
 		command_buffer->begin();
-		{
-			scene_renderer->begin_scene();
-			scene_renderer->reset_stats();
+		scene_renderer->begin_scene();
+		scene_renderer->reset_stats();
 
-			draw_entities_in_scene(ts);
+		draw_entities_in_scene(ts);
 
-			scene_renderer->end_scene(*command_buffer, framebuffer);
-		}
+		scene_renderer->end_scene(*command_buffer, framebuffer);
 		command_buffer->end();
 		command_buffer->submit();
 	}
@@ -304,12 +304,6 @@ namespace SceneSystem {
 			if (geom.geometry == Component::Geometry::Quad)
 				renderer->quad(transform.to_matrix(), texture.colour);
 		});
-
-		if (mouse_ray) {
-			glm::vec3 vec = *mouse_ray;
-			vec *= 100;
-			scene_renderer->line(scene_camera->get_position(), scene_camera->get_position() + vec, { 0.5, 0, 0.5, 1.0 });
-		}
 	}
 
 	void Scene::on_event(Alabaster::Event& event)
@@ -317,7 +311,7 @@ namespace SceneSystem {
 		scene_camera->on_event(event);
 
 		Alabaster::EventDispatcher dispatch(event);
-		dispatch.dispatch<Alabaster::WindowResizeEvent>([this](Alabaster::WindowResizeEvent& e) {
+		dispatch.dispatch<Alabaster::WindowResizeEvent>([this](const Alabaster::WindowResizeEvent& e) {
 			const auto vertical_fov = glm::degrees(scene_camera->get_vertical_fov());
 			scene_camera.reset(new Alabaster::EditorCamera(
 				vertical_fov, static_cast<float>(e.width()), static_cast<float>(e.height()), 0.1f, 1000.0f, scene_camera.get()));

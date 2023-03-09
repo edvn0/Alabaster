@@ -120,7 +120,7 @@ void AlabasterLayer::ui(float ts)
 			ImGui::PopStyleVar(2);
 
 		// DockSpace
-		ImGuiIO& io = ImGui::GetIO();
+		const ImGuiIO& io = ImGui::GetIO();
 		ImGuiStyle& style = ImGui::GetStyle();
 		float min_window_size_x = style.WindowMinSize.x;
 		style.WindowMinSize.x = 370.0f;
@@ -131,68 +131,66 @@ void AlabasterLayer::ui(float ts)
 
 		style.WindowMinSize.x = min_window_size_x;
 
-		if (ImGui::BeginMenuBar()) {
-			if (ImGui::BeginMenu("File")) {
-#ifndef DEBUG_IMGUI
-				ImVec2 vMin = ImGui::GetWindowContentRegionMin();
-				ImVec2 vMax = ImGui::GetWindowContentRegionMax();
-
-				vMin.x += ImGui::GetWindowPos().x;
-				vMin.y += ImGui::GetWindowPos().y;
-				vMax.x += ImGui::GetWindowPos().x;
-				vMax.y += ImGui::GetWindowPos().y;
-				ImGui::GetForegroundDrawList()->AddRect(vMin, vMax, IM_COL32(255, 255, 0, 255));
-#endif
-				if (ImGui::MenuItem("New", "Ctrl+N")) { }
-				if (ImGui::MenuItem("Open...", "Ctrl+O")) { }
-				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) { }
-				if (ImGui::MenuItem("Exit")) {
-					Application::the().exit();
-				}
-				ImGui::EndMenu();
-			}
-
-			ImGui::EndMenuBar();
-		}
+		menu_bar();
 
 		for (const auto& panel : panels) {
 			panel->ui(ts);
 		}
 
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 { 0, 0 });
-		ImGui::Begin("Viewport");
-		{
-			auto viewport_min_region = ImGui::GetWindowContentRegionMin();
-			auto viewport_max_region = ImGui::GetWindowContentRegionMax();
-			auto viewport_offset = ImGui::GetWindowPos();
-			viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
-			viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
-
-			viewport_focused = ImGui::IsWindowFocused();
-			viewport_hovered = ImGui::IsWindowHovered();
-
-			global_imgui_is_blocking = viewport_hovered;
-			if (viewport_hovered) {
-				Application::the().gui_layer().block_events();
-			}
-			ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
-			viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
-			editor_scene->update_viewport_sizes(viewport_size, viewport_bounds, { viewport_offset.x, viewport_offset.y });
-
-			const auto& img = editor_scene->final_image();
-			UI::image(*img, { viewport_size.x, viewport_size.y });
-
-			handle_drag_drop();
-
-			ImGui::End();
-		}
-		ImGui::PopStyleVar();
+		viewport();
 	}
 	ImGui::End();
 }
 
+void AlabasterLayer::menu_bar() const
+{
+	if (ImGui::BeginMenuBar()) {
+		if (ImGui::BeginMenu("File")) {
+			if (ImGui::MenuItem("New", "Ctrl+N")) { }
+			if (ImGui::MenuItem("Open...", "Ctrl+O")) { }
+			if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) { }
+			if (ImGui::MenuItem("Exit")) {
+				Application::the().exit();
+			}
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMenuBar();
+	}
+}
+
+void AlabasterLayer::viewport()
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 { 0, 0 });
+	ImGui::Begin("Viewport");
+	auto viewport_min_region = ImGui::GetWindowContentRegionMin();
+	auto viewport_max_region = ImGui::GetWindowContentRegionMax();
+	auto viewport_offset = ImGui::GetWindowPos();
+	viewport_bounds[0] = { viewport_min_region.x + viewport_offset.x, viewport_min_region.y + viewport_offset.y };
+	viewport_bounds[1] = { viewport_max_region.x + viewport_offset.x, viewport_max_region.y + viewport_offset.y };
+
+	viewport_focused = ImGui::IsWindowFocused();
+	viewport_hovered = ImGui::IsWindowHovered();
+
+	global_imgui_is_blocking = viewport_hovered;
+	if (viewport_hovered) {
+		Application::the().gui_layer().block_events();
+	}
+	ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
+	viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
+	editor_scene->update_viewport_sizes(viewport_size, viewport_bounds, { viewport_offset.x, viewport_offset.y });
+
+	const auto& img = editor_scene->final_image();
+	UI::image(*img, { viewport_size.x, viewport_size.y });
+
+	handle_drag_drop();
+
+	ImGui::End();
+	ImGui::PopStyleVar();
+}
+
 template <> struct handle_filetype<Filetype::Filetypes::PNG> {
-	void operator()(std::unique_ptr<SceneSystem::Scene>& scene, const std::filesystem::path& path) const
+	void operator()(SceneSystem::Scene& scene, const std::filesystem::path& path) const
 	{
 		if (path.extension() != ".png")
 			return;
@@ -200,6 +198,7 @@ template <> struct handle_filetype<Filetype::Filetypes::PNG> {
 		TextureProperties props;
 		const auto img = Alabaster::Texture::from_filename(path, props);
 		(void)img;
+		scene.create_entity("TestEntity");
 		return;
 	}
 };
@@ -215,14 +214,14 @@ void AlabasterLayer::handle_drag_drop()
 			const auto extension = filename.extension();
 
 			try {
-				handle_filetype<Filetype::Filetypes::PNG> {}(editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::TTF> {}(editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::JPEG> {}(editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::JPG> {}(editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::SPV> {}(editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::VERT> {}(editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::FRAG> {}(editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::OBJ> {}(editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::PNG> {}(*editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::TTF> {}(*editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::JPEG> {}(*editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::JPG> {}(*editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::SPV> {}(*editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::VERT> {}(*editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::FRAG> {}(*editor_scene, filename);
+				handle_filetype<Filetype::Filetypes::OBJ> {}(*editor_scene, filename);
 			} catch (const AlabasterException& e) {
 				Log::info("[AlabasterLayer] {}", e.what());
 			}
@@ -234,7 +233,7 @@ void AlabasterLayer::handle_drag_drop()
 void AlabasterLayer::destroy()
 {
 	editor_scene->shutdown();
-	for (auto& panel : panels) {
+	for (const auto& panel : panels) {
 		panel->on_destroy();
 	}
 }
