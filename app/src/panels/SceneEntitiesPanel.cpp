@@ -520,7 +520,7 @@ namespace App {
 		});
 
 		// Right-click on blank space
-		if (ImGui::BeginPopupContextWindow(0, 1)) {
+		if (ImGui::BeginPopupContextWindow("EmptyEntityId", 1)) {
 			if (ImGui::MenuItem("Create Empty Entity"))
 				scene->create_entity("Empty Entity");
 

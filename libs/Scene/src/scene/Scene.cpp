@@ -88,7 +88,7 @@ namespace SceneSystem {
 		}
 
 		{
-			Entity floor = create_entity("floor");
+			Entity floor = create_entity("Floor");
 			floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
 			Component::Transform& floor_transform = floor.get_component<Component::Transform>();
 			floor_transform.scale = { 200, 200, .2 };
@@ -167,8 +167,94 @@ namespace SceneSystem {
 		framebuffer->destroy();
 	}
 
+	static constexpr bool ray_sphere(
+		glm::vec3 ray_origin_wor, glm::vec3 ray_direction_wor, const Component::Transform& transform, float& intersection_distance)
+	{
+		const auto sphere_centre_wor = transform.position;
+		const auto sphere_radius = transform.scale.x;
+		// work out components of quadratic
+		glm::vec3 dist_to_sphere = ray_origin_wor - sphere_centre_wor;
+		float b = glm::dot(ray_direction_wor, dist_to_sphere);
+		float c = glm::dot(dist_to_sphere, dist_to_sphere) - sphere_radius * sphere_radius;
+		float b_squared_minus_c = b * b - c;
+		// check for "imaginary" answer. == ray completely misses sphere
+		if (b_squared_minus_c < 0.0f) {
+			return false;
+		}
+		// check for ray hitting twice (in and out of the sphere)
+		if (b_squared_minus_c > 0.0f) {
+			// get the 2 intersection distances along ray
+			float t_a = -b + glm::sqrt(b_squared_minus_c);
+			float t_b = -b - glm::sqrt(b_squared_minus_c);
+			intersection_distance = t_b;
+			// if behind viewer, throw one or both away
+			if (t_a < 0.0) {
+				if (t_b < 0.0) {
+					return false;
+				}
+			} else if (t_b < 0.0) {
+				intersection_distance = t_a;
+			}
+
+			return true;
+		}
+		// check for ray hitting once (skimming the surface)
+		if (0.0f == b_squared_minus_c) {
+			// if behind viewer, throw away
+			float t = -b + glm::sqrt(b_squared_minus_c);
+			if (t < 0.0f) {
+				return false;
+			}
+			intersection_distance = t;
+			return true;
+		}
+		// note: could also check if ray origin is inside sphere radius
+		return false;
+	}
+
+	void Scene::pick_mouse()
+	{
+		const auto mouse_pos = Alabaster::Input::mouse_position();
+		const auto size = viewport_size;
+
+		const auto mouse_x_in_viewport = mouse_pos.x;
+		const auto mouse_y_in_viewport = mouse_pos.y - 20; // Menubar size
+
+		float x = (2.0f * mouse_x_in_viewport) / size.x - 1.0f;
+		float y = 1.0f - (2.0f * mouse_y_in_viewport) / size.y;
+		float z = 1.0f;
+		glm::vec3 ray_nds(x, -y, z);
+
+		glm::vec4 ray_clip(ray_nds.x, ray_nds.y, -1.0, 1.0);
+
+		glm::vec4 ray_eye = glm::inverse(scene_camera->get_projection_matrix()) * ray_clip;
+		ray_eye = glm::vec4(ray_eye.x, ray_eye.y, -1.0, 0.0);
+
+		glm::vec3 ray_wor = glm::inverse(scene_camera->get_view_matrix()) * ray_eye;
+		ray_wor = glm::normalize(ray_wor);
+
+		mouse_ray = { ray_wor };
+
+		const auto camera_position = scene_camera->get_position();
+		auto mesh_view
+			= registry.view<const Component::Tag, Component::Transform, const Component::Mesh, Component::Texture, const Component::Pipeline>();
+		mesh_view.each([&camera_position, &ray_wor](const Component::Tag& tag, const Component::Transform& transform,
+						   const Component::Mesh&, Component::Texture& texture, const Component::Pipeline&) {
+			if (tag.tag.starts_with("Sphere")) {
+				float t_dist = 0.0f;
+				if (ray_sphere(camera_position, ray_wor, transform, t_dist)) {
+					texture.colour = { 1, 0, 0, 0 };
+				}
+			}
+		});
+	}
+
 	void Scene::update(float ts)
 	{
+		if (Alabaster::Input::mouse(Alabaster::Mouse::Left)) {
+			pick_mouse();
+		}
+
 		scene_camera->on_update(ts);
 		command_buffer->begin();
 		{
@@ -177,7 +263,7 @@ namespace SceneSystem {
 
 			draw_entities_in_scene(ts);
 
-			scene_renderer->end_scene(command_buffer, framebuffer);
+			scene_renderer->end_scene(*command_buffer, framebuffer);
 		}
 		command_buffer->end();
 		command_buffer->submit();
@@ -218,6 +304,12 @@ namespace SceneSystem {
 			if (geom.geometry == Component::Geometry::Quad)
 				renderer->quad(transform.to_matrix(), texture.colour);
 		});
+
+		if (mouse_ray) {
+			glm::vec3 vec = *mouse_ray;
+			vec *= 100;
+			scene_renderer->line(scene_camera->get_position(), scene_camera->get_position() + vec, { 0.5, 0, 0.5, 1.0 });
+		}
 	}
 
 	void Scene::on_event(Alabaster::Event& event)

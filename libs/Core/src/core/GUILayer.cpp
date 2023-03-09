@@ -81,7 +81,7 @@ namespace Alabaster {
 		ImGui::GetIO().Fonts->AddFontFromFileTTF(path.string().c_str(), 14.0f);
 
 		{
-			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer { "Fonts Texture" });
+			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer { "Fonts Texture" }.get_buffer());
 
 			vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
 
@@ -153,14 +153,14 @@ namespace Alabaster {
 			viewport.width = static_cast<float>(width);
 			viewport.minDepth = 0.0f;
 			viewport.maxDepth = 1.0f;
-			vkCmdSetViewport(*imgui_buffer, 0, 1, &viewport);
+			vkCmdSetViewport((*imgui_buffer).get_buffer(), 0, 1, &viewport);
 
 			VkRect2D scissor = {};
 			scissor.extent.width = width;
 			scissor.extent.height = height;
 			scissor.offset.x = 0;
 			scissor.offset.y = 0;
-			vkCmdSetScissor(*imgui_buffer, 0, 1, &scissor);
+			vkCmdSetScissor((*imgui_buffer).get_buffer(), 0, 1, &scissor);
 
 			static float scale_x { -1.0f };
 			static float scale_y { -1.0f };
@@ -174,7 +174,7 @@ namespace Alabaster {
 
 			main_draw_data->FramebufferScale = { scale_x, scale_y };
 			// UI scale and translate via push constants
-			ImGui_ImplVulkan_RenderDrawData(main_draw_data, *imgui_buffer);
+			ImGui_ImplVulkan_RenderDrawData(main_draw_data, (*imgui_buffer).get_buffer());
 
 			imgui_buffer->end_with_no_reset();
 		}

@@ -63,7 +63,7 @@ namespace Alabaster {
 
 		VkBufferCopy copy_region = {};
 		copy_region.size = buffer_size;
-		vkCmdCopyBuffer(immediate_command_buffer, staging_buffer, vulkan_buffer, 1, &copy_region);
+		vkCmdCopyBuffer(immediate_command_buffer.get_buffer(), staging_buffer, vulkan_buffer, 1, &copy_region);
 
 		const auto human_readable_size = Utilities::human_readable_size(buffer_size);
 		Log::info("[VertexBuffer] Initialised with size: {}", human_readable_size);

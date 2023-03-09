@@ -106,8 +106,8 @@ namespace Alabaster {
 		void line(float size, const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void text(std::string text, glm::vec3 position, float font_size = 11.0f);
 
-		void end_scene(const std::unique_ptr<CommandBuffer>& command_buffer);
-		void end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, const std::shared_ptr<Framebuffer>& target);
+		void end_scene(const CommandBuffer& command_buffer);
+		void end_scene(const CommandBuffer& command_buffer, const std::shared_ptr<Framebuffer>& target);
 
 		void set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience = 1.0f);
 
@@ -119,9 +119,9 @@ namespace Alabaster {
 		const VkRenderPass& get_render_pass() const;
 
 	private:
-		void draw_quads(const std::unique_ptr<CommandBuffer>& command_buffer);
-		void draw_lines(const std::unique_ptr<CommandBuffer>& command_buffer);
-		void draw_meshes(const std::unique_ptr<CommandBuffer>& command_buffer);
+		void draw_quads(const CommandBuffer& command_buffer);
+		void draw_lines(const CommandBuffer& command_buffer);
+		void draw_meshes(const CommandBuffer& command_buffer);
 
 		void flush();
 		void update_uniform_buffers(const std::optional<glm::mat4>& model = {});

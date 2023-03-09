@@ -66,16 +66,16 @@ namespace Alabaster {
 	{
 		std::array<VkDescriptorPoolSize, 2> pool_sizes {};
 		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-		pool_sizes[0].descriptorCount = static_cast<std::uint32_t>(Application::the().swapchain().get_image_count());
+		pool_sizes[0].descriptorCount = Application::the().swapchain().get_image_count();
 
 		pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		pool_sizes[1].descriptorCount = static_cast<std::uint32_t>(Application::the().swapchain().get_image_count());
+		pool_sizes[1].descriptorCount = Application::the().swapchain().get_image_count();
 
 		VkDescriptorPoolCreateInfo pool_info {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		pool_info.poolSizeCount = static_cast<std::uint32_t>(pool_sizes.size());
 		pool_info.pPoolSizes = pool_sizes.data();
-		pool_info.maxSets = static_cast<std::uint32_t>(Application::the().swapchain().get_image_count());
+		pool_info.maxSets = Application::the().swapchain().get_image_count();
 
 		if (vkCreateDescriptorPool(GraphicsContext::the().device(), &pool_info, nullptr, &data.descriptor_pool) != VK_SUCCESS) {
 			throw std::runtime_error("failed to create descriptor pool!");
@@ -96,7 +96,7 @@ namespace Alabaster {
 		data.descriptor_sets.resize(image_count);
 		vk_check(vkAllocateDescriptorSets(GraphicsContext::the().device(), &alloc_info, data.descriptor_sets.data()));
 
-		const auto image_info = AssetManager::the().texture("viking_room.png")->get_descriptor_info();
+		const auto& image_info = AssetManager::the().texture("viking_room.png")->get_descriptor_info();
 		for (std::size_t i = 0; i < image_count; i++) {
 			VkDescriptorBufferInfo buffer_info {};
 			buffer_info.buffer = data.uniforms[i]->get_buffer();
@@ -209,7 +209,7 @@ namespace Alabaster {
 			.topology = Topology::LineList,
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
-			.line_width = 2.0f };
+			.line_width = 5.0f };
 		auto line_pipeline = new Pipeline(line_spec);
 		line_pipeline->invalidate();
 		data.pipelines["line"] = std::move(line_pipeline);
@@ -269,9 +269,10 @@ namespace Alabaster {
 	void Renderer3D::quad(const glm::mat4& transform, const glm::vec4& colour)
 	{
 		static constexpr std::size_t quad_vertex_count = 4;
-		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
-		static constexpr glm::vec4 quad_positions[]
-			= { { -0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { -0.5f, 0.5f, 0.0f, 1.0f } };
+		static constexpr std::array<glm::vec2, 4> texture_coordinates
+			= { glm::vec2 { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
+		static constexpr std::array <glm::vec4, 4> quad_positions
+			= { glm::vec4{ -0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, -0.5f, 0.0f, 1.0f }, { 0.5f, 0.5f, 0.0f, 1.0f }, { -0.5f, 0.5f, 0.0f, 1.0f } };
 		static constexpr glm::vec4 quad_normal = glm::vec4 { 0, 0, 1, 0 };
 
 		if (data.quad_indices_submitted >= RendererData::max_indices) {
@@ -377,11 +378,11 @@ namespace Alabaster {
 		// Flush ignores these for now...
 	}
 
-	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer, const std::shared_ptr<Framebuffer>& target)
+	void Renderer3D::end_scene(const CommandBuffer& command_buffer, const std::shared_ptr<Framebuffer>& target)
 	{
 		Renderer::begin_render_pass(command_buffer, target);
 		if (data.quad_indices_submitted > 0) {
-			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.quad_vertices_submitted);
+			auto vertex_count = data.quad_vertices_submitted;
 
 			std::uint32_t size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer->set_data(data.quad_buffer.data(), size, 0);
@@ -392,7 +393,7 @@ namespace Alabaster {
 		}
 
 		if (data.line_indices_submitted > 0) {
-			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.line_vertices_submitted);
+			auto vertex_count = data.line_vertices_submitted;
 
 			std::uint32_t size = vertex_count * sizeof(LineVertex);
 			data.line_vertex_buffer->set_data(data.line_buffer.data(), size, 0);
@@ -409,11 +410,11 @@ namespace Alabaster {
 		Renderer::end_render_pass(command_buffer);
 	}
 
-	void Renderer3D::end_scene(const std::unique_ptr<CommandBuffer>& command_buffer)
+	void Renderer3D::end_scene(const CommandBuffer& command_buffer)
 	{
 		Renderer::begin_render_pass(command_buffer, data.framebuffer);
 		if (data.quad_indices_submitted > 0) {
-			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.quad_vertices_submitted);
+			auto vertex_count = data.quad_vertices_submitted;
 
 			std::uint32_t size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer->set_data(data.quad_buffer.data(), size, 0);
@@ -424,7 +425,7 @@ namespace Alabaster {
 		}
 
 		if (data.line_indices_submitted > 0) {
-			std::uint32_t vertex_count = static_cast<std::uint32_t>(data.line_vertices_submitted);
+			auto vertex_count = data.line_vertices_submitted;
 
 			std::uint32_t size = vertex_count * sizeof(LineVertex);
 			data.line_vertex_buffer->set_data(data.line_buffer.data(), size, 0);
@@ -441,7 +442,7 @@ namespace Alabaster {
 		Renderer::end_render_pass(command_buffer);
 	}
 
-	void Renderer3D::draw_quads(const std::unique_ptr<CommandBuffer>& command_buffer)
+	void Renderer3D::draw_quads(const CommandBuffer& command_buffer)
 	{
 		const auto& vb = data.quad_vertex_buffer;
 		const auto& ib = data.quad_index_buffer;
@@ -449,29 +450,29 @@ namespace Alabaster {
 		const auto& pipeline = data.pipelines["quad"];
 		const auto index_count = data.quad_indices_submitted;
 
-		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
+		vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
 		const auto& pc = data.push_constant;
 		vkCmdPushConstants(
-			*command_buffer, pipeline->get_vulkan_pipeline_layout(),
+			command_buffer.get_buffer(), pipeline->get_vulkan_pipeline_layout(),
 			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
 		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
 		VkDeviceSize offsets { 0 };
-		vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
+		vkCmdBindVertexBuffers(command_buffer.get_buffer(), 0, 1, vbs.data(), &offsets);
 
-		vkCmdBindIndexBuffer(*command_buffer, ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(command_buffer.get_buffer(), ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
 		if (pipeline->get_vulkan_pipeline_layout()) {
 			vkCmdBindDescriptorSets(
-				*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
+				command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
 		}
 
-		const auto count = static_cast<std::uint32_t>(index_count);
-		vkCmdDrawIndexed(*command_buffer, count, 1, 0, 0, 0);
+		const auto count = index_count;
+		vkCmdDrawIndexed(command_buffer.get_buffer(), count, 1, 0, 0, 0);
 	}
 
-	void Renderer3D::draw_lines(const std::unique_ptr<CommandBuffer>& command_buffer)
+	void Renderer3D::draw_lines(const CommandBuffer& command_buffer)
 	{
 		const auto& vb = data.line_vertex_buffer;
 		const auto& ib = data.line_index_buffer;
@@ -479,34 +480,34 @@ namespace Alabaster {
 		const auto& pipeline = data.pipelines["line"];
 		const auto index_count = data.line_indices_submitted;
 
-		vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
+		vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
 		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
 		VkDeviceSize offsets { 0 };
-		vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
+		vkCmdBindVertexBuffers(command_buffer.get_buffer(), 0, 1, vbs.data(), &offsets);
 
-		vkCmdBindIndexBuffer(*command_buffer, ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
+		vkCmdBindIndexBuffer(command_buffer.get_buffer(), ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
 
 		if (pipeline->get_vulkan_pipeline_layout()) {
 			vkCmdBindDescriptorSets(
-				*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
+				command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
 		}
 
 		const auto line_width = pipeline->get_specification().line_width;
-		vkCmdSetLineWidth(*command_buffer, line_width);
+		vkCmdSetLineWidth(command_buffer.get_buffer(), line_width);
 
-		const auto count = static_cast<std::uint32_t>(index_count);
-		const auto instances = static_cast<std::uint32_t>(index_count / 2);
-		vkCmdDrawIndexed(*command_buffer, count, instances, 0, 0, 0);
+		const auto count = index_count;
+		const auto instances = index_count / 2;
+		vkCmdDrawIndexed(command_buffer.get_buffer(), count, instances, 0, 0, 0);
 	}
 
-	void Renderer3D::draw_meshes(const std::unique_ptr<CommandBuffer>& command_buffer)
+	void Renderer3D::draw_meshes(const CommandBuffer& command_buffer)
 	{
 		const VkDescriptorSet& descriptor = data.descriptor_sets[Renderer::current_frame()];
 
-		Pipeline* initial_pipeline = data.mesh_pipeline_submit[0];
+		const Pipeline* initial_pipeline = data.mesh_pipeline_submit[0];
 		VkPipelineLayout initial_layout = initial_pipeline->get_vulkan_pipeline_layout();
-		Mesh* initial_mesh = data.mesh[0];
+		const Mesh* initial_mesh = data.mesh[0];
 
 		for (std::uint32_t i = 1; i < data.meshes_submitted; i++) {
 			const auto& mesh = data.mesh[i];
@@ -519,29 +520,29 @@ namespace Alabaster {
 			data.push_constant.object_transform = mesh_transform;
 			data.push_constant.object_colour = mesh_colour;
 			const auto& pc = data.push_constant;
-			vkCmdPushConstants(*command_buffer, pipeline->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
+			vkCmdPushConstants(command_buffer.get_buffer(), pipeline->get_vulkan_pipeline_layout(), VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0,
 				sizeof(PC), &pc);
 
 			if (initial_layout != pipeline->get_vulkan_pipeline_layout()) {
 				initial_layout = pipeline->get_vulkan_pipeline_layout();
-				vkCmdBindDescriptorSets(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, initial_layout, 0, 1, &descriptor, 0, nullptr);
+				vkCmdBindDescriptorSets(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, initial_layout, 0, 1, &descriptor, 0, nullptr);
 			}
 
 			if (initial_pipeline != pipeline) {
 				initial_pipeline = pipeline;
-				vkCmdBindPipeline(*command_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, initial_pipeline->get_vulkan_pipeline());
+				vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, initial_pipeline->get_vulkan_pipeline());
 			}
 
 			if (initial_mesh != mesh) {
 				initial_mesh = mesh;
 				std::array<VkBuffer, 1> vbs { *vb };
 				VkDeviceSize offsets { 0 };
-				vkCmdBindVertexBuffers(*command_buffer, 0, 1, vbs.data(), &offsets);
+				vkCmdBindVertexBuffers(command_buffer.get_buffer(), 0, 1, vbs.data(), &offsets);
 
-				vkCmdBindIndexBuffer(*command_buffer, *ib, 0, VK_INDEX_TYPE_UINT32);
+				vkCmdBindIndexBuffer(command_buffer.get_buffer(), *ib, 0, VK_INDEX_TYPE_UINT32);
 			}
 
-			vkCmdDrawIndexed(*command_buffer, static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
+			vkCmdDrawIndexed(command_buffer.get_buffer(), static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 			data.draw_calls++;
 		}
 	}
@@ -554,7 +555,7 @@ namespace Alabaster {
 		ubo.projection = camera->get_projection_matrix();
 		ubo.view = camera->get_view_matrix();
 		ubo.view_projection = ubo.projection * ubo.view;
-		ubo.model = model.has_value() ? *model : default_model;
+		ubo.model = model.value_or(default_model);
 
 		data.uniforms[image_index]->set_data(&ubo, sizeof(UBO), 0);
 	}

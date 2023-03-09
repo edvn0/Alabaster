@@ -98,7 +98,7 @@ void AlabasterLayer::ui(float ts)
 
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
 	if (opt_fullscreen) {
-		ImGuiViewport* viewport = ImGui::GetMainViewport();
+		const ImGuiViewport* viewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(viewport->Pos);
 		ImGui::SetNextWindowSize(viewport->Size);
 		ImGui::SetNextWindowViewport(viewport->ID);
@@ -125,7 +125,7 @@ void AlabasterLayer::ui(float ts)
 		float min_window_size_x = style.WindowMinSize.x;
 		style.WindowMinSize.x = 370.0f;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
-			ImGuiID dockspace_id = ImGui::GetID("MyDockSpacew");
+			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
@@ -133,6 +133,16 @@ void AlabasterLayer::ui(float ts)
 
 		if (ImGui::BeginMenuBar()) {
 			if (ImGui::BeginMenu("File")) {
+#ifndef DEBUG_IMGUI
+				ImVec2 vMin = ImGui::GetWindowContentRegionMin();
+				ImVec2 vMax = ImGui::GetWindowContentRegionMax();
+
+				vMin.x += ImGui::GetWindowPos().x;
+				vMin.y += ImGui::GetWindowPos().y;
+				vMax.x += ImGui::GetWindowPos().x;
+				vMax.y += ImGui::GetWindowPos().y;
+				ImGui::GetForegroundDrawList()->AddRect(vMin, vMax, IM_COL32(255, 255, 0, 255));
+#endif
 				if (ImGui::MenuItem("New", "Ctrl+N")) { }
 				if (ImGui::MenuItem("Open...", "Ctrl+O")) { }
 				if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S")) { }
@@ -148,16 +158,6 @@ void AlabasterLayer::ui(float ts)
 		for (const auto& panel : panels) {
 			panel->ui(ts);
 		}
-
-		ImGui::Begin("Stats");
-		{
-			ImGui::Text("Renderer Stats:");
-			std::string name = "None";
-			ImGui::Text("Hovered Entity: %s", name.c_str());
-			auto frametime = Application::the().frametime();
-			ImGui::Text("Frame time: %s", std::to_string(frametime).c_str());
-		}
-		ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2 { 0, 0 });
 		ImGui::Begin("Viewport");
@@ -175,9 +175,9 @@ void AlabasterLayer::ui(float ts)
 			if (viewport_hovered) {
 				Application::the().gui_layer().block_events();
 			}
-
 			ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 			viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
+			editor_scene->update_viewport_sizes(viewport_size, viewport_bounds, { viewport_offset.x, viewport_offset.y });
 
 			const auto& img = editor_scene->final_image();
 			UI::image(*img, { viewport_size.x, viewport_size.y });
