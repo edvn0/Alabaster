@@ -49,7 +49,7 @@ namespace Alabaster {
 
 	struct RendererData {
 		static constexpr std::uint32_t max_vertices = 4 * 100;
-		static constexpr std::uint32_t max_meshes = 200;
+		static constexpr std::uint32_t max_meshes = 400;
 		static constexpr std::uint32_t max_indices = 6 * max_vertices;
 		std::uint32_t draw_calls { 0 };
 

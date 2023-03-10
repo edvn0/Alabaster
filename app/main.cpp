@@ -5,14 +5,12 @@ using namespace Alabaster;
 
 class TestApp : public Application {
 public:
-	TestApp(const ApplicationArguments& args)
-		: Application(args) {};
+	using Application::Application;
 	~TestApp() override = default;
 
 	void on_init() override
 	{
 		push_layer(new AlabasterLayer());
-		Application::on_init();
 	}
 };
 

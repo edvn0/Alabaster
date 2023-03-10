@@ -80,10 +80,10 @@ int main(int argc, char** argv)
 	}
 	AssetManager::ResourceCache::the().shutdown();
 	Alabaster::Renderer::shutdown();
-	Alabaster::Allocator::shutdown();
-
-	delete app;
 
 	Alabaster::GraphicsContext::the().destroy();
+
 	Alabaster::Log::critical("Exiting application.");
+
+	Alabaster::Allocator::shutdown();
 }

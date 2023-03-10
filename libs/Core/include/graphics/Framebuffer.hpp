@@ -78,6 +78,11 @@ namespace Alabaster {
 	class Framebuffer {
 	public:
 		explicit Framebuffer(const FramebufferSpecification& w);
+		~Framebuffer()
+		{
+			if (!destroyed)
+				destroy();
+		}
 
 		void resize(uint32_t width, uint32_t height, bool force_recreate = false);
 		void add_resize_callback(const std::function<void(Framebuffer&)>& func);
@@ -102,6 +107,8 @@ namespace Alabaster {
 		void destroy();
 
 	private:
+		bool destroyed { false };
+
 		FramebufferSpecification spec;
 		std::uint32_t width { 0 };
 		std::uint32_t height { 0 };

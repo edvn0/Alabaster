@@ -46,12 +46,12 @@ namespace Alabaster {
 
 	void Application::stop()
 	{
-		using Map = std::map<std::string, Layer*>;
-		for (Map::iterator itr = layers.begin(); itr != layers.end();) {
-			Log::warn("[Application] Destroying layer: {}", (*itr).second->get_name());
+		using Map = std::map<std::string, Layer*, std::less<>>;
+		for (auto itr = layers.begin(); itr != layers.end();) {
+			auto& [name, layer] = *itr;
+			Log::warn("[Application] Destroying layer: {}", layer->get_name());
 
-			itr->second->destroy();
-			itr->second->~Layer();
+			layer->destroy();
 			itr = layers.erase(itr);
 		}
 		Log::info("[Application] Stopping.");
@@ -75,7 +75,7 @@ namespace Alabaster {
 
 		static std::size_t frametime_index = 0;
 		while (!window->should_close() && is_running) {
-			Timer<ClockGranularity::MILLIS, float> on_cpu;
+			Timer<float> on_cpu;
             
 			window->update();
 
@@ -155,7 +155,8 @@ namespace Alabaster {
 
 	bool Application::on_window_change(WindowResizeEvent& e)
 	{
-		const std::uint32_t width = e.width(), height = e.height();
+		const auto width = e.width();
+		const auto height = e.height();
 		if (width == 0 || height == 0) {
 			return false;
 		}

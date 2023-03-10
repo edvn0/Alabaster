@@ -78,94 +78,77 @@ namespace SceneSystem {
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 		auto sun_pipeline = Pipeline::create(sun_spec);
 
-		for (std::uint32_t i = 0; i < 20; i++) {
+		for (std::uint32_t i = 0; i < 200; i++) {
 			Entity entity = create_entity(fmt::format("Sphere-{}", i));
 			entity.add_component<Component::Mesh>(sphere_model);
 			Component::Transform& transform = entity.get_component<Component::Transform>();
-			transform.position = sphere_vector3(30);
+			transform.position = sphere_vector3(Random::get<float>(30.f, 90.f));
 			entity.add_component<Component::Texture>(glm::vec4(1.0f));
 			entity.add_component<Component::Pipeline>(sun_pipeline);
 		}
 
-		{
-			Entity floor = create_entity("Floor");
-			floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
-			Component::Transform& floor_transform = floor.get_component<Component::Transform>();
-			floor_transform.scale = { 200, 200, .2 };
-			floor_transform.position.y += 30;
-			floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
-			floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
+		
+		Entity floor = create_entity("Floor");
+		floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
+		Component::Transform& floor_transform = floor.get_component<Component::Transform>();
+		floor_transform.scale = { 200, 200, .2 };
+		floor_transform.position.y += 30;
+		floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
+		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
+		
+
+		
+		struct Plane {
+			glm::vec3 pos;
+			glm::vec4 col;
+			glm::vec3 scale;
+			float rotation;
+		};
+		std::array<Plane, 9> quad_data {};
+		quad_data[0] = { { 0, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[1] = { { 30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[2] = { { -30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+
+		quad_data[3] = { { 0, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[4] = { { 30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[5] = { { -30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+
+		quad_data[6] = { { 0, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[7] = { { 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+		quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
+
+		for (std::uint32_t i = 0; i < 9; i++) {
+			Entity entity = create_entity(fmt::format("Quad-{}", i));
+			entity.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
+
+			Component::Transform& transform = entity.get_component<Component::Transform>();
+			transform.position = quad_data[i].pos;
+			transform.scale = quad_data[i].scale;
+			transform.rotation = glm::rotate(glm::mat4 { 1.0f }, quad_data[i].rotation, { 1, 0, 0 });
+
+			entity.add_component<Component::Texture>(quad_data[i].col);
 		}
-
-		{
-			struct Plane {
-				glm::vec3 pos;
-				glm::vec4 col;
-				glm::vec3 scale;
-				float rotation;
-			};
-
-			std::array<Plane, 9> quad_data {};
-			quad_data[0] = { { 0, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[1] = { { 30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[2] = { { -30, 0, -30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-
-			quad_data[3] = { { 0, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[4] = { { 30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[5] = { { -30, 0, 0 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-
-			quad_data[6] = { { 0, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[7] = { { 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-			quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
-
-			for (std::uint32_t i = 0; i < 9; i++) {
-				Entity entity = create_entity(fmt::format("Quad-{}", i));
-				entity.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
-
-				Component::Transform& transform = entity.get_component<Component::Transform>();
-				transform.position = quad_data[i].pos;
-				transform.scale = quad_data[i].scale;
-				transform.rotation = glm::rotate(glm::mat4 { 1.0f }, quad_data[i].rotation, { 1, 0, 0 });
-
-				entity.add_component<Component::Texture>(quad_data[i].col);
-			}
-		}
-
-		{
-			Entity viking = create_entity("Viking Room");
-			auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
-			viking.add_component<Component::Mesh>(viking_room_model);
-			viking.add_component<Component::Pipeline>(viking_pipeline);
-			viking.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });
-			auto& viking_transform = viking.get_transform();
-			viking_transform.rotation = rot;
-			viking_transform.scale = { 15, 15, 15 };
-		}
-
-		{
-			Entity sun = create_entity("The Sun");
-			sun.add_component<Component::Light>();
-			sun.add_component<Component::Mesh>(sphere_model);
-			sun.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });
-			auto& sun_transform = sun.get_transform();
-			sun_transform.scale = { 3, 3, 3 };
-		}
+		
+		Entity viking = create_entity("Viking Room");
+		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
+		viking.add_component<Component::Mesh>(viking_room_model);
+		viking.add_component<Component::Pipeline>(viking_pipeline);
+		viking.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });
+		auto& viking_transform = viking.get_transform();
+		viking_transform.rotation = rot;
+		viking_transform.scale = { 15, 15, 15 };
+		
+		Entity sun = create_entity("The Sun");
+		sun.add_component<Component::Light>();
+		sun.add_component<Component::Mesh>(sphere_model);
+		sun.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });
+		auto& sun_transform = sun.get_transform();
+		sun_transform.scale = { 3, 3, 3 };
 	}
 
-	Scene::Scene() noexcept
-		: registry()
-	{
-	}
+	Scene::Scene() noexcept = default;
 
-	Scene::~Scene()
-	{
-		registry.clear();
-
-		if (scene_renderer)
-			scene_renderer->destroy();
-
-		framebuffer->destroy();
-	}
+	Scene::~Scene() = default;
 
 	static constexpr bool ray_sphere(
 		glm::vec3 ray_origin_wor, glm::vec3 ray_direction_wor, const Component::Transform& transform, float& intersection_distance)
@@ -320,7 +303,16 @@ namespace SceneSystem {
 		});
 	}
 
-	void Scene::shutdown() { SceneSerialiser serialiser(*this); }
+	void Scene::shutdown()
+	{
+		SceneSerialiser serialiser(*this);
+		registry.clear();
+
+		if (scene_renderer)
+			scene_renderer->destroy();
+
+		framebuffer->destroy();
+	}
 
 	void Scene::initialise()
 	{

@@ -20,20 +20,22 @@ namespace Filetype {
 	enum class Filetypes : std::uint8_t { PNG = 0, TTF, JPEG, JPG, SPV, VERT, FRAG, OBJ };
 }
 
-template <Filetype::Filetypes Type = Filetype::Filetypes::PNG> struct handle_filetype {
-	void operator()(SceneSystem::Scene& scene, [[maybe_unused]] const std::filesystem::path& path) const
+template <Filetype::Filetypes Type> struct handle_filetype {
+	using Scene = SceneSystem::Scene;
+	void operator()(Scene& scene, [[maybe_unused]] const std::filesystem::path& path) const
 	{
 		Alabaster::Log::info("Filetype handler not implemented for {}", magic_enum::enum_name(Type));
 	};
 };
 
-struct AlabasterLayer final : public Alabaster::Layer {
-	~AlabasterLayer() override = default;
+class AlabasterLayer final : public Alabaster::Layer {
+public:
 	AlabasterLayer() = default;
+	~AlabasterLayer() override = default;
 
 	void update(float ts) override;
 	void ui(float ts) override;
-	void ui() override;
+	void ui() override {};
 	bool initialise() override;
 	void destroy() override;
 	void on_event(Alabaster::Event& event) override;

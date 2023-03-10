@@ -120,7 +120,7 @@ namespace Alabaster {
 		populate_debug_messenger(create_info);
 
 		if (create_debug_messenger(vk_instance, &create_info, nullptr, &debug_messenger) != VK_SUCCESS) {
-			throw std::runtime_error("failed to set up debug messenger!");
+			throw AlabasterException("Failed to set up debug messenger!");
 		}
 	}
 

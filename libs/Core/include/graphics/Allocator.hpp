@@ -3,12 +3,14 @@
 #include <string>
 #include <vk_mem_alloc.h>
 
+#define VMA_DEBUG_LOG(x) Alabaster::Log::info("{}", x);
+
 namespace Alabaster {
 
 	class Allocator {
 	public:
 		Allocator() = default;
-		Allocator(const std::string& tag);
+		explicit Allocator(const std::string& tag);
 		~Allocator();
 
 		VmaAllocation allocate_buffer(VkBufferCreateInfo bci, VmaMemoryUsage usage, VmaAllocationCreateFlags flags, VkBuffer& out_buffer);

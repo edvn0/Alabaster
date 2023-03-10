@@ -76,6 +76,7 @@ namespace Alabaster {
 
 	void Framebuffer::destroy()
 	{
+		destroyed = true;
 		release();
 	}
 

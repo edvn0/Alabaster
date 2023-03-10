@@ -89,6 +89,10 @@ namespace Alabaster {
 		offline_set_data(vertex_data.data, size, offset);
 	}
 
+	VkBuffer VertexBuffer::get_vulkan_buffer() const { return vulkan_buffer; }
+
+	VkBuffer VertexBuffer::operator*() const { return vulkan_buffer; }
+
 	void VertexBuffer::offline_set_data(const void* buffer, std::uint32_t size, std::uint32_t offset)
 	{
 		Allocator allocator("VertexBuffer");

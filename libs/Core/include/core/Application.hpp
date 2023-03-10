@@ -35,7 +35,7 @@ namespace Alabaster {
 		double frametime();
 
 	public:
-		Application(const ApplicationArguments& args);
+		explicit Application(const ApplicationArguments& args);
 		Application(const Application&) = delete;
 		Application(Application&&) = delete;
 		void operator=(const Application&) = delete;

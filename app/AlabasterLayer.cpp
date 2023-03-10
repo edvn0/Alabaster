@@ -86,8 +86,6 @@ void AlabasterLayer::update(float ts)
 	}
 }
 
-void AlabasterLayer::ui() { }
-
 void AlabasterLayer::ui(float ts)
 {
 	editor_scene->ui(ts);
@@ -233,7 +231,7 @@ void AlabasterLayer::handle_drag_drop()
 void AlabasterLayer::destroy()
 {
 	editor_scene->shutdown();
-	for (const auto& panel : panels) {
+	for (auto const& panel : panels) {
 		panel->on_destroy();
 	}
 }
