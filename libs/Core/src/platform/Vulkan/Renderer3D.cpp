@@ -572,7 +572,12 @@ namespace Alabaster {
 		data.quad_index_buffer->destroy();
 		data.line_vertex_buffer->destroy();
 		data.line_index_buffer->destroy();
+
+#ifdef ALABASTER_WINDOWS
 		std::ranges::for_each(data.uniforms.begin(), data.uniforms.end(), [](auto& uni) { uni->destroy(); });
+#else
+		std::for_each(data.uniforms.begin(), data.uniforms.end(), [](auto& uni) { uni->destroy(); });
+#endif
 
 		vkDestroyDescriptorPool(device, data.descriptor_pool, nullptr);
 		vkDestroyDescriptorSetLayout(device, data.descriptor_set_layout, nullptr);

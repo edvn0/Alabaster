@@ -26,11 +26,6 @@ jobs:
                       os: ubuntu-latest
                       cc: gcc
                       cxx: g++
-                    - name: Windows Latest MinGW
-                      artifact: Windows-MinGW.7z
-                      os: windows-latest
-                      cc: gcc
-                      cxx: g++
                     - name: MacOS Latest Clang
                       artifact: MacOS-Clang.7z
                       os: macos-latest
