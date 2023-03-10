@@ -23,9 +23,9 @@ namespace Alabaster {
 	void GUILayer::on_event(Event& event)
 	{
 		if (should_block) {
-			ImGuiIO& io = ImGui::GetIO();
-			event.handled |= event.is_in_category(EventCategoryMouse) & io.WantCaptureMouse;
-			event.handled |= event.is_in_category(EventCategoryKeyboard) & io.WantCaptureKeyboard;
+			const ImGuiIO& io = ImGui::GetIO();
+			event.handled |= event.is_in_category(EventCategoryMouse) && io.WantCaptureMouse;
+			event.handled |= event.is_in_category(EventCategoryKeyboard) && io.WantCaptureKeyboard;
 		}
 	}
 
@@ -50,17 +50,26 @@ namespace Alabaster {
 		auto device = vulkan_context.device();
 
 		// Create Descriptor Pool
-		VkDescriptorPoolSize pool_sizes[] = { { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 }, { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 }, { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 }, { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 }, { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 },
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 }, { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
-			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 } };
+		std::array<VkDescriptorPoolSize, 11> pool_sizes = { 
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 }, 
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 }, 
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 }, 
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 }, 
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
+			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 } 
+		};
+		const auto size = static_cast<std::uint32_t>(pool_sizes.size());
 		VkDescriptorPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-		pool_info.maxSets = 100 * IM_ARRAYSIZE(pool_sizes);
-		pool_info.poolSizeCount = static_cast<std::uint32_t>(IM_ARRAYSIZE(pool_sizes));
-		pool_info.pPoolSizes = pool_sizes;
+		pool_info.maxSets = 100 * size;
+		pool_info.poolSizeCount = size;
+		pool_info.pPoolSizes = pool_sizes.data();
 		vk_check(vkCreateDescriptorPool(device, &pool_info, nullptr, &imgui_descriptor_pool));
 
 		// Setup Platform/Renderer bindings
@@ -91,23 +100,24 @@ namespace Alabaster {
 		return true;
 	}
 
-	void GUILayer::begin()
+	void GUILayer::begin() const
 	{
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 	}
 
-	void GUILayer::end()
+	void GUILayer::end() const
 	{
 		ImGui::Render();
 
 		static constexpr VkClearColorValue clear_colour { { 0.1f, 0.1f, 0.1f, 0.0f } };
+		static constexpr VkClearDepthStencilValue depth_stencil_clear { .depth = 1.0f, .stencil = 0 };
 
 		const auto& swapchain = Application::the().get_window()->get_swapchain();
 		std::array<VkClearValue, 2> clear_values {};
 		clear_values[0].color = clear_colour;
-		clear_values[1].depthStencil = { .depth = 1.0f, .stencil = 0 };
+		clear_values[1].depthStencil = depth_stencil_clear;
 
 		std::uint32_t width = swapchain->get_width();
 		std::uint32_t height = swapchain->get_height();

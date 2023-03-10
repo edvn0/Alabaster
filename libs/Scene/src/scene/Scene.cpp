@@ -85,9 +85,9 @@ namespace SceneSystem {
 			transform.position = sphere_vector3(Random::get<float>(30.f, 90.f));
 			entity.add_component<Component::Texture>(glm::vec4(1.0f));
 			entity.add_component<Component::Pipeline>(sun_pipeline);
+			entity.add_component<Component::SphereIntersectible>();
 		}
 
-		
 		Entity floor = create_entity("Floor");
 		floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
 		Component::Transform& floor_transform = floor.get_component<Component::Transform>();
@@ -95,9 +95,7 @@ namespace SceneSystem {
 		floor_transform.position.y += 30;
 		floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
 		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
-		
 
-		
 		struct Plane {
 			glm::vec3 pos;
 			glm::vec4 col;
@@ -128,7 +126,7 @@ namespace SceneSystem {
 
 			entity.add_component<Component::Texture>(quad_data[i].col);
 		}
-		
+
 		Entity viking = create_entity("Viking Room");
 		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
 		viking.add_component<Component::Mesh>(viking_room_model);
@@ -137,7 +135,7 @@ namespace SceneSystem {
 		auto& viking_transform = viking.get_transform();
 		viking_transform.rotation = rot;
 		viking_transform.scale = { 15, 15, 15 };
-		
+
 		Entity sun = create_entity("The Sun");
 		sun.add_component<Component::Light>();
 		sun.add_component<Component::Mesh>(sphere_model);
@@ -195,6 +193,26 @@ namespace SceneSystem {
 		return false;
 	}
 
+	void Scene::pick_entity(const glm::vec3& ray_wor)
+	{
+		const auto camera_position = scene_camera->get_position();
+		entt::entity found_entity = entt::null;
+		float t_dist = 1000.0f;
+		auto mesh_view = registry.view<const Component::SphereIntersectible>();
+		mesh_view.each([&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::SphereIntersectible& intersectable) {
+			float distance = 1000.0f;
+			const bool intersected = intersectable.intersects_with(ray_wor, camera_position, distance);
+			if (intersected && distance < t_dist) {
+				t_dist = distance;
+				found_entity = entity;
+			}
+		});
+
+		if (found_entity != entt::null) {
+			*selected_entity = Entity(this, found_entity);
+		}
+	}
+
 	void Scene::pick_mouse()
 	{
 		const auto mouse_pos = Alabaster::Input::mouse_position();
@@ -220,36 +238,31 @@ namespace SceneSystem {
 
 		mouse_ray = { ray_wor };
 
-		const auto camera_position = scene_camera->get_position();
-		auto mesh_view
-			= registry.view<const Component::Tag, Component::Transform, const Component::Mesh, Component::Texture, const Component::Pipeline>();
-		mesh_view.each([&camera_position, &ray_wor](const Component::Tag& tag, const Component::Transform& transform, const Component::Mesh&,
-						   Component::Texture& texture, const Component::Pipeline&) {
-			if (tag.tag.starts_with("Sphere")) {
-				float t_dist = 0.0f;
-				if (ray_sphere(camera_position, ray_wor, transform, t_dist)) {
-					texture.colour = { 1, 0, 0, 1 };
-				}
-			}
-		});
+		pick_entity(ray_wor);
 	}
 
 	void Scene::update(float ts)
 	{
-		if (Alabaster::Input::mouse(Alabaster::Mouse::Left)) {
-			pick_mouse();
-		}
-
 		scene_camera->on_update(ts);
 		command_buffer->begin();
 		scene_renderer->begin_scene();
 		scene_renderer->reset_stats();
-
 		draw_entities_in_scene(ts);
-
+		update_intersectables();
 		scene_renderer->end_scene(*command_buffer, framebuffer);
 		command_buffer->end();
 		command_buffer->submit();
+
+		if (Alabaster::Input::mouse(Alabaster::Mouse::Left)) {
+			pick_mouse();
+		}
+	}
+
+	void Scene::update_intersectables() {
+		auto mesh_view = registry.view<const Component::Transform, Component::SphereIntersectible>();
+		mesh_view.each([](const Component::Transform& transform, Component::SphereIntersectible& intersectable) {
+			intersectable.update(transform.position, transform.scale, transform.rotation);
+		});
 	}
 
 	void Scene::draw_entities_in_scene(float ts)
@@ -306,12 +319,14 @@ namespace SceneSystem {
 	void Scene::shutdown()
 	{
 		SceneSerialiser serialiser(*this);
+
 		registry.clear();
 
 		if (scene_renderer)
 			scene_renderer->destroy();
 
 		framebuffer->destroy();
+		command_buffer->destroy();
 	}
 
 	void Scene::initialise()
@@ -321,6 +336,7 @@ namespace SceneSystem {
 		scene_camera = std::make_shared<Alabaster::EditorCamera>(74.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
 		scene_renderer = std::make_unique<Alabaster::Renderer3D>(scene_camera);
 		command_buffer = std::make_unique<Alabaster::CommandBuffer>(3);
+		selected_entity = std::make_unique<Entity>();
 
 		build_scene();
 	}

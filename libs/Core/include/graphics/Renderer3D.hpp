@@ -78,7 +78,6 @@ namespace Alabaster {
 		std::array<glm::vec4, max_meshes> mesh_colour;
 		std::array<Pipeline*, max_meshes> mesh_pipeline_submit;
 
-		std::shared_ptr<Mesh> sphere_model;
 		PC push_constant;
 
 		std::unordered_map<std::string_view, Pipeline*> pipelines;

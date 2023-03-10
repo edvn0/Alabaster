@@ -191,8 +191,6 @@ namespace Alabaster {
 
 	void Window::update() { glfwPollEvents(); }
 
-	void Window::set_event_callback(const EventCallback& cb) { user_data.callback = cb; }
-
 	bool Window::should_close() { return glfwWindowShouldClose(handle); }
 
 	void Window::close() { glfwSetWindowShouldClose(handle, 1); }

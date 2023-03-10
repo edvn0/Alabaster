@@ -78,7 +78,7 @@ namespace Alabaster {
 
 	class ImmediateCommandBuffer final : public CommandBuffer {
 	public:
-		ImmediateCommandBuffer(std::string allocator_tag)
+		explicit ImmediateCommandBuffer(std::string allocator_tag)
 			: CommandBuffer(1)
 		{
 			CommandBuffer::begin();

@@ -78,12 +78,13 @@ int main(int argc, char** argv)
 	} catch (const std::system_error& e) {
 		Alabaster::Log::error("{}", e.what());
 	}
-	AssetManager::ResourceCache::the().shutdown();
 	Alabaster::Renderer::shutdown();
+	AssetManager::ResourceCache::the().shutdown();
+	Alabaster::Allocator::shutdown();
+
+	delete app;
 
 	Alabaster::GraphicsContext::the().destroy();
 
 	Alabaster::Log::critical("Exiting application.");
-
-	Alabaster::Allocator::shutdown();
 }

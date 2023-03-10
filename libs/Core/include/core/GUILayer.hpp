@@ -21,8 +21,8 @@ namespace Alabaster {
 
 		void block_events() { should_block = true; }
 
-		void begin();
-		void end();
+		void begin() const;
+		void end() const;
 
 	private:
 		std::string_view name() override { return gui_layer_name; }

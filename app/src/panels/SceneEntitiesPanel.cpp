@@ -508,7 +508,11 @@ namespace App {
 		}
 	}
 
-	void SceneEntitiesPanel::on_update(float ts) { }
+	void SceneEntitiesPanel::on_update(float ts)
+	{
+		if (const auto* picked_entity = scene->get_selected_entity(); picked_entity)
+			selected_entity = *picked_entity;
+	}
 
 	void SceneEntitiesPanel::ui(float ts)
 	{

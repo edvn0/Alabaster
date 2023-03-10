@@ -131,7 +131,6 @@ namespace Alabaster {
 	Renderer3D::Renderer3D(const std::shared_ptr<Camera>& cam) noexcept
 		: camera(cam)
 	{
-		data.sphere_model = Mesh::from_file("sphere.obj");
 		const auto&& [w, h] = Application::the().get_window()->size();
 		FramebufferSpecification fbs;
 		fbs.width = w;
@@ -569,6 +568,12 @@ namespace Alabaster {
 
 		data.framebuffer->destroy();
 
+		data.quad_vertex_buffer->destroy();
+		data.quad_index_buffer->destroy();
+		data.line_vertex_buffer->destroy();
+		data.line_index_buffer->destroy();
+		std::ranges::for_each(data.uniforms.begin(), data.uniforms.end(), [](auto& uni) { uni->destroy(); });
+		
 		vkDestroyDescriptorPool(device, data.descriptor_pool, nullptr);
 		vkDestroyDescriptorSetLayout(device, data.descriptor_set_layout, nullptr);
 	}

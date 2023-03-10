@@ -7,7 +7,8 @@
 #include "core/Buffer.hpp"
 
 #include <vulkan/vulkan.h>
-typedef struct VmaAllocation_T* VmaAllocation;
+
+using VmaAllocation = struct VmaAllocation_T*;
 
 namespace Alabaster {
 
@@ -16,7 +17,6 @@ namespace Alabaster {
 		UniformBuffer(std::uint32_t size, std::uint32_t input_binding);
 		UniformBuffer(VkDeviceSize device_size, std::uint32_t input_binding)
 			: UniformBuffer(static_cast<std::uint32_t>(device_size), input_binding) {};
-		~UniformBuffer();
 
 		void set_data(const void* data, std::uint32_t size, std::uint32_t offset = 0);
 		std::uint32_t get_binding() const { return binding; }
@@ -29,7 +29,6 @@ namespace Alabaster {
 		void release();
 		void invalidate();
 
-	private:
 		VmaAllocation allocation { nullptr };
 		VkBuffer buffer { nullptr };
 		std::uint32_t size { 0 };

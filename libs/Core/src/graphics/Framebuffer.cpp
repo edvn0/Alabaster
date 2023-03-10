@@ -65,7 +65,7 @@ namespace Alabaster {
 
 		if (!spec.existing_framebuffer) {
 			uint32_t attachment_index = 0;
-			for (auto& attachment_specification : spec.attachments) {
+			for (const auto& attachment_specification : spec.attachments) {
 				initialise_attachments(width, height, spec, attachment_specification, attachment_images, depth_image, attachment_index);
 			}
 		}
@@ -135,7 +135,7 @@ namespace Alabaster {
 			clear_values.emplace_back().color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
 		}
 
-		for (auto& callback : resize_callbacks)
+		for (const auto& callback : resize_callbacks)
 			callback(*this);
 	}
 

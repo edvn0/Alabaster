@@ -25,7 +25,7 @@ namespace Alabaster {
 
 		global_app = this;
 		window = std::make_unique<Window>(args);
-		window->set_event_callback([this](Event& e) { on_event(e); });
+		window->set_event_callback([this](Event& event) { on_event(event); });
 
 		push_layer(new GUILayer());
 
@@ -48,7 +48,7 @@ namespace Alabaster {
 	{
 		using Map = std::map<std::string, Layer*, std::less<>>;
 		for (auto itr = layers.begin(); itr != layers.end();) {
-			auto& [name, layer] = *itr;
+			const auto& [name, layer] = *itr;
 			Log::warn("[Application] Destroying layer: {}", layer->get_name());
 
 			layer->destroy();
@@ -150,7 +150,7 @@ namespace Alabaster {
 				return;
 
 			layer->on_event(event);
-		};
+		}
 	}
 
 	bool Application::on_window_change(WindowResizeEvent& e)
