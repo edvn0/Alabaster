@@ -208,10 +208,6 @@ namespace SceneSystem {
 		scene_renderer->end_scene(*command_buffer, framebuffer);
 		command_buffer->end();
 		command_buffer->submit();
-
-		if (Alabaster::Input::mouse(Alabaster::Mouse::Left)) {
-			pick_mouse();
-		}
 	}
 
 	void Scene::update_intersectables()
@@ -269,6 +265,14 @@ namespace SceneSystem {
 			scene_camera.reset(new Alabaster::EditorCamera(
 				vertical_fov, static_cast<float>(e.width()), static_cast<float>(e.height()), 0.1f, 1000.0f, scene_camera.get()));
 			scene_renderer->set_camera(scene_camera);
+			return false;
+		});
+
+		dispatch.dispatch<Alabaster::MouseButtonPressedEvent>([this](const Alabaster::MouseButtonPressedEvent& mouse_button_pressed_event) {
+			if (mouse_button_pressed_event.get_mouse_button() == Alabaster::Mouse::Left) {
+				pick_mouse();
+				return false;
+			}
 			return false;
 		});
 	}

@@ -16,7 +16,8 @@ namespace Alabaster {
 
 	glm::vec2 Input::mouse_position()
 	{
-		double out_x, out_y;
+		double out_x;
+		double out_y;
 		glfwGetCursorPos(get_window(), &out_x, &out_y);
 		return { out_x, out_y };
 	}
