@@ -328,8 +328,8 @@ namespace Alabaster {
 
 			// Prepare current mip level as image blit destination
 			Utilities::insert_image_memory_barrier(immediate_command_buffer.get_buffer(), info.image, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
-				VK_IMAGE_LAYOUT_UNDEFINED,
-				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, mip_sub_range);
+				VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+				mip_sub_range);
 
 			// Blit from previous level
 			vkCmdBlitImage(immediate_command_buffer.get_buffer(), info.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, info.image,
@@ -348,8 +348,7 @@ namespace Alabaster {
 		subresource_range.levelCount = mip_levels;
 
 		Utilities::insert_image_memory_barrier(immediate_command_buffer.get_buffer(), info.image, VK_ACCESS_TRANSFER_READ_BIT,
-			VK_ACCESS_SHADER_READ_BIT,
-			VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
+			VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
 			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresource_range);
 	}
 

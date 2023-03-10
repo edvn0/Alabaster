@@ -46,7 +46,6 @@ namespace Alabaster {
 
 	void Application::stop()
 	{
-		using Map = std::map<std::string, Layer*, std::less<>>;
 		for (auto itr = layers.begin(); itr != layers.end();) {
 			const auto& [name, layer] = *itr;
 			Log::warn("[Application] Destroying layer: {}", layer->get_name());
@@ -76,7 +75,7 @@ namespace Alabaster {
 		static std::size_t frametime_index = 0;
 		while (!window->should_close() && is_running) {
 			Timer<float> on_cpu;
-            
+
 			window->update();
 
 			swapchain().begin_frame();

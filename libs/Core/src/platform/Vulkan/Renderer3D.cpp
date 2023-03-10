@@ -573,7 +573,7 @@ namespace Alabaster {
 		data.line_vertex_buffer->destroy();
 		data.line_index_buffer->destroy();
 		std::ranges::for_each(data.uniforms.begin(), data.uniforms.end(), [](auto& uni) { uni->destroy(); });
-		
+
 		vkDestroyDescriptorPool(device, data.descriptor_pool, nullptr);
 		vkDestroyDescriptorSetLayout(device, data.descriptor_set_layout, nullptr);
 	}

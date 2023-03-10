@@ -22,8 +22,7 @@ namespace Alabaster {
 
 		static void begin();
 		static void begin_render_pass(const CommandBuffer& buffer, VkRenderPass render_pass, bool explicit_clear = false);
-		static void begin_render_pass(
-			const CommandBuffer& buffer, const std::shared_ptr<Framebuffer>& fb, bool explicit_clear = false);
+		static void begin_render_pass(const CommandBuffer& buffer, const std::shared_ptr<Framebuffer>& fb, bool explicit_clear = false);
 		static void end_render_pass(const CommandBuffer& buffer);
 		static void end();
 

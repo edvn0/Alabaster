@@ -24,8 +24,9 @@ namespace SceneSystem {
 		void on_event(Alabaster::Event& event);
 		void shutdown();
 		void ui(float ts);
-		
-		template<class Bound> void update_viewport_sizes(const glm::vec2& sizes, Bound&& bounds, const glm::vec2& offset) {
+
+		template <class Bound> void update_viewport_sizes(const glm::vec2& sizes, Bound&& bounds, const glm::vec2& offset)
+		{
 			viewport_size = sizes;
 			viewport_bounds = std::forward<Bound>(bounds);
 			viewport_offset = offset;

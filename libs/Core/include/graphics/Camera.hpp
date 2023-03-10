@@ -134,7 +134,7 @@ namespace Alabaster {
 		glm::mat4 view_matrix;
 		glm::vec3 position = { 0, 0, -20 };
 		glm::vec3 direction;
-		glm::vec3 focal_point {0.0f};
+		glm::vec3 focal_point { 0.0f };
 
 		float vertical_fov;
 		float aspect_ratio;

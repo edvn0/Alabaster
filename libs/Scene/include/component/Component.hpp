@@ -40,13 +40,15 @@ namespace SceneSystem::Component {
 		virtual bool intersects_with(const glm::vec3& direction, const glm::vec3& origin, float& distance) const = 0;
 	};
 
-	struct SphereIntersectible: public RayIntersectible {
+	struct SphereIntersectible : public RayIntersectible {
 		SphereIntersectible() = default;
-		SphereIntersectible(const glm::vec3& world_position, float radius)
-			: world_position(world_position), radius(radius){};
+		SphereIntersectible(const glm::vec3& in_world_pos, float in_radius)
+			: world_position(in_world_pos)
+			, radius(in_radius) {};
 		~SphereIntersectible() override = default;
 
-		void update(const glm::vec3& position, const glm::vec3& scale, const glm::quat&) override {
+		void update(const glm::vec3& position, const glm::vec3& scale, const glm::quat&) override
+		{
 			world_position = position;
 			radius = scale.x;
 		}
@@ -98,10 +100,9 @@ namespace SceneSystem::Component {
 
 	private:
 		glm::vec3 world_position { 0 };
-		float radius {0.f};
+		float radius { 0.f };
 	};
 	template <> inline constexpr std::string_view component_name<Component::SphereIntersectible> = "sphere_intersectable";
-
 
 	struct Transform {
 		glm::vec3 position;

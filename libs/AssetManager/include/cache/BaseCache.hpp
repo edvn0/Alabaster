@@ -35,10 +35,9 @@ namespace AssetManager {
 		}
 	};
 
-	template<typename T>
-	using StringMap = std::unordered_map<std::string, T, StringHash, std::equal_to<>>;
+	template <typename T> using StringMap = std::unordered_map<std::string, T, StringHash, std::equal_to<>>;
 
-	template<typename T> class BaseCache {
+	template <typename T> class BaseCache {
 	public:
 		virtual ~BaseCache() = default;
 

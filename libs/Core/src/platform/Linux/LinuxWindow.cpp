@@ -207,8 +207,6 @@ namespace Alabaster {
 
 	bool Window::should_close() { return glfwWindowShouldClose(handle); }
 
-	void Window::set_event_callback(const Alabaster::Window::EventCallback& cb) { user_data.callback = cb; }
-
 	void Window::close()
 	{
 		glfwSetWindowShouldClose(handle, 1);

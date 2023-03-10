@@ -199,14 +199,15 @@ namespace SceneSystem {
 		entt::entity found_entity = entt::null;
 		float t_dist = 1000.0f;
 		auto mesh_view = registry.view<const Component::SphereIntersectible>();
-		mesh_view.each([&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::SphereIntersectible& intersectable) {
-			float distance = 1000.0f;
-			const bool intersected = intersectable.intersects_with(ray_wor, camera_position, distance);
-			if (intersected && distance < t_dist) {
-				t_dist = distance;
-				found_entity = entity;
-			}
-		});
+		mesh_view.each(
+			[&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::SphereIntersectible& intersectable) {
+				float distance = 1000.0f;
+				const bool intersected = intersectable.intersects_with(ray_wor, camera_position, distance);
+				if (intersected && distance < t_dist) {
+					t_dist = distance;
+					found_entity = entity;
+				}
+			});
 
 		if (found_entity != entt::null) {
 			*selected_entity = Entity(this, found_entity);
@@ -258,7 +259,8 @@ namespace SceneSystem {
 		}
 	}
 
-	void Scene::update_intersectables() {
+	void Scene::update_intersectables()
+	{
 		auto mesh_view = registry.view<const Component::Transform, Component::SphereIntersectible>();
 		mesh_view.each([](const Component::Transform& transform, Component::SphereIntersectible& intersectable) {
 			intersectable.update(transform.position, transform.scale, transform.rotation);

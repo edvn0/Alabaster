@@ -2,9 +2,6 @@
 
 #include "utilities/Time.hpp"
 
-#ifdef ALABASTER_WINDOWS
-#include <time.h>
-#endif
 #include <algorithm>
 
 namespace Alabaster::Time {
@@ -25,15 +22,8 @@ namespace Alabaster::Time {
 
 	tm local_time()
 	{
-#ifdef ALABASTER_WINDOWS
-		struct tm newtime;
-		time_t now = time(0);
-		localtime_s(&newtime, &now);
-		return newtime;
-#else
 		auto t = time(nullptr);
 		return *std::localtime(&t);
-#endif
 	}
 
 } // namespace Alabaster::Time

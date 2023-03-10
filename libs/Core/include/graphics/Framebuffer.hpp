@@ -122,6 +122,7 @@ namespace Alabaster {
 		VkFramebuffer frame_buffer { nullptr };
 
 		std::vector<std::function<void(Framebuffer&)>> resize_callbacks;
+
 	public:
 		static std::shared_ptr<Framebuffer> create(const FramebufferSpecification& spec) { return std::make_shared<Framebuffer>(spec); }
 	};
