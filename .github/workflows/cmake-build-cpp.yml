@@ -12,7 +12,7 @@ jobs:
         name: "${{ matrix.config.name }}"
         runs-on: "${{ matrix.config.os }}"
         strategy:
-            fail-fast: true
+            fail-fast: false
             matrix:
                 config:
                     - name: Windows Latest MSVC
