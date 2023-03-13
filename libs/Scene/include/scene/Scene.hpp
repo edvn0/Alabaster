@@ -66,8 +66,6 @@ namespace SceneSystem {
 		glm::vec2 viewport_size;
 		glm::vec2 viewport_offset;
 
-		std::optional<glm::vec3> mouse_ray;
-
 		std::unique_ptr<Entity> selected_entity;
 
 		std::shared_ptr<Alabaster::EditorCamera> scene_camera;

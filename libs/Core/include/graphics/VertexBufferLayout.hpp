@@ -11,28 +11,30 @@ namespace Alabaster {
 
 	static std::uint32_t shader_data_type_size(ShaderDataType type)
 	{
+		using enum Alabaster::ShaderDataType;
+
 		switch (type) {
-		case ShaderDataType::Float:
+		case Float:
 			return 4;
-		case ShaderDataType::Float2:
+		case Float2:
 			return 4 * 2;
-		case ShaderDataType::Float3:
+		case Float3:
 			return 4 * 3;
-		case ShaderDataType::Float4:
+		case Float4:
 			return 4 * 4;
-		case ShaderDataType::Mat3:
+		case Mat3:
 			return 4 * 3 * 3;
-		case ShaderDataType::Mat4:
+		case Mat4:
 			return 4 * 4 * 4;
-		case ShaderDataType::Int:
+		case Int:
 			return 4;
-		case ShaderDataType::Int2:
+		case Int2:
 			return 4 * 2;
-		case ShaderDataType::Int3:
+		case Int3:
 			return 4 * 3;
-		case ShaderDataType::Int4:
+		case Int4:
 			return 4 * 4;
-		case ShaderDataType::Bool:
+		case Bool:
 			return 1;
 		default: {
 			Log::error("Unknown ShaderDataType!");
@@ -47,8 +49,8 @@ namespace Alabaster {
 		std::string name;
 		ShaderDataType shader_data_type;
 		std::uint32_t size;
-		std::uint32_t offset;
-		bool normalised;
+		std::uint32_t offset { 0 };
+		bool normalised { false };
 
 		VertexBufferElement() = default;
 
@@ -56,35 +58,36 @@ namespace Alabaster {
 			: name(input_name)
 			, shader_data_type(type)
 			, size(shader_data_type_size(type))
-			, offset(0)
 			, normalised(is_normalised)
 		{
 		}
 
 		std::uint32_t get_component_count() const
 		{
+			using enum Alabaster::ShaderDataType;
+
 			switch (shader_data_type) {
-			case ShaderDataType::Float:
+			case Float:
 				return 1;
-			case ShaderDataType::Float2:
+			case Float2:
 				return 2;
-			case ShaderDataType::Float3:
+			case Float3:
 				return 3;
-			case ShaderDataType::Float4:
+			case Float4:
 				return 4;
-			case ShaderDataType::Mat3:
+			case Mat3:
 				return 3 * 3;
-			case ShaderDataType::Mat4:
+			case Mat4:
 				return 4 * 4;
-			case ShaderDataType::Int:
+			case Int:
 				return 1;
-			case ShaderDataType::Int2:
+			case Int2:
 				return 2;
-			case ShaderDataType::Int3:
+			case Int3:
 				return 3;
-			case ShaderDataType::Int4:
+			case Int4:
 				return 4;
-			case ShaderDataType::Bool:
+			case Bool:
 				return 1;
 			default: {
 				Log::error("Never reach here in VertexBuffer.");
@@ -98,7 +101,7 @@ namespace Alabaster {
 
 	class VertexBufferLayout {
 	public:
-		VertexBufferLayout() { }
+		VertexBufferLayout() = default;
 
 		explicit VertexBufferLayout(const std::initializer_list<VertexBufferElement>& input_elements)
 			: elements(input_elements)
@@ -108,14 +111,14 @@ namespace Alabaster {
 
 		std::uint32_t get_stride() const { return stride; }
 		const std::vector<VertexBufferElement>& get_elements() const { return elements; }
-		std::uint32_t get_element_count() const { return (std::uint32_t)elements.size(); }
+		std::uint32_t get_element_count() const { return static_cast<std::uint32_t>(elements.size()); }
 
 		[[nodiscard]] std::vector<VertexBufferElement>::iterator begin() { return elements.begin(); }
 		[[nodiscard]] std::vector<VertexBufferElement>::iterator end() { return elements.end(); }
 		[[nodiscard]] std::vector<VertexBufferElement>::const_iterator begin() const { return elements.begin(); }
 		[[nodiscard]] std::vector<VertexBufferElement>::const_iterator end() const { return elements.end(); }
 
-		inline void log()
+		inline void log() const
 		{
 			for (const auto& element : elements) {
 				Log::info("Type: {}, Name: {}", enum_name(element.shader_data_type), element.name);
@@ -134,7 +137,6 @@ namespace Alabaster {
 			}
 		}
 
-	private:
 		std::vector<VertexBufferElement> elements;
 		std::uint32_t stride = 0;
 	};

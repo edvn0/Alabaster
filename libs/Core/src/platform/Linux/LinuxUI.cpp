@@ -9,7 +9,7 @@ namespace Alabaster::UI {
 			auto relative_path = std::filesystem::relative(path, Alabaster::IO::resources());
 			const char* item_path = relative_path.c_str();
 			const auto size = (std::strlen(item_path) + 1) * sizeof(char);
-			ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", item_path, size);
+			ImGui::SetDragDropPayload("AlabasterLayer::DragDropPayload", item_path, size);
 			ImGui::EndDragDropSource();
 		}
 	}

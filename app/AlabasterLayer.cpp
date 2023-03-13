@@ -178,6 +178,16 @@ void AlabasterLayer::viewport()
 	viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 	editor_scene->update_viewport_sizes(viewport_size, viewport_bounds, { viewport_offset.x, viewport_offset.y });
 
+	auto f = ImGui::GetWindowPos();
+	(void)f.x;
+	(void)f.y;
+
+	auto g = ImGui::GetCursorScreenPos();
+	(void)g;
+
+	auto h = ImGui::GetWindowDpiScale();
+	(void)h;
+
 	const auto& img = editor_scene->final_image();
 	UI::image(*img, { viewport_size.x, viewport_size.y });
 
@@ -204,22 +214,24 @@ template <> struct handle_filetype<Filetype::Filetypes::PNG> {
 void AlabasterLayer::handle_drag_drop()
 {
 	if (ImGui::BeginDragDropTarget()) {
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM")) {
+		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AlabasterLayer::DragDropPayload")) {
 			const auto* path = static_cast<const char*>(payload->Data);
-			const auto fp = std::filesystem::path { path };
+			const std::filesystem::path fp = path;
 
 			const auto filename = fp.filename();
 			const auto extension = filename.extension();
+			auto& scene = *editor_scene;
 
 			try {
-				handle_filetype<Filetype::Filetypes::PNG> {}(*editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::TTF> {}(*editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::JPEG> {}(*editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::JPG> {}(*editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::SPV> {}(*editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::VERT> {}(*editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::FRAG> {}(*editor_scene, filename);
-				handle_filetype<Filetype::Filetypes::OBJ> {}(*editor_scene, filename);
+				using enum Filetype::Filetypes;
+				handle_filetype<PNG>()(scene, filename);
+				handle_filetype<TTF>()(scene, filename);
+				handle_filetype<JPEG>()(scene, filename);
+				handle_filetype<JPG>()(scene, filename);
+				handle_filetype<SPV>()(scene, filename);
+				handle_filetype<VERT>()(scene, filename);
+				handle_filetype<FRAG>()(scene, filename);
+				handle_filetype<OBJ>()(scene, filename);
 			} catch (const AlabasterException& e) {
 				Log::info("[AlabasterLayer] {}", e.what());
 			}

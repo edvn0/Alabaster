@@ -24,6 +24,7 @@
 #include "serialisation/SceneDeserialiser.hpp"
 #include "serialisation/SceneSerialiser.hpp"
 
+#include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 
 namespace SceneSystem {
@@ -32,7 +33,8 @@ namespace SceneSystem {
 	static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
 	static float ambience { 1.0f };
 
-	static constexpr auto axes = [](const auto& renderer, auto&& position) {
+	template <class Position = glm::vec3> static constexpr auto axes(const auto& renderer, const Position& position)
+	{
 		renderer->line(position, position + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
 		renderer->line(position, position + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
 		renderer->line(position, position + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
@@ -115,16 +117,16 @@ namespace SceneSystem {
 		quad_data[7] = { { 30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
 		quad_data[8] = { { -30, 0, 30 }, { 0.2, 0.3, 0.1, 1.0f }, { 10.0, 10.0, .3f }, glm::radians(90.0f) };
 
-		for (std::uint32_t i = 0; i < 9; i++) {
-			Entity entity = create_entity(fmt::format("Quad-{}", i));
+		for (std::uint32_t quad_index = 0; quad_index < quad_data.size(); quad_index++) {
+			Entity entity = create_entity(fmt::format("Quad-{}", quad_index));
 			entity.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
 
 			Component::Transform& transform = entity.get_component<Component::Transform>();
-			transform.position = quad_data[i].pos;
-			transform.scale = quad_data[i].scale;
-			transform.rotation = glm::rotate(glm::mat4 { 1.0f }, quad_data[i].rotation, { 1, 0, 0 });
+			transform.position = quad_data[quad_index].pos;
+			transform.scale = quad_data[quad_index].scale;
+			transform.rotation = glm::rotate(glm::mat4 { 1.0f }, quad_data[quad_index].rotation, { 1, 0, 0 });
 
-			entity.add_component<Component::Texture>(quad_data[i].col);
+			entity.add_component<Component::Texture>(quad_data[quad_index].col);
 		}
 
 		Entity viking = create_entity("Viking Room");
@@ -169,20 +171,26 @@ namespace SceneSystem {
 		}
 	}
 
+	template <class Vec = glm::vec3> static constexpr auto xy(const Vec& vec) { return vec.xy; }
+
 	void Scene::pick_mouse()
 	{
 		const auto mouse_pos = Alabaster::Input::mouse_position();
 		const auto size = viewport_size;
 
-		const auto vp_x = viewport_bounds[0].x;
+		int x_offset;
+		int y_offset;
+		glfwGetWindowPos(Alabaster::Application::the().get_window()->native(), &x_offset, &y_offset);
 
-		const auto mouse_x_in_viewport = mouse_pos.x - vp_x;
+		const auto offset_x = static_cast<float>(x_offset);
+		const auto vp_x = viewport_bounds[0].x;
+		const auto mouse_x_in_viewport = (mouse_pos.x + offset_x) - vp_x;
 		const auto mouse_y_in_viewport = mouse_pos.y - 20; // Menubar size
 
 		float x = (2.0f * mouse_x_in_viewport) / size.x - 1.0f;
 		float y = 1.0f - (2.0f * mouse_y_in_viewport) / size.y;
 		float z = 1.0f;
-		glm::vec3 ray_nds(x, -y, z);
+		glm::vec3 ray_nds { x, -y, z };
 
 		glm::vec4 ray_clip(ray_nds.x, ray_nds.y, -1.0, 1.0);
 
@@ -192,7 +200,7 @@ namespace SceneSystem {
 		glm::vec3 ray_wor = glm::inverse(scene_camera->get_view_matrix()) * ray_eye;
 		ray_wor = glm::normalize(ray_wor);
 
-		mouse_ray = { ray_wor };
+		Alabaster::Log::info("({},{})", mouse_pos.x, mouse_pos.y);
 
 		pick_entity(ray_wor);
 	}
