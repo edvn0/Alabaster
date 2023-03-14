@@ -35,7 +35,7 @@ namespace AssetManager {
 	{
 		const auto found = texture_cache.get_from_cache(name);
 		if (!found) {
-			throw Alabaster::AlabasterException(fmt::format("Texture [{}]not found.", name));
+			throw Alabaster::AlabasterException(fmt::format("Texture [{}] not found.", name));
 		}
 
 		return found.value();
@@ -44,7 +44,10 @@ namespace AssetManager {
 	const Alabaster::Shader* ResourceCache::shader(const std::string& name)
 	{
 		const auto found = shader_cache.get_from_cache(name);
-		return found.value_or(nullptr);
+		if (!found) {
+			throw Alabaster::AlabasterException(fmt::format("Shader [{}] not found.", name));
+		}
+		return found.value();
 	}
 
 } // namespace AssetManager

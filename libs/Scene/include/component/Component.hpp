@@ -3,6 +3,7 @@
 #include "core/Random.hpp"
 #include "graphics/Mesh.hpp"
 #include "graphics/Pipeline.hpp"
+#include "graphics/Texture.hpp"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -102,7 +103,7 @@ namespace SceneSystem::Component {
 		glm::vec3 world_position { 0 };
 		float radius { 0.f };
 	};
-	template <> inline constexpr std::string_view component_name<Component::SphereIntersectible> = "sphere_intersectable";
+	template <> inline constexpr std::string_view component_name<Component::SphereIntersectible> = "sphere_intersectible";
 
 	struct Transform {
 		glm::vec3 position;
@@ -158,9 +159,14 @@ namespace SceneSystem::Component {
 
 	struct Texture {
 		glm::vec4 colour { 1.0f };
-		explicit Texture(glm::vec4 col);
-		Texture()
-			: colour() {};
+		const Alabaster::Texture* texture { nullptr };
+
+		template <typename T>
+		explicit Texture(const T& col, const Alabaster::Texture* tex = nullptr)
+			: colour(col)
+			, texture(tex) {};
+
+		explicit Texture() = default;
 		~Texture() = default;
 	};
 	template <> inline constexpr std::string_view component_name<Component::Texture> = "texture";

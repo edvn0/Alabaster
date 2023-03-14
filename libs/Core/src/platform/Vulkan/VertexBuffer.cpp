@@ -85,7 +85,7 @@ namespace Alabaster {
 
 	void VertexBuffer::set_data(const void* buffer, std::uint32_t size, std::uint32_t offset)
 	{
-		std::memcpy(vertex_data.data, (uint8_t*)buffer + offset, size);
+		std::memcpy(vertex_data.data, static_cast<const uint8_t*>(buffer) + offset, size);
 		offline_set_data(vertex_data.data, size, offset);
 	}
 
@@ -97,7 +97,7 @@ namespace Alabaster {
 	{
 		Allocator allocator("VertexBuffer");
 		auto* data_pointer = allocator.map_memory<uint8_t>(memory_allocation);
-		memcpy(data_pointer, (uint8_t*)buffer + offset, size);
+		memcpy(data_pointer, static_cast<const uint8_t*>(buffer) + offset, size);
 		allocator.unmap_memory(memory_allocation);
 	}
 

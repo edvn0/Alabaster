@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 namespace Alabaster {
 
@@ -90,6 +91,7 @@ namespace Alabaster {
 
 		const auto& device = GraphicsContext::the().device();
 		vkDestroyFramebuffer(device, framebuffer, nullptr);
+		vkDestroyRenderPass(device, render_pass, nullptr);
 
 		Log::info("[Framebuffer] Destroying framebuffer.");
 

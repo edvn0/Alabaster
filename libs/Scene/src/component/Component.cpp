@@ -33,11 +33,6 @@ namespace SceneSystem {
 	{
 	}
 
-	Component::Texture::Texture(glm::vec4 col)
-		: colour(std::move(col))
-	{
-	}
-
 	Component::Tag::Tag(const std::string& in_tag)
 		: tag(in_tag)
 	{

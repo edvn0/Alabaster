@@ -561,8 +561,9 @@ namespace Alabaster {
 	{
 		const auto& device = GraphicsContext::the().device();
 
-		for (const auto& [key, pipeline] : data.pipelines) {
-			pipeline->destroy();
+		for (auto itr = data.pipelines.begin(); itr != data.pipelines.end();) {
+			(*itr).second->destroy();
+			itr = data.pipelines.erase(itr);
 		}
 		data.pipelines.clear();
 

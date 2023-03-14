@@ -16,7 +16,6 @@ if(WIN32)
     else()
         message(FATAL_ERROR "Only MinGW (g++) and MSVC are supported")
     endif()
-
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(ALABASTER_OS "MacOS")
     set(ALABASTER_COMPILER "clang")
@@ -27,7 +26,7 @@ endif()
 
 message(STATUS "ALABASTER: Chosen OS: ${ALABASTER_OS}, chosen compiler: ${ALABASTER_COMPILER}")
 
-if(CMAKE_GENERATOR STREQUAL Xcode)
+if(CMAKE_GENERATOR STREQUAL "Xcode")
 	set(XCODE_SCHEME_ENABLE_GPU_API_VALIDATION ON)
 	set(XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 	set(XCODE_SCHEME_ENABLE_GPU_SHADER_VALIDATION ON)

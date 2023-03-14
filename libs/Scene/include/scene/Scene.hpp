@@ -33,7 +33,7 @@ namespace SceneSystem {
 		}
 
 		void draw_entities_in_scene(float ts);
-		void update_intersectables();
+		void update_intersectibles();
 
 		void delete_entity(const std::string& tag);
 		void delete_entity(const uuids::uuid& uuid);
@@ -62,9 +62,9 @@ namespace SceneSystem {
 
 		entt::registry registry;
 
-		std::array<glm::vec2, 2> viewport_bounds; // top left, bottom right XY vectors
-		glm::vec2 viewport_size;
-		glm::vec2 viewport_offset;
+		std::array<glm::vec2, 2> viewport_bounds { glm::vec2 { 0 }, glm::vec2 { 0 } }; // top left, bottom right XY vectors
+		glm::vec2 viewport_size { 0 };
+		glm::vec2 viewport_offset { 0 };
 
 		std::unique_ptr<Entity> selected_entity;
 

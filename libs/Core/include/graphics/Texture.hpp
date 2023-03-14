@@ -46,7 +46,6 @@ namespace Alabaster {
 		bool load_image(const std::string& path);
 		bool load_image(const void* data, std::uint32_t size);
 
-	private:
 		std::filesystem::path path;
 		std::uint32_t width;
 		std::uint32_t height;
@@ -61,12 +60,13 @@ namespace Alabaster {
 		bool destroyed { false };
 
 	public:
-		static std::shared_ptr<Texture> from_filename(auto&& filename)
+		template <typename Path = std::filesystem::path> static std::shared_ptr<Texture> from_filename(const Path& filename)
 		{
-			return std::make_shared<Texture>(IO::texture(filename), TextureProperties {});
+			return std::make_shared<Texture>(IO::texture(filename), TextureProperties(filename.string()));
 		}
 
-		static std::shared_ptr<Texture> from_filename(auto&& filename, auto&& props)
+		template <typename Path = std::filesystem::path>
+		static std::shared_ptr<Texture> from_filename(const Path& filename, const TextureProperties& props)
 		{
 			return std::make_shared<Texture>(IO::texture(filename), props);
 		}

@@ -49,7 +49,6 @@ private:
 
 	std::unique_ptr<SceneSystem::Scene> editor_scene;
 	std::vector<std::unique_ptr<App::Panel>> panels;
-	SceneSystem::Entity selected_entity {};
 
 	glm::vec2 viewport_size = { 0.0f, 0.0f };
 	std::array<glm::vec2, 2> viewport_bounds = { glm::vec2 { 0.0f, 0.0f }, glm::vec2 { 0.0f, 0.0f } };

@@ -19,14 +19,14 @@ namespace Alabaster::UI {
 		const auto& [sampler, image_view, layout] = image_info;
 		if (cached_views.contains(image_view)) {
 			const auto set = cached_views[image_view];
-			ImGui::Image(reinterpret_cast<ImU64>(set), size, uv0, uv1);
+			ImGui::Image(std::bit_cast<ImU64>(set), size, uv0, uv1);
 			return;
 		}
 
 		if (!image_view)
 			return;
 		const auto texture_id = ImGui_ImplVulkan_AddTexture(sampler, image_view, layout);
-		ImGui::Image(reinterpret_cast<ImU64>(texture_id), size, uv0, uv1);
+		ImGui::Image(std::bit_cast<ImU64>(texture_id), size, uv0, uv1);
 
 		cached_views[image_view] = texture_id;
 	}
@@ -43,21 +43,18 @@ namespace Alabaster::UI {
 		image(descriptor_info, size, uv0, uv1);
 	}
 
-	void image(const std::unique_ptr<Image>& img, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1) { image(*img, size, uv0, uv1); }
-
 	void image(const std::shared_ptr<Alabaster::Image>& img, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1)
 	{
 		image(*img, size, uv0, uv1);
 	}
-	void image(const std::unique_ptr<Alabaster::Image>& img, const ImVec2& size) { image(*img, size, { 0, 0 }, { 1, 1 }); }
 
 	void image(const std::shared_ptr<Alabaster::Image>& img, const ImVec2& size) { image(*img, size, { 0, 0 }, { 1, 1 }); }
 
 	void empty_cache()
 	{
 		for (auto it = cached_views.begin(); it != cached_views.end();) {
-			const auto entry = *it;
-			const auto& [key, value] = entry;
+			auto& entry = *it;
+			auto& [key, value] = entry;
 			ImGui_ImplVulkan_RemoveTexture(value);
 			vkDestroyImageView(GraphicsContext::the().device(), key, nullptr);
 			it = cached_views.erase(it);
@@ -79,8 +76,10 @@ namespace Alabaster::UI {
 
 	void remove_image(const VkDescriptorImageInfo& info)
 	{
-		if (cached_views.contains(info.imageView))
+		if (cached_views.contains(info.imageView)) {
 			ImGui_ImplVulkan_RemoveTexture(cached_views[info.imageView]);
+			cached_views.erase(info.imageView);
+		}
 	}
 
 } // namespace Alabaster::UI

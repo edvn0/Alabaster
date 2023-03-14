@@ -27,18 +27,13 @@ static bool is_dockspace_open { true };
 
 static bool global_imgui_is_blocking { false };
 
-static glm::vec4 pos { -5, 5, 5, 1.0f };
-static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
-static float ambience { 1.0f };
-
 bool AlabasterLayer::initialise()
 {
 	editor_scene = std::make_unique<Scene>();
 	editor_scene->initialise();
 
 	panels.push_back(std::make_unique<App::SceneEntitiesPanel>(editor_scene.get()));
-	// TODO: Dysfunctional right now.
-	// panels.push_back(std::make_unique<App::DirectoryContentPanel>(IO::resources()));
+	panels.push_back(std::make_unique<App::DirectoryContentPanel>(IO::resources()));
 
 	for (const auto& panel : panels) {
 		panel->on_init();
@@ -177,16 +172,6 @@ void AlabasterLayer::viewport()
 	ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 	viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 	editor_scene->update_viewport_sizes(viewport_size, viewport_bounds, { viewport_offset.x, viewport_offset.y });
-
-	auto f = ImGui::GetWindowPos();
-	(void)f.x;
-	(void)f.y;
-
-	auto g = ImGui::GetCursorScreenPos();
-	(void)g;
-
-	auto h = ImGui::GetWindowDpiScale();
-	(void)h;
 
 	const auto& img = editor_scene->final_image();
 	UI::image(*img, { viewport_size.x, viewport_size.y });
