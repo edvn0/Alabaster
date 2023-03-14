@@ -138,7 +138,7 @@ namespace Alabaster {
 
 	void Image::release()
 	{
-		if (info.image == nullptr)
+		if (!info.image)
 			return;
 
 		vkDestroyImageView(GraphicsContext::the().device(), info.view, nullptr);

@@ -2,8 +2,8 @@
 
 #include "utilities/Time.hpp"
 
-#include <time.h>
 #include <algorithm>
+#include <time.h>
 
 namespace Alabaster::Time {
 

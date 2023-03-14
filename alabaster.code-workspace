@@ -179,7 +179,6 @@
         "editor.formatOnType": false,
         "editor.detectIndentation": false,
         "editor.tabSize": 4,
-        "prettier.tabWidth": 4,
         "files.exclude": {
             "**/.git": true,
             "**/.svn": true,
@@ -195,6 +194,49 @@
             "**/.git/objects/**": true,
             "**/.git/subtree-cache/**": true,
             "**/node_modules/*/**": true
+        },
+        "cmake.configureSettings": {
+            "VULKAN_SDK": "C:\\VulkanSDK\\1.3.239.0",
+            "Vulkan_LIBRARY": "C:\\VulkanSDK\\1.3.239.0\\Lib\\vulkan-1.lib",
+            "CMAKE_BUILD_TYPE": "Debug",
+            "GLFW_INSTALL": false,
+            "GLFW_BUILD_DOCS": false,
+            "GLFW_BUILD_TESTS": false,
+            "GLFW_BUILD_EXAMPLES": false,
+            "BUILD_TESTING": true,
+            "ENABLE_HLSL": true,
+            "ENABLE_CTEST": false,
+            "ENTT_BUILD_TESTING": false,
+            "Random_BuildTests": false,
+            "BUILD_SHARED_LIBS": false,
+            "SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS": false,
+            "SPIRV_CROSS_SHARED": false,
+            "SPIRV_CROSS_STATIC": true,
+            "SPIRV_CROSS_CLI": false,
+            "SPIRV_CROSS_ENABLE_TESTS": false,
+            "SPIRV_CROSS_ENABLE_GLSL": true,
+            "SPIRV_CROSS_ENABLE_HLSL": false,
+            "SPIRV_CROSS_ENABLE_MSL": false,
+            "SPIRV_CROSS_ENABLE_CPP": false,
+            "SPIRV_CROSS_ENABLE_REFLECT": false,
+            "SPIRV_CROSS_ENABLE_C_API": false,
+            "SPIRV_CROSS_ENABLE_UTIL": false,
+            "SPIRV_CROSS_SKIP_INSTALL": true,
+            "SHADERC_SKIP_INSTALL": true,
+            "SHADERC_SKIP_TESTS": true,
+            "SHADERC_SKIP_EXAMPLES": true,
+            "SHADERC_SKIP_COPYRIGHT_CHECK": true,
+            "SHADERC_ENABLE_WERROR_COMPILE": false,
+            "SKIP_SPIRV_TOOLS_INSTALL": true,
+            "SPIRV_BUILD_FUZZER": false,
+            "SPIRV_BUILD_LIBFUZZER_TARGETS": false,
+            "SPIRV_WERROR": false,
+            "SPIRV_WARN_EVERYTHING": false,
+            "SPIRV_COLOR_TERMINAL": false,
+            "SPIRV_TOOLS_LIBRARY_TYPE": "STATIC",
+            "SPIRV_TOOLS_BUILD_STATIC": false,
+            "SPDLOG_FMT_EXTERNAL": true,
+            "UUID_USING_CXX20_SPAN": true,
         },
         "cSpell.words": [
             "backface",
@@ -229,10 +271,6 @@
             "timestep",
             "Vulkan"
         ],
-        "lldb.displayFormat": "auto",
-        "lldb.showDisassembly": "never",
-        "lldb.dereferencePointers": true,
-        "lldb.consoleMode": "commands",
     },
     "launch": {
         "version": "0.2.0",
@@ -241,9 +279,9 @@
                 "request": "launch",
                 "preLaunchTask": "build",
                 "name": "Debug",
-                "program": "${workspaceFolder:Alabaster}/build/app/AlabasterApp",
+                "program": "${Alabaster:workspaceFolder}/build/app/AlabasterApp",
                 "args": [],
-                "cwd": "${workspaceFolder:Alabaster}/build/app"
+                "cwd": "${Alabaster:workspaceFolder}/build/app"
             }
         ]
     },
@@ -259,7 +297,7 @@
                 "type": "process",
                 "group": "build",
                 "options": {
-                    "cwd": "${workspaceFolder:Alabaster}"
+                    "cwd": "${Alabaster:workspaceFolder}"
                 }
             }
         ]

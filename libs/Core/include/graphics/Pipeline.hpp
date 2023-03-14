@@ -46,6 +46,11 @@ namespace Alabaster {
 	public:
 		explicit Pipeline(PipelineSpecification pipe_spec)
 			: spec(std::move(pipe_spec)) {};
+		~Pipeline()
+		{
+			if (!destroyed)
+				destroy();
+		}
 
 		void destroy();
 

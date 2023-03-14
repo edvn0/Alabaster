@@ -16,6 +16,7 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vulkan/vulkan.h>
 
 typedef struct VmaAllocation_T* VmaAllocation;
@@ -58,6 +59,9 @@ namespace Alabaster {
 	enum class TextureType { None = 0, Texture2D, TextureCube };
 
 	struct TextureProperties {
+		explicit TextureProperties(const std::string& name = "Debug")
+			: debug_name(name) {};
+
 		std::string debug_name;
 		TextureWrap sampler_wrap { TextureWrap::Repeat };
 		TextureFilter sampler_filter { TextureFilter::Linear };

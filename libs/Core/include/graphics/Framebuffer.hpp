@@ -70,7 +70,7 @@ namespace Alabaster {
 
 		std::shared_ptr<Image> existing_image;
 		std::vector<uint32_t> existing_image_layers;
-		std::map<uint32_t, std::shared_ptr<Image>> existing_images;
+		std::unordered_map<uint32_t, std::shared_ptr<Image>> existing_images;
 		std::shared_ptr<Framebuffer> existing_framebuffer;
 		std::string debug_name;
 	};

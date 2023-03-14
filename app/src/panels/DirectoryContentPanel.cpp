@@ -107,59 +107,59 @@ namespace App {
 			column_count = 1;
 		}
 
-		ImGui::Columns(column_count, nullptr, false);
+		if (ImGui::BeginTable("DirectoryContent", column_count)) {
 
-		for (const auto& directory_entry : current_directory_content) {
-			const auto& path = directory_entry;
-			const auto filename = path.filename();
-			std::string filename_string = filename.string();
+			for (const auto& directory_entry : current_directory_content) {
+				const auto& path = directory_entry;
+				const auto filename = path.filename();
+				std::string filename_string = filename.string();
 
-			const auto& data = filename_string.data();
-			ImGui::PushID(data);
+				const auto* data = filename_string.data();
+				ImGui::PushID(data);
 
-			const auto is_image = Alabaster::Utilities::is_image_by_extension<std::filesystem::path>()(path);
+				const auto is_image = Alabaster::Utilities::is_image_by_extension<std::filesystem::path>()(path);
 
-			if (is_image) {
-				if (icons.contains(filename)) {
-					ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-					const auto& image_info = icons[filename]->get_descriptor_info();
-					Alabaster::UI::image(image_info, { thumbnail_size, thumbnail_size });
-					ImGui::PopStyleColor();
+				if (!is_image) {
+					draw_file_or_directory(path, { thumbnail_size, thumbnail_size });
 				} else {
-					if (!do_not_try_icons.contains(filename)) {
-						try {
-							if (icons.size() >= icons_max_size) {
-								icons.clear();
-							}
-
-							icons[filename] = Alabaster::Texture::from_filename(filename);
-						} catch (const Alabaster::AlabasterException& e) {
-							Alabaster::Log::info("Could not create icon from image {}, will not try to display again.", filename.string());
-							do_not_try_icons.emplace(filename);
-						}
+					if (icons.contains(filename)) {
+						ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+						const auto& image_info = icons[filename]->get_descriptor_info();
+						Alabaster::UI::image(image_info, { thumbnail_size, thumbnail_size });
+						ImGui::PopStyleColor();
 					} else {
-						draw_file_or_directory(path, { thumbnail_size, thumbnail_size });
+						if (!do_not_try_icons.contains(filename)) {
+							try {
+								if (icons.size() >= icons_max_size) {
+									icons.clear();
+								}
+
+								icons[filename] = Alabaster::Texture::from_filename(filename);
+							} catch (const Alabaster::AlabasterException& e) {
+								Alabaster::Log::info("Could not create icon from image {}, will not try to display again.", filename.string());
+								do_not_try_icons.emplace(filename);
+							}
+						} else {
+							draw_file_or_directory(path, { thumbnail_size, thumbnail_size });
+						}
 					}
 				}
-			} else {
-				draw_file_or_directory(path, { thumbnail_size, thumbnail_size });
+				Alabaster::UI::drag_drop(path);
+				Alabaster::UI::handle_double_click([&directory_entry, this] {
+					if (is_directory(directory_entry)) {
+						traverse_down(directory_entry);
+					}
+				});
+
+				ImGui::TextWrapped("%s", filename_string.c_str());
+
+				ImGui::TableNextColumn();
+
+				ImGui::PopID();
 			}
-
-			Alabaster::UI::drag_drop(path);
-			Alabaster::UI::handle_double_click([&directory_entry, this] {
-				if (is_directory(directory_entry)) {
-					traverse_down(directory_entry);
-				}
-			});
-
-			ImGui::TextWrapped("%s", filename_string.c_str());
-
-			ImGui::NextColumn();
-
-			ImGui::PopID();
 		}
 
-		ImGui::Columns(1);
+		ImGui::EndTable();
 
 		ImGui::End();
 	}
@@ -175,11 +175,12 @@ namespace App {
 	void DirectoryContentPanel::on_destroy()
 	{
 		for (auto it = icons.begin(); it != icons.end();) {
-			Alabaster::UI::remove_image(it->second->get_descriptor_info());
 			it->second->destroy();
+			Alabaster::UI::remove_image(it->second->get_descriptor_info());
 			it = icons.erase(it);
 		}
-		Alabaster::UI::empty_cache();
+		current_directory_content.clear();
+		path_and_content_cache.clear();
 	}
 
 	std::vector<std::filesystem::path> DirectoryContentPanel::get_files_in_directory(const std::filesystem::path& for_path) const

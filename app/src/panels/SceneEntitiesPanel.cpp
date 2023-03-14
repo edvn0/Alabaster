@@ -1,6 +1,7 @@
 #include "panels/SceneEntitiesPanel.hpp"
 
 #include "component/Component.hpp"
+#include "ui/ImGui.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
@@ -8,8 +9,8 @@
 
 namespace App {
 
-	static float font_size = 11.0f;
-	static float frame_padding = 0.5f;
+	static constexpr float font_size = 11.0f;
+	static constexpr float frame_padding = 0.5f;
 
 	static void draw_vec3_control(const std::string& label, glm::vec3& values, float reset_value = 0.0f, float column_width = 100.0f)
 	{
@@ -193,7 +194,7 @@ namespace App {
 	{
 		static constexpr float hue_picker_width = 20.0f;
 		static constexpr float crosshair_size = 7.0f;
-		static constexpr ImVec2 sv_picker_size = ImVec2(200, 200);
+		static constexpr auto sv_picker_size = ImVec2(200, 200);
 
 		ImColor color(col[0], col[1], col[2], col[3]);
 		bool value_changed = false;
@@ -211,7 +212,9 @@ namespace App {
 				colors[i], colors[i + 1], colors[i + 1]);
 		}
 
-		float hue, saturation, value;
+		float hue;
+		float saturation;
+		float value;
 		ImGui::ColorConvertRGBtoHSV(color.Value.x, color.Value.y, color.Value.z, hue, saturation, value);
 
 		draw_list->AddLine(ImVec2(picker_pos.x + sv_picker_size.x + 8, picker_pos.y + hue * sv_picker_size.y),
@@ -219,7 +222,7 @@ namespace App {
 
 		{
 			const int step = 5;
-			ImVec2 pos = ImVec2(0, 0);
+			ImVec2 pos(0, 0);
 
 			ImVec4 c00(1, 1, 1, 1);
 			ImVec4 c10(1, 1, 1, 1);
@@ -229,8 +232,8 @@ namespace App {
 				for (int x = 0; x < step; x++) {
 					float s0 = (float)x / (float)step;
 					float s1 = (float)(x + 1) / (float)step;
-					float v0 = 1.0 - (float)(y) / (float)step;
-					float v1 = 1.0 - (float)(y + 1) / (float)step;
+					float v0 = 1.0f - (float)(y) / (float)step;
+					float v1 = 1.0f - (float)(y + 1) / (float)step;
 
 					ImGui::ColorConvertHSVtoRGB(hue, s0, v0, c00.x, c00.y, c00.z);
 					ImGui::ColorConvertHSVtoRGB(hue, s1, v0, c10.x, c10.y, c10.z);
@@ -280,8 +283,9 @@ namespace App {
 		ImGui::SetCursorScreenPos(ImVec2(picker_pos.x + sv_picker_size.x + 10, picker_pos.y));
 		ImGui::InvisibleButton("hue_selector", ImVec2(hue_picker_width, sv_picker_size.y));
 
-		if ((ImGui::IsItemHovered() || ImGui::IsItemActive()) && ImGui::GetIO().MouseDown[0]) {
-			ImVec2 mouse_pos_in_canvas = ImVec2(ImGui::GetIO().MousePos.x - picker_pos.x, ImGui::GetIO().MousePos.y - picker_pos.y);
+		const auto& io = ImGui::GetIO();
+		if ((ImGui::IsItemHovered() || ImGui::IsItemActive()) && io.MouseDown[0]) {
+			ImVec2 mouse_pos_in_canvas { io.MousePos.x - picker_pos.x, io.MousePos.y - picker_pos.y };
 
 			/* Previous horizontal bar will represent hue=1 (bottom) as hue=0 (top). Since both colors are red, we clamp at (-2, above edge) to avoid
 			 * visual continuities */
@@ -294,7 +298,7 @@ namespace App {
 			value_changed = true;
 		}
 
-		color = ImColor::HSV(hue > 0 ? hue : 1e-6, saturation > 0 ? saturation : 1e-6, value > 0 ? value : 1e-6);
+		color = ImColor::HSV(hue > 0 ? hue : 1e-6f, saturation > 0 ? saturation : 1e-6f, value > 0 ? value : 1e-6f);
 		col[0] = color.Value.x;
 		col[1] = color.Value.y;
 		col[2] = color.Value.z;
@@ -302,7 +306,8 @@ namespace App {
 		return value_changed || ImGui::ColorEdit4(label, glm::value_ptr(col));
 	}
 
-	static void draw_four_component_vector(const std::string& label, auto&& values, float reset_value = 0.0f, float column_width = 100.0f)
+	template <class Vec>
+	static void draw_four_component_vector(const std::string& label, Vec& values, float reset_value = 0.0f, float column_width = 100.0f)
 	{
 		ImGuiIO& io = ImGui::GetIO();
 		auto bold_font = io.Fonts->Fonts[0];
@@ -468,8 +473,12 @@ namespace App {
 			draw_vec3_control("Scale", component.scale, 1.0f);
 		});
 
-		draw_component<SceneSystem::Component::Texture>(
-			entity, "Texture", [](SceneSystem::Component::Texture& component) { color_picker("Colour", component.colour); });
+		draw_component<SceneSystem::Component::Texture>(entity, "Texture", [](SceneSystem::Component::Texture& component) {
+			color_picker("Colour", component.colour);
+
+			if (component.texture)
+				Alabaster::UI::image(component.texture->get_descriptor_info(), ImVec2(200, 200));
+		});
 	}
 
 	void SceneEntitiesPanel::draw_entity_node(SceneSystem::Entity& entity)
@@ -495,8 +504,7 @@ namespace App {
 		if (opened) {
 			ImGuiTreeNodeFlags opened_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
 			const auto leaf_id = (const char*)&entity.get_component<SceneSystem::Component::ID>().identifier;
-			bool was_opened = ImGui::TreeNodeEx(leaf_id, opened_flags, "%s", tag.c_str());
-			if (was_opened)
+			if (bool was_opened = ImGui::TreeNodeEx(leaf_id, opened_flags, "%s", tag.c_str()))
 				ImGui::TreePop();
 			ImGui::TreePop();
 		}
@@ -508,10 +516,11 @@ namespace App {
 		}
 	}
 
-	void SceneEntitiesPanel::on_update(float ts)
+	void SceneEntitiesPanel::on_update(float)
 	{
-		if (const auto* picked_entity = scene->get_selected_entity(); picked_entity)
+		if (const auto* picked_entity = scene->get_selected_entity(); picked_entity && picked_entity->is_valid()) {
 			selected_entity = *picked_entity;
+		}
 	}
 
 	void SceneEntitiesPanel::ui(float ts)
@@ -541,6 +550,6 @@ namespace App {
 		ImGui::End();
 	}
 
-	void SceneEntitiesPanel::on_event(Alabaster::Event& event) { }
+	void SceneEntitiesPanel::on_event(Alabaster::Event&) { }
 
 } // namespace App

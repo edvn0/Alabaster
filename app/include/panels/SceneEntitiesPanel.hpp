@@ -15,6 +15,7 @@ namespace App {
 			: scene(input_scene)
 		{
 		}
+		~SceneEntitiesPanel() override = default;
 
 		void update_scene(SceneSystem::Scene* new_scene) { scene = new_scene; }
 		void draw_components(SceneSystem::Entity& entity);
@@ -27,7 +28,6 @@ namespace App {
 		}
 		void draw_entity_node(SceneSystem::Entity& entity);
 
-		~SceneEntitiesPanel() override = default;
 		void on_update(float ts) override;
 		void ui(float ts) override;
 		void on_event(Alabaster::Event& event) override;
