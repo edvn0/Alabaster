@@ -164,7 +164,9 @@ namespace SceneSystem::Component {
 		template <typename T>
 		explicit Texture(const T& col, const Alabaster::Texture* tex = nullptr)
 			: colour(col)
-			, texture(tex) {};
+			, texture(tex)
+		{
+		}
 
 		explicit Texture() = default;
 		~Texture() = default;
