@@ -12,6 +12,15 @@
 
 namespace Alabaster::UI {
 
+	template <typename T> static constexpr auto reinterpret_as(auto in)
+	{
+#ifndef ALABASTER_MACOS
+		return std::bit_cast<T>(in);
+#else
+		return reinterpret_cast<T>(in);
+#endif
+	}
+
 	static std::unordered_map<VkImageView, VkDescriptorSet> cached_views;
 
 	void image(const VkDescriptorImageInfo& image_info, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1)
@@ -19,14 +28,14 @@ namespace Alabaster::UI {
 		const auto& [sampler, image_view, layout] = image_info;
 		if (cached_views.contains(image_view)) {
 			const auto set = cached_views[image_view];
-			ImGui::Image(std::bit_cast<ImU64>(set), size, uv0, uv1);
+			ImGui::Image(reinterpret_as<ImU64>(set), size, uv0, uv1);
 			return;
 		}
 
 		if (!image_view)
 			return;
 		const auto texture_id = ImGui_ImplVulkan_AddTexture(sampler, image_view, layout);
-		ImGui::Image(std::bit_cast<ImU64>(texture_id), size, uv0, uv1);
+		ImGui::Image(reinterpret_as<ImU64>(texture_id), size, uv0, uv1);
 
 		cached_views[image_view] = texture_id;
 	}
