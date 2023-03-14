@@ -129,7 +129,7 @@ namespace SceneSystem {
 			entity.add_component<Component::Texture>(quad_data[quad_index].col);
 		}
 
-		Entity viking = create_entity("Viking Room");
+		auto viking = create_entity("Viking Room");
 		auto rot = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), glm::vec3 { 1, 0, 0 });
 		viking.add_component<Component::Mesh>(viking_room_model);
 		viking.add_component<Component::Pipeline>(viking_pipeline);
@@ -139,7 +139,7 @@ namespace SceneSystem {
 		viking_transform.rotation = rot;
 		viking_transform.scale = { 15, 15, 15 };
 
-		Entity sun = create_entity("The Sun");
+		auto sun = create_entity("The Sun");
 		sun.add_component<Component::Light>();
 		sun.add_component<Component::Mesh>(sphere_model);
 		sun.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });

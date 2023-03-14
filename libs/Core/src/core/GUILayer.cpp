@@ -177,6 +177,9 @@ namespace Alabaster {
 				scale_x = sx;
 				scale_y = sy;
 				scaled_already = true;
+
+				const auto scale = ImGui::GetWindowDpiScale();
+				Alabaster::Log::info("Scale: {}", scale);
 			}
 
 			main_draw_data->FramebufferScale = { scale_x, scale_y };
