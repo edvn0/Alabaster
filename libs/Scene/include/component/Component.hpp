@@ -100,7 +100,6 @@ namespace SceneSystem::Component {
 			return false;
 		};
 
-	private:
 		glm::vec3 world_position { 0 };
 		float radius { 0.f };
 	};

@@ -31,6 +31,8 @@ namespace SceneSystem {
 		handle_component_serialisation<Component::ID>(entity, output_object);
 		handle_component_serialisation<Component::Tag>(entity, output_object);
 		handle_component_serialisation<Component::Mesh>(entity, output_object);
+		handle_component_serialisation<Component::SphereIntersectible>(entity, output_object);
+		handle_component_serialisation<Component::Camera>(entity, output_object);
 		handle_component_serialisation<Component::Texture>(entity, output_object);
 		handle_component_serialisation<Component::Transform>(entity, output_object);
 		handle_component_serialisation<Component::BasicGeometry>(entity, output_object);
