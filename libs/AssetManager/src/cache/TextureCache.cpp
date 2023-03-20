@@ -32,7 +32,8 @@ namespace AssetManager {
 					spec.debug_name = image_name;
 
 					std::unique_lock lock { single_entry };
-					textures.try_emplace(image_name, std::filesystem::path { entry }, spec);
+					auto texture = std::make_shared<Alabaster::Texture>(std::filesystem::path { entry }, spec);
+					textures.insert(std::make_pair(image_name, texture));
 				}
 			});
 		}

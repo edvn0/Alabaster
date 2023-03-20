@@ -66,7 +66,8 @@ namespace AssetManager {
 				continue;
 			}
 			auto&& code = res.get();
-			shaders.try_emplace(code.name, code.shader);
+			auto shader = std::make_shared<Alabaster::Shader>(code.shader);
+			shaders.insert(std::make_pair(code.name, shader));
 		}
 	}
 

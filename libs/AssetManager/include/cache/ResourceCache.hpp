@@ -6,6 +6,7 @@
 #include "graphics/Texture.hpp"
 
 #include <filesystem>
+#include <string_view>
 #include <type_traits>
 
 namespace AssetManager {
@@ -21,8 +22,8 @@ namespace AssetManager {
 
 		static ResourceCache& the();
 
-		const Alabaster::Texture* texture(const std::string& name);
-		const Alabaster::Shader* shader(const std::string& name);
+		const std::shared_ptr<Alabaster::Texture>& texture(const std::string& name);
+		const std::shared_ptr<Alabaster::Shader>& shader(const std::string& name);
 
 	private:
 		ResourceCache();
@@ -34,24 +35,24 @@ namespace AssetManager {
 	inline auto& the() { return ResourceCache::the(); }
 
 	template <typename T> struct get_asset {
-		const T* operator()(auto&& name) const;
+		const std::shared_ptr<T>& operator()(const std::string& name) const;
 	};
 
 	template <> struct get_asset<Alabaster::Texture> {
-		const Alabaster::Texture* operator()(auto&& name) const { return the().texture(name); }
+		const std::shared_ptr<Alabaster::Texture>& operator()(const std::string& name) const { return the().texture(name); }
 	};
 
 	template <> struct get_asset<Alabaster::Shader> {
-		const Alabaster::Shader* operator()(auto&& name) const { return the().shader(name); }
+		const std::shared_ptr<Alabaster::Shader>& operator()(const std::string& name) const { return the().shader(name); }
 	};
 
-	template <typename T> const T* asset(const auto& name)
+	template <typename T> const std::shared_ptr<T>& asset(const std::string& name)
 	{
 		try {
 			return get_asset<T>()(name);
 		} catch (const Alabaster::AlabasterException& exc) {
 			Alabaster::Log::info("Could not find asset with name {}. Exception: {}", name, exc.what());
-			return nullptr;
+			throw Alabaster::AlabasterException(exc);
 		}
 	}
 

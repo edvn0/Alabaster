@@ -26,7 +26,7 @@ namespace Alabaster {
 	};
 
 	struct PipelineSpecification {
-		Shader shader;
+		std::shared_ptr<Shader> shader;
 		bool shader_owned_by_pipeline { false };
 		std::string debug_name;
 		VkRenderPass render_pass { nullptr };

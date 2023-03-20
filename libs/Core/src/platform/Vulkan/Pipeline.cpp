@@ -54,12 +54,12 @@ namespace Alabaster {
 		pipeline_layout_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 		pipeline_layout_create_info.pNext = nullptr;
 
-		if (shader.descriptor_set_layouts().empty()) {
+		if (shader->descriptor_set_layouts().empty()) {
 			pipeline_layout_create_info.setLayoutCount = static_cast<std::uint32_t>(spec.descriptor_set_layouts.size());
 			pipeline_layout_create_info.pSetLayouts = spec.descriptor_set_layouts.data();
 		} else {
-			pipeline_layout_create_info.setLayoutCount = static_cast<std::uint32_t>(shader.descriptor_set_layouts().size());
-			pipeline_layout_create_info.pSetLayouts = shader.descriptor_set_layouts().data();
+			pipeline_layout_create_info.setLayoutCount = static_cast<std::uint32_t>(shader->descriptor_set_layouts().size());
+			pipeline_layout_create_info.pSetLayouts = shader->descriptor_set_layouts().data();
 		}
 		if (spec.ranges) {
 			const auto& used = *spec.ranges;
@@ -191,7 +191,7 @@ namespace Alabaster {
 		vertex_input_state.vertexAttributeDescriptionCount = static_cast<std::uint32_t>(vertex_input_attributes.size());
 		vertex_input_state.pVertexAttributeDescriptions = vertex_input_attributes.data();
 
-		const auto& stages = shader.stages();
+		const auto& stages = shader->stages();
 
 		pipeline_create_info.stageCount = static_cast<std::uint32_t>(stages.size());
 		pipeline_create_info.pStages = stages.data();
@@ -215,7 +215,7 @@ namespace Alabaster {
 		Log::info("[Pipeline] Created pipeline with name {}.", spec.debug_name);
 
 		if (spec.shader_owned_by_pipeline) {
-			spec.shader.destroy();
+			spec.shader->destroy();
 		}
 	}
 

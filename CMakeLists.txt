@@ -5,6 +5,8 @@ project(
 	VERSION 0.0.1
 	LANGUAGES CXX)
 
+message(STATUS "${CMAKE_CXX_COMPILER}")
+
 if(WIN32)
 	set(FT_DISABLE_HARFBUZZ ON)
 	set(ALABASTER_OS "Windows")
@@ -13,8 +15,10 @@ if(WIN32)
         set(ALABASTER_COMPILER "MinGW")
     elseif(MSVC)
         set(ALABASTER_COMPILER "MSVC")
+    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+        set(ALABASTER_COMPILER "Clang")
     else()
-        message(FATAL_ERROR "Only MinGW (g++) and MSVC are supported")
+        message(FATAL_ERROR "Only MinGW (g++), MSVC and Clang are supported")
     endif()
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 	set(ALABASTER_OS "MacOS")

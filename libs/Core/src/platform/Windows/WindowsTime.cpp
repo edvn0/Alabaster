@@ -19,6 +19,7 @@ namespace Alabaster::Time {
 		std::ranges::replace(time_stamp.begin(), time_stamp.end(), '\\', '_');
 		std::ranges::replace(time_stamp.begin(), time_stamp.end(), '/', '_');
 		std::ranges::replace(time_stamp.begin(), time_stamp.end(), '.', '_');
+		std::ranges::replace(time_stamp.begin(), time_stamp.end(), ',', '_');
 
 		return time_stamp;
 	}

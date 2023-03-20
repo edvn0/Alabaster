@@ -479,6 +479,12 @@ namespace App {
 			if (component.texture)
 				Alabaster::UI::image(component.texture->get_descriptor_info(), ImVec2(200, 200));
 		});
+
+		draw_component<SceneSystem::Component::SphereIntersectible>(entity, "SphereIntersectible",
+			[](SceneSystem::Component::SphereIntersectible& component) { ImGui::Text("This component can be mouse-picked."); });
+
+		draw_component<SceneSystem::Component::Camera>(
+			entity, "Camera", [](SceneSystem::Component::Camera& component) { ImGui::Text("This is a camera component."); });
 	}
 
 	void SceneEntitiesPanel::draw_entity_node(SceneSystem::Entity& entity)

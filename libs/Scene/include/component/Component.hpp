@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Random.hpp"
+#include "graphics/Camera.hpp"
 #include "graphics/Mesh.hpp"
 #include "graphics/Pipeline.hpp"
 #include "graphics/Texture.hpp"
@@ -159,10 +160,10 @@ namespace SceneSystem::Component {
 
 	struct Texture {
 		glm::vec4 colour { 1.0f };
-		const Alabaster::Texture* texture { nullptr };
+		const std::shared_ptr<Alabaster::Texture> texture { nullptr };
 
 		template <typename T>
-		explicit Texture(const T& col, const Alabaster::Texture* tex = nullptr)
+		explicit Texture(const T& col, const std::shared_ptr<Alabaster::Texture>& tex = nullptr)
 			: colour(col)
 			, texture(tex)
 		{
@@ -184,6 +185,8 @@ namespace SceneSystem::Component {
 	struct Camera {
 		Camera() = default;
 		~Camera() = default;
+
+		Alabaster::CameraType camera_type = Alabaster::CameraType::Perspective;
 	};
 	template <> inline constexpr std::string_view component_name<Component::Camera> = "camera";
 
