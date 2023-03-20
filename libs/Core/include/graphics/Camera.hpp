@@ -13,7 +13,7 @@
 
 namespace Alabaster {
 
-	enum class CameraType : std::uint8_t { Perspective, Orthographic };
+	enum class CameraType { Perspective, Orthographic };
 
 	class Camera {
 	public:

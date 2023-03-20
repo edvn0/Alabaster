@@ -79,7 +79,7 @@ namespace SceneSystem {
 
 		std::string scene_name = data["scene_name"];
 
-		auto json_entities = data["entities"];
+		const auto& json_entities = data["entities"];
 
 		for (const auto& json_entity : json_entities) {
 			auto created_entity = out.create_entity("Unnamed entity");
@@ -92,6 +92,7 @@ namespace SceneSystem {
 				handle_component<Pipeline>(json_entity, created_entity);
 				handle_component<BasicGeometry>(json_entity, created_entity);
 				handle_component<Texture>(json_entity, created_entity);
+				handle_component<SphereIntersectible>(json_entity, created_entity);
 			}
 		}
 

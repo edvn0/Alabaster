@@ -68,4 +68,25 @@ namespace SceneSystem {
 		};
 	};
 
+	template <> struct serialise_component<Component::SphereIntersectible> {
+		void operator()(Entity& entity, auto& out)
+		{
+			const auto& sphere_intersectible_component = entity.get_component<Component::SphereIntersectible>();
+			auto sphere_intersectible = json::object();
+			sphere_intersectible["radius"] = sphere_intersectible_component.radius;
+			sphere_intersectible["world_position"] = sphere_intersectible_component.world_position;
+			out["sphere_intersectible"] = sphere_intersectible;
+		};
+	};
+
+	template <> struct serialise_component<Component::Camera> {
+		void operator()(Entity& entity, auto& out)
+		{
+			const auto& camera_component = entity.get_component<Component::Camera>();
+			auto camera = json::object();
+			camera["type"] = Alabaster::enum_name(camera_component.camera_type);
+			out["camera"] = camera;
+		};
+	};
+
 } // namespace SceneSystem
