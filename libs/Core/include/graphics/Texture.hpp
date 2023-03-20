@@ -62,7 +62,10 @@ namespace Alabaster {
 	public:
 		template <typename Path = std::filesystem::path> static std::shared_ptr<Texture> from_filename(const Path& filename)
 		{
-			return std::make_shared<Texture>(IO::texture(filename), TextureProperties(filename.string()));
+			if constexpr (std::is_same_v<Path, std::filesystem::path>)
+				return std::make_shared<Texture>(IO::texture(filename), TextureProperties(filename.string()));
+			if constexpr (std::is_same_v<Path, std::string>)
+				return std::make_shared<Texture>(IO::texture(filename), TextureProperties(filename));
 		}
 
 		template <typename Path = std::filesystem::path>

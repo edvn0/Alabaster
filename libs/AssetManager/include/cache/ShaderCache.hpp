@@ -2,6 +2,7 @@
 
 #include "cache/BaseCache.hpp"
 #include "compiler/ShaderCompiler.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "graphics/Shader.hpp"
 
 #include <unordered_map>
@@ -14,25 +15,26 @@ namespace AssetManager {
 
 		void destroy() override
 		{
-			for (auto& [key, shader] : shaders) {
-				shader.destroy();
+			for (const auto& [key, shader] : shaders) {
+				shader->destroy();
 			}
 		}
 
-		[[nodiscard]] std::optional<const Alabaster::Shader*> get_from_cache(const std::string& name) override
+		[[nodiscard]] const std::shared_ptr<Alabaster::Shader>& get_from_cache(const std::string& name) override
 		{
 			if (shaders.contains(name)) {
-				return { &shaders.at(name) };
+				return shaders.at(name);
 			}
-			return {};
+
+			throw Alabaster::AlabasterException("Could not find shader");
 		}
 
-		[[nodiscard]] bool add_to_cache(const std::string& name, Alabaster::Shader* input) override
+		[[nodiscard]] bool add_to_cache(const std::string& name, const Alabaster::Shader& input) override
 		{
 			if (shaders.contains(name)) {
 				return false;
 			}
-			shaders.try_emplace(name, *input);
+			shaders.try_emplace(name, input);
 			return true;
 		};
 

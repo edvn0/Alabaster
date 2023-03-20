@@ -11,9 +11,11 @@
 #include "graphics/CommandBuffer.hpp"
 #include "panels/DirectoryContentPanel.hpp"
 #include "panels/SceneEntitiesPanel.hpp"
+#include "panels/StatisticsPanel.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
+#include <memory>
 #include <optional>
 #include <string.h>
 #include <vulkan/vulkan.h>
@@ -34,6 +36,7 @@ bool AlabasterLayer::initialise()
 
 	panels.push_back(std::make_unique<App::SceneEntitiesPanel>(editor_scene.get()));
 	panels.push_back(std::make_unique<App::DirectoryContentPanel>(IO::resources()));
+	panels.push_back(std::make_unique<App::StatisticsPanel>(Application::the().get_statistics()));
 
 	for (const auto& panel : panels) {
 		panel->on_init();
@@ -183,15 +186,15 @@ void AlabasterLayer::viewport()
 }
 
 template <> struct handle_filetype<Filetype::Filetypes::PNG> {
-	void operator()(SceneSystem::Scene& scene, const std::filesystem::path& path) const
+	void operator()(SceneSystem::Scene& scene, const std::filesystem::path& path)
 	{
 		if (path.extension() != ".png")
 			return;
 
 		TextureProperties props;
-		const auto img = Alabaster::Texture::from_filename(path, props);
-		(void)img;
-		scene.create_entity("TestEntity");
+		auto img = Alabaster::Texture::from_filename(path, props);
+		// auto entity = scene.create_entity(path.filename().string());
+		// entity.add_component<Component::Texture>(glm::vec4 { 1 }, img.get());
 		return;
 	}
 };
@@ -228,7 +231,7 @@ void AlabasterLayer::handle_drag_drop()
 void AlabasterLayer::destroy()
 {
 	editor_scene->shutdown();
-	for (auto const& panel : panels) {
+	for (const auto& panel : panels) {
 		panel->on_destroy();
 	}
 }

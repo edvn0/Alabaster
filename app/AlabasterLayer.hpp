@@ -22,7 +22,7 @@ namespace Filetype {
 
 template <Filetype::Filetypes Type> struct handle_filetype {
 	using Scene = SceneSystem::Scene;
-	void operator()(Scene& scene, [[maybe_unused]] const std::filesystem::path& path) const
+	void operator()(Scene& scene, [[maybe_unused]] const std::filesystem::path& path)
 	{
 		Alabaster::Log::info("Filetype handler not implemented for {}", magic_enum::enum_name(Type));
 	};

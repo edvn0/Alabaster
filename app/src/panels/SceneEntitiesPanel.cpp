@@ -1,6 +1,7 @@
 #include "panels/SceneEntitiesPanel.hpp"
 
 #include "component/Component.hpp"
+#include "core/Random.hpp"
 #include "ui/ImGui.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -412,12 +413,12 @@ namespace App {
 			float line_height = font_size + frame_padding * 2.0f;
 			ImGui::Separator();
 
-			const auto leaf_id = (const void*)&entity.get_component<SceneSystem::Component::ID>().identifier;
-			bool open = ImGui::TreeNodeEx(leaf_id, tree_node_flags, "%s", name.c_str());
+			const auto leaf_id = Alabaster::Random::get<std::size_t>();
+			bool open = ImGui::TreeNodeEx(&leaf_id, tree_node_flags, "%s", name.c_str());
 			ImGui::PopStyleVar();
 			ImGui::SameLine(content_region_available.x - line_height * 0.5f);
-			if (ImGui::Button("+", ImVec2 { line_height, line_height })) {
-				ImGui::OpenPopup("ComponentSettings");
+			if (ImGui::Button("+", ImVec2 { line_height * 2, line_height * 2 })) {
+				ImGui::OpenPopup("Component Settings");
 			}
 
 			bool remove_component = false;
@@ -443,7 +444,7 @@ namespace App {
 		if (entity.has_component<SceneSystem::Component::Tag>()) {
 			auto& tag = entity.get_tag().tag;
 
-			std::string buffer;
+			std::string buffer { "" };
 			buffer.reserve(500);
 			std::memset(buffer.data(), 0, sizeof(buffer));
 			tag.copy(buffer.data(), 499);
@@ -456,11 +457,13 @@ namespace App {
 		ImGui::PushItemWidth(-1);
 
 		if (ImGui::Button("Add Component"))
-			ImGui::OpenPopup("AddComponent");
+			ImGui::OpenPopup("Add Component");
 
-		if (ImGui::BeginPopup("AddComponent")) {
-			display_add_component_entry<SceneSystem::Component::Camera>("Camera");
-			display_add_component_entry<SceneSystem::Component::Texture>("Texture");
+		if (ImGui::BeginPopup("Add Component")) {
+			using namespace std::literals;
+			display_add_component_entry<SceneSystem::Component::Camera>("Camera"sv);
+			display_add_component_entry<SceneSystem::Component::Texture>("Texture"sv);
+			display_add_component_entry<SceneSystem::Component::SphereIntersectible>("SphereIntersectible"sv);
 
 			ImGui::EndPopup();
 		}
@@ -479,6 +482,12 @@ namespace App {
 			if (component.texture)
 				Alabaster::UI::image(component.texture->get_descriptor_info(), ImVec2(200, 200));
 		});
+
+		draw_component<SceneSystem::Component::SphereIntersectible>(entity, "SphereIntersectible",
+			[](SceneSystem::Component::SphereIntersectible& component) { ImGui::Text("This component can be mouse-picked."); });
+
+		draw_component<SceneSystem::Component::Camera>(
+			entity, "Camera", [](SceneSystem::Component::Camera& component) { ImGui::Text("This is a camera component."); });
 	}
 
 	void SceneEntitiesPanel::draw_entity_node(SceneSystem::Entity& entity)

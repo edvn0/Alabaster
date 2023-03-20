@@ -31,23 +31,23 @@ namespace AssetManager {
 		return cache;
 	}
 
-	const Alabaster::Texture* ResourceCache::texture(const std::string& name)
+	const std::shared_ptr<Alabaster::Texture>& ResourceCache::texture(const std::string& name)
 	{
-		const auto found = texture_cache.get_from_cache(name);
+		const auto& found = texture_cache.get_from_cache(name);
 		if (!found) {
 			throw Alabaster::AlabasterException(fmt::format("Texture [{}] not found.", name));
 		}
 
-		return found.value();
+		return found;
 	}
 
-	const Alabaster::Shader* ResourceCache::shader(const std::string& name)
+	const std::shared_ptr<Alabaster::Shader>& ResourceCache::shader(const std::string& name)
 	{
-		const auto found = shader_cache.get_from_cache(name);
+		const auto& found = shader_cache.get_from_cache(name);
 		if (!found) {
 			throw Alabaster::AlabasterException(fmt::format("Shader [{}] not found.", name));
 		}
-		return found.value();
+		return found;
 	}
 
 } // namespace AssetManager

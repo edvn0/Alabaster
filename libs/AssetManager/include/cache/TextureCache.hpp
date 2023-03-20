@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cache/BaseCache.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "graphics/Texture.hpp"
 
 #include <unordered_map>
@@ -19,26 +20,28 @@ namespace AssetManager {
 		void destroy() override
 		{
 			for (auto it = textures.begin(); it != textures.end();) {
-				it->second.destroy();
+				it->second->destroy();
 				it = textures.erase(it);
 			}
 			textures.clear();
 		}
 
-		[[nodiscard]] std::optional<const Alabaster::Texture*> get_from_cache(const std::string& name) override
+		[[nodiscard]] const std::shared_ptr<Alabaster::Texture>& get_from_cache(const std::string& name) override
 		{
 			if (textures.contains(name)) {
-				return { &textures.at(name) };
+				return textures.at(name);
 			}
-			return {};
+
+			throw Alabaster::AlabasterException("Could not find");
 		}
 
-		[[nodiscard]] bool add_to_cache(const std::string& name, Alabaster::Texture* input) override
+		[[nodiscard]] bool add_to_cache(const std::string& name, const Alabaster::Texture& input) override
 		{
 			if (textures.contains(name))
 				return false;
+
 			try {
-				textures.try_emplace(name, *input);
+				textures.try_emplace(name, input);
 			} catch (const std::exception& exc) {
 				throw Alabaster::AlabasterException(exc.what());
 			}

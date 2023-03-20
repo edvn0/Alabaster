@@ -19,7 +19,6 @@
 #include "graphics/Renderer.hpp"
 #include "graphics/Renderer3D.hpp"
 #include "graphics/Shader.hpp"
-#include "graphics/SimpleCamera.hpp"
 #include "graphics/Texture.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBuffer.hpp"

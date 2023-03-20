@@ -6,12 +6,13 @@
 #include "scene/Scene.hpp"
 
 #include <imgui.h>
+#include <string_view>
 
 namespace App {
 
 	class SceneEntitiesPanel : public App::Panel {
 	public:
-		SceneEntitiesPanel(SceneSystem::Scene* input_scene)
+		explicit SceneEntitiesPanel(SceneSystem::Scene* input_scene)
 			: scene(input_scene)
 		{
 		}
@@ -19,10 +20,12 @@ namespace App {
 
 		void update_scene(SceneSystem::Scene* new_scene) { scene = new_scene; }
 		void draw_components(SceneSystem::Entity& entity);
-		template <SceneSystem::Component::IsComponent T> void display_add_component_entry(const std::string& entry_name)
+
+		template <SceneSystem::Component::IsComponent Component, class EntryName = std::string_view>
+		void display_add_component_entry(EntryName entry_name)
 		{
-			if (!selected_entity.has_component<T>() && ImGui::MenuItem(entry_name.c_str())) {
-				selected_entity.add_component<T>();
+			if (!selected_entity.has_component<Component>() && ImGui::MenuItem(std::forward<EntryName>(entry_name).data())) {
+				selected_entity.add_component<Component>();
 				ImGui::CloseCurrentPopup();
 			}
 		}

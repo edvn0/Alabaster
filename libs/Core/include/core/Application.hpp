@@ -27,13 +27,14 @@ namespace Alabaster {
 		SyncMode sync_mode;
 	};
 
+	struct ApplicationStatistics {
+		double app_ts { 7.5 };
+		float cpu_time;
+		float frame_time;
+		float last_frametime;
+	};
+
 	class Application {
-	public:
-		void run();
-		void exit();
-
-		double frametime();
-
 	public:
 		explicit Application(const ApplicationArguments& args);
 		Application(const Application&) = delete;
@@ -45,6 +46,9 @@ namespace Alabaster {
 		virtual void on_init() { GraphicsContext::the(); }
 		virtual void on_event(Event&);
 		virtual void on_shutdown();
+
+		void run();
+		void exit();
 
 		void resize(int w, int h);
 
@@ -67,6 +71,9 @@ namespace Alabaster {
 		}
 
 		static Application& the();
+
+		const auto& get_statistics() const { return statistics; }
+
 		inline const std::unique_ptr<Window>& get_window() { return window; };
 		inline const std::unique_ptr<Window>& get_window() const { return window; }
 		Swapchain& swapchain();
@@ -88,10 +95,7 @@ namespace Alabaster {
 		std::map<std::string, Layer*> layers;
 		std::unique_ptr<Window> window;
 
-		double app_ts { 7.5 };
-		float cpu_time;
-		float frame_time;
-		float last_frametime;
+		ApplicationStatistics statistics {};
 
 		std::array<double, 500> frametime_queue;
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <memory>
 
 // clang-format off
 #define YAML_CPP_STATIC_DEFINE

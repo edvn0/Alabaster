@@ -58,7 +58,7 @@ namespace SceneSystem {
 		fbs.clear_depth_on_load = true;
 		framebuffer = Framebuffer::create(fbs);
 
-		PipelineSpecification viking_spec { .shader = *AssetManager::asset<Alabaster::Shader>("viking"),
+		PipelineSpecification viking_spec { .shader = AssetManager::asset<Alabaster::Shader>("viking"),
 			.debug_name = "Viking Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
 			.topology = Topology::TriangleList,
@@ -69,7 +69,7 @@ namespace SceneSystem {
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 		auto viking_pipeline = Pipeline::create(viking_spec);
 
-		PipelineSpecification sun_spec { .shader = *AssetManager::asset<Alabaster::Shader>("mesh"),
+		PipelineSpecification sun_spec { .shader = AssetManager::asset<Alabaster::Shader>("mesh"),
 			.debug_name = "Sun Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
 			.topology = Topology::TriangleList,
@@ -96,7 +96,7 @@ namespace SceneSystem {
 		floor_transform.scale = { 200, 200, .2 };
 		floor_transform.position.y += 30;
 		floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
-		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
+		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f }, AssetManager::asset<Alabaster::Texture>("floor.png"));
 
 		struct Plane {
 			glm::vec3 pos;
@@ -142,6 +142,7 @@ namespace SceneSystem {
 		auto sun = create_entity("The Sun");
 		sun.add_component<Component::Light>();
 		sun.add_component<Component::Mesh>(sphere_model);
+		sun.add_component<Component::SphereIntersectible>();
 		sun.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });
 		auto& sun_transform = sun.get_transform();
 		sun_transform.scale = { 3, 3, 3 };
@@ -269,7 +270,7 @@ namespace SceneSystem {
 		quad_view.each([&renderer = scene_renderer](
 						   const Component::Transform& transform, const Component::BasicGeometry& geom, const Component::Texture& texture) {
 			if (geom.geometry == Component::Geometry::Quad)
-				renderer->quad(transform.to_matrix(), texture.colour);
+				renderer->quad(transform.to_matrix(), texture.colour, texture.texture);
 		});
 	}
 

@@ -1,29 +1,9 @@
 {
     "folders": [
         {
-            "path": "libs/Core",
-            "name": "Core"
-        },
-        {
-            "path": "libs/AssetManager",
-            "name": "AssetManager"
-        },
-        {
-            "path": "libs/Scene",
-            "name": "Scene"
-        },
-        {
-            "path": "app",
-            "name": "App"
-        },
-        {
             "path": ".",
             "name": "Alabaster",
         },
-        {
-            "path": "third_party",
-            "name": "Third Party",
-        }
     ],
     "settings": {
         "git.detectSubmodulesLimit": 20,
@@ -276,12 +256,13 @@
         "version": "0.2.0",
         "configurations": [
             {
+                "type": "cppvsdbg",
                 "request": "launch",
                 "preLaunchTask": "build",
                 "name": "Debug",
-                "program": "${Alabaster:workspaceFolder}/build/app/AlabasterApp",
+                "program": "${workspaceFolder}/build-Debug-VS/app/Debug/AlabasterApp.exe",
                 "args": [],
-                "cwd": "${Alabaster:workspaceFolder}/build/app"
+                "cwd": "${workspaceFolder}/build-Debug-VS/app/Debug"
             }
         ]
     },
@@ -291,13 +272,17 @@
             {
                 "label": "build",
                 "command": [
-                    "./run.sh"
+                    "./run.sh",
+                    "-g",
+                    "VS",
+                    "-r",
+                    "OFF"
                 ],
                 "args": [],
-                "type": "process",
+                "type": "shell",
                 "group": "build",
                 "options": {
-                    "cwd": "${Alabaster:workspaceFolder}"
+                    "cwd": "${workspaceFolder}"
                 }
             }
         ]

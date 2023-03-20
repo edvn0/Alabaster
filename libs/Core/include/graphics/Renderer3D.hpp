@@ -10,6 +10,7 @@
 #include <optional>
 #include <vector>
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
 
 namespace Alabaster {
 
@@ -19,12 +20,14 @@ namespace Alabaster {
 	class IndexBuffer;
 	class CommandBuffer;
 	class Camera;
+	class Texture;
 
 	struct QuadVertex {
 		glm::vec4 position;
 		glm::vec4 colour;
 		glm::vec3 normals;
 		glm::vec2 uvs;
+		int texture { -1 };
 	};
 
 	struct LineVertex {
@@ -48,6 +51,7 @@ namespace Alabaster {
 	};
 
 	struct RendererData {
+		static constexpr std::uint32_t max_textures = 8;
 		static constexpr std::uint32_t max_vertices = 4 * 100;
 		static constexpr std::uint32_t max_meshes = 400;
 		static constexpr std::uint32_t max_indices = 6 * max_vertices;
@@ -78,6 +82,11 @@ namespace Alabaster {
 		std::array<glm::vec4, max_meshes> mesh_colour;
 		std::array<Pipeline*, max_meshes> mesh_pipeline_submit;
 
+		std::uint32_t textures_submitted { 0 };
+		std::array<std::shared_ptr<Texture>, max_textures> textures {};
+
+		std::array<VkDescriptorImageInfo, max_textures> get_texture_image_infos();
+
 		PC push_constant;
 
 		std::unordered_map<std::string_view, Pipeline*> pipelines;
@@ -92,6 +101,7 @@ namespace Alabaster {
 		void quad(const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
 			float rotation_degrees = 0.0f);
 		void quad(const glm::mat4& transform, const glm::vec4& colour);
+		void quad(const glm::mat4& transform, const glm::vec4& colour, const std::shared_ptr<Texture> texture = nullptr);
 
 		void mesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Pipeline>& pipeline = nullptr, const glm::vec3& pos = { 0, 0, 0 },
 			const glm::mat4& rotation_matrix = glm::mat4 { 1.0f }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
@@ -127,7 +137,6 @@ namespace Alabaster {
 		void create_descriptor_set_layout();
 		void create_descriptor_pool();
 		void create_descriptor_sets();
-		void create_renderpass();
 
 		std::shared_ptr<Camera> camera;
 		RendererData data;

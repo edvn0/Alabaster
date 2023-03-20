@@ -81,7 +81,7 @@ namespace Alabaster {
 			swapchain().begin_frame();
 			Renderer::begin();
 			{
-				update_layers(app_ts);
+				update_layers(statistics.app_ts);
 				gui_layer().begin();
 				render_imgui();
 				gui_layer().end();
@@ -89,12 +89,12 @@ namespace Alabaster {
 			Renderer::end();
 			swapchain().end_frame();
 
-			cpu_time = on_cpu.elapsed();
-			frametime_queue[frametime_index] = cpu_time;
+			statistics.cpu_time = on_cpu.elapsed();
+			frametime_queue[frametime_index] = statistics.cpu_time;
 			float time = Clock::get_ms<float>();
-			frame_time = time - last_frametime;
-			app_ts = glm::min<float>(frame_time, 0.0333f);
-			last_frametime = time;
+			statistics.frame_time = time - statistics.last_frametime;
+			statistics.app_ts = glm::min<float>(statistics.frame_time, 0.0333f);
+			statistics.last_frametime = time;
 
 			frametime_index = (frametime_index + 1) % frametime_queue.size();
 		}
@@ -108,7 +108,7 @@ namespace Alabaster {
 
 	void Application::render_imgui()
 	{
-		auto time_step = float(app_ts);
+		auto time_step = float(statistics.app_ts);
 		for (const auto& [key, layer] : layers) {
 			layer->ui(time_step);
 		}
@@ -128,8 +128,6 @@ namespace Alabaster {
 			layer->update(time_step);
 		}
 	}
-
-	double Application::frametime() { return app_ts; }
 
 	void Application::on_shutdown()
 	{
