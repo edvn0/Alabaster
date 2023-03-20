@@ -58,7 +58,7 @@ namespace SceneSystem {
 		fbs.clear_depth_on_load = true;
 		framebuffer = Framebuffer::create(fbs);
 
-		PipelineSpecification viking_spec { .shader = *AssetManager::asset<Alabaster::Shader>("viking"),
+		PipelineSpecification viking_spec { .shader = AssetManager::asset<Alabaster::Shader>("viking"),
 			.debug_name = "Viking Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
 			.topology = Topology::TriangleList,
@@ -69,7 +69,7 @@ namespace SceneSystem {
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 		auto viking_pipeline = Pipeline::create(viking_spec);
 
-		PipelineSpecification sun_spec { .shader = *AssetManager::asset<Alabaster::Shader>("mesh"),
+		PipelineSpecification sun_spec { .shader = AssetManager::asset<Alabaster::Shader>("mesh"),
 			.debug_name = "Sun Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
 			.topology = Topology::TriangleList,

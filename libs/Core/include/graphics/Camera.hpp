@@ -13,6 +13,8 @@
 
 namespace Alabaster {
 
+	enum class CameraType : std::uint8_t { Perspective, Orthographic };
+
 	class Camera {
 	public:
 		Camera() = default;

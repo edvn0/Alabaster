@@ -156,7 +156,7 @@ namespace Alabaster {
 
 		// QUAD STUFF
 
-		PipelineSpecification quad_spec { .shader = *AssetManager::the().shader("quad_light"),
+		PipelineSpecification quad_spec { .shader = AssetManager::the().shader("quad_light"),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = Topology::TriangleList,
@@ -188,7 +188,7 @@ namespace Alabaster {
 		// END QUAD STUFF
 
 		PipelineSpecification mesh_spec {
-			.shader = *AssetManager::the().shader("mesh_light"),
+			.shader = AssetManager::the().shader("mesh_light"),
 			.debug_name = "Mesh Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = Topology::TriangleList,
@@ -202,7 +202,7 @@ namespace Alabaster {
 		mesh_pipeline->invalidate();
 		data.pipelines["mesh"] = std::move(mesh_pipeline);
 
-		PipelineSpecification line_spec { .shader = *AssetManager::the().shader("line"),
+		PipelineSpecification line_spec { .shader = AssetManager::the().shader("line"),
 			.debug_name = "Line Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = Topology::LineList,

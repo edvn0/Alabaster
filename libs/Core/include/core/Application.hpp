@@ -27,6 +27,13 @@ namespace Alabaster {
 		SyncMode sync_mode;
 	};
 
+	struct ApplicationStatistics {
+		double app_ts { 7.5 };
+		float cpu_time;
+		float frame_time;
+		float last_frametime;
+	};
+
 	class Application {
 	public:
 		void run();
@@ -73,6 +80,8 @@ namespace Alabaster {
 		Swapchain& swapchain() const;
 		GUILayer& gui_layer();
 
+		const auto& get_statistics() const { return statistics; }
+
 	private:
 		bool on_window_change(WindowResizeEvent& event);
 		bool on_window_change(WindowMinimizeEvent& event);
@@ -88,10 +97,7 @@ namespace Alabaster {
 		std::map<std::string, Layer*> layers;
 		std::unique_ptr<Window> window;
 
-		double app_ts { 7.5 };
-		float cpu_time;
-		float frame_time;
-		float last_frametime;
+		ApplicationStatistics statistics {};
 
 		std::array<double, 500> frametime_queue;
 

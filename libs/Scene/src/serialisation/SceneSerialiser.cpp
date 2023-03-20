@@ -44,7 +44,7 @@ namespace SceneSystem {
 
 		time_stamp = Alabaster::Time::formatted_time();
 
-		output_json["scene_name"] = fmt::format("{}", time_stamp);
+		output_json["scene_name"] = std::string { fmt::format("{}", time_stamp) };
 
 		std::vector<Entity> entities;
 		registry.each([scene = &scene, &entities](const auto entity) { entities.push_back(scene->create_entity(entity)); });
@@ -63,16 +63,19 @@ namespace SceneSystem {
 	{
 		has_written = true;
 
-		const auto output_file = Alabaster::IO::scene(time_stamp + "_" + to_string(scene.get_name()));
-		std::ofstream scene_output(output_file);
-		if (!scene_output) {
-			Alabaster::Log::warn("[SceneSerialiser] Could not write scene to {}.", output_file.string());
-			return;
+		try {
+			const auto output_file = Alabaster::IO::scene(time_stamp + "_" + to_string(scene.get_name()));
+			std::ofstream scene_output(output_file);
+			if (!scene_output) {
+				Alabaster::Log::warn("[SceneSerialiser] Could not write scene to {}.", output_file.string());
+				return;
+			}
+
+			scene_output << std::setw(4) << output_json << '\n';
+			Alabaster::Log::info("[SceneSerialiser] Wrote scene to file {}", output_file.string());
+		} catch (const std::exception& e) {
+			Alabaster::Log::warn("[SceneSerialiser] Could not serialise because: {}", e.what());
 		}
-
-		scene_output << std::setw(4) << output_json << '\n';
-
-		Alabaster::Log::info("[SceneSerialiser] Wrote scene to file {}", output_file.string());
 	}
 
 } // namespace SceneSystem

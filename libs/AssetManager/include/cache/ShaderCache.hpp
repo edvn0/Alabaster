@@ -8,31 +8,35 @@
 
 namespace AssetManager {
 
-	class ShaderCache : public BaseCache<Alabaster::Shader> {
+	class ShaderCache {
 	public:
+		ShaderCache() = default;
+		~ShaderCache() = default;
+
 		void load_from_directory(const std::filesystem::path& shader_directory_path);
 
-		void destroy() override
+		void destroy()
 		{
 			for (auto& [key, shader] : shaders) {
-				shader.destroy();
+				shader->destroy();
 			}
 		}
 
-		[[nodiscard]] std::optional<const Alabaster::Shader*> get_from_cache(const std::string& name) override
+		[[nodiscard]] const std::shared_ptr<Alabaster::Shader>& get_from_cache(const std::string& name)
 		{
 			if (shaders.contains(name)) {
-				return { &shaders.at(name) };
+				return shaders.at(name);
 			}
-			return {};
+
+			throw Alabaster::AlabasterException("Could not find shader");
 		}
 
-		[[nodiscard]] bool add_to_cache(const std::string& name, Alabaster::Shader* input) override
+		template <typename... Args> [[nodiscard]] bool add_to_cache(const std::string& name, Args&&... args)
 		{
 			if (shaders.contains(name)) {
 				return false;
 			}
-			shaders.try_emplace(name, *input);
+			shaders.try_emplace(name, std::forward<Args>(args)...);
 			return true;
 		};
 
@@ -40,7 +44,7 @@ namespace AssetManager {
 		std::vector<std::pair<std::filesystem::path, std::filesystem::path>> extract_into_pairs_of_shaders(
 			const std::vector<std::string>& sorted_shaders_in_directory);
 
-		StringMap<Alabaster::Shader> shaders;
+		std::unordered_map<std::string, std::shared_ptr<Alabaster::Shader>> shaders;
 	};
 
 } // namespace AssetManager

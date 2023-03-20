@@ -11,8 +11,10 @@
 
 namespace SceneSystem {
 
+	using namespace nlohmann;
+
 	template <Component::IsComponent T> struct serialise_component {
-		void operator()(Entity&, nlohmann::json&) {};
+		void operator()(Entity&, json&) {};
 	};
 
 	template <> struct serialise_component<Component::ID> {
@@ -26,7 +28,7 @@ namespace SceneSystem {
 	template <> struct serialise_component<Component::Texture> {
 		void operator()(Entity& entity, auto& out)
 		{
-			auto texture_object = nlohmann::json::object();
+			auto texture_object = json::object();
 			texture_object["colour"] = entity.get_component<Component::Texture>().colour;
 
 			out["texture"] = texture_object;
@@ -36,7 +38,7 @@ namespace SceneSystem {
 	template <> struct serialise_component<Component::Mesh> {
 		void operator()(Entity& entity, auto& out)
 		{
-			auto mesh_object = nlohmann::json::object();
+			auto mesh_object = json::object();
 			mesh_object["asset_path"] = entity.get_component<Component::Mesh>().mesh->get_asset_path().string();
 
 			out["mesh"] = mesh_object;
@@ -46,7 +48,7 @@ namespace SceneSystem {
 	template <> struct serialise_component<Component::BasicGeometry> {
 		void operator()(Entity& entity, auto& out)
 		{
-			auto mesh_object = nlohmann::json::object();
+			auto mesh_object = json::object();
 			mesh_object["basic_geometry"] = entity.get_component<Component::BasicGeometry>().geometry;
 
 			out["mesh"] = mesh_object;
@@ -56,7 +58,7 @@ namespace SceneSystem {
 	template <> struct serialise_component<Component::Transform> {
 		void operator()(Entity& entity, auto& out)
 		{
-			auto transform = nlohmann::json::object();
+			auto transform = json::object();
 			const Component::Transform& entity_transform = entity.get_component<Component::Transform>();
 			transform["position"] = entity_transform.position;
 			transform["rotation"] = entity_transform.rotation;

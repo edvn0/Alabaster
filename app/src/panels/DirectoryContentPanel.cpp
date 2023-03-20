@@ -12,6 +12,8 @@
 
 namespace App {
 
+	using namespace std::string_view_literals;
+
 	DirectoryContentPanel::DirectoryContentPanel(std::filesystem::path initial)
 		: initial(initial)
 		, current(initial)

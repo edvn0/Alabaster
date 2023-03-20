@@ -11,6 +11,11 @@ namespace Alabaster {
 			: std::runtime_error(ex)
 		{
 		}
+
+		explicit AlabasterException(const std::runtime_error& ex) noexcept
+			: std::runtime_error(ex)
+		{
+		}
 	};
 
 } // namespace Alabaster
