@@ -15,7 +15,7 @@
                 "third_party/*",
                 "C:\\VulkanSDK\\**"
             ],
-            "compileCommands": "${workspaceFolder:Alabaster}/compile_commands.json",
+            "compileCommands": "${workspaceFolder}/compile_commands.json",
             "compilerPath": "/usr/bin/clang++",
             "cStandard": "c17",
             "configurationProvider": "ms-vscode.cmake-tools"

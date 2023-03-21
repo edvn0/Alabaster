@@ -21,6 +21,8 @@
 
 namespace Alabaster {
 
+	using namespace std::string_view_literals;
+
 	static constexpr auto default_model = glm::mat4 { 1.0f };
 
 	static void reset_data(RendererData& to_reset)
@@ -164,9 +166,7 @@ namespace Alabaster {
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 				VertexBufferElement(ShaderDataType::Float3, "normals"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
-		auto quad_pipeline = new Pipeline(quad_spec);
-		quad_pipeline->invalidate();
-		data.pipelines["quad"] = std::move(quad_pipeline);
+		data.pipelines.emplace("quad", std::make_unique<Pipeline>(quad_spec));
 
 		data.quad_vertex_buffer = VertexBuffer::create(RendererData::max_vertices * sizeof(QuadVertex));
 		data.line_vertex_buffer = VertexBuffer::create(RendererData::max_vertices * sizeof(LineVertex));
@@ -198,9 +198,7 @@ namespace Alabaster {
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) },
 		};
-		auto mesh_pipeline = new Pipeline(mesh_spec);
-		mesh_pipeline->invalidate();
-		data.pipelines["mesh"] = std::move(mesh_pipeline);
+		data.pipelines.emplace("mesh", std::make_unique<Pipeline>(mesh_spec));
 
 		PipelineSpecification line_spec { .shader = AssetManager::the().shader("line"),
 			.debug_name = "Line Pipeline",
@@ -209,9 +207,7 @@ namespace Alabaster {
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
 			.line_width = 5.0f };
-		auto line_pipeline = new Pipeline(line_spec);
-		line_pipeline->invalidate();
-		data.pipelines["line"] = std::move(line_pipeline);
+		data.pipelines.emplace("line", std::make_unique<Pipeline>(line_spec));
 
 		std::vector<std::uint32_t> line_indices;
 		line_indices.resize(RendererData::max_indices);
@@ -219,6 +215,15 @@ namespace Alabaster {
 			line_indices[i] = i;
 		}
 		data.line_index_buffer = IndexBuffer::create(line_indices);
+
+		invalidate_pipelines();
+	}
+
+	void Renderer3D::invalidate_pipelines()
+	{
+		for (auto& [k, pipe] : data.pipelines) {
+			pipe->invalidate();
+		}
 	}
 
 	void Renderer3D::begin_scene()
@@ -310,7 +315,7 @@ namespace Alabaster {
 		data.mesh_transform[data.meshes_submitted] = std::move(transform);
 		data.mesh_colour[data.meshes_submitted] = colour;
 		data.mesh[data.meshes_submitted] = mesh.get();
-		data.mesh_pipeline_submit[data.meshes_submitted] = pipeline ? pipeline.get() : data.pipelines["mesh"];
+		data.mesh_pipeline_submit[data.meshes_submitted] = pipeline ? pipeline.get() : data.pipelines["mesh"sv].get();
 		data.meshes_submitted++;
 	}
 
@@ -319,7 +324,7 @@ namespace Alabaster {
 		data.mesh_transform[data.meshes_submitted] = std::move(transform);
 		data.mesh_colour[data.meshes_submitted] = colour;
 		data.mesh[data.meshes_submitted] = mesh.get();
-		data.mesh_pipeline_submit[data.meshes_submitted] = data.pipelines["mesh"];
+		data.mesh_pipeline_submit[data.meshes_submitted] = data.pipelines["mesh"sv].get();
 		data.meshes_submitted++;
 	}
 

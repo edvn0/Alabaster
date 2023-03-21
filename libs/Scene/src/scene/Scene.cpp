@@ -85,7 +85,7 @@ namespace SceneSystem {
 			entity.add_component<Component::Mesh>(sphere_model);
 			Component::Transform& transform = entity.get_component<Component::Transform>();
 			transform.position = sphere_vector3(Random::get<float>(30.f, 90.f));
-			entity.add_component<Component::Texture>(glm::vec4(1.0f));
+			entity.add_component<Component::Texture>(Alabaster::random_vec4(0, 1));
 			entity.add_component<Component::Pipeline>(sun_pipeline);
 			entity.add_component<Component::SphereIntersectible>();
 		}
@@ -127,6 +127,7 @@ namespace SceneSystem {
 			transform.rotation = glm::rotate(glm::mat4 { 1.0f }, quad_data[quad_index].rotation, { 1, 0, 0 });
 
 			entity.add_component<Component::Texture>(quad_data[quad_index].col);
+			entity.add_component<Component::QuadIntersectible>(transform.position, glm::vec3 { 0, 1, 0 });
 		}
 
 		auto viking = create_entity("Viking Room");
@@ -156,16 +157,26 @@ namespace SceneSystem {
 		const auto camera_position = scene_camera->get_position();
 		entt::entity found_entity = entt::null;
 		float t_dist = 1000.0f;
-		auto mesh_view = registry.view<const Component::SphereIntersectible>();
-		mesh_view.each(
-			[&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::SphereIntersectible& intersectible) {
-				float distance = 1000.0f;
-				const bool intersected = intersectible.intersects_with(ray_wor, camera_position, distance);
-				if (intersected && distance < t_dist) {
-					t_dist = distance;
-					found_entity = entity;
-				}
-			});
+
+		auto spheres = registry.view<const Component::SphereIntersectible>();
+		spheres.each([&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::SphereIntersectible& sphere) {
+			float distance = 1000.0f;
+			const bool intersected = sphere.intersects_with(ray_wor, camera_position, distance);
+			if (intersected && distance < t_dist) {
+				t_dist = distance;
+				found_entity = entity;
+			}
+		});
+
+		auto quads = registry.view<const Component::QuadIntersectible>();
+		quads.each([&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::QuadIntersectible& quad) {
+			float distance = 1000.0f;
+			const bool intersected = quad.intersects_with(ray_wor, camera_position, distance);
+			if (intersected && distance < t_dist) {
+				t_dist = distance;
+				found_entity = entity;
+			}
+		});
 
 		if (found_entity != entt::null) {
 			*selected_entity = Entity(this, found_entity);
@@ -234,6 +245,12 @@ namespace SceneSystem {
 		mesh_view.each([](const Component::Transform& transform, Component::SphereIntersectible& intersectible) {
 			intersectible.update(transform.position, transform.scale, transform.rotation);
 		});
+
+		auto quad_view = registry.view<const Component::Transform, Component::QuadIntersectible>();
+		quad_view.each([](const Component::Transform& transform, Component::QuadIntersectible& intersectible) {
+			intersectible.update(transform.position, transform.scale, transform.rotation);
+			intersectible.set_normal(glm::vec3 { 0, -1, 0 } * transform.rotation);
+		});
 	}
 
 	void Scene::draw_entities_in_scene(float ts)
@@ -268,8 +285,10 @@ namespace SceneSystem {
 		auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
 		quad_view.each([&renderer = scene_renderer](
 						   const Component::Transform& transform, const Component::BasicGeometry& geom, const Component::Texture& texture) {
-			if (geom.geometry == Component::Geometry::Quad)
-				renderer->quad(transform.to_matrix(), texture.colour);
+			if (geom.geometry == Component::Geometry::Quad) {
+				const auto base_pos = transform.to_matrix();
+				renderer->quad(base_pos, texture.colour);
+			}
 		});
 	}
 

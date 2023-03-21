@@ -39,4 +39,13 @@ namespace SceneSystem {
 		void operator()(const nlohmann::json&, Entity& out) { out.put_component<Component::SphereIntersectible>(); }
 	};
 
+	template <> struct deserialise_component<Component::Camera> {
+		void operator()(const nlohmann::json& json, Entity& out)
+		{
+			const auto camera_type = json.get<Alabaster::CameraType>();
+
+			out.put_component<Component::Camera>(camera_type);
+		}
+	};
+
 } // namespace SceneSystem

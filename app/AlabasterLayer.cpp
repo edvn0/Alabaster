@@ -11,6 +11,7 @@
 #include "graphics/CommandBuffer.hpp"
 #include "panels/DirectoryContentPanel.hpp"
 #include "panels/SceneEntitiesPanel.hpp"
+#include "panels/StatisticsPanel.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui.h>
@@ -34,6 +35,7 @@ bool AlabasterLayer::initialise()
 
 	panels.push_back(std::make_unique<App::SceneEntitiesPanel>(editor_scene.get()));
 	panels.push_back(std::make_unique<App::DirectoryContentPanel>(IO::resources()));
+	panels.push_back(std::make_unique<App::StatisticsPanel>(Application::the().get_statistics()));
 
 	for (const auto& panel : panels) {
 		panel->on_init();

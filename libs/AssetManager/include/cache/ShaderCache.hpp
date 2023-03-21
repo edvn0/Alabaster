@@ -38,7 +38,7 @@ namespace AssetManager {
 			}
 			shaders.try_emplace(name, std::forward<Args>(args)...);
 			return true;
-		};
+		}
 
 	private:
 		std::vector<std::pair<std::filesystem::path, std::filesystem::path>> extract_into_pairs_of_shaders(

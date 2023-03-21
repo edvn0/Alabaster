@@ -105,6 +105,33 @@ namespace SceneSystem::Component {
 	};
 	template <> inline constexpr std::string_view component_name<Component::SphereIntersectible> = "sphere_intersectible";
 
+	struct QuadIntersectible : public RayIntersectible {
+		QuadIntersectible() = default;
+		QuadIntersectible(const glm::vec3& in_world_pos, const glm::vec3& in_normal)
+			: world_position(in_world_pos)
+			, normal(in_normal) {};
+		~QuadIntersectible() override = default;
+
+		void update(const glm::vec3& position, const glm::vec3&, const glm::quat&) override { world_position = position; }
+
+		void set_normal(const glm::vec3& in_normal) { normal = in_normal; }
+
+		bool intersects_with(const glm::vec3& ray_direction_wor, const glm::vec3& ray_origin_wor, float& intersection_distance) const override
+		{
+			float denom = glm::dot(normal, ray_direction_wor);
+			if (!glm::epsilonEqual(denom, 0.f, 0.00001f)) {
+				glm::vec3 quad_ray_origin_vec = world_position - ray_origin_wor;
+				intersection_distance = glm::dot(quad_ray_origin_vec, normal) / denom;
+				return intersection_distance >= 0;
+			}
+
+			return false;
+		};
+
+		glm::vec3 world_position { 0 };
+		glm::vec3 normal { 0.f, 1.f, 0.f };
+	};
+
 	struct Transform {
 		glm::vec3 position;
 		glm::quat rotation;
@@ -183,6 +210,8 @@ namespace SceneSystem::Component {
 
 	struct Camera {
 		Camera() = default;
+		Camera(Alabaster::CameraType type)
+			: camera_type(type) {};
 		~Camera() = default;
 
 		Alabaster::CameraType camera_type = Alabaster::CameraType::Perspective;
@@ -195,6 +224,7 @@ namespace SceneSystem::Component {
 	}
 
 	template <typename T>
-	concept IsComponent = Detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light, SphereIntersectible>;
+	concept IsComponent
+		= Detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light, SphereIntersectible, QuadIntersectible>;
 
 } // namespace SceneSystem::Component

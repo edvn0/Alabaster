@@ -45,7 +45,7 @@ namespace AssetManager {
 				throw Alabaster::AlabasterException(exc.what());
 			}
 			return true;
-		};
+		}
 
 	private:
 		std::unordered_map<std::string, std::shared_ptr<Alabaster::Texture>> textures;
