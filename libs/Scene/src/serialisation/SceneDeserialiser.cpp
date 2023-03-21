@@ -12,24 +12,22 @@
 #include <exception>
 
 namespace SceneSystem {
+
 	using Alabaster::AlabasterException;
 
 	class DeserialiserNotImplementedException : public AlabasterException {
 	public:
-		DeserialiserNotImplementedException(auto&& exc)
-			: AlabasterException(exc) {};
+		using AlabasterException::AlabasterException;
 	};
 
 	class ComponentMissingInJsonNodeException : public AlabasterException {
 	public:
-		ComponentMissingInJsonNodeException(auto&& exc)
-			: AlabasterException(exc) {};
+		using AlabasterException::AlabasterException;
 	};
 
 	class DeserialisationFailedException : public AlabasterException {
 	public:
-		DeserialisationFailedException(auto&& exc)
-			: AlabasterException(exc) {};
+		using AlabasterException::AlabasterException;
 	};
 
 } // namespace SceneSystem
@@ -54,8 +52,8 @@ namespace SceneSystem {
 			if (const auto component = json_node[name]; component.is_object()) {
 				try {
 					deserialise_component<T>()(component, entity);
-				} catch (const std::exception&) {
-					throw DeserialisationFailedException("Could not deserialise this component with the deserialiser.");
+				} catch (const std::exception& exc) {
+					throw DeserialisationFailedException("Could not deserialise this component with the deserialiser. Message: {}", exc.what());
 				};
 			}
 		} catch (const DeserialiserNotImplementedException&) {
@@ -63,7 +61,8 @@ namespace SceneSystem {
 			return;
 		} catch (const ComponentMissingInJsonNodeException&) {
 			return;
-		} catch (const DeserialisationFailedException&) {
+		} catch (const DeserialisationFailedException& e) {
+			Alabaster::Log::warn("{}", e.what());
 			return;
 		}
 	}

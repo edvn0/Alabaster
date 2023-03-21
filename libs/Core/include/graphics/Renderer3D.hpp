@@ -80,7 +80,7 @@ namespace Alabaster {
 
 		PC push_constant;
 
-		std::unordered_map<std::string_view, Pipeline*> pipelines;
+		std::unordered_map<std::string_view, std::unique_ptr<Pipeline>> pipelines;
 	};
 
 	class Renderer3D {
@@ -127,7 +127,8 @@ namespace Alabaster {
 		void create_descriptor_set_layout();
 		void create_descriptor_pool();
 		void create_descriptor_sets();
-		void create_renderpass();
+
+		void invalidate_pipelines();
 
 		std::shared_ptr<Camera> camera;
 		RendererData data;

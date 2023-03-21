@@ -1,5 +1,6 @@
 #pragma once
 
+#include <fmt/format.h>
 #include <stdexcept>
 #include <string>
 
@@ -14,6 +15,12 @@ namespace Alabaster {
 
 		explicit AlabasterException(const std::runtime_error& ex) noexcept
 			: std::runtime_error(ex)
+		{
+		}
+
+		template <typename Format, typename... Args>
+		explicit AlabasterException(Format&& fmt, Args&&... args) noexcept
+			: std::runtime_error(std::string { fmt::vformat(std::forward<Format>(fmt), fmt::make_format_args(std::forward<Args>(args)...)) })
 		{
 		}
 	};

@@ -36,34 +36,38 @@ namespace SceneSystem {
 
 		template <Component::IsComponent T> T& get_component() const { return scene->registry.get<T>(entity_handle); }
 
-		template <Component::IsComponent T, typename... Args> void put_component(Args&&... args)
+		template <Component::IsComponent T, typename... Args> auto& put_component(Args&&... args)
 		{
 			if (has_component<T>()) {
 				auto& component = get_component<T>();
 				component = T(std::forward<Args>(args)...);
-				return;
+				return component;
 			}
 
-			add_component<T>(std::forward<Args>(args)...);
+			return add_component<T>(std::forward<Args>(args)...);
 		}
 
-		template <Component::IsComponent T, typename... Args> void add_component(Args&&... args)
+		template <Component::IsComponent T, typename... Args> auto& add_component(Args&&... args)
 		{
 			if (has_component<T>())
-				return;
+				return get_component<T>();
 
-			scene->registry.emplace<T>(entity_handle, std::forward<Args>(args)...);
+			return emplace_component<T>(std::forward<Args>(args)...);
 		}
 
-		template <Component::IsComponent T, typename... Args> void add_component()
+		template <Component::IsComponent T, typename... Args> auto& add_component()
 		{
 			if (has_component<T>())
-				return;
+				return get_component<T>();
 
-			scene->registry.emplace<T>(entity_handle);
+			return emplace_component<T>();
 		}
 
-		template <Component::IsComponent T, typename... Args> T& emplace_component() { return scene->registry.emplace<T>(entity_handle); }
+		template <Component::IsComponent T> T& emplace_component() { return scene->registry.emplace<T>(entity_handle); }
+		template <Component::IsComponent T, typename... Args> T& emplace_component(Args&&... args)
+		{
+			return scene->registry.emplace<T>(entity_handle, std::forward<Args>(args)...);
+		}
 
 		template <Component::IsComponent T> auto remove_component() { scene->registry.remove<T>(entity_handle); }
 

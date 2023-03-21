@@ -38,7 +38,7 @@ namespace AssetManager {
 		if (found) {
 			return found;
 		}
-		throw Alabaster::AlabasterException(fmt::format("Texture [{}] not found.", name));
+		throw Alabaster::AlabasterException("Texture [{}] not found.", name);
 	}
 
 	const std::shared_ptr<Alabaster::Shader>& ResourceCache::shader(const std::string& name)
@@ -47,7 +47,7 @@ namespace AssetManager {
 		if (found) {
 			return found;
 		}
-		throw Alabaster::AlabasterException(fmt::format("Shader [{}] not found.", name));
+		throw Alabaster::AlabasterException("Shader [{}] not found.", name);
 	}
 
 } // namespace AssetManager
