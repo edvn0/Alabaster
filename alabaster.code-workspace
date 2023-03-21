@@ -149,7 +149,8 @@
             "latch": "cpp",
             "scoped_allocator": "cpp",
             "syncstream": "cpp",
-            "pointers": "cpp"
+            "pointers": "cpp",
+            "*.hpp11": "cpp"
         },
         "search.exclude": {
             "**/node_modules": true,

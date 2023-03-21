@@ -304,20 +304,18 @@ namespace Alabaster {
 		for (uint32_t i = 1; i < mip_levels; i++) {
 			VkImageBlit image_blit {};
 
-			// Source
 			image_blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			image_blit.srcSubresource.layerCount = 1;
 			image_blit.srcSubresource.mipLevel = i - 1;
-			image_blit.srcOffsets[1].x = int32_t(width >> (i - 1));
-			image_blit.srcOffsets[1].y = int32_t(height >> (i - 1));
+			image_blit.srcOffsets[1].x = std::int32_t(width >> (i - 1));
+			image_blit.srcOffsets[1].y = std::int32_t(height >> (i - 1));
 			image_blit.srcOffsets[1].z = 1;
 
-			// Destination
 			image_blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 			image_blit.dstSubresource.layerCount = 1;
 			image_blit.dstSubresource.mipLevel = i;
-			image_blit.dstOffsets[1].x = int32_t(width >> i);
-			image_blit.dstOffsets[1].y = int32_t(height >> i);
+			image_blit.dstOffsets[1].x = std::int32_t(width >> i);
+			image_blit.dstOffsets[1].y = std::int32_t(height >> i);
 			image_blit.dstOffsets[1].z = 1;
 
 			VkImageSubresourceRange mip_sub_range = {};
@@ -326,22 +324,18 @@ namespace Alabaster {
 			mip_sub_range.levelCount = 1;
 			mip_sub_range.layerCount = 1;
 
-			// Prepare current mip level as image blit destination
 			Utilities::insert_image_memory_barrier(immediate_command_buffer.get_buffer(), info.image, 0, VK_ACCESS_TRANSFER_WRITE_BIT,
 				VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
 				mip_sub_range);
 
-			// Blit from previous level
 			vkCmdBlitImage(immediate_command_buffer.get_buffer(), info.image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, info.image,
 				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &image_blit, Utilities::vulkan_sampler_filter(properties.sampler_filter));
 
-			// Prepare current mip level as image blit source for next level
 			Utilities::insert_image_memory_barrier(immediate_command_buffer.get_buffer(), info.image, VK_ACCESS_TRANSFER_WRITE_BIT,
 				VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
 				VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, mip_sub_range);
 		}
 
-		// After the loop, all mip layers are in TRANSFER_SRC layout, so transition all to SHADER_READ
 		VkImageSubresourceRange subresource_range = {};
 		subresource_range.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 		subresource_range.layerCount = 1;

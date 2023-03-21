@@ -43,9 +43,11 @@ namespace SceneSystem {
 	void Scene::build_scene()
 	{
 		using namespace Alabaster;
+		using namespace std::literals;
 		auto viking_room_model = Mesh::from_file("viking_room.obj");
 		auto sphere_model = Mesh::from_file("sphere.obj");
 		auto cube_model = Mesh::from_file("cube.obj");
+		auto cube_map = TextureCube::from_file("cube_map.png"s);
 
 		const auto&& [w, h] = Application::the().get_window()->size();
 		FramebufferSpecification fbs;

@@ -13,7 +13,19 @@
 
 namespace Alabaster {
 
-	class Texture {
+	struct ITexture {
+		virtual ~ITexture() = default;
+		virtual void resize(const glm::uvec2& size) = 0;
+		virtual void resize(std::uint32_t width, uint32_t height) = 0;
+		virtual void destroy() = 0;
+		virtual void invalidate() = 0;
+		virtual bool loaded() const = 0;
+
+		virtual const std::shared_ptr<Image>& get_image() const = 0;
+		virtual const VkDescriptorImageInfo& get_descriptor_info() const = 0;
+	};
+
+	class Texture : public ITexture {
 	public:
 		Texture(const std::filesystem::path& path, TextureProperties properties);
 		Texture(ImageFormat format, std::uint32_t width, uint32_t height, const void* data, TextureProperties properties);
@@ -69,6 +81,20 @@ namespace Alabaster {
 		static std::shared_ptr<Texture> from_filename(const Path& filename, const TextureProperties& props)
 		{
 			return std::make_shared<Texture>(IO::texture(filename), props);
+		}
+	};
+
+	template <class T>
+	concept HasDotString = requires(T t) { t.string(); };
+
+	class TextureCube : public Texture {
+	public:
+		explicit TextureCube(HasDotString auto path, TextureProperties properties = TextureProperties("TextureCube"));
+
+	public:
+		static std::shared_ptr<TextureCube> from_file(HasDotString auto filename)
+		{
+			return std::make_shared<TextureCube>(filename, TextureProperties(filename.string()));
 		}
 	};
 
