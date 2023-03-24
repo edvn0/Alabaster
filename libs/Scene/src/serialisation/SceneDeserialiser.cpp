@@ -67,7 +67,7 @@ namespace SceneSystem {
 		}
 	}
 
-	void SceneDeserialiser::deserialise(const std::filesystem::path& scene_path, Scene& out)
+	void SceneDeserialiser::deserialise()
 	{
 		std::ifstream json_file(scene_path);
 		if (!json_file) {
@@ -81,7 +81,7 @@ namespace SceneSystem {
 		const auto& json_entities = data["entities"];
 
 		for (const auto& json_entity : json_entities) {
-			auto created_entity = out.create_entity("Unnamed entity");
+			auto created_entity = scene.create_entity("Unnamed entity");
 			if (json_entity.is_object()) {
 				handle_component<Mesh>(json_entity, created_entity);
 				handle_component<Transform>(json_entity, created_entity);

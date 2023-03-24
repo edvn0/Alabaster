@@ -315,8 +315,6 @@ namespace SceneSystem {
 
 	void Scene::shutdown()
 	{
-		registry.clear();
-
 		if (scene_renderer)
 			scene_renderer->destroy();
 
@@ -326,7 +324,7 @@ namespace SceneSystem {
 		if (command_buffer)
 			command_buffer->destroy();
 
-		SceneSerialiser serialiser(*this);
+		registry.clear();
 	}
 
 	void Scene::initialise()
@@ -390,6 +388,17 @@ namespace SceneSystem {
 		Entity entity { this, name };
 		entity.add_component<Component::ID>();
 		entity.add_component<Component::Transform>();
+
+		return entity;
+	}
+
+	Entity Scene::create_entity(entt::entity name, const std::string& tag_name)
+	{
+		Entity entity { this, name };
+		entity.add_component<Component::ID>();
+		entity.add_component<Component::Transform>();
+		auto& tag = entity.add_component<Component::Tag>();
+		tag.tag = tag_name;
 
 		return entity;
 	}

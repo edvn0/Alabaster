@@ -13,8 +13,7 @@ namespace Alabaster {
 		: path(tex_path)
 		, properties(props)
 	{
-		bool loaded = load_image(path.string());
-		if (!loaded) {
+		if (!load_image(path.string())) {
 			throw AlabasterException("Could not load image.");
 		}
 
@@ -104,6 +103,8 @@ namespace Alabaster {
 
 	bool Texture::load_image(const std::string& in_path)
 	{
+		if (!IO::is_file(in_path))
+			return false;
 		int w, h, channels;
 
 		if (stbi_is_hdr(in_path.c_str())) {

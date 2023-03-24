@@ -12,9 +12,14 @@ namespace SceneSystem {
 
 	class SceneDeserialiser {
 	public:
-		SceneDeserialiser() = default;
+		SceneDeserialiser(const std::filesystem::path& in_scene_path, Scene& out)
+			: scene(out)
+			, scene_path(in_scene_path) {};
 
-		void deserialise(const std::filesystem::path& scene_path, Scene& out);
+		void deserialise();
+
+		Scene& scene;
+		std::filesystem::path scene_path;
 	};
 
 } // namespace SceneSystem

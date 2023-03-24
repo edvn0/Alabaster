@@ -93,7 +93,7 @@ cmake -B "$build_and_generator_folder" \
     -D UUID_USING_CXX20_SPAN=ON \
     -S "$current_dir"
 
-cmake --build "$build_and_generator_folder" --parallel 10
+cmake --build "$build_and_generator_folder" --target AlabasterApp --parallel 10
 
 if [ "$generator" = "Ninja" ]; then
     if [ -f "$current_dir/compile_commands.json" ]; then

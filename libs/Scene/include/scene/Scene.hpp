@@ -41,6 +41,7 @@ namespace SceneSystem {
 		Entity create_entity(const std::string& name);
 		Entity create_entity(const Entity& name);
 		Entity create_entity(entt::entity name);
+		Entity create_entity(entt::entity name, const std::string& tag_name);
 
 		const auto& get_registry() const { return registry; }
 		auto& get_registry() { return registry; }

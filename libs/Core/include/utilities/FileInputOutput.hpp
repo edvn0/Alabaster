@@ -43,7 +43,7 @@ namespace Alabaster::IO {
 	template <typename Path = std::filesystem::path> std::filesystem::path scene(const Path& path)
 	{
 		const auto out = IO::resources() / std::filesystem::path { "scene" } / std::filesystem::path { path };
-		return std::filesystem::path { out.string() + ".json" };
+		return std::filesystem::path { out.string() + ".scene" };
 	}
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);

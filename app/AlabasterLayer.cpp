@@ -2,12 +2,11 @@
 
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
-#include "component/Component.hpp"
+#include "SceneSystem.hpp"
 #include "core/Common.hpp"
 #include "core/GUILayer.hpp"
 #include "core/Logger.hpp"
 #include "core/exceptions/AlabasterException.hpp"
-#include "entity/Entity.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "panels/DirectoryContentPanel.hpp"
 #include "panels/SceneEntitiesPanel.hpp"
@@ -54,20 +53,25 @@ void AlabasterLayer::on_event(Event& e)
 	EventDispatcher dispatch(e);
 	dispatch.dispatch<MouseScrolledEvent>([](MouseScrolledEvent&) { return global_imgui_is_blocking; });
 
-	dispatch.dispatch<KeyPressedEvent>([](KeyPressedEvent& key_event) {
-		const auto key_code = key_event.get_key_code();
-		if (key_code == Key::Escape) {
+	dispatch.dispatch<KeyPressedEvent>([this](KeyPressedEvent& key_event) {
+		switch (const auto key_code = key_event.get_key_code()) {
+		case Key::Escape: {
 			Application::the().exit();
 			return true;
 		}
-
-		if (key_code == Key::F) {
+		case Key::F: {
 			UI::empty_cache();
 			return false;
 		}
-
-		if (key_code == Key::G) {
+		case Key::G: {
 			Logger::cycle_levels();
+			return false;
+		}
+		case Key::S: {
+			serialise_scene();
+			return false;
+		}
+		default:
 			return false;
 		}
 
@@ -198,11 +202,26 @@ template <> struct handle_filetype<Filetype::Filetypes::PNG> {
 	}
 };
 
+template <> struct handle_filetype<Filetype::Filetypes::SCENE> {
+	void operator()(SceneSystem::Scene& scene, const std::filesystem::path& path) const
+	{
+		if (path.extension() != ".scene")
+			return;
+
+		SceneSystem::SceneDeserialiser deserialiser(path, scene);
+		deserialiser.deserialise();
+	}
+};
+
 void AlabasterLayer::handle_drag_drop()
 {
 	if (ImGui::BeginDragDropTarget()) {
 		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AlabasterLayer::DragDropPayload")) {
+#ifndef ALABASTER_WINDOWS
 			const auto* path = static_cast<const char*>(payload->Data);
+#else
+			const auto* path = static_cast<const wchar_t*>(payload->Data);
+#endif
 			const std::filesystem::path fp = path;
 
 			const auto filename = fp.filename();
@@ -217,6 +236,7 @@ void AlabasterLayer::handle_drag_drop()
 				handle_filetype<JPG>()(scene, filename);
 				handle_filetype<SPV>()(scene, filename);
 				handle_filetype<VERT>()(scene, filename);
+				handle_filetype<SCENE>()(scene, filename);
 				handle_filetype<FRAG>()(scene, filename);
 				handle_filetype<OBJ>()(scene, filename);
 			} catch (const AlabasterException& e) {

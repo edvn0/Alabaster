@@ -17,7 +17,7 @@
 #include <memory>
 
 namespace Filetype {
-	enum class Filetypes : std::uint8_t { PNG = 0, TTF, JPEG, JPG, SPV, VERT, FRAG, OBJ };
+	enum class Filetypes : std::uint8_t { PNG = 0, TTF, JPEG, JPG, SPV, VERT, FRAG, OBJ, JSON, SCENE };
 }
 
 template <Filetype::Filetypes Type> struct handle_filetype {

@@ -4,11 +4,14 @@
 
 #include "component/Component.hpp"
 #include "core/Logger.hpp"
+#include "core/Utilities.hpp"
 #include "entity/Entity.hpp"
 #include "scene/Scene.hpp"
 #include "serialisation/ComponentSerialiser.hpp"
 #include "utilities/Time.hpp"
 #include "uuid.h"
+
+#include <cstdint>
 
 namespace SceneSystem {
 
@@ -25,7 +28,7 @@ namespace SceneSystem {
 		}
 	}
 
-	nlohmann::json SceneSerialiser::serialise_entity(Entity& entity)
+	nlohmann::json serialise_entity(Entity& entity)
 	{
 		auto output_object = nlohmann::json::object();
 		handle_component_serialisation<Component::ID>(entity, output_object);
@@ -42,28 +45,58 @@ namespace SceneSystem {
 	void SceneSerialiser::serialise_to_json()
 	{
 		using json = nlohmann::json;
-		const auto& registry = scene.get_registry();
+		auto& registry = scene.get_registry();
 
 		time_stamp = Alabaster::Time::formatted_time();
 
 		output_json["scene_name"] = std::string { fmt::format("{}", time_stamp) };
 
 		std::vector<Entity> entities;
-		registry.each([scene = &scene, &entities](const auto entity) { entities.push_back(scene->create_entity(entity)); });
+		auto view = registry.view<const Component::Tag>();
+		view.each([&scene = scene, &entities](
+					  entt::entity entity, const Component::Tag& tag) mutable { entities.push_back(scene.create_entity(entity, tag.tag)); });
 
+		if (registry.size() != entities.size()) {
+			Alabaster::Log::info("We could not create these entities..");
+		}
+
+		AssetManager::ThreadPool pool { 16 };
 		auto all_serialised_entities = json::array();
-		registry.each([scene = &scene, &all_serialised_entities, this](const entt::entity& entt_entity) {
-			auto entity = scene->create_entity(entt_entity);
-			const auto serialised_object = serialise_entity(entity);
+		using namespace Alabaster::Utilities;
+		for (auto chunked = split_into(entities, 16); auto& chunk : chunked) {
+			futures.emplace_back(pool.push([chunk = std::move(chunk)](int) mutable {
+				auto serialised_entities = json::array();
+				for (auto& entity : chunk) {
+					serialised_entities.push_back(serialise_entity(entity));
+				}
+				return serialised_entities;
+			}));
+		}
 
-			all_serialised_entities.push_back(serialised_object);
-		});
-		output_json["entities"] = all_serialised_entities;
+		pool.stop(true);
 	}
 
 	void SceneSerialiser::write_to_dir() noexcept
 	{
 		has_written = true;
+
+		json entities_array = json::array();
+		try {
+			for (auto& entity_array_future : futures) {
+				auto array = entity_array_future.get();
+				for (const auto& entity_array : array) {
+					entities_array.push_back(entity_array);
+				}
+			}
+		} catch (const std::future_error& error) {
+			Alabaster::Log::error("Could not serialise scene because the thread pool threw. Will not write file. More info: {}", error.what());
+			return;
+		} catch (const std::exception& error) {
+			Alabaster::Log::error("Could not serialise scene because {}. Will not write file.", error.what());
+			return;
+		}
+
+		output_json["entities"] = entities_array;
 
 		try {
 			const auto output_file = Alabaster::IO::scene(time_stamp + "_" + to_string(scene.get_name()));
