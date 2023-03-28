@@ -38,7 +38,6 @@ namespace AssetManager {
 	class FileWatcher {
 	public:
 		explicit FileWatcher(const std::filesystem::path& path, std::chrono::duration<int, std::milli> in_delay = std::chrono::milliseconds(2000));
-		void stop();
 
 		void on_created(const std::function<void(const FileInformation&)>& activation_function);
 		void on_modified(const std::function<void(const FileInformation&)>& activation_function);
@@ -48,7 +47,13 @@ namespace AssetManager {
 		~FileWatcher() { stop(); }
 
 	private:
+		/// @brief OS specific foreach (Apple-Clang does not support execution::par)
+		/// @param info file information
+		/// @param activations all functions
+		static void for_each(const FileInformation& info, const std::vector<std::function<void(const FileInformation&)>>&);
+
 		void start(const std::function<void(const FileInformation&)>& activation_function);
+		void stop();
 		void loop_until();
 
 		std::vector<std::function<void(const FileInformation&)>> activations;

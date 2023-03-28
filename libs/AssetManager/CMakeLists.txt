@@ -3,7 +3,9 @@ include("${CMAKE_SOURCE_DIR}/cmake/common_alabaster.cmake")
 
 project(AssetManager)
 
-file(GLOB_RECURSE sources am_pch.hpp AssetManager.hpp include/**.hpp src/**.cpp)
+file(GLOB_RECURSE sources am_pch.hpp AssetManager.hpp include/**.hpp "src/cache/**.cpp" "src/watcher/**.cpp" "src/compiler/**.cpp")
+file(GLOB os_sources "src/platform/${ALABASTER_OS}/**.cpp")
+list(APPEND sources ${os_sources})
 
 add_library(${PROJECT_NAME} ${sources})
 add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})

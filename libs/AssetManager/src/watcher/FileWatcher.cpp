@@ -65,8 +65,8 @@ namespace AssetManager {
 			while (path_iterator != paths.end()) {
 				if (!std::filesystem::exists(path_iterator->first)) {
 					path_iterator->second.status = FileStatus::Deleted;
-					std::for_each(std::execution::par, activations.begin(), activations.end(),
-						[&file_info = path_iterator->second](const auto& func) { func(file_info); });
+					const auto& current = path_iterator->second;
+					for_each(current, activations);
 					path_iterator = paths.erase(path_iterator);
 				} else {
 					path_iterator++;
@@ -88,15 +88,14 @@ namespace AssetManager {
 					};
 
 					const auto current = paths[file.path().string()];
-					std::for_each(std::execution::par, activations.begin(), activations.end(), [&current](const auto& func) { func(current); });
+					for_each(current, activations);
 					// File modification
 				} else {
 					auto current = paths[file.path().string()];
 
 					if (current.last_modified != current_file_last_write_time) {
 						current.last_modified = current_file_last_write_time;
-
-						std::for_each(std::execution::par, activations.begin(), activations.end(), [&current](const auto& func) { func(current); });
+						for_each(current, activations);
 					}
 				}
 			}

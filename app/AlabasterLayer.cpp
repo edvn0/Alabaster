@@ -201,7 +201,7 @@ void AlabasterLayer::viewport()
 			viewport_bounds[0].x, viewport_bounds[0].y, viewport_bounds[1].x - viewport_bounds[0].x, viewport_bounds[1].y - viewport_bounds[0].y);
 
 		const auto& camera = editor_scene->get_camera();
-		const auto& camera_view = glm::inverse(camera->get_view_matrix());
+		const auto& camera_view = camera->get_view_matrix();
 		const auto& camera_projection = camera->get_projection_matrix();
 
 		auto& entity_transform = entity->get_transform();

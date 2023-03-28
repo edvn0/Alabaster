@@ -104,7 +104,6 @@ namespace Alabaster {
 			frametime_index = (frametime_index + 1) % frametime_queue.size();
 		}
 
-		file_watcher->stop();
 		on_shutdown();
 	}
 

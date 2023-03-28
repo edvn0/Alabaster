@@ -46,8 +46,8 @@ namespace Alabaster {
 		void set_perspective_projection_matrix(
 			const float radians_fov, const float width, const float height, const float near_plane, const float far_plane)
 		{
-			projection_matrix = glm::perspectiveFov(radians_fov, width, height, far_plane, near_plane);
-			unreversed_projection_matrix = glm::perspectiveFov(radians_fov, width, height, near_plane, far_plane);
+			projection_matrix = glm::perspectiveFov(radians_fov, width, height, near_plane, far_plane);
+			unreversed_projection_matrix = glm::perspectiveFov(radians_fov, width, height, far_plane, near_plane);
 		}
 
 		void set_ortho_projection_matrix(const float width, const float height, const float near_plane, const float far_plane)

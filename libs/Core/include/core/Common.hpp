@@ -55,12 +55,11 @@ namespace Alabaster {
 	}
 
 	template <typename T>
-	concept HasSizeAndIterator = requires(T t)
-	{
-		t.size();
-		t.begin();
-		t.end();
-	};
+	concept HasSizeAndIterator = requires(T t) {
+									 t.size();
+									 t.begin();
+									 t.end();
+								 };
 
 	static constexpr auto equals_ignore_case(const HasSizeAndIterator auto& lhs, const HasSizeAndIterator auto& rhs)
 	{
@@ -165,10 +164,7 @@ namespace Alabaster {
 	};
 
 	template <typename T>
-	concept has_empty = requires(T t)
-	{
-		t.empty();
-	};
+	concept has_empty = requires(T t) { t.empty(); };
 	static constexpr auto non_empty = [](const has_empty auto& in) { return not in.empty(); };
 
 #ifdef ALABASTER_DEBUG
