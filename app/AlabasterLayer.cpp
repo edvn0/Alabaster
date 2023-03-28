@@ -13,6 +13,7 @@
 #include "panels/StatisticsPanel.hpp"
 #include "ui/ImGuizmo.hpp"
 
+#include <glfw/glfw3.h>
 #include <glm/ext/matrix_relational.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -84,6 +85,20 @@ void AlabasterLayer::on_event(Event& e)
 		case Key::S: {
 			serialise_scene();
 			return false;
+		}
+		case Key::T: {
+			if (gizmo_type == ImGuizmo::OPERATION::TRANSLATE) {
+				gizmo_type = ImGuizmo::OPERATION::ROTATE;
+				return false;
+			}
+			if (gizmo_type == ImGuizmo::OPERATION::ROTATE) {
+				gizmo_type = ImGuizmo::OPERATION::SCALE;
+				return false;
+			}
+			if (gizmo_type == ImGuizmo::OPERATION::SCALE) {
+				gizmo_type = ImGuizmo::OPERATION::TRANSLATE;
+				return false;
+			}
 		}
 		default:
 			return false;
@@ -194,21 +209,34 @@ void AlabasterLayer::viewport()
 	const auto& img = editor_scene->final_image();
 	UI::image(*img, { viewport_size.x, viewport_size.y });
 
+	ui_toolbar();
+
 	if (auto* entity = editor_scene->get_selected_entity(); entity->is_valid()) {
 		ImGuizmo::SetDrawlist();
 
-		ImGuizmo::SetRect(
-			viewport_bounds[0].x, viewport_bounds[0].y, viewport_bounds[1].x - viewport_bounds[0].x, viewport_bounds[1].y - viewport_bounds[0].y);
+		const auto size = viewport_size;
+
+		auto& io = ImGui::GetIO();
+		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
 		const auto& camera = editor_scene->get_camera();
 		const auto& camera_view = camera->get_view_matrix();
 		const auto& camera_projection = camera->get_projection_matrix();
+		auto copy = camera_projection;
+		copy[1][1] *= -1.0f;
 
 		auto& entity_transform = entity->get_transform();
 		auto transform = entity_transform.to_matrix();
 
+		bool snap = Input::key(Key::LeftShift);
+		float snap_value = 0.5f;
+		if (gizmo_type == ImGuizmo::OPERATION::ROTATE)
+			snap_value = 45.0f;
+
+		std::array<float, 3> snap_values = { snap_value, snap_value, snap_value };
+
 		ImGuizmo::Manipulate(
-			glm::value_ptr(camera_view), glm::value_ptr(camera_projection), ImGuizmo::TRANSLATE, ImGuizmo::LOCAL, glm::value_ptr(transform));
+			glm::value_ptr(camera_view), glm::value_ptr(copy), gizmo_type, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, snap_values.data());
 
 		if (ImGuizmo::IsUsing()) {
 			glm::vec3 scale;
@@ -218,8 +246,10 @@ void AlabasterLayer::viewport()
 			glm::vec4 perspective;
 			glm::decompose(transform, scale, rotation, translation, skew, perspective);
 
+			auto deltaRotation = rotation - entity_transform.rotation;
+
 			entity_transform.position = translation;
-			entity_transform.rotation = rotation;
+			entity_transform.rotation += deltaRotation;
 			entity_transform.scale = scale;
 		}
 	}
@@ -228,6 +258,87 @@ void AlabasterLayer::viewport()
 
 	ImGui::End();
 	ImGui::PopStyleVar();
+}
+
+void AlabasterLayer::ui_toolbar()
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
+	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+	auto& colors = ImGui::GetStyle().Colors;
+	const auto& button_hovered = colors[ImGuiCol_ButtonHovered];
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(button_hovered.x, button_hovered.y, button_hovered.z, 0.5f));
+	const auto& button_active = colors[ImGuiCol_ButtonActive];
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(button_active.x, button_active.y, button_active.z, 0.5f));
+
+	ImGuiWindowFlags window_flags = 0;
+	window_flags |= ImGuiWindowFlags_NoTitleBar;
+	window_flags |= ImGuiWindowFlags_NoDecoration;
+	window_flags |= ImGuiWindowFlags_NoScrollbar;
+	window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
+	ImGui::Begin("##toolbar", nullptr, window_flags);
+	// ImGui::Begin("##toolbar", nullptr);
+
+	bool toolbarEnabled = static_cast<bool>(editor_scene);
+
+	ImVec4 tintColor = ImVec4(1, 1, 1, 1);
+	if (!toolbarEnabled)
+		tintColor.w = 0.5f;
+
+	float size = ImGui::GetWindowHeight() - 4.0f;
+	ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
+
+	bool has_play_button = scene_state == SceneState::Edit || scene_state == SceneState::Play;
+	bool has_simulate_button = scene_state == SceneState::Edit || scene_state == SceneState::Simulate;
+	bool has_pause_button = scene_state != SceneState::Edit;
+
+	if (has_play_button) {
+		auto icon = (scene_state == SceneState::Edit || scene_state == SceneState::Simulate) ? icon_play : icon_stop;
+		if (UI::image_button(icon, size) && toolbarEnabled) {
+			if (scene_state == SceneState::Edit || scene_state == SceneState::Simulate)
+				Alabaster::Log::info("Play here!");
+			else if (scene_state == SceneState::Play)
+				Alabaster::Log::info("Stop here!");
+		}
+	}
+
+	if (has_simulate_button) {
+		if (has_play_button)
+			ImGui::SameLine();
+
+		auto icon = (scene_state == SceneState::Edit || scene_state == SceneState::Play) ? icon_simulate : icon_stop;
+		if (UI::image_button(icon, size) && toolbarEnabled) {
+			if (scene_state == SceneState::Edit || scene_state == SceneState::Play)
+				Alabaster::Log::info("Simulate here!");
+			else if (scene_state == SceneState::Simulate)
+				Alabaster::Log::info("Stop here!");
+		}
+	}
+	if (has_pause_button) {
+		const auto is_paused = editor_scene->is_paused();
+		ImGui::SameLine();
+		{
+			auto icon = icon_pause;
+			if (UI::image_button(icon, size) && toolbarEnabled) {
+				editor_scene->set_paused(!is_paused);
+			}
+		}
+
+		// Step button
+		if (is_paused) {
+			ImGui::SameLine();
+			{
+				auto icon = icon_step;
+				const auto is_paused = editor_scene->is_paused();
+				if (UI::image_button(icon, size) && toolbarEnabled) {
+					Alabaster::Log::info("Step here!");
+				}
+			}
+		}
+	}
+	ImGui::PopStyleVar(2);
+	ImGui::PopStyleColor(3);
+	ImGui::End();
 }
 
 template <> struct handle_filetype<Filetype::Filetypes::PNG> {
@@ -264,6 +375,7 @@ template <> struct handle_filetype<Filetype::Filetypes::OBJ> {
 		const auto mesh = Alabaster::Mesh::from_file(path);
 		auto entity = scene.create_entity("TestEntity");
 		entity.add_component<Component::Mesh>(mesh);
+		entity.add_component<Component::Texture>();
 		entity.add_component<Component::Pipeline>();
 		return;
 	}

@@ -11,7 +11,7 @@
 namespace Alabaster {
 
 #ifdef ALABASTER_VALIDATION
-	static const std::vector<const char*> requested_validation_layers;
+	static const std::vector<const char*> requested_validation_layers { "VK_LAYER_KHRONOS_validation" };
 #else
 	static const std::vector<const char*> requested_validation_layers;
 #endif
@@ -116,14 +116,12 @@ namespace Alabaster {
 
 	void GraphicsContext::setup_debug_messenger()
 	{
-#if 0
 		VkDebugUtilsMessengerCreateInfoEXT create_info {};
 		populate_debug_messenger(create_info);
 
 		if (create_debug_messenger(vk_instance, &create_info, nullptr, &debug_messenger) != VK_SUCCESS) {
 			throw AlabasterException("Failed to set up debug messenger!");
 		}
-#endif
 	}
 
 	void GraphicsContext::create_instance()

@@ -35,11 +35,11 @@ namespace SceneSystem {
 	static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
 	static float ambience { 1.0f };
 
-	template <class Position = glm::vec3> static constexpr auto axes(const auto& renderer, const Position& position)
+	template <class Position = glm::vec3> static constexpr auto axes(const auto& renderer, const Position& position, auto length = 1.0f)
 	{
-		renderer->line(position, position + glm::vec3 { 1, 0, 0 }, { 1, 0, 0, 1 });
-		renderer->line(position, position + glm::vec3 { 0, -1, 0 }, { 0, 1, 0, 1 });
-		renderer->line(position, position + glm::vec3 { 0, 0, -1 }, { 0, 0, 1, 1 });
+		renderer->line(position, position + glm::vec3 { length, 0, 0 }, { 1, 0, 0, 1 });
+		renderer->line(position, position + glm::vec3 { 0, -length, 0 }, { 0, 1, 0, 1 });
+		renderer->line(position, position + glm::vec3 { 0, 0, -length }, { 0, 0, 1, 1 });
 	};
 
 	void Scene::build_scene()
@@ -212,13 +212,18 @@ namespace SceneSystem {
 
 	void Scene::draw_entities_in_scene(float)
 	{
-		axes(scene_renderer, glm::vec3 { 0, -0.1, 0 });
+		axes(scene_renderer, glm::vec3 { -100, -0.1, 100 }, 400.0f);
 		scene_renderer->set_light_data(pos, col, ambience);
 
-		auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>();
+		auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>(
+			entt::exclude<Component::Light>);
 		mesh_view.each(
 			[&renderer = scene_renderer](const Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture,
 				const Component::Pipeline& pipeline) { renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour); });
+
+		auto light_view = registry.view<const Component::Transform, const Component::Light, const Component::Texture, const Component::Mesh>();
+		light_view.each([&renderer = scene_renderer](const Component::Transform& transform, const Component::Light, const Component::Texture& texture,
+							const Component::Mesh& mesh) { renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, texture.colour); });
 
 		auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
 		quad_view.each([&renderer = scene_renderer](

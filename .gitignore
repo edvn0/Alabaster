@@ -66,4 +66,4 @@ build*
 
 app/resources/scene/*.json
 
-!./app/resources/editor
+!app/resources/editor/*.png

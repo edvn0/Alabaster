@@ -6,44 +6,22 @@ project(Core)
 find_package(Vulkan REQUIRED)
 find_package(Python3 COMPONENTS Interpreter)
 
-file(GLOB_RECURSE sources av_pch.hpp Alabaster.hpp include/**.hpp src/**.cpp)
+file(GLOB_RECURSE sources 
+  av_pch.hpp 
+  Alabaster.hpp
+  "src/core/**.cpp"
+  "src/graphics/**.cpp"
+  "src/ui/**.cpp"
+  "src/utilities/**.cpp"
+  "src/platform/stb/**.cpp"
+  "src/platform/Vulkan/**.cpp"
+  "src/platform/ImGui/**.cpp"
+)
+set(input_sources "${sources}")
+set(all_sources "")
+add_os_specific_objects(input_sources all_sources)
 
-if(${ALABASTER_OS} STREQUAL "Windows")
-    list(FILTER sources EXCLUDE REGEX MacOS*)
-    list(FILTER sources EXCLUDE REGEX Linux*)
-    list(FILTER sources EXCLUDE REGEX MSVC*)
-    list(FILTER sources EXCLUDE REGEX MinGW*)
-
-    if (ALABASTER_COMPILER STREQUAL "MinGW")
-        file(GLOB_RECURSE compilerSpecificSources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MinGW/MinGWUI.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MinGW/**.cpp")
-        list(APPEND sources ${compilerSpecificSources})
-        list(FILTER sources EXCLUDE REGEX MSVC)
-    elseif(ALABASTER_COMPILER STREQUAL "MSVC")
-        file(GLOB_RECURSE compilerSpecificSources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MSVC/MSVCUI.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MSVC/**.cpp")
-        list(APPEND sources ${compilerSpecificSources})
-        list(FILTER sources EXCLUDE REGEX MinGW)
-    endif()
-elseif(${ALABASTER_OS} STREQUAL "MacOS")
-    list(FILTER sources EXCLUDE REGEX Windows*)
-    list(FILTER sources EXCLUDE REGEX Linux*)
-    list(FILTER sources EXCLUDE REGEX MSVC*)
-    list(FILTER sources EXCLUDE REGEX MinGW*)
-
-    # Windows includes 'Window'...
-    list(APPEND sources
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MacOS/MacOSWindow.cpp)
-elseif(${ALABASTER_OS} STREQUAL "Linux")
-    list(FILTER sources EXCLUDE REGEX MacOS*)
-    list(FILTER sources EXCLUDE REGEX Windows*)
-    list(FILTER sources EXCLUDE REGEX MSVC*)
-    list(FILTER sources EXCLUDE REGEX MinGW*)
-
-    # Windows includes 'Window'...
-    list(APPEND sources
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Linux/LinuxWindow.cpp)
-endif()
-
-add_library(${PROJECT_NAME} ${sources})
+add_library(${PROJECT_NAME} ${all_sources})
 add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_include_directories(

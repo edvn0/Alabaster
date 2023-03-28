@@ -450,7 +450,7 @@ namespace Alabaster {
 		const auto& vb = data.quad_vertex_buffer;
 		const auto& ib = data.quad_index_buffer;
 		const auto& descriptor = data.descriptor_sets[Renderer::current_frame()];
-		const auto& pipeline = data.pipelines["quad"];
+		const auto& pipeline = data.pipelines["quad"sv];
 		const auto index_count = data.quad_indices_submitted;
 
 		vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
@@ -479,7 +479,7 @@ namespace Alabaster {
 		const auto& vb = data.line_vertex_buffer;
 		const auto& ib = data.line_index_buffer;
 		const auto& descriptor = data.descriptor_sets[Renderer::current_frame()];
-		const auto& pipeline = data.pipelines["line"];
+		const auto& pipeline = data.pipelines["line"sv];
 		const auto index_count = data.line_indices_submitted;
 
 		vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());

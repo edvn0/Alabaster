@@ -263,11 +263,10 @@
             {
                 "type": "cppvsdbg",
                 "request": "launch",
-                "preLaunchTask": "build",
                 "name": "Debug",
                 "program": "${workspaceFolder}/build-Debug-VS/app/Debug/AlabasterApp.exe",
                 "args": [],
-                "cwd": "${workspaceFolder}/build-Debug-VS/app/Debug"
+                "cwd": "${workspaceFolder}/app"
             }
         ]
     },

@@ -14,6 +14,8 @@ namespace SceneSystem {
 
 	class Entity;
 
+	enum class SceneState : std::uint8_t { Play, Simulate, Edit };
+
 	class Scene {
 	public:
 		Scene() noexcept;
@@ -64,6 +66,9 @@ namespace SceneSystem {
 
 		void clear() { registry.clear(); };
 
+		bool is_paused() const { return paused; }
+		void set_paused(bool in_pause) { paused = in_pause; }
+
 	private:
 		void pick_entity(const glm::vec3& ray_world);
 		void pick_mouse();
@@ -82,6 +87,8 @@ namespace SceneSystem {
 		std::shared_ptr<Alabaster::Framebuffer> framebuffer;
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
+
+		bool paused { false };
 
 		friend Entity;
 	};

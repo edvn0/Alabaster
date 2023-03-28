@@ -61,45 +61,10 @@ function(default_register_project PROJECT)
   register_for_project(${PROJECT} ON)
 endfunction()
 
-function(remove_os_specific_translation_units sources)
-  set(OUTPUT ${sources})
-  if(${ALABASTER_OS} STREQUAL "Windows")
-    list(FILTER ${OUTPUT} EXCLUDE REGEX MacOS*)
-    list(FILTER ${OUTPUT} EXCLUDE REGEX Linux*)
-    list(FILTER ${OUTPUT} EXCLUDE REGEX MSVC*)
-    list(FILTER ${OUTPUT} EXCLUDE REGEX MinGW*)
-
-    if(ALABASTER_COMPILER STREQUAL "MinGW")
-      file(GLOB_RECURSE ${compilerSpecificSources}
-           "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MinGW/MinGWUI.cpp"
-           "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MinGW/**.cpp")
-      list(APPEND ${OUTPUT} ${compilerSpecificSources})
-      list(FILTER ${OUTPUT} EXCLUDE REGEX MSVC)
-    elseif(ALABASTER_COMPILER STREQUAL "MSVC")
-      file(GLOB_RECURSE ${compilerSpecificSources}
-           "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MSVC/MSVCUI.cpp"
-           "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MSVC/**.cpp")
-      list(APPEND ${OUTPUT} ${compilerSpecificSources})
-      list(FILTER ${OUTPUT} EXCLUDE REGEX "MinGW")
-    endif()
-  elseif(${ALABASTER_OS} STREQUAL "MacOS")
-    list(FILTER ${OUTPUT} EXCLUDE REGEX "Windows*")
-    list(FILTER ${OUTPUT} EXCLUDE REGEX "Linux*")
-    list(FILTER ${OUTPUT} EXCLUDE REGEX "MSVC*")
-    list(FILTER ${OUTPUT} EXCLUDE REGEX "MinGW*")
-
-    # Windows includes 'Window'...
-    list(APPEND ${OUTPUT} "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MacOS/MacOSWindow.cpp")
-  elseif(${ALABASTER_OS} STREQUAL "Linux")
-    list(FILTER ${OUTPUT} EXCLUDE REGEX "MacOS*")
-    list(FILTER ${OUTPUT} EXCLUDE REGEX "Windows*")
-    list(FILTER ${OUTPUT} EXCLUDE REGEX "MSVC*")
-    list(FILTER ${OUTPUT} EXCLUDE REGEX "MinGW*")
-
-    # Windows includes 'Window'...
-    list(APPEND ${OUTPUT}
-         "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Linux/LinuxWindow.cpp")
-  endif()
-
-  set(${sources} ${OUTPUT} PARENT_SCOPE)
-endfunction(remove_os_specific_translation_units)
+function(add_os_specific_objects sources all_sources)
+    set(_ALL_INPUTS ${${sources}}) # Merge them together
+    file(GLOB_RECURSE private_os_sources "src/platform/${ALABASTER_OS}/**.cpp")
+    file(GLOB_RECURSE compiler_sources "src/platform/${ALABASTER_COMPILER}/**.cpp")
+    list(APPEND _ALL_INPUTS ${private_os_sources} ${compiler_sources})
+    set(${all_sources} ${_ALL_INPUTS} PARENT_SCOPE)
+endfunction(add_os_specific_objects)
