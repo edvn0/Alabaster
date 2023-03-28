@@ -21,6 +21,7 @@ namespace Alabaster::IO {
 	std::filesystem::path shaders();
 	std::filesystem::path models();
 	std::filesystem::path fonts();
+	std::filesystem::path scenes();
 	std::filesystem::path editor_resources();
 
 	template <typename Path = std::filesystem::path> std::filesystem::path shader(const Path& path)
@@ -39,11 +40,9 @@ namespace Alabaster::IO {
 	{
 		return IO::fonts() / std::filesystem::path { path };
 	}
-
 	template <typename Path = std::filesystem::path> std::filesystem::path scene(const Path& path)
 	{
-		const auto out = IO::resources() / std::filesystem::path { "scene" } / std::filesystem::path { path };
-		return std::filesystem::path { out.string() + ".scene" };
+		return IO::scenes() / std::filesystem::path { path };
 	}
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);

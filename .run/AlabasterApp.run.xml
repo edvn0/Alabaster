@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="AlabasterApp" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="--width 1600 --height 600 --name &quot;AlabasterApp - CLion&quot;" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" WORKING_DIR="file://$PROJECT_DIR$/cmake-build-debug/app/" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Alabaster" TARGET_NAME="AlabasterApp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="Alabaster" RUN_TARGET_NAME="AlabasterApp">
+  <configuration default="false" name="AlabasterApp" type="CMakeRunConfiguration" factoryName="Application" PROGRAM_PARAMS="--width 1600 --height 600 --name &quot;AlabasterApp - CLion&quot;" REDIRECT_INPUT="false" ELEVATE="false" USE_EXTERNAL_CONSOLE="false" WORKING_DIR="file://$PROJECT_DIR$/cmake-build-debug/app/" PASS_PARENT_ENVS_2="true" PROJECT_NAME="Project" TARGET_NAME="AlabasterApp" CONFIG_NAME="Debug" RUN_TARGET_PROJECT_NAME="Project" RUN_TARGET_NAME="AlabasterApp">
     <method v="2">
       <option name="com.jetbrains.cidr.execution.CidrBuildBeforeRunTaskProvider$BuildBeforeRunTask" enabled="true" />
     </method>

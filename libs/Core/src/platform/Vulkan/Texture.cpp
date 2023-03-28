@@ -5,9 +5,19 @@
 #include "graphics/GraphicsContext.hpp"
 #include "platform/Vulkan/ImageUtilities.hpp"
 
+#include <AssetManager.hpp>
 #include <stb_image.h>
 
 namespace Alabaster {
+
+	std::shared_ptr<Texture> Texture::from_filename(const std::filesystem::path& path, const TextureProperties& props)
+	{
+		const auto actual_path = IO::texture(path);
+		const auto filename_as_string = actual_path.filename().string();
+		if (const auto& tex = AssetManager::asset<Texture>(filename_as_string))
+			return tex;
+		return std::make_shared<Texture>(IO::texture(actual_path), props);
+	}
 
 	Texture::Texture(const std::filesystem::path& tex_path, const TextureProperties props)
 		: path(tex_path)

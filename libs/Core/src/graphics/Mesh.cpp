@@ -99,7 +99,6 @@ namespace Alabaster {
 
 		const auto& attrib = reader.GetAttrib();
 		const auto& shapes = reader.GetShapes();
-		// TODO: const auto& materials = reader.GetMaterials();
 
 		return handle_vertices(attrib, shapes);
 	}

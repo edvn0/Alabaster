@@ -45,6 +45,8 @@ private:
 	void menu_bar() const;
 	void viewport();
 
+	void serialise_scene();
+
 	std::string_view name() override { return "AlabasterLayer"; }
 
 	std::unique_ptr<SceneSystem::Scene> editor_scene;

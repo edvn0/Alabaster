@@ -16,6 +16,7 @@ namespace Alabaster::IO {
 	std::filesystem::path fonts() { return root / std::filesystem::path { "fonts" }; }
 	std::filesystem::path shaders() { return root / std::filesystem::path { "shaders" }; }
 	std::filesystem::path models() { return root / std::filesystem::path { "models" }; }
+	std::filesystem::path scenes() { return root / std::filesystem::path { "scene" }; }
 	std::filesystem::path editor_resources() { return root / std::filesystem::path { "editor" }; }
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
@@ -45,14 +46,11 @@ namespace Alabaster::IO {
 
 	std::string read_file(std::filesystem::path&& filename, OpenMode mode) { return IO::read_file(filename, mode); }
 
-	bool exists(const std::filesystem::path& path)
-	{
-		return std::filesystem::exists(path) || std::filesystem::exists(std::filesystem::current_path() / path);
-	}
+	bool exists(const std::filesystem::path& path) { return std::filesystem::exists(path) || std::filesystem::exists(resources() / path); }
 
 	bool is_file(const std::filesystem::path& path)
 	{
-		auto regular_file = std::filesystem::is_regular_file(path) || std::filesystem::is_regular_file(std::filesystem::current_path() / path);
+		auto regular_file = std::filesystem::is_regular_file(path) || std::filesystem::is_regular_file(resources() / path);
 		return IO::exists(path) && regular_file;
 	}
 

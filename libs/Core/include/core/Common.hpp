@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core/Logger.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 
 #include <algorithm>
 #include <array>
@@ -14,6 +15,44 @@
 #endif
 
 namespace Alabaster {
+
+	namespace {
+		void stop()
+		{
+#ifdef ALABASTER_EXCEPTIONS
+			throw Alabaster::AlabasterException();
+#else
+			debug_break();
+#endif
+		}
+	} // namespace
+
+	static constexpr auto is_equals_ignore_case(const auto* x, const auto* y)
+	{
+#ifdef ALABASTER_WINDOWS
+		return _stricmp(x, y);
+#else
+		return _strcasecmp(x, y);
+#endif
+	}
+
+	static constexpr auto str_is_equals_ignore_case(const std::filesystem::path& x, auto&& y)
+	{
+#ifdef ALABASTER_WINDOWS
+		return _stricmp(x.string().data(), y);
+#else
+		return _strcasecmp(x.string().data(), y);
+#endif
+	}
+
+	static constexpr auto str_is_equals_ignore_case(const std::string& x, auto&& y)
+	{
+#ifdef ALABASTER_WINDOWS
+		return _stricmp(x.data(), y);
+#else
+		return _strcasecmp(x.data(), y);
+#endif
+	}
 
 	template <typename T>
 	concept HasSizeAndIterator = requires(T t) {
@@ -135,7 +174,7 @@ namespace Alabaster {
 		VkResult err = result;
 		if (err) {
 			Log::info("[VkCheck] Vulkan failed with error: {}", vk_result(result));
-			debug_break();
+			stop();
 		}
 	}
 
@@ -160,7 +199,7 @@ namespace Alabaster {
 		auto result = static_cast<bool>(happy);
 		if (not result) {
 			Log::error("Assertion failed.");
-			debug_break();
+			stop();
 		}
 	}
 
@@ -169,7 +208,7 @@ namespace Alabaster {
 		auto result = static_cast<bool>(happy);
 		if (not result) {
 			Log::error("Assertion failed. Message: {}", message);
-			debug_break();
+			stop();
 		}
 	}
 

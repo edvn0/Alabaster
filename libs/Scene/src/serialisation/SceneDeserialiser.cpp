@@ -74,6 +74,8 @@ namespace SceneSystem {
 			throw Alabaster::AlabasterException("Could not open scene file.");
 		}
 
+		scene.clear();
+
 		nlohmann::json data = nlohmann::json::parse(json_file);
 
 		std::string scene_name = data["scene_name"];
@@ -83,6 +85,7 @@ namespace SceneSystem {
 		for (const auto& json_entity : json_entities) {
 			auto created_entity = scene.create_entity("Unnamed entity");
 			if (json_entity.is_object()) {
+				handle_component<Tag>(json_entity, created_entity);
 				handle_component<Mesh>(json_entity, created_entity);
 				handle_component<Transform>(json_entity, created_entity);
 				handle_component<ID>(json_entity, created_entity);

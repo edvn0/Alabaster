@@ -34,10 +34,17 @@ namespace AssetManager {
 
 	const std::shared_ptr<Alabaster::Texture>& ResourceCache::texture(const std::string& name)
 	{
-		const auto& found = texture_cache.get_from_cache(name);
-		if (found) {
+		if (const auto& found = texture_cache.get_from_cache(name)) {
 			return found;
 		}
+
+		try {
+			if (texture_cache.add_to_cache(name, Alabaster::Texture::from_filename(name)))
+				return texture_cache.get_from_cache(name);
+		} catch (const Alabaster::AlabasterException& e) {
+			throw Alabaster::AlabasterException("Exception: {}", e.what());
+		}
+
 		throw Alabaster::AlabasterException("Texture [{}] not found.", name);
 	}
 

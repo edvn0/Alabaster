@@ -2,8 +2,6 @@
 
 #include "cache/ShaderCache.hpp"
 #include "cache/TextureCache.hpp"
-#include "graphics/Image.hpp"
-#include "graphics/Texture.hpp"
 
 #include <filesystem>
 #include <string_view>

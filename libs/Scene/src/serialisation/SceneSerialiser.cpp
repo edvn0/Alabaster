@@ -11,6 +11,7 @@
 #include "utilities/Time.hpp"
 #include "uuid.h"
 
+#include <AssetManager.hpp>
 #include <cstdint>
 
 namespace SceneSystem {
@@ -99,7 +100,8 @@ namespace SceneSystem {
 		output_json["entities"] = entities_array;
 
 		try {
-			const auto output_file = Alabaster::IO::scene(time_stamp + "_" + to_string(scene.get_name()));
+			const auto filename = time_stamp + "_" + to_string(scene.get_name()) + ".scene";
+			const auto output_file = Alabaster::IO::scene(filename);
 			std::ofstream scene_output(output_file);
 			if (!scene_output) {
 				Alabaster::Log::warn("[SceneSerialiser] Could not write scene to {}.", output_file.string());

@@ -55,6 +55,14 @@ namespace SceneSystem {
 		const std::shared_ptr<Alabaster::Image>& final_image() const;
 
 		const Entity* get_selected_entity() const { return selected_entity.get(); }
+		Entity* get_selected_entity() { return selected_entity.get(); }
+
+		void update_selected_entity();
+
+		const auto& get_camera() const { return scene_camera; }
+		auto& get_camera() { return scene_camera; }
+
+		void clear() { registry.clear(); };
 
 	private:
 		void pick_entity(const glm::vec3& ray_world);
@@ -67,7 +75,8 @@ namespace SceneSystem {
 		glm::vec2 viewport_size { 0 };
 		glm::vec2 viewport_offset { 0 };
 
-		std::unique_ptr<Entity> selected_entity;
+		std::unique_ptr<Entity> selected_entity { nullptr };
+		std::unique_ptr<Entity> hovered_entity { nullptr };
 
 		std::shared_ptr<Alabaster::EditorCamera> scene_camera;
 		std::shared_ptr<Alabaster::Framebuffer> framebuffer;

@@ -5,6 +5,7 @@
 #include "graphics/Texture.hpp"
 
 #include <imgui.h>
+#include <optional>
 #include <vulkan/vulkan.h>
 
 namespace Alabaster::UI {
@@ -25,6 +26,7 @@ namespace Alabaster::UI {
 			handler();
 		}
 	}
+	std::optional<std::filesystem::path> accept_drag_drop(const std::string& payload_identifier);
 
 	void remove_image(const VkDescriptorImageInfo& info);
 

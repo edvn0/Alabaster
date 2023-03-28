@@ -14,7 +14,7 @@ namespace SceneSystem {
 	public:
 		SceneDeserialiser(const std::filesystem::path& in_scene_path, Scene& out)
 			: scene(out)
-			, scene_path(in_scene_path) {};
+			, scene_path(Alabaster::IO::scene(in_scene_path)) {};
 
 		void deserialise();
 

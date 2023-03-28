@@ -22,8 +22,8 @@ namespace Alabaster {
 			: projection_matrix(projection)
 			, unreversed_projection_matrix(unreversed_projection) {};
 		Camera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane)
-			: projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, far_plane, near_plane))
-			, unreversed_projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, near_plane, far_plane)) {};
+			: projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, near_plane, far_plane))
+			, unreversed_projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, far_plane, near_plane)) {};
 		virtual ~Camera() = default;
 
 		virtual void focus(const glm::vec3&) {};
@@ -100,7 +100,7 @@ namespace Alabaster {
 		}
 
 		const glm::mat4& get_view_matrix() const override { return view_matrix; }
-		glm::mat4 get_un_reversed_view_projection() const { return get_unreversed_projection_matrix() * view_matrix; }
+		glm::mat4 get_unreversed_view_projection() const { return get_unreversed_projection_matrix() * view_matrix; }
 
 		glm::vec3 get_up_direction() const;
 		glm::vec3 get_right_direction() const;

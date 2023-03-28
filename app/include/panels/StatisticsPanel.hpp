@@ -16,6 +16,7 @@ namespace App {
 		void on_event(Alabaster::Event&) override {};
 		void on_update(float ts) override;
 		void ui(float ts) override;
+		void register_file_watcher(AssetManager::FileWatcher&) { }
 
 	private:
 		const Alabaster::ApplicationStatistics& statistics;

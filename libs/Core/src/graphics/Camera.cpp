@@ -13,7 +13,7 @@ namespace Alabaster {
 
 	EditorCamera::EditorCamera(
 		const float deg_fov, const float width, const float height, const float near_plane, const float far_plane, EditorCamera* previous_camera)
-		: Camera(deg_fov, width, height, far_plane, near_plane)
+		: Camera(deg_fov, width, height, near_plane, far_plane)
 		, focal_point(0.0f)
 		, vertical_fov(glm::radians(deg_fov))
 		, near_clip(near_plane)

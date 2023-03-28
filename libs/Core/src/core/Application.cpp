@@ -12,6 +12,9 @@
 #include "core/events/Event.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
+#include "utilities/FileInputOutput.hpp"
+
+#include <AssetManager.hpp>
 
 namespace Alabaster {
 
@@ -70,6 +73,8 @@ namespace Alabaster {
 
 	void Application::run()
 	{
+		file_watcher = std::make_unique<AssetManager::FileWatcher>(IO::resources());
+
 		on_init();
 
 		static std::size_t frametime_index = 0;
@@ -99,6 +104,7 @@ namespace Alabaster {
 			frametime_index = (frametime_index + 1) % frametime_queue.size();
 		}
 
+		file_watcher->stop();
 		on_shutdown();
 	}
 

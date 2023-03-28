@@ -1,0 +1,186 @@
+{
+    "entities": [
+        {
+            "id": "a037fadc-547f-4db6-870b-6aba218d4288",
+            "mesh": {
+                "asset_path": "resources\\models\\sphere.obj"
+            },
+            "tag": "The Sun",
+            "texture": {
+                "colour": [
+                    1.0,
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            },
+            "transform": {
+                "position": [
+                    10.0,
+                    10.0,
+                    5.0
+                ],
+                "rotation": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    10.0,
+                    10.0,
+                    10.0
+                ]
+            }
+        },
+        {
+            "id": "f31987b2-1ecd-425a-a3a1-e9e5e61b7527",
+            "mesh": {
+                "asset_path": "resources\\models\\viking_room.obj"
+            },
+            "tag": "Viking Room",
+            "texture": {
+                "colour": [
+                    0.6000000238418579,
+                    0.10000000149011612,
+                    1.0,
+                    1.0
+                ]
+            },
+            "transform": {
+                "position": [
+                    31.899999618530273,
+                    0.0,
+                    0.0
+                ],
+                "rotation": [
+                    0.7071067690849304,
+                    0.0,
+                    0.0,
+                    0.7071067690849304
+                ],
+                "scale": [
+                    15.0,
+                    15.0,
+                    15.0
+                ]
+            }
+        },
+        {
+            "id": "86f1283a-3c29-47f9-b469-396bd7c1496e",
+            "mesh": {
+                "basic_geometry": 1
+            },
+            "tag": "Floor",
+            "texture": {
+                "colour": [
+                    0.30000001192092896,
+                    0.20000000298023224,
+                    0.30000001192092896,
+                    0.699999988079071
+                ]
+            },
+            "transform": {
+                "position": [
+                    0.0,
+                    6.0,
+                    0.0
+                ],
+                "rotation": [
+                    0.7071067690849304,
+                    0.0,
+                    0.0,
+                    0.7071067690849304
+                ],
+                "scale": [
+                    200.0,
+                    200.0,
+                    0.20000000298023224
+                ]
+            }
+        },
+        {
+            "id": "47cc351e-431e-4f3f-be8b-18c8851f7be5",
+            "mesh": {
+                "asset_path": "resources\\models\\sphere.obj"
+            },
+            "sphere_intersectible": {
+                "radius": 1.0,
+                "world_position": [
+                    3.700000047683716,
+                    -5.0,
+                    5.0
+                ]
+            },
+            "tag": "Sphere-1",
+            "texture": {
+                "colour": [
+                    0.7830314040184021,
+                    0.851874589920044,
+                    0.46413537859916687,
+                    0.6729273796081543
+                ]
+            },
+            "transform": {
+                "position": [
+                    3.700000047683716,
+                    -5.0,
+                    5.0
+                ],
+                "rotation": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        },
+        {
+            "id": "8e521282-91c4-41a7-bed4-cd5f2edfaff6",
+            "mesh": {
+                "asset_path": "resources\\models\\sphere.obj"
+            },
+            "sphere_intersectible": {
+                "radius": 1.0,
+                "world_position": [
+                    -3.299999952316284,
+                    -5.0,
+                    5.0
+                ]
+            },
+            "tag": "Sphere-0",
+            "texture": {
+                "colour": [
+                    0.18101349472999573,
+                    0.8952542543411255,
+                    0.640842616558075,
+                    0.06921448558568954
+                ]
+            },
+            "transform": {
+                "position": [
+                    -3.299999952316284,
+                    -5.0,
+                    5.0
+                ],
+                "rotation": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "scale": [
+                    1.0,
+                    1.0,
+                    1.0
+                ]
+            }
+        }
+    ],
+    "scene_name": "03_24_23_16_29_16_W__Europe_Standard_Time"
+}
