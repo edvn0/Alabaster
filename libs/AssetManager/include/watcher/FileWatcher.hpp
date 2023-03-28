@@ -29,7 +29,7 @@ namespace AssetManager {
 		FileType type;
 		std::string_view path;
 		std::filesystem::file_time_type last_modified;
-		FileStatus status;
+		FileStatus status = FileStatus::Created;
 
 		auto to_path() const { return std::filesystem::path { path }; }
 		auto is_valid() const { return std::filesystem::is_regular_file(to_path()); }
@@ -37,7 +37,7 @@ namespace AssetManager {
 
 	class FileWatcher {
 	public:
-		explicit FileWatcher(const std::filesystem::path& path, std::chrono::duration<int, std::milli> delay = std::chrono::milliseconds(2000));
+		explicit FileWatcher(const std::filesystem::path& path, std::chrono::duration<int, std::milli> in_delay = std::chrono::milliseconds(2000));
 		void stop();
 
 		void on_created(const std::function<void(const FileInformation&)>& activation_function);

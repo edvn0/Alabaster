@@ -37,9 +37,9 @@ namespace AssetManager {
 			return FileType::UNKNOWN;
 	}
 
-	FileWatcher::FileWatcher(const std::filesystem::path& in_path, std::chrono::duration<int, std::milli> delay)
+	FileWatcher::FileWatcher(const std::filesystem::path& in_path, std::chrono::duration<int, std::milli> in_delay)
 		: root(in_path)
-		, delay(delay)
+		, delay(in_delay)
 	{
 		Alabaster::assert_that(std::filesystem::is_directory(root), "File watcher API currently only supports directories.");
 		for (const auto& file : std::filesystem::recursive_directory_iterator { root }) {
