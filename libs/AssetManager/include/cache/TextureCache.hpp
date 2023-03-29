@@ -19,9 +19,8 @@ namespace AssetManager {
 
 		void destroy()
 		{
-			for (auto it = textures.begin(); it != textures.end();) {
-				it->second->destroy();
-				it = textures.erase(it);
+			for (const auto& [key, tex] : textures) {
+				tex->destroy();
 			}
 			textures.clear();
 		}

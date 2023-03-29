@@ -236,8 +236,8 @@ void AlabasterLayer::viewport()
 
 		std::array<float, 3> snap_values = { snap_value, snap_value, snap_value };
 
-		ImGuizmo::Manipulate(
-			glm::value_ptr(camera_view), glm::value_ptr(copy), gizmo_type, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr, snap_values.data());
+		ImGuizmo::Manipulate(glm::value_ptr(camera_view), glm::value_ptr(copy), gizmo_type, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr,
+			snap ? snap_values.data() : nullptr);
 
 		if (ImGuizmo::IsUsing()) {
 			glm::vec3 scale;
