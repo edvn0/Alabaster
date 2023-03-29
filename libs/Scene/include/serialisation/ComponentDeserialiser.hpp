@@ -18,8 +18,16 @@ namespace SceneSystem {
 	template <> struct deserialise_component<Component::ID> {
 		void operator()(const nlohmann::json& json, Entity& out)
 		{
-			auto id = json.get<uuids::uuid>();
+			auto id = json["id"].get<uuids::uuid>();
 			out.put_component<Component::ID>(id);
+		}
+	};
+
+	template <> struct deserialise_component<Component::Tag> {
+		void operator()(const nlohmann::json& json, Entity& out)
+		{
+			auto tag = json["tag"].get<std::string>();
+			out.put_component<Component::Tag>(tag);
 		}
 	};
 

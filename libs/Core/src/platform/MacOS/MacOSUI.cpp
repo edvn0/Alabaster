@@ -13,4 +13,17 @@ namespace Alabaster::UI {
 		}
 	}
 
+	std::optional<std::filesystem::path> accept_drag_drop(const std::string& payload_id)
+	{
+		std::optional<std::filesystem::path> fp {};
+		if (ImGui::BeginDragDropTarget()) {
+			if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(payload_id.c_str())) {
+				const char* path = (const char*)payload->Data;
+				fp = path;
+			}
+			ImGui::EndDragDropTarget();
+		}
+		return fp;
+	}
+
 } // namespace Alabaster::UI

@@ -11,13 +11,12 @@ namespace App {
 
 	class SceneEntitiesPanel : public App::Panel {
 	public:
-		SceneEntitiesPanel(SceneSystem::Scene* input_scene)
+		explicit SceneEntitiesPanel(SceneSystem::Scene& input_scene)
 			: scene(input_scene)
 		{
 		}
 		~SceneEntitiesPanel() override = default;
 
-		void update_scene(SceneSystem::Scene* new_scene) { scene = new_scene; }
 		void draw_components(SceneSystem::Entity& entity);
 		template <SceneSystem::Component::IsComponent T> void display_add_component_entry(const std::string& entry_name)
 		{
@@ -33,9 +32,10 @@ namespace App {
 		void on_event(Alabaster::Event& event) override;
 		void on_init() override { Alabaster::Log::info("[SceneEntitiesPanel] Initialised."); };
 		void on_destroy() override { Alabaster::Log::info("[SceneEntitiesPanel] Destroyed."); };
+		void register_file_watcher(AssetManager::FileWatcher&) { }
 
 	private:
-		SceneSystem::Scene* scene;
+		SceneSystem::Scene& scene;
 		SceneSystem::Entity selected_entity;
 	};
 

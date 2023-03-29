@@ -14,6 +14,8 @@ namespace SceneSystem {
 
 	class Entity;
 
+	enum class SceneState : std::uint8_t { Play, Simulate, Edit };
+
 	class Scene {
 	public:
 		Scene() noexcept;
@@ -41,6 +43,7 @@ namespace SceneSystem {
 		Entity create_entity(const std::string& name);
 		Entity create_entity(const Entity& name);
 		Entity create_entity(entt::entity name);
+		Entity create_entity(entt::entity name, const std::string& tag_name);
 
 		const auto& get_registry() const { return registry; }
 		auto& get_registry() { return registry; }
@@ -54,6 +57,17 @@ namespace SceneSystem {
 		const std::shared_ptr<Alabaster::Image>& final_image() const;
 
 		const Entity* get_selected_entity() const { return selected_entity.get(); }
+		Entity* get_selected_entity() { return selected_entity.get(); }
+
+		void update_selected_entity();
+
+		const auto& get_camera() const { return scene_camera; }
+		auto& get_camera() { return scene_camera; }
+
+		void clear() { registry.clear(); };
+
+		bool is_paused() const { return paused; }
+		void set_paused(bool in_pause) { paused = in_pause; }
 
 	private:
 		void pick_entity(const glm::vec3& ray_world);
@@ -66,12 +80,15 @@ namespace SceneSystem {
 		glm::vec2 viewport_size { 0 };
 		glm::vec2 viewport_offset { 0 };
 
-		std::unique_ptr<Entity> selected_entity;
+		std::unique_ptr<Entity> selected_entity { nullptr };
+		std::unique_ptr<Entity> hovered_entity { nullptr };
 
 		std::shared_ptr<Alabaster::EditorCamera> scene_camera;
 		std::shared_ptr<Alabaster::Framebuffer> framebuffer;
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
+
+		bool paused { false };
 
 		friend Entity;
 	};

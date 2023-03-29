@@ -13,7 +13,8 @@ namespace Alabaster {
 
 	EditorCamera::EditorCamera(
 		const float deg_fov, const float width, const float height, const float near_plane, const float far_plane, EditorCamera* previous_camera)
-		: Camera(deg_fov, width, height, far_plane, near_plane)
+		: Camera(glm::perspectiveFov(glm::radians(deg_fov), width, height, near_plane, far_plane),
+			glm::perspectiveFov(glm::radians(deg_fov), width, height, far_plane, near_plane))
 		, focal_point(0.0f)
 		, vertical_fov(glm::radians(deg_fov))
 		, near_clip(near_plane)
@@ -127,7 +128,6 @@ namespace Alabaster {
 	{
 		const float yaw_sign = get_up_direction().y < 0 ? -1.0f : 1.0f;
 
-		// Extra step to handle the problem when the camera direction is the same as the up vector
 		const float cos_angle = glm::dot(get_forward_direction(), get_up_direction());
 		if (cos_angle * yaw_sign > 0.99f)
 			pitch_delta = 0.f;
@@ -137,7 +137,6 @@ namespace Alabaster {
 		distance = glm::distance(position, focal_point);
 		view_matrix = glm::lookAt(position, look_at, glm::vec3 { 0.f, yaw_sign, 0.f });
 
-		// damping for smooth camera
 		yaw_delta *= 0.6f;
 		pitch_delta *= 0.6f;
 		position_delta *= 0.8f;

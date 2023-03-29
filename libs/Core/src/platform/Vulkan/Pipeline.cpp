@@ -4,6 +4,7 @@
 
 #include "core/Common.hpp"
 #include "core/Logger.hpp"
+#include "core/exceptions/AlabasterException.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
 #include "graphics/Shader.hpp"
@@ -212,10 +213,18 @@ namespace Alabaster {
 
 		VkPipelineCacheCreateInfo pipeline_cache_info = {};
 		pipeline_cache_info.sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO;
-		vk_check(vkCreatePipelineCache(device, &pipeline_cache_info, nullptr, &pipeline_cache));
-
-		vk_check(vkCreateGraphicsPipelines(device, pipeline_cache, 1, &pipeline_create_info, nullptr, &pipeline));
-
+		{
+			auto result = vkCreatePipelineCache(device, &pipeline_cache_info, nullptr, &pipeline_cache);
+			if (result != VK_SUCCESS) {
+				throw Alabaster::AlabasterException("Could not create pipeline cache.");
+			}
+		}
+		{
+			auto result = vkCreateGraphicsPipelines(device, pipeline_cache, 1, &pipeline_create_info, nullptr, &pipeline);
+			if (result != VK_SUCCESS) {
+				throw Alabaster::AlabasterException("Could not create pipeline.");
+			}
+		}
 		Log::info("[Pipeline] Created pipeline with name {}.", spec.debug_name);
 
 		if (spec.shader_owned_by_pipeline) {

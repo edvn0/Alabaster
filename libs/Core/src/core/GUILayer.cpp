@@ -10,7 +10,7 @@
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
 #include "graphics/Shader.hpp"
-#include "vulkan/vulkan_core.h"
+#include "ui/ImGuizmo.hpp"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
@@ -91,6 +91,8 @@ namespace Alabaster {
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
 
+		ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
+
 		return true;
 	}
 
@@ -99,6 +101,7 @@ namespace Alabaster {
 		ImGui_ImplVulkan_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
 	}
 
 	void GUILayer::end() const

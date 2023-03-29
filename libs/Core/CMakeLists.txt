@@ -1,74 +1,28 @@
 cmake_minimum_required(VERSION 3.21)
+include("${CMAKE_SOURCE_DIR}/cmake/common_alabaster.cmake")
 
 project(Core)
 
 find_package(Vulkan REQUIRED)
 find_package(Python3 COMPONENTS Interpreter)
 
-file(GLOB_RECURSE sources av_pch.hpp Alabaster.hpp include/**.hpp src/**.cpp)
+file(GLOB_RECURSE sources 
+  av_pch.hpp 
+  Alabaster.hpp
+  "src/core/**.cpp"
+  "src/graphics/**.cpp"
+  "src/ui/**.cpp"
+  "src/utilities/**.cpp"
+  "src/platform/stb/**.cpp"
+  "src/platform/Vulkan/**.cpp"
+  "src/platform/ImGui/**.cpp"
+)
+set(input_sources "${sources}")
+set(all_sources "")
+add_os_specific_objects(input_sources all_sources)
 
-if(${ALABASTER_OS} STREQUAL "Windows")
-    list(FILTER sources EXCLUDE REGEX MacOS*)
-    list(FILTER sources EXCLUDE REGEX Linux*)
-    list(FILTER sources EXCLUDE REGEX MSVC*)
-    list(FILTER sources EXCLUDE REGEX MinGW*)
-
-    if (ALABASTER_COMPILER STREQUAL "MinGW")
-        file(GLOB_RECURSE compilerSpecificSources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MinGW/MinGWUI.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MinGW/**.cpp")
-        list(APPEND sources ${compilerSpecificSources})
-        list(FILTER sources EXCLUDE REGEX MSVC)
-    elseif(ALABASTER_COMPILER STREQUAL "MSVC")
-        file(GLOB_RECURSE compilerSpecificSources "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MSVC/MSVCUI.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MSVC/**.cpp")
-        list(APPEND sources ${compilerSpecificSources})
-        list(FILTER sources EXCLUDE REGEX MinGW)
-    endif()
-elseif(${ALABASTER_OS} STREQUAL "MacOS")
-    list(FILTER sources EXCLUDE REGEX Windows*)
-    list(FILTER sources EXCLUDE REGEX Linux*)
-    list(FILTER sources EXCLUDE REGEX MSVC*)
-    list(FILTER sources EXCLUDE REGEX MinGW*)
-
-    # Windows includes 'Window'...
-    list(APPEND sources
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/MacOS/MacOSWindow.cpp)
-elseif(${ALABASTER_OS} STREQUAL "Linux")
-    list(FILTER sources EXCLUDE REGEX MacOS*)
-    list(FILTER sources EXCLUDE REGEX Windows*)
-    list(FILTER sources EXCLUDE REGEX MSVC*)
-    list(FILTER sources EXCLUDE REGEX MinGW*)
-
-    # Windows includes 'Window'...
-    list(APPEND sources
-        ${CMAKE_CURRENT_SOURCE_DIR}/src/platform/Linux/LinuxWindow.cpp)
-endif()
-
-find_program(CLANG_FORMAT "clang-format")
-if(CLANG_FORMAT)
-	set(formattable_files ${sources})
-
-	add_custom_target(clang-format-lib COMMAND ${CLANG_FORMAT} -i -style=file
-		${formattable_files})
-endif()
-
-add_library(${PROJECT_NAME} ${sources})
+add_library(${PROJECT_NAME} ${all_sources})
 add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
-if(${ALABASTER_OS} STREQUAL "Windows")
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
-    if (${ALABASTER_COMPILER} STREQUAL "MinGW")
-        target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_COMPILER_MINGW)
-    elseif(${ALABASTER_COMPILER} STREQUAL "MSVC")
-        target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_COMPILER_MSVC)
-    endif()
-elseif(${ALABASTER_OS} STREQUAL "MacOS")
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_COMPILER_CLANG)
-elseif(${ALABASTER_OS} STREQUAL "Linux")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_COMPILER_GNU)
-endif()
-
-set(THIRD_PARTY_DIR ../../third_party/)
 
 target_include_directories(
 	${PROJECT_NAME}
@@ -83,6 +37,7 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/magic_enum/include
 	${THIRD_PARTY_DIR}/random/include
 	${THIRD_PARTY_DIR}/imgui
+    ${THIRD_PARTY_DIR}/imguizmo
 	${THIRD_PARTY_DIR}/imgui/backends
 	${THIRD_PARTY_DIR}/stb
 	${THIRD_PARTY_DIR}/tinyobjloader
@@ -95,6 +50,7 @@ target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE glfw
 	imgui
+    imguizmo
 	Vulkan::Vulkan
 	spdlog
 	magic_enum
@@ -104,34 +60,5 @@ target_link_libraries(
 	tinyobjloader
 	effolkronium_random)
 
-if(MINGW)
-    target_link_libraries(${PROJECT_NAME} PRIVATE -static-libgcc -static-libstdc++)
-endif()
-
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/av_pch.hpp)
-
-if(MSVC)
-	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX /wd4201 "/MP")
-else()
-	target_compile_options(
-		${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Werror
-		-Wno-nullability-extension)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_VALIDATION)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_DEBUG)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
-	"RelWithDebInfo")
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_PROFILE)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_RELEASE)
-endif()
-
-if(BUILD_TESTING)
-	add_subdirectory(tests)
-endif()
-
-if(CLANG_FORMAT)
-	add_dependencies(${PROJECT_NAME} clang-format-lib)
-endif()
+default_register_project(${PROJECT_NAME})

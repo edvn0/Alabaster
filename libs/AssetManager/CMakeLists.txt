@@ -1,31 +1,15 @@
 cmake_minimum_required(VERSION 3.21)
+include("${CMAKE_SOURCE_DIR}/cmake/common_alabaster.cmake")
 
 project(AssetManager)
 
-find_package(Vulkan REQUIRED)
-find_program(CLANG_FORMAT "clang-format")
+file(GLOB_RECURSE sources am_pch.hpp AssetManager.hpp include/**.hpp "src/cache/**.cpp" "src/watcher/**.cpp" "src/compiler/**.cpp")
+set(input_sources "${sources}")
+set(all_sources "")
+add_os_specific_objects(input_sources all_sources)
 
-set(THIRD_PARTY_DIR ../../third_party/)
-
-file(GLOB_RECURSE sources am_pch.hpp AssetManager.hpp include/**.hpp src/**.cpp)
-
-if(CLANG_FORMAT)
-	set(formattable_files ${sources})
-
-	add_custom_target(clang-format-shader-compiler
-		COMMAND ${CLANG_FORMAT} -i -style=file ${formattable_files})
-endif()
-
-add_library(${PROJECT_NAME} ${sources})
+add_library(${PROJECT_NAME} ${all_sources})
 add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
-if(${ALABASTER_OS} STREQUAL "Windows")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_WINDOWS)
-elseif(${ALABASTER_OS} STREQUAL "MacOS")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_MACOS)
-elseif(${ALABASTER_OS} STREQUAL "Linux")
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_LINUX)
-endif()
 
 target_include_directories(
 	${PROJECT_NAME}
@@ -54,39 +38,5 @@ target_link_libraries(
     spirv-cross-glsl
 )
 
-if(MINGW)
-    target_link_libraries(
-	    ${PROJECT_NAME}
-	    PRIVATE  -static-libgcc -static-libstdc++)
-endif()
-
-
-target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_20)
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/am_pch.hpp)
-
-if(MSVC)
-	target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
-else()
-	target_compile_options(
-    ${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Werror
-		-Wno-nullability-extension)
-endif()
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_VALIDATION)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_DEBUG)
-elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
-	"RelWithDebInfo")
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_PROFILE)
-	target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_RELEASE)
-endif()
-
-if(MSVC)
-	target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
-endif()
-
-add_subdirectory(tests)
-
-if(CLANG_FORMAT)
-	add_dependencies(${PROJECT_NAME} clang-format-shader-compiler)
-endif()
+default_register_project(${PROJECT_NAME})

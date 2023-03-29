@@ -9,6 +9,10 @@
 #include <map>
 #include <memory>
 
+namespace AssetManager {
+	class FileWatcher;
+}
+
 namespace Alabaster {
 
 	class Window;
@@ -80,6 +84,9 @@ namespace Alabaster {
 		Swapchain& swapchain() const;
 		GUILayer& gui_layer();
 
+		const auto& get_file_watcher() const { return *file_watcher; }
+		auto& get_file_watcher() { return *file_watcher; }
+
 		const auto& get_statistics() const { return statistics; }
 
 	private:
@@ -90,12 +97,12 @@ namespace Alabaster {
 		void update_layers(float ts);
 		void update_layers(double ts);
 
-	private:
 		void stop();
 
-	private:
 		std::map<std::string, Layer*> layers;
 		std::unique_ptr<Window> window;
+
+		std::unique_ptr<AssetManager::FileWatcher> file_watcher;
 
 		ApplicationStatistics statistics {};
 

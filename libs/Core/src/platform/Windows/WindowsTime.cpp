@@ -14,12 +14,19 @@ namespace Alabaster::Time {
 		ss << std::put_time(&time, "%c %Z");
 
 		auto time_stamp { ss.str() };
-		std::ranges::replace(time_stamp.begin(), time_stamp.end(), ' ', '_');
-		std::ranges::replace(time_stamp.begin(), time_stamp.end(), ':', '_');
-		std::ranges::replace(time_stamp.begin(), time_stamp.end(), '\\', '_');
-		std::ranges::replace(time_stamp.begin(), time_stamp.end(), '/', '_');
-		std::ranges::replace(time_stamp.begin(), time_stamp.end(), '.', '_');
-		std::ranges::replace(time_stamp.begin(), time_stamp.end(), ',', '_');
+		static auto replace = [](auto& data, char what, char with) mutable {
+			std::ranges::replace(data.begin(), data.end(), what, with);
+		};
+
+		replace(time_stamp, ' ', '_');
+		replace(time_stamp, ':', '_');
+		replace(time_stamp, '\\', '_');
+		replace(time_stamp, '/', '_');
+		replace(time_stamp, '.', '_');
+		replace(time_stamp, ',', '_');
+		replace(time_stamp, 'å', 'a');
+		replace(time_stamp, 'ö', 'o');
+		replace(time_stamp, 'ä', 'a');
 
 		return time_stamp;
 	}

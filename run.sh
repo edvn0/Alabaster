@@ -10,18 +10,20 @@ build_testing="OFF"
 clean_first="OFF"
 build_type="Debug"
 generator="Ninja"
+force_configure="OFF"
 
 function alabaster_help() {
     echo "Usage: run [ -r <ON/*OFF> ] [ -t <ON/*OFF> ] [ -c <ON/*OFF> ] [ -b <*Debug/Release/RelWithDebInfo/MinSizeRel> ] [ -g <*Ninja/VS/<CMake Generator freetext>> ] [ -h ]"
 }
 
-while getopts g:r:t:c:b:h flag; do
+while getopts g:r:t:c:b:h:f flag; do
     case "${flag}" in
     g) generator=${OPTARG} ;;
     r) should_run=${OPTARG} ;;
     t) build_testing=${OPTARG} ;;
     c) clean_first=${OPTARG} ;;
     b) build_type=${OPTARG} ;;
+    f) force_configure=${OPTARG} ;;
     h)
         alabaster_help
         exit 2
@@ -51,49 +53,51 @@ else
     export CMAKE_GENERATOR="$generator"
 fi
 
-cmake -B "$build_and_generator_folder" \
-    -D GLFW_INSTALL=OFF \
-    -D GLFW_BUILD_DOCS=OFF \
-    -D GLFW_BUILD_TESTS=OFF \
-    -D GLFW_BUILD_EXAMPLES=OFF \
-    -D CMAKE_BUILD_TYPE="$build_type" \
-    -D BUILD_TESTING="$build_testing" \
-    -D ENABLE_HLSL=ON \
-    -D ENABLE_CTEST=OFF \
-    -D ENTT_BUILD_TESTING=OFF \
-    -D Random_BuildTests=OFF \
-    -D BUILD_SHARED_LIBS=OFF \
-    -D SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS=OFF \
-    -D SPIRV_CROSS_SHARED=OFF \
-    -D SPIRV_CROSS_STATIC=ON \
-    -D SPIRV_CROSS_CLI=OFF \
-    -D SPIRV_CROSS_ENABLE_TESTS=OFF \
-    -D SPIRV_CROSS_ENABLE_GLSL=ON \
-    -D SPIRV_CROSS_ENABLE_HLSL=OFF \
-    -D SPIRV_CROSS_ENABLE_MSL=OFF \
-    -D SPIRV_CROSS_ENABLE_CPP=OFF \
-    -D SPIRV_CROSS_ENABLE_REFLECT=OFF \
-    -D SPIRV_CROSS_ENABLE_C_API=OFF \
-    -D SPIRV_CROSS_ENABLE_UTIL=OFF \
-    -D SPIRV_CROSS_SKIP_INSTALL=ON \
-    -D SHADERC_SKIP_INSTALL=ON \
-    -D SHADERC_SKIP_TESTS=ON \
-    -D SHADERC_SKIP_EXAMPLES=ON \
-    -D SHADERC_SKIP_COPYRIGHT_CHECK=ON \
-    -D SHADERC_ENABLE_WERROR_COMPILE=OFF \
-    -D SKIP_SPIRV_TOOLS_INSTALL=ON \
-    -D SPIRV_BUILD_FUZZER=OFF \
-    -D SPIRV_BUILD_LIBFUZZER_TARGETS=OFF \
-    -D SPIRV_WERROR=OFF \
-    -D SPIRV_WARN_EVERYTHING=OFF \
-    -D SPIRV_COLOR_TERMINAL=OFF \
-    -D SPIRV_TOOLS_LIBRARY_TYPE=STATIC \
-    -D SPIRV_TOOLS_BUILD_STATIC=OFF \
-    -D SPDLOG_FMT_EXTERNAL=ON \
-    -D UUID_USING_CXX20_SPAN=ON \
-    -S "$current_dir"
+if [ "$force_configure" = "ON" ] || ! [ -d "$build_and_generator_folder" ]; then
+    cmake -B "$build_and_generator_folder" \
+        -D GLFW_INSTALL=OFF \
+        -D GLFW_BUILD_DOCS=OFF \
+        -D GLFW_BUILD_TESTS=OFF \
+        -D GLFW_BUILD_EXAMPLES=OFF \
+        -D CMAKE_BUILD_TYPE="$build_type" \
+        -D BUILD_TESTING="$build_testing" \
+        -D ENABLE_HLSL=ON \
+        -D ENABLE_CTEST=OFF \
+        -D ENTT_BUILD_TESTING=OFF \
+        -D Random_BuildTests=OFF \
+        -D BUILD_SHARED_LIBS=OFF \
+        -D SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS=OFF \
+        -D SPIRV_CROSS_SHARED=OFF \
+        -D SPIRV_CROSS_STATIC=ON \
+        -D SPIRV_CROSS_CLI=OFF \
+        -D SPIRV_CROSS_ENABLE_TESTS=OFF \
+        -D SPIRV_CROSS_ENABLE_GLSL=ON \
+        -D SPIRV_CROSS_ENABLE_HLSL=OFF \
+        -D SPIRV_CROSS_ENABLE_MSL=OFF \
+        -D SPIRV_CROSS_ENABLE_CPP=OFF \
+        -D SPIRV_CROSS_ENABLE_REFLECT=OFF \
+        -D SPIRV_CROSS_ENABLE_C_API=OFF \
+        -D SPIRV_CROSS_ENABLE_UTIL=OFF \
+        -D SPIRV_CROSS_SKIP_INSTALL=ON \
+        -D SHADERC_SKIP_INSTALL=ON \
+        -D SHADERC_SKIP_TESTS=ON \
+        -D SHADERC_SKIP_EXAMPLES=ON \
+        -D SHADERC_SKIP_COPYRIGHT_CHECK=ON \
+        -D SHADERC_ENABLE_WERROR_COMPILE=OFF \
+        -D SKIP_SPIRV_TOOLS_INSTALL=ON \
+        -D SPIRV_BUILD_FUZZER=OFF \
+        -D SPIRV_BUILD_LIBFUZZER_TARGETS=OFF \
+        -D SPIRV_WERROR=OFF \
+        -D SPIRV_WARN_EVERYTHING=OFF \
+        -D SPIRV_COLOR_TERMINAL=OFF \
+        -D SPIRV_TOOLS_LIBRARY_TYPE=STATIC \
+        -D SPIRV_TOOLS_BUILD_STATIC=OFF \
+        -D SPDLOG_FMT_EXTERNAL=ON \
+        -D UUID_USING_CXX20_SPAN=ON \
+        -S "$current_dir"
+fi
 
-cmake --build "$build_and_generator_folder" --parallel 10
+cmake --build "$build_and_generator_folder" --target AlabasterApp --parallel 10
 
 if [ "$generator" = "Ninja" ]; then
     if [ -f "$current_dir/compile_commands.json" ]; then

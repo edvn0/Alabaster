@@ -5,16 +5,25 @@
 #include "graphics/GraphicsContext.hpp"
 #include "platform/Vulkan/ImageUtilities.hpp"
 
+#include <AssetManager.hpp>
 #include <stb_image.h>
 
 namespace Alabaster {
+
+	std::shared_ptr<Texture> Texture::from_filename(const std::filesystem::path& path, const TextureProperties& props)
+	{
+		const auto actual_path = IO::texture(path);
+		const auto filename_as_string = actual_path.filename().string();
+		if (const auto& tex = AssetManager::asset<Texture>(filename_as_string))
+			return tex;
+		return std::make_shared<Texture>(IO::texture(actual_path), props);
+	}
 
 	Texture::Texture(const std::filesystem::path& tex_path, const TextureProperties props)
 		: path(tex_path)
 		, properties(props)
 	{
-		bool loaded = load_image(path.string());
-		if (!loaded) {
+		if (!load_image(path.string())) {
 			throw AlabasterException("Could not load image.");
 		}
 
@@ -104,6 +113,8 @@ namespace Alabaster {
 
 	bool Texture::load_image(const std::string& in_path)
 	{
+		if (!IO::is_file(in_path))
+			return false;
 		int w, h, channels;
 
 		if (stbi_is_hdr(in_path.c_str())) {

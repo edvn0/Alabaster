@@ -14,15 +14,13 @@ namespace App {
 
 	using namespace std::string_view_literals;
 
-	DirectoryContentPanel::DirectoryContentPanel(std::filesystem::path initial)
+	DirectoryContentPanel::DirectoryContentPanel(const std::filesystem::path& initial)
 		: initial(initial)
 		, current(initial)
-		, directory_icon(*AssetManager::asset<Alabaster::Texture>("directory_icon.png"))
-		, file_icon(*AssetManager::asset<Alabaster::Texture>("file_icon.png"))
 	{
 	}
 
-	bool DirectoryContentPanel::traverse_down(const std::filesystem::path into_directory, bool force_reload)
+	bool DirectoryContentPanel::traverse_down(const std::filesystem::path& into_directory, bool force_reload)
 	{
 		bool could = true;
 
@@ -93,10 +91,16 @@ namespace App {
 
 	void DirectoryContentPanel::ui(float ts)
 	{
+		bool force_reload = false;
+		if (Alabaster::Input::all(Alabaster::Key::LeftControl, Alabaster::Key::LeftShift, Alabaster::Key::R)) {
+			reload();
+			force_reload = true;
+		}
+
 		ImGui::Begin("Directory Content");
 
 		if (can_traverse_up() && ImGui::ArrowButton("##GoUpOneLevel", ImGuiDir_Left)) {
-			traverse_up();
+			traverse_up(force_reload);
 		}
 
 		static float padding = 16.0f;
@@ -137,7 +141,7 @@ namespace App {
 								}
 
 								icons[filename] = Alabaster::Texture::from_filename(filename);
-							} catch (const Alabaster::AlabasterException& e) {
+							} catch (const Alabaster::AlabasterException&) {
 								Alabaster::Log::info("Could not create icon from image {}, will not try to display again.", filename.string());
 								do_not_try_icons.emplace(filename);
 							}
@@ -147,9 +151,9 @@ namespace App {
 					}
 				}
 				Alabaster::UI::drag_drop(path);
-				Alabaster::UI::handle_double_click([&directory_entry, this] {
+				Alabaster::UI::handle_double_click([&directory_entry, force_reload, this] {
 					if (is_directory(directory_entry)) {
-						traverse_down(directory_entry);
+						traverse_down(directory_entry, force_reload);
 					}
 				});
 
@@ -169,6 +173,12 @@ namespace App {
 	void DirectoryContentPanel::on_event(Alabaster::Event& event) { }
 
 	void DirectoryContentPanel::on_init()
+	{
+		path_and_content_cache[current] = get_files_in_directory(current);
+		current_directory_content = path_and_content_cache[current];
+	}
+
+	void DirectoryContentPanel::reload()
 	{
 		path_and_content_cache[current] = get_files_in_directory(current);
 		current_directory_content = path_and_content_cache[current];
@@ -194,13 +204,28 @@ namespace App {
 		return found;
 	}
 
-	void DirectoryContentPanel::draw_file_or_directory(const std::filesystem::path& path, const ImVec2& size) const
+	void DirectoryContentPanel::draw_file_or_directory(const std::filesystem::path& path, const ImVec2& size)
 	{
-		const auto& icon = is_directory(path) ? directory_icon : file_icon;
+		if (!file_type_cache.contains(path)) {
+			file_type_cache[path] = is_directory(path);
+		}
+		const auto& icon = file_type_cache[path] ? directory_icon : file_icon;
 		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-		const auto& image_info = icon.get_descriptor_info();
+		const auto& image_info = icon->get_descriptor_info();
 		Alabaster::UI::image(image_info, size);
 		ImGui::PopStyleColor();
+	}
+
+	void DirectoryContentPanel::register_file_watcher(AssetManager::FileWatcher& watcher)
+	{
+		watcher.on_created_or_deleted([this](const AssetManager::FileInformation& file_info) {
+			std::filesystem::path file_path { file_info.path };
+			if (const auto file_directory_for_modified_file = file_path.parent_path(); file_directory_for_modified_file != current)
+				return;
+
+			std::unique_lock lock { mutex };
+			reload();
+		});
 	}
 
 } // namespace App

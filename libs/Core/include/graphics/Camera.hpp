@@ -100,7 +100,7 @@ namespace Alabaster {
 		}
 
 		const glm::mat4& get_view_matrix() const override { return view_matrix; }
-		glm::mat4 get_un_reversed_view_projection() const { return get_unreversed_projection_matrix() * view_matrix; }
+		glm::mat4 get_unreversed_view_projection() const { return get_unreversed_projection_matrix() * view_matrix; }
 
 		glm::vec3 get_up_direction() const;
 		glm::vec3 get_right_direction() const;
@@ -134,7 +134,7 @@ namespace Alabaster {
 		float zoom_speed() const;
 
 		glm::mat4 view_matrix;
-		glm::vec3 position = { 0, 0, -20 };
+		glm::vec3 position = { 5, 5, -5 };
 		glm::vec3 direction;
 		glm::vec3 focal_point { 0.0f };
 

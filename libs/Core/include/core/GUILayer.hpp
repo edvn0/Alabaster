@@ -19,7 +19,7 @@ namespace Alabaster {
 		void ui() override {};
 		void destroy() override;
 
-		void block_events() { should_block = true; }
+		void block_events(bool set_blocking) { should_block = set_blocking; }
 
 		void begin() const;
 		void end() const;

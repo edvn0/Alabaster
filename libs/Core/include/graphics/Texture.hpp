@@ -60,16 +60,17 @@ namespace Alabaster {
 		bool destroyed { false };
 
 	public:
-		template <typename Path = std::filesystem::path> static std::shared_ptr<Texture> from_filename(const Path& filename)
+		static std::shared_ptr<Texture> from_filename(const std::filesystem::path& filename)
 		{
 			return std::make_shared<Texture>(IO::texture(filename), TextureProperties(filename.string()));
 		}
 
-		template <typename Path = std::filesystem::path>
-		static std::shared_ptr<Texture> from_filename(const Path& filename, const TextureProperties& props)
+		static std::shared_ptr<Texture> from_filename(const std::string& filename)
 		{
-			return std::make_shared<Texture>(IO::texture(filename), props);
+			return std::make_shared<Texture>(IO::texture(filename), TextureProperties(filename));
 		}
+
+		static std::shared_ptr<Texture> from_filename(const std::filesystem::path& filename, const TextureProperties& props);
 	};
 
 } // namespace Alabaster

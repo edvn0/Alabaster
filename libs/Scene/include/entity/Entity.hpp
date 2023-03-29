@@ -76,9 +76,9 @@ namespace SceneSystem {
 		bool is_valid() const { return is_valid(entity_handle); }
 		template <typename Handle> bool is_valid(Handle&& handle) const { return std::forward<Handle>(handle) != entt::null; }
 
-		auto& get_transform() const { return get_component<Component::Transform>(); }
-		auto& get_tag() const { return get_component<Component::Tag>(); }
+		const auto& get_transform() const { return get_component<Component::Transform>(); }
 		auto& get_transform() { return get_component<Component::Transform>(); }
+		const auto& get_tag() const { return get_component<Component::Tag>(); }
 		auto& get_tag() { return get_component<Component::Tag>(); }
 
 	private:
