@@ -5,6 +5,7 @@
 #include "core/events/ApplicationEvent.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Swapchain.hpp"
+#include "utilities/StringHash.hpp"
 
 #include <map>
 #include <memory>
@@ -99,7 +100,7 @@ namespace Alabaster {
 
 		void stop();
 
-		std::map<std::string, Layer*> layers;
+		std::unordered_map<std::string, Layer*, AssetManager::StringHash, std::equal_to<>> layers;
 		std::unique_ptr<Window> window;
 
 		std::unique_ptr<AssetManager::FileWatcher> file_watcher;

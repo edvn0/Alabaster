@@ -29,7 +29,7 @@ namespace Alabaster {
 
 	private:
 		void offline_set_data(const void* buffer, std::uint32_t size, std::uint32_t offset) const;
-		void offline_set_data(const void* buffer, const std::size_t  size, const std::size_t  offset)const;
+		void offline_set_data(const void* buffer, const std::size_t size, const std::size_t offset) const;
 
 	public:
 		inline static std::unique_ptr<VertexBuffer> create(std::vector<Vertex>&& vs)

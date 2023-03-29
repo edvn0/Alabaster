@@ -9,6 +9,7 @@
 #include "scene/Scene.hpp"
 
 #include <Alabaster.hpp>
+#include <AssetManager.hpp>
 #include <ImGuizmo.h>
 #include <SceneSystem.hpp>
 #include <memory>

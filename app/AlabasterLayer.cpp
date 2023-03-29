@@ -63,7 +63,7 @@ void AlabasterLayer::on_event(Event& e)
 		return false;
 	});
 	dispatch.dispatch<KeyPressedEvent>([this](KeyPressedEvent& key_event) {
-		switch (const auto key_code = key_event.get_key_code()) {
+		switch (key_event.get_key_code()) {
 		case Key::Escape: {
 			Application::the().exit();
 			return true;
@@ -196,7 +196,10 @@ void AlabasterLayer::viewport()
 	viewport_hovered = ImGui::IsWindowHovered();
 
 	global_imgui_is_blocking = !viewport_hovered && !viewport_focused;
+
 	Application::the().gui_layer().block_events(!viewport_hovered && !viewport_focused);
+	UI::block_events(!viewport_hovered && !viewport_focused);
+
 	ImVec2 viewport_panel_size = ImGui::GetContentRegionAvail();
 	viewport_size = { viewport_panel_size.x, viewport_panel_size.y };
 	editor_scene->update_viewport_sizes(viewport_size, viewport_bounds, { viewport_offset.x, viewport_offset.y });
@@ -221,10 +224,11 @@ void AlabasterLayer::viewport()
 
 		bool snap = Input::key(Key::LeftShift);
 		float snap_value = 0.5f;
-		if (gizmo_type == ImGuizmo::OPERATION::ROTATE)
+		if (gizmo_type == ImGuizmo::OPERATION::ROTATE) {
 			snap_value = 45.0f;
+		}
 
-		std::array<float, 3> snap_values = { snap_value, snap_value, snap_value };
+		std::array snap_values = { snap_value, snap_value, snap_value };
 
 		ImGuizmo::Manipulate(glm::value_ptr(camera_view), glm::value_ptr(copy), gizmo_type, ImGuizmo::LOCAL, glm::value_ptr(transform), nullptr,
 			snap ? snap_values.data() : nullptr);
@@ -297,8 +301,9 @@ void AlabasterLayer::ui_toolbar()
 	}
 
 	if (has_simulate_button) {
-		if (has_play_button)
+		if (has_play_button) {
 			ImGui::SameLine();
+		}
 
 		if (const auto& icon = (scene_state == SceneState::Edit || scene_state == SceneState::Play) ? icon_simulate : icon_stop;
 			UI::image_button(icon, size) && toolbar_enabled) {
@@ -312,19 +317,17 @@ void AlabasterLayer::ui_toolbar()
 	if (has_pause_button) {
 		const auto is_paused = editor_scene->is_paused();
 		ImGui::SameLine();
-		{
-			if (const auto& icon = icon_pause; UI::image_button(icon, size) && toolbar_enabled) {
-				editor_scene->set_paused(!is_paused);
-			}
+
+		if (const auto& icon = icon_pause; UI::image_button(icon, size) && toolbar_enabled) {
+			editor_scene->set_paused(!is_paused);
 		}
 
 		// Step button
 		if (is_paused) {
 			ImGui::SameLine();
-			{
-				if (const auto& icon = icon_step; UI::image_button(icon, size) && toolbar_enabled) {
-					take_step();
-				}
+
+			if (const auto& icon = icon_step; UI::image_button(icon, size) && toolbar_enabled) {
+				take_step();
 			}
 		}
 	}

@@ -1,5 +1,5 @@
-#include "cache/TextureCache.hpp"
 #include "cache/ShaderCache.hpp"
+#include "cache/TextureCache.hpp"
 #include "graphics/Shader.hpp"
 
 #include <gmock/gmock.h>

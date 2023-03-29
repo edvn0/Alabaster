@@ -1,8 +1,5 @@
 #pragma once
 
-#include "AssetManager.hpp"
-
-#include <filesystem>
 #include <future>
 #include <nlohmann/json.hpp>
 #include <vector>

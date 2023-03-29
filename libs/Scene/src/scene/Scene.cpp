@@ -246,6 +246,9 @@ namespace SceneSystem {
 
 		Alabaster::EventDispatcher dispatch(event);
 		dispatch.dispatch<Alabaster::WindowResizeEvent>([this](const Alabaster::WindowResizeEvent& e) {
+			if (e.width() == 0 || e.height() == 0)
+				return true;
+
 			const auto vertical_fov = glm::degrees(scene_camera->get_vertical_fov());
 			scene_camera.reset(new Alabaster::EditorCamera(
 				vertical_fov, static_cast<float>(e.width()), static_cast<float>(e.height()), 0.1f, 1000.0f, scene_camera.get()));

@@ -2,21 +2,19 @@
 
 #include "core/GUILayer.hpp"
 
-#include "core/Buffer.hpp"
 #include "core/Common.hpp"
 #include "core/Window.hpp"
 #include "core/events/KeyEvent.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
-#include "graphics/Renderer.hpp"
 #include "graphics/Shader.hpp"
 #include "ui/ImGuizmo.hpp"
+#include "utilities/FileInputOutput.hpp"
 
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_vulkan.h>
-#include <utilities/FileInputOutput.hpp>
 
 namespace Alabaster {
 
@@ -47,17 +45,17 @@ namespace Alabaster {
 		auto& window = Application::the().get_window();
 
 		auto& vulkan_context = GraphicsContext::the();
-		auto device = vulkan_context.device();
+		auto& device = vulkan_context.device();
 
 		// Create Descriptor Pool
-		std::array<VkDescriptorPoolSize, 11> pool_sizes = { VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+		static const std::array<VkDescriptorPoolSize, 11> pool_sizes = { VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
 			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 }, VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
 			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 100 }, VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 100 },
 			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 100 }, VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 100 },
 			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 100 }, VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 100 },
 			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 100 },
 			VkDescriptorPoolSize { VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 100 } };
-		const auto size = static_cast<std::uint32_t>(pool_sizes.size());
+		constexpr auto size = static_cast<std::uint32_t>(pool_sizes.size());
 		VkDescriptorPoolCreateInfo pool_info = {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
 		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
@@ -116,10 +114,10 @@ namespace Alabaster {
 		clear_values[0].color = clear_colour;
 		clear_values[1].depthStencil = depth_stencil_clear;
 
-		std::uint32_t width = swapchain->get_width();
-		std::uint32_t height = swapchain->get_height();
+		const auto width = swapchain->get_width();
+		const auto height = swapchain->get_height();
 
-		VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
+		const VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
 
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -141,8 +139,8 @@ namespace Alabaster {
 		vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
 		const auto& imgui_buffer = imgui_command_buffer;
-		const auto& command_buffer = imgui_buffer->get_buffer();
 		{
+			const auto& command_buffer = imgui_buffer->get_buffer();
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
 			inheritance_info.renderPass = swapchain->get_render_pass();
@@ -154,7 +152,7 @@ namespace Alabaster {
 			cbi.pInheritanceInfo = &inheritance_info;
 			imgui_buffer->begin(&cbi);
 
-			VkViewport viewport = {};
+			VkViewport viewport;
 			viewport.x = 0.0f;
 			viewport.y = static_cast<float>(height);
 			viewport.height = -static_cast<float>(height);
@@ -163,7 +161,7 @@ namespace Alabaster {
 			viewport.maxDepth = 1.0f;
 			vkCmdSetViewport(command_buffer, 0, 1, &viewport);
 
-			VkRect2D scissor = {};
+			VkRect2D scissor;
 			scissor.extent.width = width;
 			scissor.extent.height = height;
 			scissor.offset.x = 0;
@@ -182,7 +180,7 @@ namespace Alabaster {
 				scaled_already = true;
 
 				const auto scale = ImGui::GetWindowDpiScale();
-				Alabaster::Log::info("Scale: {}", scale);
+				Alabaster::Log::info("[GUILayer] Scale: {}, new framebuffer scale: {} by {}", scale, sx, sy);
 			}
 
 			main_draw_data->FramebufferScale = { scale_x, scale_y };
@@ -198,8 +196,7 @@ namespace Alabaster {
 
 		vk_check(vkEndCommandBuffer(draw_command_buffer));
 
-		const ImGuiIO& io = ImGui::GetIO();
-		if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+		if (const ImGuiIO& io = ImGui::GetIO(); io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
 			ImGui::UpdatePlatformWindows();
 			ImGui::RenderPlatformWindowsDefault();
 		}

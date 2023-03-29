@@ -33,6 +33,8 @@ namespace Alabaster::UI {
 		}
 	}
 	std::optional<std::filesystem::path> accept_drag_drop(const std::string& payload_identifier);
+	void block_events(const bool should_block);
+	bool is_blocking_events();
 
 	void remove_image(const VkDescriptorImageInfo& info);
 

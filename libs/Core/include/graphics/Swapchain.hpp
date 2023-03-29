@@ -73,6 +73,8 @@ namespace Alabaster {
 		VkDevice device;
 		bool vsync = false;
 
+		GLFWwindow* glfw_window;
+
 		VkFormat color_format;
 		VkColorSpaceKHR color_space;
 		VkExtent2D extent;

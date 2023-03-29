@@ -128,4 +128,8 @@ namespace Alabaster::UI {
 		}
 	}
 
+	static std::atomic_bool block_all_events { false };
+	void block_events(const bool should_block) { block_all_events = should_block; }
+	bool is_blocking_events() { return block_all_events; }
+
 } // namespace Alabaster::UI

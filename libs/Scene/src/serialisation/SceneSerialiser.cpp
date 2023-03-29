@@ -12,7 +12,6 @@
 #include "uuid.h"
 
 #include <AssetManager.hpp>
-#include <cstdint>
 
 namespace SceneSystem {
 
