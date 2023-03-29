@@ -4,6 +4,10 @@
 #include <concepts>
 #include <fstream>
 #include <functional>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <initializer_list>
 #include <iostream>
 #include <map>

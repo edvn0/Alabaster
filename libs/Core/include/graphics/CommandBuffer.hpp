@@ -15,8 +15,8 @@ namespace Alabaster {
 	enum class QueueChoice { Graphics = 0, Compute = 1 };
 
 	class CommandBuffer {
+	protected:
 		using DeallocationCallback = std::function<void(Allocator&)>;
-
 	public:
 		explicit CommandBuffer(std::uint32_t count, QueueChoice choice = QueueChoice::Graphics, bool primary = true);
 		virtual ~CommandBuffer();
@@ -44,6 +44,7 @@ namespace Alabaster {
 		void add_destruction_callback(DeallocationCallback&& cb) { destruction_callbacks.push(std::move(cb)); }
 
 	protected:
+
 		void set_allocator_name(std::string name)
 		{
 			if (!allocator)
@@ -76,13 +77,18 @@ namespace Alabaster {
 		static std::unique_ptr<CommandBuffer> from_swapchain() { return std::unique_ptr<CommandBuffer>(new CommandBuffer()); };
 	};
 
+	static constexpr auto default_callback = [](Allocator&) {};
+
 	class ImmediateCommandBuffer final : public CommandBuffer {
 	public:
-		explicit ImmediateCommandBuffer(std::string allocator_tag)
+		template <typename Str, typename Func = DeallocationCallback>
+			requires std::is_convertible_v<Str,std::string>
+		explicit ImmediateCommandBuffer(Str&& allocator_tag, Func&& cb = default_callback)
 			: CommandBuffer(1)
 		{
 			CommandBuffer::begin();
-			set_allocator_name(std::move(allocator_tag));
+			set_allocator_name(std::forward<Str>(allocator_tag));
+			add_destruction_callback(std::forward<Func>(cb));
 		}
 
 		~ImmediateCommandBuffer() override

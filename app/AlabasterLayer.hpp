@@ -4,31 +4,14 @@
 
 #pragma once
 
-#include "Alabaster.hpp"
-#include "AssetManager.hpp"
-#include "SceneSystem.hpp"
-#include "graphics/Camera.hpp"
-#include "graphics/Renderer.hpp"
 #include "graphics/Texture.hpp"
 #include "panels/Panel.hpp"
 #include "scene/Scene.hpp"
 
+#include <Alabaster.hpp>
 #include <ImGuizmo.h>
-#include <glm/glm.hpp>
-#include <magic_enum.hpp>
+#include <SceneSystem.hpp>
 #include <memory>
-
-namespace Filetype {
-	enum class Filetypes : std::uint8_t { PNG = 0, TTF, JPEG, JPG, SPV, VERT, FRAG, OBJ, JSON, SCENE };
-}
-
-template <Filetype::Filetypes Type> struct handle_filetype {
-	using Scene = SceneSystem::Scene;
-	void operator()(Scene& scene, [[maybe_unused]] const std::filesystem::path& path) const
-	{
-		Alabaster::Log::info("Filetype handler not implemented for {}", magic_enum::enum_name(Type));
-	};
-};
 
 class AlabasterLayer final : public Alabaster::Layer {
 public:
@@ -37,15 +20,16 @@ public:
 
 	void update(float ts) override;
 	void ui(float ts) override;
-	void ui() override {};
+	void ui() override { }
 	bool initialise() override;
 	void destroy() override;
 	void on_event(Alabaster::Event& event) override;
 
 private:
-	void handle_drag_drop();
+	void handle_drag_drop() const;
 	void menu_bar() const;
 	void viewport();
+	void take_step();
 	void ui_toolbar();
 
 	void serialise_scene();

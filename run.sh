@@ -16,7 +16,7 @@ function alabaster_help() {
     echo "Usage: run [ -r <ON/*OFF> ] [ -t <ON/*OFF> ] [ -c <ON/*OFF> ] [ -b <*Debug/Release/RelWithDebInfo/MinSizeRel> ] [ -g <*Ninja/VS/<CMake Generator freetext>> ] [ -h ]"
 }
 
-while getopts g:r:t:c:b:h:f flag; do
+while getopts ":g:r:t:c:b:h:f:" flag; do
     case "${flag}" in
     g) generator=${OPTARG} ;;
     r) should_run=${OPTARG} ;;
@@ -97,7 +97,9 @@ if [ "$force_configure" = "ON" ] || ! [ -d "$build_and_generator_folder" ]; then
         -S "$current_dir"
 fi
 
-cmake --build "$build_and_generator_folder" --target AlabasterApp --parallel 10
+if ! [ "$force_configure" = "ON" ]; then
+    cmake --build "$build_and_generator_folder" --target AlabasterApp --parallel 10
+fi
 
 if [ "$generator" = "Ninja" ]; then
     if [ -f "$current_dir/compile_commands.json" ]; then

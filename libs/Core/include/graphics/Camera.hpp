@@ -6,9 +6,7 @@
 
 #include "core/events/Event.hpp"
 #include "core/events/MouseEvent.hpp"
-#include "glm/fwd.hpp"
 
-#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/glm.hpp>
 
 namespace Alabaster {
@@ -18,12 +16,9 @@ namespace Alabaster {
 	class Camera {
 	public:
 		Camera() = default;
-		Camera(const glm::mat4& projection, const glm::mat4& unreversed_projection)
-			: projection_matrix(projection)
-			, unreversed_projection_matrix(unreversed_projection) {};
-		Camera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane)
-			: projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, far_plane, near_plane))
-			, unreversed_projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, near_plane, far_plane)) {};
+		Camera(const glm::mat4& projection, const glm::mat4& unreversed_projection);
+		Camera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane);
+
 		virtual ~Camera() = default;
 
 		virtual void focus(const glm::vec3&) {};
@@ -44,17 +39,9 @@ namespace Alabaster {
 		}
 
 		void set_perspective_projection_matrix(
-			const float radians_fov, const float width, const float height, const float near_plane, const float far_plane)
-		{
-			projection_matrix = glm::perspectiveFov(radians_fov, width, height, far_plane, near_plane);
-			unreversed_projection_matrix = glm::perspectiveFov(radians_fov, width, height, near_plane, far_plane);
-		}
+			const float radians_fov, const float width, const float height, const float near_plane, const float far_plane);
 
-		void set_ortho_projection_matrix(const float width, const float height, const float near_plane, const float far_plane)
-		{
-			projection_matrix = glm::ortho(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, far_plane, near_plane);
-			unreversed_projection_matrix = glm::ortho(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near_plane, far_plane);
-		}
+		void set_ortho_projection_matrix(const float width, const float height, const float near_plane, const float far_plane);
 
 		float get_exposure() const { return exposure; }
 		float& get_exposure() { return exposure; }

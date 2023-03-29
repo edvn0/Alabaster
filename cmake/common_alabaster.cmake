@@ -62,7 +62,7 @@ function(default_register_project PROJECT)
 endfunction()
 
 function(add_os_specific_objects sources all_sources)
-    set(_ALL_INPUTS ${${sources}}) # Merge them together
+    set(_ALL_INPUTS ${${sources}})
     file(GLOB_RECURSE private_os_sources "src/platform/${ALABASTER_OS}/**.cpp")
     file(GLOB_RECURSE compiler_sources "src/platform/${ALABASTER_COMPILER}/**.cpp")
     list(APPEND _ALL_INPUTS ${private_os_sources} ${compiler_sources})

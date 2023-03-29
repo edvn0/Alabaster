@@ -86,8 +86,7 @@ namespace SceneSystem {
 		json entities_array = json::array();
 		try {
 			for (auto& entity_array_future : futures) {
-				auto array = entity_array_future.get();
-				for (const auto& entity_array : array) {
+				for (auto array = entity_array_future.get(); const auto& entity_array : array) {
 					entities_array.push_back(entity_array);
 				}
 			}
@@ -102,7 +101,7 @@ namespace SceneSystem {
 		output_json["entities"] = entities_array;
 
 		try {
-			const auto filename = time_stamp + "_" + to_string(scene.get_name()) + ".scene";
+			const auto filename = time_stamp + "_" + scene.get_name() + ".scene";
 			const auto output_file = Alabaster::IO::scene(filename);
 			std::ofstream scene_output(output_file);
 			if (!scene_output) {

@@ -9,9 +9,8 @@
 #include "graphics/VertexBuffer.hpp"
 #include "utilities/FileInputOutput.hpp"
 
-#include <tiny_obj_loader.h>
-
 #define TINYOBJLOADER_USE_MAPBOX_EARCUT
+#include <tiny_obj_loader.h>
 
 namespace Alabaster {
 
@@ -59,7 +58,7 @@ namespace Alabaster {
 	Mesh::Mesh(const std::filesystem::path& input_path)
 		: path(input_path)
 	{
-		auto t0 = Clock::get_ms<float>();
+		const auto t0 = Clock::get_ms<float>();
 		verify(IO::exists(input_path), fmt::format("{} did not exist.", input_path.string()));
 		verify(IO::is_file(input_path), fmt::format("{} is not a file.", input_path.string()));
 
@@ -87,8 +86,9 @@ namespace Alabaster {
 
 		tinyobj::ObjReader reader;
 
-		if (!reader.ParseFromFile(path.string().c_str(), reader_config)) {
+		if (!reader.ParseFromFile(path.string(), reader_config)) {
 			if (!reader.Error().empty()) {
+
 				Log::error("{}", reader.Error());
 			}
 		}

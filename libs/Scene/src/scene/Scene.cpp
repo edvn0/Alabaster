@@ -73,7 +73,7 @@ namespace SceneSystem {
 
 		Entity sphere_one = create_entity(fmt::format("Sphere-{}", 0));
 		sphere_one.add_component<Component::Mesh>(sphere_model);
-		Component::Transform& sphere_one_transform = sphere_one.get_component<Component::Transform>();
+		auto& sphere_one_transform = sphere_one.get_component<Component::Transform>();
 		sphere_one_transform.position = { 3, -6, 5 };
 		sphere_one.add_component<Component::Texture>(Alabaster::random_vec4(0, 1));
 		sphere_one.add_component<Component::Pipeline>(sun_pipeline);
@@ -81,7 +81,7 @@ namespace SceneSystem {
 
 		Entity sphere_two = create_entity(fmt::format("Sphere-{}", 1));
 		sphere_two.add_component<Component::Mesh>(sphere_model);
-		Component::Transform& sphere_two_transform = sphere_two.get_component<Component::Transform>();
+		auto& sphere_two_transform = sphere_two.get_component<Component::Transform>();
 		sphere_two_transform.position = { 1, -6, 5 };
 		sphere_two.add_component<Component::Texture>(Alabaster::random_vec4(0, 1));
 		sphere_two.add_component<Component::Pipeline>(sun_pipeline);
@@ -89,7 +89,7 @@ namespace SceneSystem {
 
 		Entity floor = create_entity("Floor");
 		floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
-		Component::Transform& floor_transform = floor.get_component<Component::Transform>();
+		auto& floor_transform = floor.get_component<Component::Transform>();
 		floor_transform.scale = { 200, 200, .2 };
 		floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
 		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
@@ -111,27 +111,32 @@ namespace SceneSystem {
 
 	Scene::~Scene() = default;
 
-	void Scene::pick_entity(const glm::vec3& ray_wor)
+	void Scene::step()
+	{
+		// TODO: We should step
+		(void)this;
+	}
+
+	void Scene::pick_entity(const glm::vec3& ray_world)
 	{
 		const auto camera_position = scene_camera->get_position();
 		entt::entity found_entity = entt::null;
 		float t_dist = 1000.0f;
 
-		auto spheres = registry.view<const Component::SphereIntersectible>();
-		spheres.each([&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::SphereIntersectible& sphere) {
-			float distance = 1000.0f;
-			const bool intersected = sphere.intersects_with(ray_wor, camera_position, distance);
-			if (intersected && distance < t_dist) {
-				t_dist = distance;
-				found_entity = entity;
-			}
-		});
+		const auto spheres = registry.view<const Component::SphereIntersectible>();
+		spheres.each(
+			[&camera_position, &ray_world, &t_dist, &found_entity](const entt::entity& entity, const Component::SphereIntersectible& sphere) {
+				float distance = 1000.0f;
+				if (const bool intersected = sphere.intersects_with(ray_world, camera_position, distance); intersected && distance < t_dist) {
+					t_dist = distance;
+					found_entity = entity;
+				}
+			});
 
-		auto quads = registry.view<const Component::QuadIntersectible>();
-		quads.each([&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::QuadIntersectible& quad) {
+		const auto quads = registry.view<const Component::QuadIntersectible>();
+		quads.each([&camera_position, &ray_world, &t_dist, &found_entity](const entt::entity& entity, const Component::QuadIntersectible& quad) {
 			float distance = 1000.0f;
-			const bool intersected = quad.intersects_with(ray_wor, camera_position, distance);
-			if (intersected && distance < t_dist) {
+			if (const bool intersected = quad.intersects_with(ray_world, camera_position, distance); intersected && distance < t_dist) {
 				t_dist = distance;
 				found_entity = entity;
 			}
@@ -146,7 +151,7 @@ namespace SceneSystem {
 
 	template <class Vec = glm::vec3> static constexpr auto xy(const Vec& vec) { return vec.xy; }
 
-	void Scene::update_selected_entity() { *selected_entity = *hovered_entity; }
+	void Scene::update_selected_entity() const { *selected_entity = *hovered_entity; }
 
 	void Scene::pick_mouse()
 	{
@@ -204,7 +209,7 @@ namespace SceneSystem {
 
 	void Scene::update_intersectibles()
 	{
-		auto mesh_view = registry.view<const Component::Transform, Component::SphereIntersectible>();
+		const auto mesh_view = registry.view<const Component::Transform, Component::SphereIntersectible>();
 		mesh_view.each([](const Component::Transform& transform, Component::SphereIntersectible& intersectible) {
 			intersectible.update(transform.position, transform.scale, transform.rotation);
 		});
@@ -215,17 +220,17 @@ namespace SceneSystem {
 		axes(scene_renderer, glm::vec3 { -100, -0.1, 100 }, 400.0f);
 		scene_renderer->set_light_data(pos, col, ambience);
 
-		auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>(
+		const auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>(
 			entt::exclude<Component::Light>);
 		mesh_view.each(
 			[&renderer = scene_renderer](const Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture,
 				const Component::Pipeline& pipeline) { renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour); });
 
-		auto light_view = registry.view<const Component::Transform, const Component::Light, const Component::Texture, const Component::Mesh>();
+		const auto light_view = registry.view<const Component::Transform, const Component::Light, const Component::Texture, const Component::Mesh>();
 		light_view.each([&renderer = scene_renderer](const Component::Transform& transform, const Component::Light, const Component::Texture& texture,
 							const Component::Mesh& mesh) { renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, texture.colour); });
 
-		auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
+		const auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
 		quad_view.each([&renderer = scene_renderer](
 						   const Component::Transform& transform, const Component::BasicGeometry& geom, const Component::Texture& texture) {
 			if (geom.geometry == Component::Geometry::Quad) {

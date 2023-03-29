@@ -235,7 +235,9 @@ namespace App {
 		if (ImGui::BeginPopup("AddComponent")) {
 			display_add_component_entry<SceneSystem::Component::Camera>("Camera");
 			display_add_component_entry<SceneSystem::Component::Texture>("Texture");
-
+			display_add_component_entry<SceneSystem::Component::Pipeline>("Pipeline");
+			display_add_component_entry<SceneSystem::Component::Mesh>("Mesh");
+			display_add_component_entry<SceneSystem::Component::SphereIntersectible>("SphereIntersectible");
 			ImGui::EndPopup();
 		}
 
@@ -266,6 +268,11 @@ namespace App {
 			[](const SceneSystem::Component::Mesh& component) { ImGui::Text("Mesh path: %s", component.mesh->get_asset_path().string().data()); });
 
 		draw_component<SceneSystem::Component::Pipeline>(entity, "Pipeline", [](SceneSystem::Component::Pipeline& component) {
+			if (!component.pipeline) {
+				ImGui::Text("Has a null pipeline.");
+				return;
+			}
+
 			auto& info = component.pipeline->get_specification();
 			ImGui::Text("Pipeline %s\nLine width: %f", info.debug_name.c_str(), info.line_width);
 			ImGui::Button("Pipeline shader");
@@ -273,7 +280,7 @@ namespace App {
 			if (!path)
 				return;
 
-			auto fp = *path;
+			const auto fp = *path;
 			const auto filename_wo_extension = fp.filename().replace_extension();
 			const auto directory = fp.parent_path();
 			const auto extension = fp.extension();
@@ -325,9 +332,9 @@ namespace App {
 		}
 
 		if (opened) {
-			ImGuiTreeNodeFlags opened_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-			const auto leaf_id = (const char*)&entity.get_component<SceneSystem::Component::ID>().identifier;
-			if (bool was_opened = ImGui::TreeNodeEx(leaf_id, opened_flags, "%s", tag.c_str()))
+			constexpr auto opened_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+			const auto leaf_id = reinterpret_cast<const char*>(&entity.get_component<SceneSystem::Component::ID>().identifier);
+			if (ImGui::TreeNodeEx(leaf_id, opened_flags, "%s", tag.c_str()))
 				ImGui::TreePop();
 			ImGui::TreePop();
 		}

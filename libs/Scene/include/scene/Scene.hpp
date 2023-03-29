@@ -8,7 +8,6 @@
 
 #include <entt/entt.hpp>
 #include <uuid.h>
-#include <vulkan/vulkan.h>
 
 namespace SceneSystem {
 
@@ -45,29 +44,30 @@ namespace SceneSystem {
 		Entity create_entity(entt::entity name);
 		Entity create_entity(entt::entity name, const std::string& tag_name);
 
-		const auto& get_registry() const { return registry; }
+		[[nodiscard]] const auto& get_registry() const { return registry; }
 		auto& get_registry() { return registry; }
 
 		template <Component::IsComponent... T> auto all_with() { return registry.view<T...>(); }
 
 		template <typename Func> void for_each_entity(Func&& func) { registry.each(std::forward<Func>(func)); }
 
-		auto get_name() const { return Component::ID().identifier; }
+		[[nodiscard]] auto get_name() const { return to_string(Component::ID().identifier) + std::to_string(registry.alive()); }
 
-		const std::shared_ptr<Alabaster::Image>& final_image() const;
+		[[nodiscard]] const std::shared_ptr<Alabaster::Image>& final_image() const;
 
-		const Entity* get_selected_entity() const { return selected_entity.get(); }
+		[[nodiscard]] const Entity* get_selected_entity() const { return selected_entity.get(); }
 		Entity* get_selected_entity() { return selected_entity.get(); }
 
-		void update_selected_entity();
+		void update_selected_entity() const;
 
-		const auto& get_camera() const { return scene_camera; }
+		[[nodiscard]] const auto& get_camera() const { return scene_camera; }
 		auto& get_camera() { return scene_camera; }
 
-		void clear() { registry.clear(); };
+		void clear() { registry.clear(); }
+		void step();
 
-		bool is_paused() const { return paused; }
-		void set_paused(bool in_pause) { paused = in_pause; }
+		[[nodiscard]] bool is_paused() const { return paused; }
+		void set_paused(const bool in_pause) { paused = in_pause; }
 
 	private:
 		void pick_entity(const glm::vec3& ray_world);

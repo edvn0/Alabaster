@@ -36,7 +36,7 @@ namespace Alabaster {
 	{
 	}
 
-	Allocator::~Allocator() { }
+	Allocator::~Allocator() = default;
 
 	VmaAllocation Allocator::allocate_buffer(
 		VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VmaAllocationCreateFlags flags, VkBuffer& out_buffer)

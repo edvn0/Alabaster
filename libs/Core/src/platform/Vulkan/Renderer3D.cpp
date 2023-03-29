@@ -298,37 +298,38 @@ namespace Alabaster {
 		data.quad_indices_submitted += 6;
 	}
 
-	void Renderer3D::mesh(const std::shared_ptr<Mesh>& input_mesh, const std::shared_ptr<Pipeline>& pipeline, const glm::vec3& pos,
+	void Renderer3D::mesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Pipeline>& pipeline, const glm::vec3& pos,
 		const glm::mat4& rotation_matrix, const glm::vec4& colour, const glm::vec3& scale)
 	{
-		auto transform = glm::translate(glm::mat4(1.0f), pos) * rotation_matrix * glm::scale(glm::mat4(1.0f), scale);
-		mesh(input_mesh, std::move(transform), pipeline, colour);
+		const auto transform = glm::translate(glm::mat4(1.0f), pos) * rotation_matrix * glm::scale(glm::mat4(1.0f), scale);
+		this->mesh(mesh, std::move(transform), pipeline, colour);
 	}
 
-	void Renderer3D::mesh(const std::shared_ptr<Mesh>& input_mesh, const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale)
+	void Renderer3D::mesh(const std::shared_ptr<Mesh>& mesh, const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale)
 	{
-		mesh(input_mesh, nullptr, pos, glm::mat4 { 1.0f }, colour, scale);
+		this->mesh(mesh, nullptr, pos, glm::mat4 { 1.0f }, colour, scale);
 	}
 
-	void Renderer3D::mesh(const std::shared_ptr<Mesh>& mesh, glm::mat4 transform, const std::shared_ptr<Pipeline>& pipeline, const glm::vec4& colour)
+	void Renderer3D::mesh(
+		const std::shared_ptr<Mesh>& mesh, const glm::mat4& transform, const std::shared_ptr<Pipeline>& pipeline, const glm::vec4& colour)
 	{
-		data.mesh_transform[data.meshes_submitted] = std::move(transform);
+		data.mesh_transform[data.meshes_submitted] = transform;
 		data.mesh_colour[data.meshes_submitted] = colour;
 		data.mesh[data.meshes_submitted] = mesh.get();
 		data.mesh_pipeline_submit[data.meshes_submitted] = pipeline ? pipeline.get() : data.pipelines["mesh"sv].get();
 		data.meshes_submitted++;
 	}
 
-	void Renderer3D::mesh(const std::shared_ptr<Mesh>& mesh, glm::mat4 transform, const glm::vec4& colour)
+	void Renderer3D::mesh(const std::shared_ptr<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& colour)
 	{
-		data.mesh_transform[data.meshes_submitted] = std::move(transform);
+		data.mesh_transform[data.meshes_submitted] = transform;
 		data.mesh_colour[data.meshes_submitted] = colour;
 		data.mesh[data.meshes_submitted] = mesh.get();
 		data.mesh_pipeline_submit[data.meshes_submitted] = data.pipelines["mesh"sv].get();
 		data.meshes_submitted++;
 	}
 
-	void Renderer3D::line(const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
+	void Renderer3D::line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color)
 	{
 		if (data.line_indices_submitted >= RendererData::max_indices) {
 			flush();
@@ -338,13 +339,17 @@ namespace Alabaster {
 			flush();
 		}
 
-		auto& first_line_vertex = data.line_buffer[data.line_vertices_submitted++];
-		first_line_vertex.position = glm::vec4(p0, 1.0f);
-		first_line_vertex.colour = color;
+		{
+			auto& [position, colour] = data.line_buffer[data.line_vertices_submitted++];
+			position = glm::vec4(from, 1.0f);
+			colour = color;
+		}
 
-		auto& second_line_vertex = data.line_buffer[data.line_vertices_submitted++];
-		second_line_vertex.position = glm::vec4(p1, 1.0f);
-		second_line_vertex.colour = color;
+		{
+			auto& [position, colour] = data.line_buffer[data.line_vertices_submitted++];
+			position = glm::vec4(to, 1.0f);
+			colour = color;
+		}
 
 		data.line_indices_submitted += 2;
 	}
@@ -385,9 +390,9 @@ namespace Alabaster {
 	{
 		Renderer::begin_render_pass(command_buffer, target);
 		if (data.quad_indices_submitted > 0) {
-			auto vertex_count = data.quad_vertices_submitted;
+			const auto vertex_count = data.quad_vertices_submitted;
 
-			std::uint32_t size = vertex_count * sizeof(QuadVertex);
+			const auto size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer->set_data(data.quad_buffer.data(), size, 0);
 
 			draw_quads(command_buffer);
@@ -396,9 +401,9 @@ namespace Alabaster {
 		}
 
 		if (data.line_indices_submitted > 0) {
-			auto vertex_count = data.line_vertices_submitted;
+			const auto vertex_count = data.line_vertices_submitted;
 
-			std::uint32_t size = vertex_count * sizeof(LineVertex);
+			const auto size = vertex_count * sizeof(LineVertex);
 			data.line_vertex_buffer->set_data(data.line_buffer.data(), size, 0);
 
 			draw_lines(command_buffer);
@@ -417,9 +422,9 @@ namespace Alabaster {
 	{
 		Renderer::begin_render_pass(command_buffer, data.framebuffer);
 		if (data.quad_indices_submitted > 0) {
-			auto vertex_count = data.quad_vertices_submitted;
+			const auto vertex_count = data.quad_vertices_submitted;
 
-			std::uint32_t size = vertex_count * sizeof(QuadVertex);
+			const auto size = vertex_count * sizeof(QuadVertex);
 			data.quad_vertex_buffer->set_data(data.quad_buffer.data(), size, 0);
 
 			draw_quads(command_buffer);
@@ -428,9 +433,9 @@ namespace Alabaster {
 		}
 
 		if (data.line_indices_submitted > 0) {
-			auto vertex_count = data.line_vertices_submitted;
+			const auto vertex_count = data.line_vertices_submitted;
 
-			std::uint32_t size = vertex_count * sizeof(LineVertex);
+			const auto size = vertex_count * sizeof(LineVertex);
 			data.line_vertex_buffer->set_data(data.line_buffer.data(), size, 0);
 
 			draw_lines(command_buffer);
@@ -459,8 +464,8 @@ namespace Alabaster {
 		vkCmdPushConstants(command_buffer.get_buffer(), pipeline->get_vulkan_pipeline_layout(),
 			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
-		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
-		VkDeviceSize offsets { 0 };
+		const std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
+		constexpr VkDeviceSize offsets { 0 };
 		vkCmdBindVertexBuffers(command_buffer.get_buffer(), 0, 1, vbs.data(), &offsets);
 
 		vkCmdBindIndexBuffer(command_buffer.get_buffer(), ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
@@ -484,8 +489,8 @@ namespace Alabaster {
 
 		vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-		std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
-		VkDeviceSize offsets { 0 };
+		const std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
+		constexpr VkDeviceSize offsets { 0 };
 		vkCmdBindVertexBuffers(command_buffer.get_buffer(), 0, 1, vbs.data(), &offsets);
 
 		vkCmdBindIndexBuffer(command_buffer.get_buffer(), ib->get_vulkan_buffer(), 0, VK_INDEX_TYPE_UINT32);
@@ -507,9 +512,9 @@ namespace Alabaster {
 	{
 		const VkDescriptorSet& descriptor = data.descriptor_sets[Renderer::current_frame()];
 
-		Pipeline* initial_pipeline = nullptr;
+		const Pipeline* initial_pipeline = nullptr;
 		VkPipelineLayout initial_layout = nullptr;
-		Mesh* initial_mesh = nullptr;
+		const Mesh* initial_mesh = nullptr;
 
 		for (std::uint32_t i = 0; i < data.meshes_submitted; i++) {
 			const auto& mesh = data.mesh[i];
@@ -553,11 +558,12 @@ namespace Alabaster {
 	{
 		const auto image_index = Application::the().swapchain().frame();
 
-		UBO ubo {};
-		ubo.projection = camera->get_projection_matrix();
-		ubo.view = camera->get_view_matrix();
-		ubo.view_projection = ubo.projection * ubo.view;
-		ubo.model = model.value_or(default_model);
+		UBO ubo {
+			.model = model.value_or(default_model),
+			.view = camera->get_view_matrix(),
+			.projection = camera->get_projection_matrix(),
+			.view_projection = ubo.projection * ubo.view,
+		};
 
 		data.uniforms[image_index]->set_data(&ubo, sizeof(UBO), 0);
 	}

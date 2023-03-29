@@ -2,8 +2,8 @@
 
 #include "Alabaster.hpp"
 #include "AssetManager.hpp"
+#include "FileDragDropHandler.hpp"
 #include "SceneSystem.hpp"
-#include "core/Common.hpp"
 #include "core/GUILayer.hpp"
 #include "core/Logger.hpp"
 #include "core/exceptions/AlabasterException.hpp"
@@ -17,15 +17,11 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include <imgui.h>
-#include <optional>
-#include <string.h>
-#include <vulkan/vulkan.h>
 
 using namespace Alabaster;
 using namespace SceneSystem;
 using namespace Component;
 
-static std::uint32_t quads { 1 };
 static bool is_dockspace_open { true };
 
 static bool global_imgui_is_blocking { false };
@@ -57,11 +53,10 @@ void AlabasterLayer::on_event(Event& e)
 
 	EventDispatcher dispatch(e);
 	dispatch.dispatch<MouseScrolledEvent>([](MouseScrolledEvent&) { return global_imgui_is_blocking; });
-	dispatch.dispatch<MouseButtonPressedEvent>([hovered = viewport_hovered, &scene = editor_scene](MouseButtonPressedEvent& mouse) {
+	dispatch.dispatch<MouseButtonPressedEvent>([hovered = viewport_hovered, &scene = editor_scene](const MouseButtonPressedEvent& mouse) {
 		const auto is_left_button = mouse.get_mouse_button() == Mouse::Left;
 		const auto guizmo_is_over = ImGuizmo::IsOver();
-		const auto is_hovered = hovered;
-		if (is_left_button && !guizmo_is_over && is_hovered) {
+		if (const auto is_hovered = hovered; is_left_button && !guizmo_is_over && is_hovered) {
 			scene->update_selected_entity();
 		}
 
@@ -82,8 +77,7 @@ void AlabasterLayer::on_event(Event& e)
 			return false;
 		}
 		case Key::S: {
-			const auto mods_pressed = Input::all(Key::LeftShift, Key::LeftControl);
-			if (mods_pressed)
+			if (Input::all(Key::LeftShift, Key::LeftControl))
 				serialise_scene();
 			return false;
 		}
@@ -100,12 +94,12 @@ void AlabasterLayer::on_event(Event& e)
 				gizmo_type = ImGuizmo::OPERATION::TRANSLATE;
 				return false;
 			}
-		}
-		default:
 			return false;
 		}
-
-		return false;
+		default: {
+			return false;
+		}
+		}
 	});
 }
 
@@ -122,7 +116,7 @@ void AlabasterLayer::ui(float ts)
 	editor_scene->ui(ts);
 
 	static bool persistent = true;
-	bool opt_fullscreen = persistent;
+	const bool opt_fullscreen = persistent;
 	static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
 	ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
@@ -151,10 +145,10 @@ void AlabasterLayer::ui(float ts)
 		// DockSpace
 		const ImGuiIO& io = ImGui::GetIO();
 		ImGuiStyle& style = ImGui::GetStyle();
-		float min_window_size_x = style.WindowMinSize.x;
+		const float min_window_size_x = style.WindowMinSize.x;
 		style.WindowMinSize.x = 370.0f;
 		if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) {
-			ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
+			const ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
 			ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
 		}
 
@@ -214,10 +208,6 @@ void AlabasterLayer::viewport()
 
 	if (auto* entity = editor_scene->get_selected_entity(); entity->is_valid()) {
 		ImGuizmo::SetDrawlist();
-
-		const auto size = viewport_size;
-
-		auto& io = ImGui::GetIO();
 		ImGuizmo::SetRect(ImGui::GetWindowPos().x, ImGui::GetWindowPos().y, ImGui::GetWindowWidth(), ImGui::GetWindowHeight());
 
 		const auto& camera = editor_scene->get_camera();
@@ -261,12 +251,14 @@ void AlabasterLayer::viewport()
 	ImGui::PopStyleVar();
 }
 
+void AlabasterLayer::take_step() { editor_scene->step(); }
+
 void AlabasterLayer::ui_toolbar()
 {
 	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 2));
 	ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(0, 0));
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-	auto& colors = ImGui::GetStyle().Colors;
+	const auto& colors = ImGui::GetStyle().Colors;
 	const auto& button_hovered = colors[ImGuiCol_ButtonHovered];
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(button_hovered.x, button_hovered.y, button_hovered.z, 0.5f));
 	const auto& button_active = colors[ImGuiCol_ButtonActive];
@@ -280,26 +272,27 @@ void AlabasterLayer::ui_toolbar()
 	ImGui::Begin("##toolbar", nullptr, window_flags);
 	// ImGui::Begin("##toolbar", nullptr);
 
-	bool toolbarEnabled = static_cast<bool>(editor_scene);
+	const bool toolbar_enabled = static_cast<bool>(editor_scene);
 
-	ImVec4 tintColor = ImVec4(1, 1, 1, 1);
-	if (!toolbarEnabled)
-		tintColor.w = 0.5f;
+	auto tint_colour = ImVec4(1, 1, 1, 1);
+	if (!toolbar_enabled)
+		tint_colour.w = 0.5f;
 
-	float size = ImGui::GetWindowHeight() - 4.0f;
+	const float size = ImGui::GetWindowHeight() - 4.0f;
 	ImGui::SetCursorPosX((ImGui::GetWindowContentRegionMax().x * 0.5f) - (size * 0.5f));
 
-	bool has_play_button = scene_state == SceneState::Edit || scene_state == SceneState::Play;
-	bool has_simulate_button = scene_state == SceneState::Edit || scene_state == SceneState::Simulate;
-	bool has_pause_button = scene_state != SceneState::Edit;
+	const bool has_play_button = scene_state == SceneState::Edit || scene_state == SceneState::Play;
+	const bool has_simulate_button = scene_state == SceneState::Edit || scene_state == SceneState::Simulate;
+	const bool has_pause_button = scene_state != SceneState::Edit;
 
 	if (has_play_button) {
-		auto icon = (scene_state == SceneState::Edit || scene_state == SceneState::Simulate) ? icon_play : icon_stop;
-		if (UI::image_button(icon, size) && toolbarEnabled) {
-			if (scene_state == SceneState::Edit || scene_state == SceneState::Simulate)
-				Alabaster::Log::info("Play here!");
-			else if (scene_state == SceneState::Play)
-				Alabaster::Log::info("Stop here!");
+		if (const auto& icon = (scene_state == SceneState::Edit || scene_state == SceneState::Simulate) ? icon_play : icon_stop;
+			UI::image_button(icon, size) && toolbar_enabled) {
+			if (scene_state == SceneState::Edit || scene_state == SceneState::Simulate) {
+				scene_state = SceneState::Play;
+			} else if (scene_state == SceneState::Play) {
+				scene_state = SceneState::Edit;
+			}
 		}
 	}
 
@@ -307,20 +300,20 @@ void AlabasterLayer::ui_toolbar()
 		if (has_play_button)
 			ImGui::SameLine();
 
-		auto icon = (scene_state == SceneState::Edit || scene_state == SceneState::Play) ? icon_simulate : icon_stop;
-		if (UI::image_button(icon, size) && toolbarEnabled) {
-			if (scene_state == SceneState::Edit || scene_state == SceneState::Play)
-				Alabaster::Log::info("Simulate here!");
-			else if (scene_state == SceneState::Simulate)
-				Alabaster::Log::info("Stop here!");
+		if (const auto& icon = (scene_state == SceneState::Edit || scene_state == SceneState::Play) ? icon_simulate : icon_stop;
+			UI::image_button(icon, size) && toolbar_enabled) {
+			if (scene_state == SceneState::Edit || scene_state == SceneState::Play) {
+				scene_state = SceneState::Simulate;
+			} else if (scene_state == SceneState::Simulate) {
+				scene_state = SceneState::Edit;
+			}
 		}
 	}
 	if (has_pause_button) {
 		const auto is_paused = editor_scene->is_paused();
 		ImGui::SameLine();
 		{
-			auto icon = icon_pause;
-			if (UI::image_button(icon, size) && toolbarEnabled) {
+			if (const auto& icon = icon_pause; UI::image_button(icon, size) && toolbar_enabled) {
 				editor_scene->set_paused(!is_paused);
 			}
 		}
@@ -329,10 +322,8 @@ void AlabasterLayer::ui_toolbar()
 		if (is_paused) {
 			ImGui::SameLine();
 			{
-				auto icon = icon_step;
-				const auto is_paused = editor_scene->is_paused();
-				if (UI::image_button(icon, size) && toolbarEnabled) {
-					Alabaster::Log::info("Step here!");
+				if (const auto& icon = icon_step; UI::image_button(icon, size) && toolbar_enabled) {
+					take_step();
 				}
 			}
 		}
@@ -342,76 +333,30 @@ void AlabasterLayer::ui_toolbar()
 	ImGui::End();
 }
 
-template <> struct handle_filetype<Filetype::Filetypes::PNG> {
-	void operator()(SceneSystem::Scene& scene, const std::filesystem::path& path) const
-	{
-		if (path.extension() != ".png")
-			return;
-
-		TextureProperties props;
-		const auto img = Alabaster::Texture::from_filename(path, props);
-		auto entity = scene.create_entity("TestEntity");
-		entity.add_component<Component::Texture>(glm::vec4 { 1.0 }, img);
-		return;
-	}
-};
-
-template <> struct handle_filetype<Filetype::Filetypes::SCENE> {
-	void operator()(SceneSystem::Scene& scene, const std::filesystem::path& path) const
-	{
-		if (path.extension() != ".scene")
-			return;
-
-		SceneSystem::SceneDeserialiser deserialiser(path, scene);
-		deserialiser.deserialise();
-	}
-};
-
-template <> struct handle_filetype<Filetype::Filetypes::OBJ> {
-	void operator()(SceneSystem::Scene& scene, const std::filesystem::path& path) const
-	{
-		if (path.extension() != ".obj")
-			return;
-
-		const auto mesh = Alabaster::Mesh::from_file(path);
-		auto entity = scene.create_entity("TestEntity");
-		entity.add_component<Component::Mesh>(mesh);
-		entity.add_component<Component::Texture>();
-		entity.add_component<Component::Pipeline>();
-		return;
-	}
-};
-
-void AlabasterLayer::handle_drag_drop()
+void AlabasterLayer::handle_drag_drop() const
 {
-	if (ImGui::BeginDragDropTarget()) {
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("AlabasterLayer::DragDropPayload")) {
-#ifndef ALABASTER_WINDOWS
-			const auto* path = static_cast<const char*>(payload->Data);
-#else
-			const auto* path = static_cast<const wchar_t*>(payload->Data);
-#endif
-			const std::filesystem::path fp = path;
-			const auto filename = fp.filename();
-			const auto extension = filename.extension();
-			auto& scene = *editor_scene;
+	const auto path = UI::accept_drag_drop("AlabasterLayer::DragDropPayload");
+	if (!path)
+		return;
 
-			try {
-				using enum Filetype::Filetypes;
-				handle_filetype<PNG>()(scene, filename);
-				handle_filetype<TTF>()(scene, filename);
-				handle_filetype<JPEG>()(scene, filename);
-				handle_filetype<JPG>()(scene, filename);
-				handle_filetype<SPV>()(scene, filename);
-				handle_filetype<VERT>()(scene, filename);
-				handle_filetype<SCENE>()(scene, filename);
-				handle_filetype<FRAG>()(scene, filename);
-				handle_filetype<OBJ>()(scene, filename);
-			} catch (const AlabasterException& e) {
-				Log::info("[AlabasterLayer] {}", e.what());
-			}
-		}
-		ImGui::EndDragDropTarget();
+	const std::filesystem::path& fp = *path;
+	const auto filename = fp.filename();
+	const auto extension = filename.extension();
+	auto& scene = *editor_scene;
+
+	try {
+		using enum App::Filetype::Filetypes;
+		App::handle_filetype<PNG>()(scene, filename);
+		App::handle_filetype<TTF>()(scene, filename);
+		App::handle_filetype<JPEG>()(scene, filename);
+		App::handle_filetype<JPG>()(scene, filename);
+		App::handle_filetype<SPV>()(scene, filename);
+		App::handle_filetype<VERT>()(scene, filename);
+		App::handle_filetype<SCENE>()(scene, filename);
+		App::handle_filetype<FRAG>()(scene, filename);
+		App::handle_filetype<OBJ>()(scene, filename);
+	} catch (const AlabasterException& e) {
+		Log::info("[AlabasterLayer] {}", e.what());
 	}
 }
 
