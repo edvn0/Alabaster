@@ -13,7 +13,6 @@
 #include "panels/StatisticsPanel.hpp"
 #include "ui/ImGuizmo.hpp"
 
-#include <glfw/glfw3.h>
 #include <glm/ext/matrix_relational.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
@@ -83,7 +82,9 @@ void AlabasterLayer::on_event(Event& e)
 			return false;
 		}
 		case Key::S: {
-			serialise_scene();
+			const auto mods_pressed = Input::all(Key::LeftShift, Key::LeftControl);
+			if (mods_pressed)
+				serialise_scene();
 			return false;
 		}
 		case Key::T: {

@@ -19,7 +19,7 @@ namespace Alabaster::UI {
 	bool image_button(const VkDescriptorImageInfo& image_info, const ImVec2& size, const ImVec2& uv0, const ImVec2& uv1);
 	bool image_button(const std::shared_ptr<Alabaster::Image>&, float square_size);
 	bool image_button(const std::shared_ptr<Alabaster::Image>& img, std::uint32_t square_size);
-    bool image_button(const std::shared_ptr<Alabaster::Texture>&, float square_size);
+	bool image_button(const std::shared_ptr<Alabaster::Texture>&, float square_size);
 	bool image_button(const std::shared_ptr<Alabaster::Texture>& img, std::uint32_t square_size);
 
 	bool is_item_hovered();

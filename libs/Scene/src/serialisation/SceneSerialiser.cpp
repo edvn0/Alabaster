@@ -50,7 +50,9 @@ namespace SceneSystem {
 
 		time_stamp = Alabaster::Time::formatted_time();
 
-		output_json["scene_name"] = std::string { fmt::format("{}", time_stamp) };
+		std::string name = { fmt::format("{}", time_stamp) };
+
+		output_json["scene_name"] = name;
 
 		std::vector<Entity> entities;
 		auto view = registry.view<const Component::Tag>();
