@@ -196,7 +196,6 @@ void AlabasterLayer::viewport()
 	viewport_hovered = ImGui::IsWindowHovered();
 
 	global_imgui_is_blocking = !viewport_hovered && !viewport_focused;
-
 	Application::the().gui_layer().block_events(!viewport_hovered && !viewport_focused);
 	UI::block_events(!viewport_hovered && !viewport_focused);
 

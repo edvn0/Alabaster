@@ -4,6 +4,10 @@ layout(location = 0) in vec4 colour;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec3 position;
 layout(location = 3) in vec2 uvs;
+layout(location = 4) in flat int texture_id;
+
+layout(set = 0, binding = 1) uniform texture2D textures[32];
+layout(set = 0, binding = 2) uniform sampler texture_sampler;
 
 layout(location = 0) out vec4 out_colour;
 
@@ -31,4 +35,5 @@ void main()
 
 	vec3 result = (ambient + diffuse) * vec3(colour);
 	out_colour = vec4(result, 1.0);
+	out_colour *= texture(sampler2D(textures[texture_id], texture_sampler), uvs);
 }

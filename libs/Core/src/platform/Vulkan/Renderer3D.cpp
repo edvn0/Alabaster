@@ -48,14 +48,21 @@ namespace Alabaster {
 		ubo_layout_binding.pImmutableSamplers = nullptr;
 		ubo_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
 
-		VkDescriptorSetLayoutBinding combined_image_sampler {};
-		combined_image_sampler.binding = 1;
-		combined_image_sampler.descriptorCount = 1;
-		combined_image_sampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		combined_image_sampler.pImmutableSamplers = nullptr;
-		combined_image_sampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		VkDescriptorSetLayoutBinding array_of_samplers {};
+		array_of_samplers.binding = 1;
+		array_of_samplers.descriptorCount = 32;
+		array_of_samplers.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		array_of_samplers.pImmutableSamplers = nullptr;
+		array_of_samplers.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
 
-		std::array<VkDescriptorSetLayoutBinding, 2> bindings = { ubo_layout_binding, combined_image_sampler };
+		VkDescriptorSetLayoutBinding sampler {};
+		sampler.binding = 2;
+		sampler.descriptorCount = 1;
+		sampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+		sampler.pImmutableSamplers = nullptr;
+		sampler.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+		static const std::array bindings = { ubo_layout_binding, array_of_samplers, sampler };
 		VkDescriptorSetLayoutCreateInfo layout_info {};
 		layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
 		layout_info.bindingCount = static_cast<std::uint32_t>(bindings.size());
@@ -66,12 +73,15 @@ namespace Alabaster {
 
 	void Renderer3D::create_descriptor_pool()
 	{
-		std::array<VkDescriptorPoolSize, 2> pool_sizes {};
+		std::array<VkDescriptorPoolSize, 3> pool_sizes {};
 		pool_sizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 		pool_sizes[0].descriptorCount = Application::the().swapchain().get_image_count();
 
-		pool_sizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-		pool_sizes[1].descriptorCount = Application::the().swapchain().get_image_count();
+		pool_sizes[1].type = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+		pool_sizes[1].descriptorCount = 32 * Application::the().swapchain().get_image_count();
+
+		pool_sizes[2].type = VK_DESCRIPTOR_TYPE_SAMPLER;
+		pool_sizes[2].descriptorCount = Application::the().swapchain().get_image_count();
 
 		VkDescriptorPoolCreateInfo pool_info {};
 		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
@@ -86,28 +96,45 @@ namespace Alabaster {
 
 	void Renderer3D::create_descriptor_sets()
 	{
+		auto& renderer_data = data;
 		const auto image_count = Application::the().swapchain().get_image_count();
 
-		std::vector<VkDescriptorSetLayout> layouts(image_count, data.descriptor_set_layout);
+		static const std::vector<VkDescriptorSetLayout> layouts(image_count, renderer_data.descriptor_set_layout);
 		VkDescriptorSetAllocateInfo alloc_info {};
 		alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		alloc_info.descriptorPool = data.descriptor_pool;
+		alloc_info.descriptorPool = renderer_data.descriptor_pool;
 		alloc_info.descriptorSetCount = image_count;
 		alloc_info.pSetLayouts = layouts.data();
 
-		data.descriptor_sets.resize(image_count);
-		vk_check(vkAllocateDescriptorSets(GraphicsContext::the().device(), &alloc_info, data.descriptor_sets.data()));
+		renderer_data.descriptor_sets.resize(image_count);
+		vk_check(vkAllocateDescriptorSets(GraphicsContext::the().device(), &alloc_info, renderer_data.descriptor_sets.data()));
 
-		const auto& image_info = AssetManager::the().texture("viking_room.png")->get_descriptor_info();
+		const auto& white_texture_info = AssetManager::the().texture("white_texture.png")->get_descriptor_info();
+		const auto& viking_image_info = AssetManager::the().texture("viking_room.png")->get_descriptor_info();
+		const auto& floor_image_info = AssetManager::the().texture("floor.jpg")->get_descriptor_info();
+
+		static constexpr auto texture_array_size = 32;
+
+		static std::array<VkDescriptorImageInfo, texture_array_size> desc_data {};
+		for (uint32_t i = 0; i < texture_array_size; ++i) {
+			desc_data[i].sampler = nullptr;
+			desc_data[i].imageLayout = viking_image_info.imageLayout;
+			desc_data[i].imageView = viking_image_info.imageView;
+		}
+		desc_data[0] = white_texture_info;
+		desc_data[1] = viking_image_info;
+		desc_data[2] = floor_image_info;
+
 		for (std::size_t i = 0; i < image_count; i++) {
 			VkDescriptorBufferInfo buffer_info {};
 			buffer_info.buffer = data.uniforms[i]->get_buffer();
 			buffer_info.offset = 0;
 			buffer_info.range = sizeof(UBO);
 
-			std::array<VkWriteDescriptorSet, 2> descriptor_writes {};
+			std::array<VkWriteDescriptorSet, 3> descriptor_writes {};
 			auto& ubo = descriptor_writes[0];
-			auto& combined_sampler = descriptor_writes[1];
+			auto& texture_array = descriptor_writes[1];
+			auto& sampler = descriptor_writes[2];
 
 			ubo.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
 			ubo.dstSet = data.descriptor_sets[i];
@@ -117,13 +144,25 @@ namespace Alabaster {
 			ubo.descriptorCount = 1;
 			ubo.pBufferInfo = &buffer_info;
 
-			combined_sampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			combined_sampler.dstSet = data.descriptor_sets[i];
-			combined_sampler.dstBinding = 1;
-			combined_sampler.dstArrayElement = 0;
-			combined_sampler.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			combined_sampler.descriptorCount = 1;
-			combined_sampler.pImageInfo = &image_info;
+			texture_array = {};
+			texture_array.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			texture_array.dstBinding = 1;
+			texture_array.dstArrayElement = 0;
+			texture_array.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+			texture_array.descriptorCount = texture_array_size;
+			texture_array.pBufferInfo = nullptr;
+			texture_array.dstSet = data.descriptor_sets[i];
+			texture_array.pImageInfo = desc_data.data();
+
+			sampler = {};
+			sampler.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+			sampler.dstBinding = 2;
+			sampler.dstArrayElement = 0;
+			sampler.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
+			sampler.descriptorCount = 1;
+			sampler.pBufferInfo = nullptr;
+			sampler.dstSet = data.descriptor_sets[i];
+			sampler.pImageInfo = &floor_image_info;
 
 			vkUpdateDescriptorSets(
 				GraphicsContext::the().device(), static_cast<std::uint32_t>(descriptor_writes.size()), descriptor_writes.data(), 0, nullptr);
@@ -144,11 +183,11 @@ namespace Alabaster {
 		fbs.clear_depth_on_load = true;
 		data.framebuffer = Framebuffer::create(fbs);
 
-		auto image_count = Application::the().swapchain().get_image_count();
+		data.image_count = Application::the().swapchain().get_image_count();
 
-		VkDeviceSize uniform_buffer_size = sizeof(UBO);
+		constexpr VkDeviceSize uniform_buffer_size = sizeof(UBO);
 
-		for (std::size_t i = 0; i < image_count; i++) {
+		for (std::size_t i = 0; i < data.image_count; i++) {
 			data.uniforms.emplace_back(std::make_unique<UniformBuffer>(uniform_buffer_size, 0));
 		}
 
@@ -162,9 +201,9 @@ namespace Alabaster {
 			.debug_name = "Quad Pipeline",
 			.render_pass = data.framebuffer->get_renderpass(),
 			.topology = Topology::TriangleList,
-			.vertex_layout
-			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
-				VertexBufferElement(ShaderDataType::Float3, "normals"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+			.vertex_layout = VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"),
+				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float3, "normals"),
+				VertexBufferElement(ShaderDataType::Float2, "uvs"), VertexBufferElement(ShaderDataType::Int, "texture_id") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
 		data.pipelines.try_emplace("quad"sv, std::make_unique<Pipeline>(quad_spec));
 
@@ -217,6 +256,7 @@ namespace Alabaster {
 		data.line_index_buffer = IndexBuffer::create(line_indices);
 
 		invalidate_pipelines();
+		point_light_buffer.resize(10);
 	}
 
 	void Renderer3D::invalidate_pipelines()
@@ -239,7 +279,7 @@ namespace Alabaster {
 		data.draw_calls = 0;
 	}
 
-	void Renderer3D::quad(const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale, float rotation)
+	void Renderer3D::quad(const glm::vec3& pos, const glm::vec4& colour, const glm::vec3& scale, float rotation, int texture_id)
 	{
 		static constexpr std::size_t quad_vertex_count = 4;
 		static constexpr glm::vec2 texture_coordinates[] = { { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
@@ -264,13 +304,14 @@ namespace Alabaster {
 			vertex.colour = colour;
 			vertex.normals = transform * quad_normal;
 			vertex.uvs = texture_coordinates[i];
+			vertex.texture_id = texture_id;
 			data.quad_vertices_submitted++;
 		}
 
 		data.quad_indices_submitted += 6;
 	}
 
-	void Renderer3D::quad(const glm::mat4& transform, const glm::vec4& colour)
+	void Renderer3D::quad(const glm::mat4& transform, const glm::vec4& colour, int texture_id)
 	{
 		static constexpr std::size_t quad_vertex_count = 4;
 		static constexpr std::array<glm::vec2, 4> texture_coordinates = { glm::vec2 { 0.0f, 0.0f }, { 1.0f, 0.0f }, { 1.0f, 1.0f }, { 0.0f, 1.0f } };
@@ -292,6 +333,7 @@ namespace Alabaster {
 			vertex.colour = colour;
 			vertex.normals = transform * quad_normal;
 			vertex.uvs = texture_coordinates[i];
+			vertex.texture_id = texture_id;
 			data.quad_vertices_submitted++;
 		}
 
@@ -380,6 +422,22 @@ namespace Alabaster {
 		data.push_constant.light_ambience = glm::vec4 { ambience };
 	}
 
+	void Renderer3D::set_light_data(const glm::vec3& light_position, const glm::vec4& colour, const glm::vec4& ambience)
+	{
+		data.push_constant.light_position = glm::vec4(light_position.x, light_position.y, light_position.z, 1.0f);
+		data.push_constant.light_colour = colour;
+		data.push_constant.light_ambience = ambience;
+	}
+
+	void Renderer3D::submit_point_light_data(const PointLight& point_light)
+	{
+		point_light_index++;
+		point_light_index %= 10;
+		point_light_buffer[point_light_index] = point_light;
+	}
+
+	void Renderer3D::commit_point_light_data() { update_uniform_buffers(); }
+
 	void Renderer3D::flush()
 	{
 
@@ -414,41 +472,11 @@ namespace Alabaster {
 		if (data.meshes_submitted > 0) {
 			draw_meshes(command_buffer);
 		}
-
 		Renderer::end_render_pass(command_buffer);
+		point_light_buffer.resize(10);
 	}
 
-	void Renderer3D::end_scene(const CommandBuffer& command_buffer)
-	{
-		Renderer::begin_render_pass(command_buffer, data.framebuffer);
-		if (data.quad_indices_submitted > 0) {
-			const auto vertex_count = data.quad_vertices_submitted;
-
-			const auto size = vertex_count * sizeof(QuadVertex);
-			data.quad_vertex_buffer->set_data(data.quad_buffer.data(), size, 0);
-
-			draw_quads(command_buffer);
-
-			data.draw_calls++;
-		}
-
-		if (data.line_indices_submitted > 0) {
-			const auto vertex_count = data.line_vertices_submitted;
-
-			const auto size = vertex_count * sizeof(LineVertex);
-			data.line_vertex_buffer->set_data(data.line_buffer.data(), size, 0);
-
-			draw_lines(command_buffer);
-
-			data.draw_calls++;
-		}
-
-		if (data.meshes_submitted > 0) {
-			draw_meshes(command_buffer);
-		}
-
-		Renderer::end_render_pass(command_buffer);
-	}
+	void Renderer3D::end_scene(const CommandBuffer& command_buffer) { end_scene(command_buffer, data.framebuffer); }
 
 	void Renderer3D::draw_quads(const CommandBuffer& command_buffer)
 	{
@@ -489,7 +517,7 @@ namespace Alabaster {
 
 		vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-		const std::array<VkBuffer, 1> vbs { vb->get_vulkan_buffer() };
+		static const std::array vbs { vb->get_vulkan_buffer() };
 		constexpr VkDeviceSize offsets { 0 };
 		vkCmdBindVertexBuffers(command_buffer.get_buffer(), 0, 1, vbs.data(), &offsets);
 
@@ -542,8 +570,8 @@ namespace Alabaster {
 
 			if (initial_mesh != mesh) {
 				initial_mesh = mesh;
-				std::array<VkBuffer, 1> vbs { *vb };
-				VkDeviceSize offsets { 0 };
+				static const std::array vbs { *vb };
+				constexpr VkDeviceSize offsets { 0 };
 				vkCmdBindVertexBuffers(command_buffer.get_buffer(), 0, 1, vbs.data(), &offsets);
 
 				vkCmdBindIndexBuffer(command_buffer.get_buffer(), *ib, 0, VK_INDEX_TYPE_UINT32);
@@ -557,13 +585,25 @@ namespace Alabaster {
 	void Renderer3D::update_uniform_buffers(const std::optional<glm::mat4>& model)
 	{
 		const auto image_index = Application::the().swapchain().frame();
+		static const std::array<PointLight, 10> point_lights = {
+			point_light_buffer[0],
+			point_light_buffer[1],
+			point_light_buffer[2],
+			point_light_buffer[3],
+			point_light_buffer[4],
+			point_light_buffer[5],
+			point_light_buffer[6],
+			point_light_buffer[7],
+			point_light_buffer[8],
+			point_light_buffer[9],
+		};
 
-		UBO ubo {
-			.model = model.value_or(default_model),
+		UBO ubo { .model = model.value_or(default_model),
 			.view = camera->get_view_matrix(),
 			.projection = camera->get_projection_matrix(),
 			.view_projection = ubo.projection * ubo.view,
-		};
+			.num_lights = glm::vec4(10),
+			.point_lights = point_lights };
 
 		data.uniforms[image_index]->set_data(&ubo, sizeof(UBO), 0);
 	}

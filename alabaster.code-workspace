@@ -16,6 +16,7 @@
             "suppressNoRepositoryWarning": false
         },
         "files.associations": {
+            "*.frag": "hlsl",
             "*.module": "php",
             "*.sass": "css",
             "*wmc": "xml",
@@ -151,7 +152,9 @@
             "syncstream": "cpp",
             "pointers": "cpp",
             "span_ext": "cpp",
-            "*.def": "cpp"
+            "*.def": "cpp",
+            "util": "cpp",
+            "gsl_util": "cpp"
         },
         "search.exclude": {
             "**/node_modules": true,

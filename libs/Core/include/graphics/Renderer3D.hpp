@@ -19,12 +19,14 @@ namespace Alabaster {
 	class IndexBuffer;
 	class CommandBuffer;
 	class Camera;
+	class Texture;
 
 	struct QuadVertex {
 		glm::vec4 position;
 		glm::vec4 colour;
 		glm::vec3 normals;
 		glm::vec2 uvs;
+		int texture_id { 0 };
 	};
 
 	struct LineVertex {
@@ -32,11 +34,18 @@ namespace Alabaster {
 		glm::vec4 colour;
 	};
 
+	struct PointLight {
+		glm::vec4 position;
+		glm::vec4 ambience;
+	};
+
 	struct UBO {
 		glm::mat4 model;
 		glm::mat4 view;
 		glm::mat4 projection;
 		glm::mat4 view_projection;
+		glm::vec4 num_lights;
+		std::array<PointLight, 10> point_lights;
 	};
 
 	struct PC {
@@ -52,6 +61,7 @@ namespace Alabaster {
 		static constexpr std::uint32_t max_meshes = 400;
 		static constexpr std::uint32_t max_indices = 6 * max_vertices;
 		std::uint32_t draw_calls { 0 };
+		std::uint32_t image_count;
 
 		std::uint32_t quad_indices_submitted { 0 };
 		std::uint32_t quad_vertices_submitted { 0 };
@@ -90,8 +100,8 @@ namespace Alabaster {
 		void begin_scene();
 
 		void quad(const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
-			float rotation_degrees = 0.0f);
-		void quad(const glm::mat4& transform, const glm::vec4& colour);
+			float rotation_degrees = 0.0f, int texture_id = 0);
+		void quad(const glm::mat4& transform, const glm::vec4& colour, int texture_id = 0);
 
 		void mesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Pipeline>& pipeline = nullptr, const glm::vec3& pos = { 0, 0, 0 },
 			const glm::mat4& rotation_matrix = glm::mat4 { 1.0f }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
@@ -109,6 +119,9 @@ namespace Alabaster {
 		void end_scene(const CommandBuffer& command_buffer, const std::shared_ptr<Framebuffer>& target);
 
 		void set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience = 1.0f);
+		void set_light_data(const glm::vec3& light_position, const glm::vec4& colour, const glm::vec4& ambience);
+		void submit_point_light_data(const PointLight& point_light);
+		void commit_point_light_data();
 
 		void destroy();
 		void reset_stats();
@@ -132,6 +145,8 @@ namespace Alabaster {
 
 		std::shared_ptr<Camera> camera;
 		RendererData data;
+		std::size_t point_light_index { 0 };
+		std::vector<PointLight> point_light_buffer;
 	};
 
 } // namespace Alabaster

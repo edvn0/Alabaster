@@ -73,21 +73,21 @@ namespace Alabaster {
 		setup_events();
 	}
 
-	const std::pair<int, int> Window::framebuffer_extent() const
+	std::pair<int, int> Window::framebuffer_extent() const
 	{
 		int tw, th;
 		glfwGetFramebufferSize(handle, &tw, &th);
 		return { tw, th };
 	}
 
-	const std::pair<float, float> Window::framebuffer_scale() const
+	std::pair<float, float> Window::framebuffer_scale() const
 	{
 		float tw, th;
 		glfwGetWindowContentScale(handle, &tw, &th);
 		return { tw, th };
 	}
 
-	const std::pair<std::uint32_t, std::uint32_t> Window::size() const
+	std::pair<std::uint32_t, std::uint32_t> Window::size() const
 	{
 		int window_size, window_height;
 		glfwGetWindowSize(handle, &window_size, &window_height);

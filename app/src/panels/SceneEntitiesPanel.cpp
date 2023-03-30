@@ -249,6 +249,9 @@ namespace App {
 			draw_vec3_control("Scale", component.scale, 1.0f);
 		});
 
+		draw_component<SceneSystem::Component::Light>(
+			entity, "Light", [](SceneSystem::Component::Light& component) { ImGui::ColorEdit3("Ambience", glm::value_ptr(component.ambience)); });
+
 		draw_component<SceneSystem::Component::Texture>(entity, "Texture", [](SceneSystem::Component::Texture& component) {
 			ImGui::ColorEdit4("Colour", glm::value_ptr(component.colour));
 

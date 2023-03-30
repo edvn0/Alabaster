@@ -15,7 +15,7 @@ namespace Alabaster {
 
 	auto create_default_bindings()
 	{
-		std::array<VkDescriptorSetLayoutBinding, 2> bindings;
+		std::array<VkDescriptorSetLayoutBinding, 3> bindings;
 		bindings[0].binding = 0;
 		bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
 		bindings[0].pImmutableSamplers = nullptr; // Optional
@@ -24,9 +24,15 @@ namespace Alabaster {
 
 		bindings[1].binding = 1;
 		bindings[1].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-		bindings[1].descriptorCount = 1;
+		bindings[1].descriptorCount = 32;
 		bindings[1].pImmutableSamplers = nullptr;
-		bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+
+		bindings[2].binding = 2;
+		bindings[2].stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		bindings[2].descriptorCount = 1;
+		bindings[2].pImmutableSamplers = nullptr;
+		bindings[2].descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
 		return bindings;
 	}
 
@@ -37,14 +43,14 @@ namespace Alabaster {
 
 	static VkShaderModule create(std::string code)
 	{
-		auto size = code.size();
+		const auto size = code.size();
 
 		if (code.empty()) {
 			throw AlabasterException("No shader code read.");
 		}
 
-		auto data = reinterpret_cast<std::uint32_t*>(code.data());
-		auto create_info = Vulkan::Shader::module(size, data);
+		const auto data = reinterpret_cast<std::uint32_t*>(code.data());
+		const auto create_info = Vulkan::Shader::module(size, data);
 		VkShaderModule shader_module;
 		vk_check(vkCreateShaderModule(GraphicsContext::the().device(), &create_info, nullptr, &shader_module));
 
@@ -53,7 +59,7 @@ namespace Alabaster {
 
 	static VkShaderModule create(const std::uint32_t* code, std::size_t size)
 	{
-		auto create_info = Vulkan::Shader::module(size, code);
+		const auto create_info = Vulkan::Shader::module(size, code);
 		VkShaderModule shader_module;
 		vk_check(vkCreateShaderModule(GraphicsContext::the().device(), &create_info, nullptr, &shader_module));
 
@@ -62,8 +68,8 @@ namespace Alabaster {
 
 	Shader::Shader(const std::string& vertex_path, const std::string& fragment_path)
 	{
-		auto vertex_shader_module = create(IO::read_file(vertex_path));
-		auto fragment_shader_module = create(IO::read_file(fragment_path));
+		const auto vertex_shader_module = create(IO::read_file(vertex_path));
+		const auto fragment_shader_module = create(IO::read_file(fragment_path));
 
 		VkPipelineShaderStageCreateInfo vertex_stage {};
 		vertex_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -88,8 +94,8 @@ namespace Alabaster {
 		verify(IO::exists(vert), "Could not find vertex shader.");
 		verify(IO::exists(frag), "Could not find fragment shader.");
 
-		auto vertex_shader_module = create(IO::read_file(vert));
-		auto fragment_shader_module = create(IO::read_file(frag));
+		const auto vertex_shader_module = create(IO::read_file(vert));
+		const auto fragment_shader_module = create(IO::read_file(frag));
 
 		VkPipelineShaderStageCreateInfo vertex_stage {};
 		vertex_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -110,8 +116,8 @@ namespace Alabaster {
 	Shader::Shader(const std::string& path_or_name, std::vector<std::uint32_t> vert_spirv, std::vector<std::uint32_t> frag_spirv)
 		: shader_path(path_or_name)
 	{
-		auto vertex_shader_module = create(vert_spirv.data(), vert_spirv.size() * sizeof(std::uint32_t));
-		auto fragment_shader_module = create(frag_spirv.data(), frag_spirv.size() * sizeof(std::uint32_t));
+		const auto vertex_shader_module = create(vert_spirv.data(), vert_spirv.size() * sizeof(std::uint32_t));
+		const auto fragment_shader_module = create(frag_spirv.data(), frag_spirv.size() * sizeof(std::uint32_t));
 
 		VkPipelineShaderStageCreateInfo vertex_stage {};
 		vertex_stage.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -132,7 +138,7 @@ namespace Alabaster {
 	void Shader::create_layout()
 	{
 		// TODO: This should obviously be generated from the shader compilation.
-		auto bindings = create_default_bindings();
+		const auto bindings = create_default_bindings();
 
 		VkDescriptorSetLayoutCreateInfo create_info {};
 		create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;

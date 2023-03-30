@@ -4,36 +4,16 @@
 
 #include "cache/ResourceCache.hpp"
 #include "component/Component.hpp"
-#include "core/Application.hpp"
-#include "core/Input.hpp"
-#include "core/Random.hpp"
-#include "core/Window.hpp"
 #include "entity/Entity.hpp"
-#include "graphics/Camera.hpp"
-#include "graphics/CommandBuffer.hpp"
-#include "graphics/Framebuffer.hpp"
-#include "graphics/GraphicsContext.hpp"
-#include "graphics/IndexBuffer.hpp"
-#include "graphics/Mesh.hpp"
-#include "graphics/Pipeline.hpp"
-#include "graphics/PushConstantRange.hpp"
-#include "graphics/Renderer.hpp"
-#include "graphics/Renderer3D.hpp"
-#include "graphics/Vertex.hpp"
-#include "graphics/VertexBufferLayout.hpp"
 #include "serialisation/SceneDeserialiser.hpp"
 #include "serialisation/SceneSerialiser.hpp"
-#include "ui/ImGuizmo.hpp"
 
+#include <Alabaster.hpp>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 
 namespace SceneSystem {
-
-	static glm::vec4 pos { -5, 5, 5, 1.0f };
-	static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
-	static float ambience { 1.0f };
 
 	template <class Position = glm::vec3> static constexpr auto axes(const auto& renderer, const Position& position, auto length = 1.0f)
 	{
@@ -45,8 +25,7 @@ namespace SceneSystem {
 	void Scene::build_scene()
 	{
 		using namespace Alabaster;
-		auto viking_room_model = Mesh::from_file("viking_room.obj");
-		auto sphere_model = Mesh::from_file("sphere.obj");
+		auto sphere_model = Mesh::from_file("sphere_subdivided.obj");
 		auto cube_model = Mesh::from_file("cube.obj");
 
 		const auto&& [w, h] = Application::the().get_window()->size();
@@ -94,13 +73,35 @@ namespace SceneSystem {
 		floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
 		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
 
+		static std::array point_lights { create_entity("LightOne"), create_entity("LightTwo"), create_entity("LightThree"),
+			create_entity("LightFour"), create_entity("LightFive"), create_entity("LightSix"), create_entity("LightSeven"),
+			create_entity("LightEight"), create_entity("LightNine"), create_entity("LightTen") };
+		for (auto& point_light : point_lights) {
+			auto& transform = point_light.get_transform();
+
+			constexpr auto height = -10.0f;
+			constexpr auto radius = 45.0f;
+
+			static int index = 0;
+			constexpr auto division = (2 * glm::pi<float>()) / point_lights.size();
+			const auto cos = glm::cos(index * division);
+			const auto sin = glm::sin(index * division);
+			index++;
+
+			transform.position = { sin * radius, height, cos * radius };
+			auto vec = random_vec4(0, 1);
+			vec.w = 1;
+			point_light.add_component<Component::PointLight>(vec);
+			point_light.add_component<Component::Mesh>(sphere_model);
+		}
+
 		auto sun = create_entity("The Sun");
-		sun.add_component<Component::Light>();
+		sun.add_component<Component::Light>(glm::vec4 { 252., 144., 3., 255 });
 		sun.add_component<Component::Mesh>(sphere_model);
-		sun.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });
+		sun.add_component<Component::Texture>(glm::vec4 { 252., 144., 3., 255 });
 		auto& sun_transform = sun.get_transform();
-		sun_transform.position = { 10, -10, 5 };
-		sun_transform.scale = { 10, 10, 10 };
+		sun_transform.position = { -47.1, -24, -12 };
+		sun_transform.scale = { 5, 5, 5 };
 	}
 
 	Scene::Scene() noexcept
@@ -218,7 +219,6 @@ namespace SceneSystem {
 	void Scene::draw_entities_in_scene(float)
 	{
 		axes(scene_renderer, glm::vec3 { -100, -0.1, 100 }, 400.0f);
-		scene_renderer->set_light_data(pos, col, ambience);
 
 		const auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>(
 			entt::exclude<Component::Light>);
@@ -226,16 +226,40 @@ namespace SceneSystem {
 			[&renderer = scene_renderer](const Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture,
 				const Component::Pipeline& pipeline) { renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour); });
 
-		const auto light_view = registry.view<const Component::Transform, const Component::Light, const Component::Texture, const Component::Mesh>();
-		light_view.each([&renderer = scene_renderer](const Component::Transform& transform, const Component::Light, const Component::Texture& texture,
-							const Component::Mesh& mesh) { renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, texture.colour); });
+		const auto light_view = registry.view<const Component::Transform, const Component::Light, Component::Texture, const Component::Mesh>();
+		light_view.each([&renderer = scene_renderer](const Component::Transform& transform, const Component::Light& light,
+							Component::Texture& texture, const Component::Mesh& mesh) {
+			texture.colour = light.ambience;
+			renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, texture.colour);
+			renderer->set_light_data(transform.position, texture.colour, light.ambience);
+		});
+
+		static float index = 0.0f;
+		const auto point_light_view = registry.view<Component::Transform, const Component::PointLight, const Component::Mesh>();
+		const auto size = point_light_view.size_hint();
+		point_light_view.each([&renderer = scene_renderer, size = size](
+								  Component::Transform& transform, const Component::PointLight& light, const Component::Mesh& mesh) {
+			constexpr auto height = -10.0f;
+			constexpr auto radius = 45.0f;
+
+			const auto division = (2 * glm::pi<float>()) / size;
+			const auto cos = glm::cos(index * division);
+			const auto sin = glm::sin(index * division);
+			index += 0.5;
+
+			transform.position = { sin * radius, height, cos * radius };
+
+			renderer->submit_point_light_data({ glm::vec4(transform.position, 1.0), light.ambience });
+			renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, light.ambience);
+		});
+		scene_renderer->commit_point_light_data();
 
 		const auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
-		quad_view.each([&renderer = scene_renderer](
+		quad_view.each([&renderer = scene_renderer, quad_texture_index = quad_texture_index](
 						   const Component::Transform& transform, const Component::BasicGeometry& geom, const Component::Texture& texture) {
 			if (geom.geometry == Component::Geometry::Quad) {
 				const auto base_pos = transform.to_matrix();
-				renderer->quad(base_pos, texture.colour);
+				renderer->quad(base_pos, texture.colour, quad_texture_index);
 			}
 		});
 	}
@@ -245,6 +269,16 @@ namespace SceneSystem {
 		scene_camera->on_event(event);
 
 		Alabaster::EventDispatcher dispatch(event);
+		dispatch.dispatch<Alabaster::KeyPressedEvent>([&quad_index = quad_texture_index](const Alabaster::KeyPressedEvent& key_event) {
+			if (key_event.get_key_code() != Alabaster::Key::L)
+				return false;
+
+			quad_index++;
+			quad_index = quad_index % 3;
+
+			return false;
+		});
+
 		dispatch.dispatch<Alabaster::WindowResizeEvent>([this](const Alabaster::WindowResizeEvent& e) {
 			if (e.width() == 0 || e.height() == 0)
 				return true;

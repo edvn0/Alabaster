@@ -89,6 +89,7 @@ namespace SceneSystem {
 		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
 
 		bool paused { false };
+		int quad_texture_index { 0 };
 
 		friend Entity;
 	};

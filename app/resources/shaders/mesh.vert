@@ -7,14 +7,21 @@ layout(location = 3) in vec3 tangent;
 layout(location = 4) in vec3 bitangent;
 layout(location = 5) in vec2 uvs;
 
-layout(binding = 0) uniform Camera
+struct PointLight {
+	vec4 position;
+	vec4 ambience;
+};
+
+layout(binding = 0) uniform UBO
 {
 	mat4 model;
 	mat4 view;
 	mat4 proj;
 	mat4 view_proj;
+	vec4 num_lights;
+	PointLight point_lights[10];
 }
-camera;
+ubo;
 
 layout(push_constant) uniform Renderer3D
 {
@@ -33,8 +40,8 @@ layout(location = 3) out vec4 out_position;
 
 void main()
 {
-	mat4 model_view = camera.view * pc.object_transform;
-	gl_Position = camera.view_proj * pc.object_transform * vec4(locations, 1.0);
+	mat4 model_view = ubo.view * pc.object_transform;
+	gl_Position = ubo.view_proj * pc.object_transform * vec4(locations, 1.0);
 	out_colour = pc.object_colour;
 	out_uvs = uvs;
 	out_normals = vec3(model_view * vec4(normal, 0.0));
