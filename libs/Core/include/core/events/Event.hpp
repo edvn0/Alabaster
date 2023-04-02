@@ -65,12 +65,11 @@ namespace Alabaster {
 	};
 
 	template <typename T>
-	concept HasHandledAndGetStaticType = requires(T t)
-	{
+	concept HasHandledAndGetStaticType = requires(T t) {
 		t.handled;
 		{
 			T::get_static_type()
-			} -> std::same_as<EventType>;
+		} -> std::same_as<EventType>;
 	};
 
 	class EventDispatcher {

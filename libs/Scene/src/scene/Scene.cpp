@@ -49,7 +49,7 @@ namespace SceneSystem {
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
+			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, scene_renderer->default_push_constant_size()) } };
 		auto sun_pipeline = Pipeline::create(sun_spec);
 
 		Entity sphere_one = create_entity(fmt::format("Sphere-{}", 0));
@@ -319,7 +319,7 @@ namespace SceneSystem {
 		registry.clear();
 	}
 
-	void Scene::initialise()
+	void Scene::initialise(AssetManager::FileWatcher&)
 	{
 		auto&& [w, h] = Alabaster::Application::the().get_window()->size();
 

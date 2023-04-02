@@ -11,6 +11,7 @@
 #include "ui/ImGuizmo.hpp"
 #include "utilities/FileInputOutput.hpp"
 
+#include <AssetManager.hpp>
 #include <GLFW/glfw3.h>
 #include <imgui.h>
 #include <imgui_impl_glfw.h>
@@ -27,7 +28,7 @@ namespace Alabaster {
 		}
 	}
 
-	bool GUILayer::initialise()
+	bool GUILayer::initialise(AssetManager::FileWatcher& watcher)
 	{
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
@@ -88,6 +89,19 @@ namespace Alabaster {
 
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
+
+		watcher.on_created([](const AssetManager::FileInformation& info) {
+			if (info.to_path().extension() != ".ttf")
+				return;
+
+			ImGui::GetIO().Fonts->AddFontFromFileTTF(info.path.data(), 11.0f);
+
+			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer { "Fonts Texture" }.get_buffer());
+
+			vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
+
+			ImGui_ImplVulkan_DestroyFontUploadObjects();
+		});
 
 		ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 

@@ -16,6 +16,17 @@ namespace AssetManager {
 
 namespace Alabaster {
 
+	template <typename T>
+	concept ConstructibleLayer = requires(T* t, AssetManager::FileWatcher& watcher) {
+		{
+			t->initialise(watcher)
+		} -> std::same_as<bool>;
+		{
+			t->get_name()
+		} -> std::same_as<std::string_view>;
+		new T();
+	};
+
 	class Window;
 	class GUILayer;
 
@@ -61,10 +72,11 @@ namespace Alabaster {
 
 		void resize(int w, int h);
 
-		void push_layer(Layer* layer)
+		template <ConstructibleLayer L> void push_layer()
 		{
-			layer->initialise();
-			layers.emplace(layer->name(), std::move(layer));
+			L* layer = new L();
+			layer->initialise(*file_watcher);
+			layers.emplace(layer->get_name(), std::move(layer));
 		}
 
 		void pop_layer(const std::string& name)

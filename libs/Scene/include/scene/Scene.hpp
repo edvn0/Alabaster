@@ -6,6 +6,7 @@
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/Renderer3D.hpp"
 
+#include <AssetManager.hpp>
 #include <entt/entt.hpp>
 #include <uuid.h>
 
@@ -22,7 +23,7 @@ namespace SceneSystem {
 
 		void update(float ts);
 		void render();
-		void initialise();
+		void initialise(AssetManager::FileWatcher& watcher);
 		void on_event(Alabaster::Event& event);
 		void shutdown();
 		void ui(float ts);

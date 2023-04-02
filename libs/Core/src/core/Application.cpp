@@ -30,7 +30,9 @@ namespace Alabaster {
 		window = std::make_unique<Window>(args);
 		window->set_event_callback([this](Event& event) { on_event(event); });
 
-		push_layer(new GUILayer());
+		file_watcher = std::make_unique<AssetManager::FileWatcher>(IO::resources());
+
+		push_layer<GUILayer>();
 
 		Renderer::init();
 
@@ -73,11 +75,9 @@ namespace Alabaster {
 
 	void Application::run()
 	{
-		file_watcher = std::make_unique<AssetManager::FileWatcher>(IO::resources());
 
 		statistics.last_frametime = Clock::get_ms<float>();
 		const double dt = 0.01;
-		double t = 0.0;
 		double accumulator = 0.0;
 
 		on_init();
@@ -95,7 +95,6 @@ namespace Alabaster {
 			while (accumulator >= dt) {
 				update_layers(dt);
 				accumulator -= dt;
-				t += dt;
 			}
 			const auto updated_timer = layer_update.elapsed();
 			statistics.cpu_time = updated_timer;

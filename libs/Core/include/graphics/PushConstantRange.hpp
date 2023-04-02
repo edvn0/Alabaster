@@ -22,6 +22,11 @@ namespace Alabaster {
 			, flags(in_flags)
 		{
 		}
+		constexpr PushConstantRange(PushConstantKind in_flags, std::size_t in_size)
+			: size(static_cast<std::uint32_t>(in_size))
+			, flags(in_flags)
+		{
+		}
 		constexpr PushConstantRange()
 			: size(0)
 			, flags(PushConstantKind::Both)

@@ -55,8 +55,7 @@ namespace Alabaster {
 	}
 
 	template <typename T>
-	concept HasSizeAndIterator = requires(T t)
-	{
+	concept HasSizeAndIterator = requires(T t) {
 		t.size();
 		t.begin();
 		t.end();
@@ -165,11 +164,10 @@ namespace Alabaster {
 	};
 
 	template <typename T>
-	concept has_empty = requires(T t)
-	{
+	concept has_empty = requires(T t) {
 		{
 			t.empty()
-			} -> std::same_as<bool>;
+		} -> std::same_as<bool>;
 	};
 	static constexpr auto non_empty = [](const has_empty auto& in) { return not in.empty(); };
 

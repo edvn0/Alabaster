@@ -77,4 +77,55 @@ namespace Alabaster::IO {
 
 	std::filesystem::path slashed_to_fp(const std::string& slashed_string) { return independent_path(slashed_string); }
 
+	std::optional<std::filesystem::path> get_resource_root()
+	{
+		constexpr const auto sanity_checks = [] {
+			const auto cwd = std::filesystem::current_path();
+			const auto app_dir_exists = std::filesystem::exists(cwd / std::filesystem::path { "app" });
+			const auto resources_dir_exists = std::filesystem::exists(cwd / std::filesystem::path { "resources" });
+
+			const auto app_shaders_exists = std::filesystem::exists(
+				cwd / std::filesystem::path { "app" } / std::filesystem::path { "resources" } / std::filesystem::path { "shaders" });
+			const auto app_models_exists = std::filesystem::exists(
+				cwd / std::filesystem::path { "app" } / std::filesystem::path { "resources" } / std::filesystem::path { "models" });
+			const auto app_textures_exists = std::filesystem::exists(
+				cwd / std::filesystem::path { "app" } / std::filesystem::path { "resources" } / std::filesystem::path { "textures" });
+
+			const auto resources_shaders_exists
+				= std::filesystem::exists(std::filesystem::path { "resources" } / std::filesystem::path { "shaders" });
+			const auto resources_models_exists = std::filesystem::exists(std::filesystem::path { "resources" } / std::filesystem::path { "models" });
+			const auto resources_textures_exists
+				= std::filesystem::exists(std::filesystem::path { "resources" } / std::filesystem::path { "textures" });
+
+			if (!app_dir_exists && !resources_dir_exists) {
+				throw AlabasterException("Your CWD is: {}, and Alabaster could not find the 'app' directory there.", cwd.string());
+			}
+
+			// We might have app or resources
+
+			if (!app_shaders_exists && !resources_shaders_exists) {
+				throw AlabasterException("Your CWD is: {}, and Alabaster could not find the 'app/shaders' directory there.", cwd.string());
+			}
+
+			if (!app_models_exists && !resources_models_exists) {
+				throw AlabasterException("Your CWD is: {}, and Alabaster could not find the 'app/models' directory there.", cwd.string());
+			}
+
+			if (!app_textures_exists && !resources_textures_exists) {
+				throw AlabasterException("Your CWD is: {}, and Alabaster could not find the 'app/textures' directory there.", cwd.string());
+			}
+
+			if (app_dir_exists) {
+				return std::filesystem::path { "app" };
+			}
+			if (resources_dir_exists) {
+				return std::filesystem::path { "resources" };
+			}
+
+			throw AlabasterException("Something really strange happened.");
+		};
+
+		return sanity_checks();
+	}
+
 } // namespace Alabaster::IO

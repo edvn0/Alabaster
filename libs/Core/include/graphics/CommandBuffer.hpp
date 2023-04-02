@@ -82,7 +82,7 @@ namespace Alabaster {
 	class ImmediateCommandBuffer final : public CommandBuffer {
 	public:
 		template <typename Str, typename Func = DeallocationCallback>
-		requires std::is_convertible_v<Str, std::string>
+			requires std::is_convertible_v<Str, std::string>
 		explicit ImmediateCommandBuffer(Str&& allocator_tag, Func&& cb = default_callback)
 			: CommandBuffer(1)
 		{

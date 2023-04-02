@@ -57,72 +57,13 @@ namespace Alabaster::IO {
 
 	std::filesystem::path slashed_to_fp(const std::string& slashed_string);
 
-	inline std::optional<std::filesystem::path> get_resource_root()
-	{
-		constexpr const auto sanity_checks = [] {
-			const auto cwd = std::filesystem::current_path();
-			const auto app_dir_exists = std::filesystem::exists(cwd / std::filesystem::path { "app" });
-			const auto resources_dir_exists = std::filesystem::exists(cwd / std::filesystem::path { "resources" });
-
-			const auto app_shaders_exists = std::filesystem::exists(
-				cwd / std::filesystem::path { "app" } / std::filesystem::path { "resources" } / std::filesystem::path { "shaders" });
-			const auto app_models_exists = std::filesystem::exists(
-				cwd / std::filesystem::path { "app" } / std::filesystem::path { "resources" } / std::filesystem::path { "models" });
-			const auto app_textures_exists = std::filesystem::exists(
-				cwd / std::filesystem::path { "app" } / std::filesystem::path { "resources" } / std::filesystem::path { "textures" });
-
-			const auto resources_shaders_exists
-				= std::filesystem::exists(std::filesystem::path { "resources" } / std::filesystem::path { "shaders" });
-			const auto resources_models_exists = std::filesystem::exists(std::filesystem::path { "resources" } / std::filesystem::path { "models" });
-			const auto resources_textures_exists
-				= std::filesystem::exists(std::filesystem::path { "resources" } / std::filesystem::path { "textures" });
-
-			if (!app_dir_exists && !resources_dir_exists) {
-				Alabaster::Log::error("Your CWD is: {}, and Alabaster could not find the 'app' directory there.", cwd.string());
-				throw AlabasterException();
-			}
-
-			// We might have app or resources
-
-			if (!app_shaders_exists && !resources_shaders_exists) {
-				Alabaster::Log::error("Your CWD is: {}, and Alabaster could not find the 'app/shaders' directory there.", cwd.string());
-				throw AlabasterException();
-			}
-
-			if (!app_models_exists && !resources_models_exists) {
-				Alabaster::Log::error("Your CWD is: {}, and Alabaster could not find the 'app/models' directory there.", cwd.string());
-				throw AlabasterException();
-			}
-
-			if (!app_textures_exists && !resources_textures_exists) {
-				Alabaster::Log::error("Your CWD is: {}, and Alabaster could not find the 'app/textures' directory there.", cwd.string());
-				throw AlabasterException();
-			}
-
-			if (app_dir_exists) {
-				return std::filesystem::path { "app" };
-			}
-			if (resources_dir_exists) {
-				return std::filesystem::path { "resources" };
-			}
-
-			Alabaster::Log::error("Something really strange happened.");
-			throw AlabasterException();
-		};
-
-		try {
-			return sanity_checks();
-		} catch (const AlabasterException&) {
-			return {};
-		}
-	}
+	std::optional<std::filesystem::path> get_resource_root();
 
 	template <typename T>
-	concept Printable = requires(T t, std::ofstream& of)
-	{
+	concept Printable = requires(T t, std::ofstream& of) {
 		{
 			t.write_to(of)
-			} -> std::same_as<bool>;
+		} -> std::same_as<bool>;
 	};
 
 	static inline bool write_file(const std::filesystem::path& filename, Printable auto& printable)

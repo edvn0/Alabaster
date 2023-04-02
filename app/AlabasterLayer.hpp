@@ -23,7 +23,7 @@ public:
 	void render() override;
 	void ui(float ts) override;
 	void ui() override { }
-	bool initialise() override;
+	bool initialise(AssetManager::FileWatcher&) override;
 	void destroy() override;
 	void on_event(Alabaster::Event& event) override;
 

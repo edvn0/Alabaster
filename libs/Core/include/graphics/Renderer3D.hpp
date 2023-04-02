@@ -21,81 +21,17 @@ namespace Alabaster {
 	class Camera;
 	class Texture;
 
-	struct QuadVertex {
-		glm::vec4 position;
-		glm::vec4 colour;
-		glm::vec3 normals;
-		glm::vec2 uvs;
-		int texture_id { 0 };
-	};
-
-	struct LineVertex {
-		glm::vec4 position;
-		glm::vec4 colour;
-	};
+	struct RendererData;
 
 	struct PointLight {
 		glm::vec4 position;
 		glm::vec4 ambience;
 	};
 
-	struct UBO {
-		glm::mat4 model;
-		glm::mat4 view;
-		glm::mat4 projection;
-		glm::mat4 view_projection;
-		glm::vec4 num_lights;
-		std::array<PointLight, 10> point_lights;
-	};
-
-	struct PC {
-		glm::vec4 light_position;
-		glm::vec4 light_colour;
-		glm::vec4 light_ambience { 0.1f };
-		glm::vec4 object_colour;
-		glm::mat4 object_transform;
-	};
-
-	struct RendererData {
-		static constexpr std::uint32_t max_vertices = 4 * 100;
-		static constexpr std::uint32_t max_meshes = 400;
-		static constexpr std::uint32_t max_indices = 6 * max_vertices;
-		std::uint32_t draw_calls { 0 };
-		std::uint32_t image_count;
-
-		std::uint32_t quad_indices_submitted { 0 };
-		std::uint32_t quad_vertices_submitted { 0 };
-		std::array<QuadVertex, max_vertices> quad_buffer;
-		std::unique_ptr<VertexBuffer> quad_vertex_buffer;
-		std::unique_ptr<IndexBuffer> quad_index_buffer;
-
-		std::uint32_t line_indices_submitted { 0 };
-		std::uint32_t line_vertices_submitted { 0 };
-		std::array<LineVertex, max_vertices> line_buffer;
-		std::unique_ptr<VertexBuffer> line_vertex_buffer;
-		std::unique_ptr<IndexBuffer> line_index_buffer;
-
-		std::vector<std::unique_ptr<UniformBuffer>> uniforms;
-
-		std::vector<VkDescriptorSet> descriptor_sets;
-		VkDescriptorSetLayout descriptor_set_layout;
-		VkDescriptorPool descriptor_pool;
-		std::shared_ptr<Framebuffer> framebuffer;
-
-		std::uint32_t meshes_submitted { 0 };
-		std::array<Mesh*, max_meshes> mesh;
-		std::array<glm::mat4, max_meshes> mesh_transform {};
-		std::array<glm::vec4, max_meshes> mesh_colour;
-		std::array<Pipeline*, max_meshes> mesh_pipeline_submit;
-
-		PC push_constant;
-
-		std::unordered_map<std::string_view, std::unique_ptr<Pipeline>> pipelines;
-	};
-
 	class Renderer3D {
 	public:
 		explicit Renderer3D(const std::shared_ptr<Camera>& camera) noexcept;
+		~Renderer3D() = default;
 
 		void begin_scene();
 
@@ -123,6 +59,8 @@ namespace Alabaster {
 		void submit_point_light_data(const PointLight& point_light);
 		void commit_point_light_data();
 
+		std::size_t default_push_constant_size() const;
+
 		void destroy();
 		void reset_stats();
 
@@ -144,9 +82,7 @@ namespace Alabaster {
 		void invalidate_pipelines();
 
 		std::shared_ptr<Camera> camera;
-		RendererData data;
-		std::size_t point_light_index { 0 };
-		std::vector<PointLight> point_light_buffer;
+		RendererData* data;
 	};
 
 } // namespace Alabaster

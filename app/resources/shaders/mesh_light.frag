@@ -49,5 +49,5 @@ void main()
 		diffuse_light_total += intensity * ang_incidence;
 	}
 
-	out_colour = vec4(diffuse_light_total * vec3(colour), 1.0);
+	out_colour = vec4(diffuse_light_total * vec3(pc.object_colour), 1.0);
 }

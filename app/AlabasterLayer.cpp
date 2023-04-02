@@ -26,19 +26,17 @@ static bool is_dockspace_open { true };
 
 static bool global_imgui_is_blocking { false };
 
-bool AlabasterLayer::initialise()
+bool AlabasterLayer::initialise(AssetManager::FileWatcher& file_watcher)
 {
 	editor_scene = std::make_unique<Scene>();
-	editor_scene->initialise();
+	editor_scene->initialise(file_watcher);
 
 	panels.push_back(std::make_unique<App::SceneEntitiesPanel>(*editor_scene));
 	panels.push_back(std::make_unique<App::DirectoryContentPanel>(IO::resources()));
 	panels.push_back(std::make_unique<App::StatisticsPanel>(Application::the().get_statistics()));
 
-	auto& watcher = Application::the().get_file_watcher();
 	for (const auto& panel : panels) {
-		panel->on_init();
-		panel->register_file_watcher(watcher);
+		panel->initialise(file_watcher);
 	}
 	return true;
 }

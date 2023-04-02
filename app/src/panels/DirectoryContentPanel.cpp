@@ -172,10 +172,19 @@ namespace App {
 
 	void DirectoryContentPanel::on_event(Alabaster::Event& event) { }
 
-	void DirectoryContentPanel::on_init()
+	void DirectoryContentPanel::initialise(AssetManager::FileWatcher& watcher)
 	{
 		path_and_content_cache[current] = get_files_in_directory(current);
 		current_directory_content = path_and_content_cache[current];
+
+		watcher.on(AssetManager::FileStatuses::All, [this](const AssetManager::FileInformation& file_info) {
+			std::filesystem::path file_path { file_info.path };
+			if (const auto file_directory_for_modified_file = file_path.parent_path(); file_directory_for_modified_file != current)
+				return;
+
+			std::unique_lock lock { mutex };
+			reload();
+		});
 	}
 
 	void DirectoryContentPanel::reload()
@@ -215,17 +224,4 @@ namespace App {
 		Alabaster::UI::image(image_info, size);
 		ImGui::PopStyleColor();
 	}
-
-	void DirectoryContentPanel::register_file_watcher(AssetManager::FileWatcher& watcher)
-	{
-		watcher.on_created_or_deleted([this](const AssetManager::FileInformation& file_info) {
-			std::filesystem::path file_path { file_info.path };
-			if (const auto file_directory_for_modified_file = file_path.parent_path(); file_directory_for_modified_file != current)
-				return;
-
-			std::unique_lock lock { mutex };
-			reload();
-		});
-	}
-
 } // namespace App

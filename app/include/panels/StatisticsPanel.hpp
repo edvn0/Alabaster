@@ -19,7 +19,7 @@ namespace App {
 			descriptives = { Descriptive { "App Timestep", 0 }, { "CPU Time", 0 }, { "FT", 0 }, { "Last FT", 0 } };
 		};
 
-		void on_init() override {};
+		void initialise(AssetManager::FileWatcher&) override {};
 		void on_destroy() override {};
 		void on_event(Alabaster::Event&) override {};
 		void on_update(float ts) override;
