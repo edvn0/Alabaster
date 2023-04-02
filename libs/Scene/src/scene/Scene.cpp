@@ -15,6 +15,8 @@
 
 namespace SceneSystem {
 
+	static constexpr auto mouse_picking_interval_ms = 100.0;
+
 	template <class Position = glm::vec3> static constexpr auto axes(const auto& renderer, const Position& position, auto length = 1.0f)
 	{
 		renderer->line(position, position + glm::vec3 { length, 0, 0 }, { 1, 0, 0, 1 });
@@ -39,7 +41,7 @@ namespace SceneSystem {
 		fbs.clear_depth_on_load = true;
 		framebuffer = Framebuffer::create(fbs);
 
-		PipelineSpecification sun_spec { .shader = AssetManager::asset<Alabaster::Shader>("mesh"),
+		PipelineSpecification sun_spec { .shader = AssetManager::asset<Alabaster::Shader>("mesh_light"),
 			.debug_name = "Sun Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
 			.topology = Topology::TriangleList,
@@ -89,9 +91,9 @@ namespace SceneSystem {
 			index++;
 
 			transform.position = { sin * radius, height, cos * radius };
-			auto vec = random_vec4(0, 1);
-			vec.w = 1;
-			point_light.add_component<Component::PointLight>(vec);
+			auto ambience = random_vec4(0, 1);
+			ambience.w = 1;
+			point_light.add_component<Component::PointLight>(ambience);
 			point_light.add_component<Component::Mesh>(sphere_model);
 		}
 
@@ -195,14 +197,22 @@ namespace SceneSystem {
 
 	void Scene::update(float ts)
 	{
-		pick_mouse();
+		mouse_picking_accumulator += ts;
+		if (mouse_picking_accumulator >= mouse_picking_interval_ms) {
+			pick_mouse();
+			update_intersectibles();
+			mouse_picking_accumulator = 0;
+		}
 
 		scene_camera->on_update(ts);
+	}
+
+	void Scene::render()
+	{
 		command_buffer->begin();
 		scene_renderer->begin_scene();
 		scene_renderer->reset_stats();
-		draw_entities_in_scene(ts);
-		update_intersectibles();
+		draw_entities_in_scene();
 		scene_renderer->end_scene(*command_buffer, framebuffer);
 		command_buffer->end();
 		command_buffer->submit();
@@ -210,13 +220,13 @@ namespace SceneSystem {
 
 	void Scene::update_intersectibles()
 	{
-		const auto mesh_view = registry.view<const Component::Transform, Component::SphereIntersectible>();
-		mesh_view.each([](const Component::Transform& transform, Component::SphereIntersectible& intersectible) {
+		const auto sphere_intersectible_view = registry.view<const Component::Transform, Component::SphereIntersectible>();
+		sphere_intersectible_view.each([](const Component::Transform& transform, Component::SphereIntersectible& intersectible) {
 			intersectible.update(transform.position, transform.scale, transform.rotation);
 		});
 	}
 
-	void Scene::draw_entities_in_scene(float)
+	void Scene::draw_entities_in_scene()
 	{
 		axes(scene_renderer, glm::vec3 { -100, -0.1, 100 }, 400.0f);
 
@@ -226,7 +236,8 @@ namespace SceneSystem {
 			[&renderer = scene_renderer](const Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture,
 				const Component::Pipeline& pipeline) { renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour); });
 
-		const auto light_view = registry.view<const Component::Transform, const Component::Light, Component::Texture, const Component::Mesh>();
+		const auto light_view = registry.view<const Component::Transform, const Component::Light, Component::Texture, const Component::Mesh>(
+			entt::exclude<Component::PointLight>);
 		light_view.each([&renderer = scene_renderer](const Component::Transform& transform, const Component::Light& light,
 							Component::Texture& texture, const Component::Mesh& mesh) {
 			texture.colour = light.ambience;
@@ -234,32 +245,34 @@ namespace SceneSystem {
 			renderer->set_light_data(transform.position, texture.colour, light.ambience);
 		});
 
-		static float index = 0.0f;
 		const auto point_light_view = registry.view<Component::Transform, const Component::PointLight, const Component::Mesh>();
 		const auto size = point_light_view.size_hint();
-		point_light_view.each([&renderer = scene_renderer, size = size](
+		std::size_t i = 0;
+		point_light_view.each([&renderer = scene_renderer, size = size, i = i++](
 								  Component::Transform& transform, const Component::PointLight& light, const Component::Mesh& mesh) {
-			constexpr auto height = -10.0f;
-			constexpr auto radius = 45.0f;
-
-			const auto division = (2 * glm::pi<float>()) / size;
-			const auto cos = glm::cos(index * division);
-			const auto sin = glm::sin(index * division);
-			index += 0.5;
-
-			transform.position = { sin * radius, height, cos * radius };
-
 			renderer->submit_point_light_data({ glm::vec4(transform.position, 1.0), light.ambience });
 			renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, light.ambience);
 		});
 		scene_renderer->commit_point_light_data();
 
-		const auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
-		quad_view.each([&renderer = scene_renderer, quad_texture_index = quad_texture_index](
-						   const Component::Transform& transform, const Component::BasicGeometry& geom, const Component::Texture& texture) {
-			if (geom.geometry == Component::Geometry::Quad) {
-				const auto base_pos = transform.to_matrix();
+		const auto basic_geometry_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
+		basic_geometry_view.each([&renderer = scene_renderer, quad_texture_index = quad_texture_index](
+									 const Component::Transform& transform, const Component::BasicGeometry& geom, const Component::Texture& texture) {
+			const auto base_pos = transform.to_matrix();
+			switch (geom.geometry) {
+			case Component::Geometry::Rect: {
 				renderer->quad(base_pos, texture.colour, quad_texture_index);
+				return;
+			}
+			case Component::Geometry::Quad: {
+				renderer->quad(base_pos, texture.colour, quad_texture_index);
+				return;
+			}
+			case Component::Geometry::Circle: {
+				// const auto base_pos = transform.to_matrix();
+				// renderer->circle(base_pos, texture.colour, quad_texture_index);
+				return;
+			}
 			}
 		});
 	}
@@ -287,6 +300,7 @@ namespace SceneSystem {
 			scene_camera.reset(new Alabaster::EditorCamera(
 				vertical_fov, static_cast<float>(e.width()), static_cast<float>(e.height()), 0.1f, 1000.0f, scene_camera.get()));
 			scene_renderer->set_camera(scene_camera);
+			// framebuffer->resize(e.width(), e.height());
 			return false;
 		});
 	}

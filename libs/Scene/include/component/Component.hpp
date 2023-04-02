@@ -217,4 +217,11 @@ namespace SceneSystem::Component {
 	concept IsComponent = Detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light, PointLight,
 		SphereIntersectible, QuadIntersectible>;
 
+	template <typename T>
+	concept IsValidComponent = IsComponent<T> && requires(T component) {
+		{
+			component.is_valid()
+		} -> std::same_as<bool>;
+	};
+
 } // namespace SceneSystem::Component

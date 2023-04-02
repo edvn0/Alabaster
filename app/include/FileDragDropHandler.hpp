@@ -47,7 +47,7 @@ namespace App {
 				return;
 
 			auto entity = scene.create_entity(path.string());
-			entity.add_component<Component::Mesh>(Mesh::from_file(path));
+			entity.add_component<Component::Mesh>(Alabaster::Mesh::from_file(path));
 			entity.add_component<Component::Texture>();
 			entity.add_component<Component::Pipeline>();
 		}

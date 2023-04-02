@@ -15,6 +15,7 @@ namespace Alabaster {
 		void on_event(Event&) override;
 		bool initialise() override;
 		void update(float) override {};
+		void render() override {};
 		void ui(float) override;
 		void ui() override {};
 		void destroy() override;

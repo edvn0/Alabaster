@@ -20,6 +20,7 @@ public:
 	~AlabasterLayer() override = default;
 
 	void update(float ts) override;
+	void render() override;
 	void ui(float ts) override;
 	void ui() override { }
 	bool initialise() override;

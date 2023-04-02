@@ -21,6 +21,7 @@ namespace SceneSystem {
 		~Scene();
 
 		void update(float ts);
+		void render();
 		void initialise();
 		void on_event(Alabaster::Event& event);
 		void shutdown();
@@ -33,7 +34,7 @@ namespace SceneSystem {
 			viewport_offset = offset;
 		}
 
-		void draw_entities_in_scene(float ts);
+		void draw_entities_in_scene();
 		void update_intersectibles();
 
 		void delete_entity(const std::string& tag);
@@ -90,6 +91,7 @@ namespace SceneSystem {
 
 		bool paused { false };
 		int quad_texture_index { 0 };
+		double mouse_picking_accumulator { 0 };
 
 		friend Entity;
 	};

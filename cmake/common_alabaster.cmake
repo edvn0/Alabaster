@@ -42,6 +42,7 @@ function(register_for_project PROJECT HAS_TESTS)
 
   if(MSVC)
     target_compile_options(${PROJECT} PRIVATE "/MP")
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "AlabasterApp")
   endif()
 
   if(MINGW)

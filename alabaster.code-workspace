@@ -17,6 +17,7 @@
         },
         "files.associations": {
             "*.frag": "hlsl",
+            "*.vert": "hlsl",
             "*.module": "php",
             "*.sass": "css",
             "*wmc": "xml",
@@ -154,7 +155,8 @@
             "span_ext": "cpp",
             "*.def": "cpp",
             "util": "cpp",
-            "gsl_util": "cpp"
+            "gsl_util": "cpp",
+            "*.hpp11": "cpp"
         },
         "search.exclude": {
             "**/node_modules": true,

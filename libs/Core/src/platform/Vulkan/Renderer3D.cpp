@@ -396,7 +396,7 @@ namespace Alabaster {
 		data.line_indices_submitted += 2;
 	}
 
-	void Renderer3D::line(float size, const glm::vec3& p0, const glm::vec3& p1, const glm::vec4& color)
+	void Renderer3D::line(const float size, const glm::vec3& from, const glm::vec3& to, const glm::vec4& color)
 	{
 		if (data.line_indices_submitted >= RendererData::max_indices) {
 			flush();
@@ -407,7 +407,7 @@ namespace Alabaster {
 		}
 
 		if (glm::epsilonEqual(size, 1.0f, 0.0001f)) {
-			line(p0, p1, color);
+			line(from, to, color);
 		} else {
 			// TODO: quad between two points here.
 		}
@@ -585,7 +585,7 @@ namespace Alabaster {
 	void Renderer3D::update_uniform_buffers(const std::optional<glm::mat4>& model)
 	{
 		const auto image_index = Application::the().swapchain().frame();
-		static const std::array<PointLight, 10> point_lights = {
+		const std::array<PointLight, 10> point_lights = {
 			point_light_buffer[0],
 			point_light_buffer[1],
 			point_light_buffer[2],
@@ -611,11 +611,6 @@ namespace Alabaster {
 	void Renderer3D::destroy()
 	{
 		const auto& device = GraphicsContext::the().device();
-
-		for (auto itr = data.pipelines.begin(); itr != data.pipelines.end();) {
-			(*itr).second->destroy();
-			itr = data.pipelines.erase(itr);
-		}
 		data.pipelines.clear();
 
 		data.framebuffer->destroy();

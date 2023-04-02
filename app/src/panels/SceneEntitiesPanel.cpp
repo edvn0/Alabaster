@@ -187,7 +187,7 @@ namespace App {
 		float line_height = GImGui->Font->FontSize + GImGui->Style.FramePadding.y + frame_padding * 2.0f;
 		ImGui::Separator();
 
-		const auto leaf_id = (void*)typeid(T).hash_code();
+		const auto leaf_id = (const void*)typeid(T).hash_code();
 		bool open = ImGui::TreeNodeEx(leaf_id, tree_node_flags, "%s", name.c_str());
 		ImGui::PopStyleVar();
 		ImGui::SameLine(content_region_available.x - line_height * 0.5f);
@@ -238,6 +238,7 @@ namespace App {
 			display_add_component_entry<SceneSystem::Component::Pipeline>("Pipeline");
 			display_add_component_entry<SceneSystem::Component::Mesh>("Mesh");
 			display_add_component_entry<SceneSystem::Component::SphereIntersectible>("SphereIntersectible");
+			display_add_component_entry<SceneSystem::Component::PointLight>("PointLight");
 			ImGui::EndPopup();
 		}
 
@@ -251,6 +252,9 @@ namespace App {
 
 		draw_component<SceneSystem::Component::Light>(
 			entity, "Light", [](SceneSystem::Component::Light& component) { ImGui::ColorEdit3("Ambience", glm::value_ptr(component.ambience)); });
+
+		draw_component<SceneSystem::Component::PointLight>(entity, "PointLight",
+			[](SceneSystem::Component::PointLight& component) { ImGui::ColorEdit3("Ambience", glm::value_ptr(component.ambience)); });
 
 		draw_component<SceneSystem::Component::Texture>(entity, "Texture", [](SceneSystem::Component::Texture& component) {
 			ImGui::ColorEdit4("Colour", glm::value_ptr(component.colour));
@@ -267,8 +271,18 @@ namespace App {
 			ImGui::Text("Type: %s", name.data());
 		});
 
-		draw_component<SceneSystem::Component::Mesh>(entity, "Mesh",
-			[](const SceneSystem::Component::Mesh& component) { ImGui::Text("Mesh path: %s", component.mesh->get_asset_path().string().data()); });
+		draw_component<SceneSystem::Component::Mesh>(entity, "Mesh", [](const SceneSystem::Component::Mesh& component) {
+			if (component.mesh) {
+				ImGui::Text("Mesh path: %s", component.mesh->get_asset_path().string().data());
+				return;
+			}
+			ImGui::Button("Component mesh");
+			const auto path = Alabaster::UI::accept_drag_drop("AlabasterLayer::DragDropPayload");
+			if (!path)
+				return;
+
+			ImGui::Text("%s", (*path).c_str());
+		});
 
 		draw_component<SceneSystem::Component::Pipeline>(entity, "Pipeline", [](SceneSystem::Component::Pipeline& component) {
 			if (!component.pipeline) {

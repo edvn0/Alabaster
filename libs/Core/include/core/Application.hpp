@@ -34,9 +34,10 @@ namespace Alabaster {
 
 	struct ApplicationStatistics {
 		double app_ts { 7.5 };
-		float cpu_time;
-		float frame_time;
-		float last_frametime;
+		double cpu_time { 0.0f };
+		double frame_time { 0.0f };
+		double last_frametime { 0.0f };
+		double mean { 0.0f };
 	};
 
 	class Application {
@@ -95,6 +96,7 @@ namespace Alabaster {
 		bool on_window_change(WindowMinimizeEvent& event);
 		bool on_window_change(WindowCloseEvent& event);
 		void render_imgui();
+		void render_layers();
 		void update_layers(float ts);
 		void update_layers(double ts);
 

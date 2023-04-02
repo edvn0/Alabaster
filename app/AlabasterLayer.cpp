@@ -111,6 +111,8 @@ void AlabasterLayer::update(float ts)
 	}
 }
 
+void AlabasterLayer::render() { editor_scene->render(); }
+
 void AlabasterLayer::ui(float ts)
 {
 	editor_scene->ui(ts);

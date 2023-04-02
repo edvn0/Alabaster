@@ -11,6 +11,7 @@ namespace Alabaster {
 		virtual ~Layer() = default;
 		virtual auto initialise() -> bool = 0;
 		virtual auto update(float ts) -> void = 0;
+		virtual auto render() -> void = 0;
 		virtual auto destroy() -> void = 0;
 		virtual void ui(float ts) = 0;
 		virtual void ui() = 0;

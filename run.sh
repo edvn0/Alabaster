@@ -35,6 +35,8 @@ while getopts ":g:r:t:c:b:h:f:" flag; do
     esac
 done
 
+printf "Should run: %s, Build testing: %s, Clean first: %s, Build type: %s, Generator: %s Force configure: %s\n" $should_run $build_testing $clean_first $build_type $generator $force_configure
+
 build_and_generator_folder="$build_folder-$build_type-$generator"
 
 if [ "$clean_first" = "ON" ]; then
@@ -53,7 +55,11 @@ else
     export CMAKE_GENERATOR="$generator"
 fi
 
-if [ "$force_configure" = "ON" ] || ! [ -d "$build_and_generator_folder" ]; then
+if [ "$force_configure" = "ON" ]; then
+  rm -rf "$build_and_generator_folder"
+fi
+
+if ! [ -d "$build_and_generator_folder" ]; then
     cmake -B "$build_and_generator_folder" \
         -D GLFW_INSTALL=OFF \
         -D GLFW_BUILD_DOCS=OFF \
@@ -62,7 +68,7 @@ if [ "$force_configure" = "ON" ] || ! [ -d "$build_and_generator_folder" ]; then
         -D CMAKE_BUILD_TYPE="$build_type" \
         -D BUILD_TESTING="$build_testing" \
         -D ENABLE_HLSL=ON \
-        -D ENABLE_CTEST=OFF \
+        -D ENABLE_CTEST=ON \
         -D ENTT_BUILD_TESTING=OFF \
         -D Random_BuildTests=OFF \
         -D BUILD_SHARED_LIBS=OFF \
@@ -97,9 +103,7 @@ if [ "$force_configure" = "ON" ] || ! [ -d "$build_and_generator_folder" ]; then
         -S "$current_dir"
 fi
 
-if ! [ "$force_configure" = "ON" ]; then
-    cmake --build "$build_and_generator_folder" --target AlabasterApp --parallel 10
-fi
+cmake --build "$build_and_generator_folder" --target AlabasterApp --parallel 10
 
 if [ "$generator" = "Ninja" ]; then
     if [ -f "$current_dir/compile_commands.json" ]; then
