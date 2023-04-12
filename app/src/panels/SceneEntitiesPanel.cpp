@@ -263,6 +263,9 @@ namespace App {
 				Alabaster::UI::image(component.texture->get_descriptor_info(), ImVec2(200, 200));
 		});
 
+		draw_component<SceneSystem::Component::Behaviour>(
+			entity, "Behaviour", [](const SceneSystem::Component::Behaviour& component) { ImGui::Text("Script name: %s", component.name.data()); });
+
 		draw_component<SceneSystem::Component::SphereIntersectible>(entity, "SphereIntersectible",
 			[](SceneSystem::Component::SphereIntersectible& component) { draw_vec3_control("World position", component.world_position); });
 
@@ -341,7 +344,7 @@ namespace App {
 		}
 
 		bool entity_deleted = false;
-		if (ImGui::BeginPopupContextItem()) {
+		if (ImGui::BeginPopupContextWindow("##testtest")) {
 			if (ImGui::MenuItem("Delete Entity"))
 				entity_deleted = true;
 
@@ -379,7 +382,6 @@ namespace App {
 			draw_entity_node(entity);
 		});
 
-		// Right-click on blank space
 		if (ImGui::BeginPopupContextWindow("EmptyEntityId", 1)) {
 			if (ImGui::MenuItem("Create Empty Entity"))
 				scene.create_entity("Empty Entity");

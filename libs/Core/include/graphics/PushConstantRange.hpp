@@ -41,6 +41,7 @@ namespace Alabaster {
 	struct PushConstantRanges {
 		explicit PushConstantRanges(const std::initializer_list<PushConstantRange>& in);
 		const auto& get_ranges() const { return output_ranges; }
+		const auto& get_input_ranges() const { return ranges; }
 
 		auto size() const { return ranges.size(); }
 

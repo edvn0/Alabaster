@@ -11,6 +11,10 @@
 #include <glm/gtx/norm.hpp>
 #include <uuid.h>
 
+namespace SceneSystem {
+	class ScriptEntity;
+}
+
 namespace SceneSystem::Component {
 
 	template <typename T> inline constexpr std::string_view component_name;
@@ -197,7 +201,7 @@ namespace SceneSystem::Component {
 		PointLight(const T& amb)
 			: ambience(amb)
 		{
-			// If the norm is > 1, we normalize to RGB, I.e. divide by 255.
+			// If the l1 norm is > 1, we normalize to RGB, I.e. divide by 255.
 			// l1 against 4 components is fine (max of sum of four components is 4)
 			if ((ambience.x + ambience.y + ambience.z + ambience.w) > 4.0f)
 				ambience = ambience / 255.0f;
@@ -208,6 +212,39 @@ namespace SceneSystem::Component {
 	};
 	template <> inline constexpr std::string_view component_name<Component::PointLight> = "point_light";
 
+	template <typename T>
+	concept IsScriptable = requires(T t, float ts) {
+		{
+			t.on_update(ts)
+		} -> std::same_as<void>;
+		{
+			t.on_create()
+		} -> std::same_as<void>;
+		{
+			t.on_delete()
+		} -> std::same_as<void>;
+	};
+	struct Behaviour {
+		ScriptEntity* entity { nullptr };
+		std::string_view name;
+
+		Behaviour() = default;
+
+		std::function<void(Behaviour&)> create;
+		std::function<void(Behaviour&)> destroy;
+
+		template <IsScriptable T, typename... Args> void bind(std::string_view current_name, Args&&... args)
+		{
+			name = std::move(current_name);
+			create = [&](Behaviour& behaviour) { behaviour.entity = static_cast<ScriptEntity*>(new T(std::forward<Args>(args)...)); };
+			destroy = [](Behaviour& behaviour) {
+				delete behaviour.entity;
+				behaviour.entity = nullptr;
+			};
+		}
+	};
+	template <> inline constexpr std::string_view component_name<Component::Behaviour> = "behaviour";
+
 	namespace Detail {
 		template <typename T, typename... U>
 		concept IsAnyOf = (std::same_as<T, U> || ...);
@@ -215,7 +252,7 @@ namespace SceneSystem::Component {
 
 	template <typename T>
 	concept IsComponent = Detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light, PointLight,
-		SphereIntersectible, QuadIntersectible>;
+		SphereIntersectible, QuadIntersectible, Behaviour>;
 
 	template <typename T>
 	concept IsValidComponent = IsComponent<T> && requires(T component) {

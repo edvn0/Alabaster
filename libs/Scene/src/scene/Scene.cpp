@@ -4,6 +4,7 @@
 
 #include "cache/ResourceCache.hpp"
 #include "component/Component.hpp"
+#include "component/ScriptEntity.hpp"
 #include "entity/Entity.hpp"
 #include "serialisation/SceneDeserialiser.hpp"
 #include "serialisation/SceneSerialiser.hpp"
@@ -28,6 +29,7 @@ namespace SceneSystem {
 	{
 		using namespace Alabaster;
 		auto sphere_model = Mesh::from_file("sphere_subdivided.obj");
+		auto simple_sphere_model = Mesh::from_file("sphere.obj");
 		auto cube_model = Mesh::from_file("cube.obj");
 
 		const auto&& [w, h] = Application::the().get_window()->size();
@@ -55,15 +57,29 @@ namespace SceneSystem {
 		Entity sphere_one = create_entity(fmt::format("Sphere-{}", 0));
 		sphere_one.add_component<Component::Mesh>(sphere_model);
 		auto& sphere_one_transform = sphere_one.get_component<Component::Transform>();
-		sphere_one_transform.position = { 3, -6, 5 };
+		sphere_one_transform.scale = glm::vec3 { 0.1f };
+		sphere_one_transform.position = { -0.35, -0.5, .5f };
 		sphere_one.add_component<Component::Texture>(Alabaster::random_vec4(0, 1));
 		sphere_one.add_component<Component::Pipeline>(sun_pipeline);
 		sphere_one.add_component<Component::SphereIntersectible>();
+		class MoveScript : public ScriptEntity {
+		public:
+			~MoveScript() override = default;
+			void on_create() override { Alabaster::Log::info("Created entity!!!"); }
+			void on_delete() override { Alabaster::Log::info("Deleted entity!!!"); }
+			void on_update(const float ts)
+			{
+				auto& component = get_component<Component::Transform>();
+				component.position += ts * 0.1;
+			}
+		};
+		sphere_one.add_component<Component::Behaviour>().bind<MoveScript>("MoveScript");
 
 		Entity sphere_two = create_entity(fmt::format("Sphere-{}", 1));
 		sphere_two.add_component<Component::Mesh>(sphere_model);
 		auto& sphere_two_transform = sphere_two.get_component<Component::Transform>();
-		sphere_two_transform.position = { 1, -6, 5 };
+		sphere_two_transform.scale = glm::vec3 { 0.1f };
+		sphere_two_transform.position = { .35, -0.5, .5f };
 		sphere_two.add_component<Component::Texture>(Alabaster::random_vec4(0, 1));
 		sphere_two.add_component<Component::Pipeline>(sun_pipeline);
 		sphere_two.add_component<Component::SphereIntersectible>();
@@ -71,18 +87,45 @@ namespace SceneSystem {
 		Entity floor = create_entity("Floor");
 		floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
 		auto& floor_transform = floor.get_component<Component::Transform>();
-		floor_transform.scale = { 200, 200, .2 };
+		floor_transform.scale = { 5, 5, .2 };
 		floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
 		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
 
 		static std::array point_lights { create_entity("LightOne"), create_entity("LightTwo"), create_entity("LightThree"),
 			create_entity("LightFour"), create_entity("LightFive"), create_entity("LightSix"), create_entity("LightSeven"),
 			create_entity("LightEight"), create_entity("LightNine"), create_entity("LightTen") };
+
+		class MoveInCircle : public ScriptEntity {
+		public:
+			~MoveInCircle() override = default;
+			explicit MoveInCircle(float in_radius, float in_height)
+				: radius(in_radius)
+				, height(in_height)
+			{
+			}
+			void on_create() override { Alabaster::Log::info("Created entity!!!"); }
+			void on_delete() override { Alabaster::Log::info("Deleted entity!!!"); }
+			void on_update(const float ts)
+			{
+				auto& component = get_component<Component::Transform>();
+				auto& pos = component.position;
+				const auto cos = glm::cos(glm::radians(position_index));
+				const auto sin = glm::sin(glm::radians(position_index));
+				position_index += ts;
+
+				pos = { sin * radius, height, cos * radius };
+			}
+
+		private:
+			float radius;
+			float height;
+			float position_index = 0;
+		};
 		for (auto& point_light : point_lights) {
 			auto& transform = point_light.get_transform();
 
-			constexpr auto height = -10.0f;
-			constexpr auto radius = 45.0f;
+			constexpr auto height = -0.5f;
+			constexpr auto radius = 2.0f;
 
 			static int index = 0;
 			constexpr auto division = (2 * glm::pi<float>()) / point_lights.size();
@@ -94,7 +137,8 @@ namespace SceneSystem {
 			auto ambience = random_vec4(0, 1);
 			ambience.w = 1;
 			point_light.add_component<Component::PointLight>(ambience);
-			point_light.add_component<Component::Mesh>(sphere_model);
+			point_light.add_component<Component::Mesh>(simple_sphere_model);
+			point_light.add_behaviour<MoveInCircle>("MoveInCircle", radius, height);
 		}
 
 		auto sun = create_entity("The Sun");
@@ -102,8 +146,8 @@ namespace SceneSystem {
 		sun.add_component<Component::Mesh>(sphere_model);
 		sun.add_component<Component::Texture>(glm::vec4 { 252., 144., 3., 255 });
 		auto& sun_transform = sun.get_transform();
-		sun_transform.position = { -47.1, -24, -12 };
-		sun_transform.scale = { 5, 5, 5 };
+		sun_transform.position = { -3, -1.5, -1 };
+		sun_transform.scale = glm::vec3 { 0.5 };
 	}
 
 	Scene::Scene() noexcept
@@ -201,6 +245,18 @@ namespace SceneSystem {
 		if (mouse_picking_accumulator >= mouse_picking_interval_ms) {
 			pick_mouse();
 			update_intersectibles();
+
+			auto scripts = registry.view<Component::Behaviour>();
+			scripts.each([this](const auto entity, Component::Behaviour& behaviour) {
+				if (behaviour.entity)
+					return;
+				behaviour.create(behaviour);
+				behaviour.entity->entity = Entity { this, entity };
+				behaviour.entity->on_create();
+			});
+
+			scripts.each([ts](Component::Behaviour& behaviour) { behaviour.entity->on_update(ts); });
+
 			mouse_picking_accumulator = 0;
 		}
 
@@ -228,7 +284,7 @@ namespace SceneSystem {
 
 	void Scene::draw_entities_in_scene()
 	{
-		axes(scene_renderer, glm::vec3 { -100, -0.1, 100 }, 400.0f);
+		axes(scene_renderer, glm::vec3 { -2.5, -0.1, 2.5 }, 5.0f);
 
 		const auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>(
 			entt::exclude<Component::Light>);
@@ -315,6 +371,12 @@ namespace SceneSystem {
 
 		if (command_buffer)
 			command_buffer->destroy();
+
+		auto scripts = registry.view<Component::Behaviour>();
+		scripts.each([](Component::Behaviour& behaviour) {
+			behaviour.entity->on_delete();
+			behaviour.destroy(behaviour);
+		});
 
 		registry.clear();
 	}

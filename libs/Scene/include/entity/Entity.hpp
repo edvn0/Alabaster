@@ -63,6 +63,17 @@ namespace SceneSystem {
 			return emplace_component<T>();
 		}
 
+		template <Component::IsScriptable Script, typename... Args> inline auto& add_behaviour(std::string_view name, Args&&... args)
+		{
+			using T = Component::Behaviour;
+			if (has_component<T>())
+				return get_component<T>();
+
+			auto& component = add_component<T>();
+			component.bind<Script>(std::move(name), std::forward<Args>(args)...);
+			return component;
+		}
+
 		template <Component::IsComponent T> T& emplace_component() { return scene->registry.emplace<T>(entity_handle); }
 		template <Component::IsComponent T, typename... Args> T& emplace_component(Args&&... args)
 		{

@@ -17,7 +17,7 @@ namespace Alabaster {
 	{
 		std::array<VkDescriptorSetLayoutBinding, 3> bindings;
 		bindings[0].binding = 0;
-		bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
+		bindings[0].stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
 		bindings[0].pImmutableSamplers = nullptr; // Optional
 		bindings[0].descriptorCount = 1;
 		bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;

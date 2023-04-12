@@ -39,6 +39,7 @@ namespace SceneSystem {
 		handle_component_serialisation<Component::Texture>(entity, output_object);
 		handle_component_serialisation<Component::Transform>(entity, output_object);
 		handle_component_serialisation<Component::BasicGeometry>(entity, output_object);
+		handle_component_serialisation<Component::Pipeline>(entity, output_object);
 		return output_object;
 	}
 

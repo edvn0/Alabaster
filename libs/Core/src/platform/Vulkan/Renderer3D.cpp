@@ -88,7 +88,7 @@ namespace Alabaster {
 		std::unordered_map<std::string_view, std::unique_ptr<Pipeline>> pipelines;
 
 		std::size_t point_light_index { 0 };
-		std::vector<PointLight> point_light_buffer;
+		std::array<PointLight, 10> point_light_buffer;
 	};
 
 	using namespace std::string_view_literals;
@@ -327,7 +327,6 @@ namespace Alabaster {
 		data->line_index_buffer = IndexBuffer::create(line_indices);
 
 		invalidate_pipelines();
-		data->point_light_buffer.resize(10);
 	}
 
 	void Renderer3D::invalidate_pipelines()
@@ -546,7 +545,6 @@ namespace Alabaster {
 			draw_meshes(command_buffer);
 		}
 		Renderer::end_render_pass(command_buffer);
-		data->point_light_buffer.resize(10);
 	}
 
 	void Renderer3D::end_scene(const CommandBuffer& command_buffer) { end_scene(command_buffer, data->framebuffer); }
@@ -625,23 +623,25 @@ namespace Alabaster {
 			const auto& mesh_transform = data->mesh_transform[i];
 			const auto& mesh_colour = data->mesh_colour[i];
 
+			const auto new_mesh = mesh != initial_mesh;
+
 			data->push_constant.object_transform = mesh_transform;
 			data->push_constant.object_colour = mesh_colour;
 			const auto& pc = data->push_constant;
 			vkCmdPushConstants(command_buffer.get_buffer(), pipeline->get_vulkan_pipeline_layout(),
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
-			if (initial_layout != pipeline->get_vulkan_pipeline_layout()) {
+			if (new_mesh || initial_layout != pipeline->get_vulkan_pipeline_layout()) {
 				initial_layout = pipeline->get_vulkan_pipeline_layout();
 				vkCmdBindDescriptorSets(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, initial_layout, 0, 1, &descriptor, 0, nullptr);
 			}
 
-			if (initial_pipeline != pipeline) {
+			if (new_mesh || initial_pipeline != pipeline) {
 				initial_pipeline = pipeline;
 				vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, initial_pipeline->get_vulkan_pipeline());
 			}
 
-			if (initial_mesh != mesh) {
+			if (new_mesh || initial_mesh != mesh) {
 				initial_mesh = mesh;
 				static const std::array vbs { *vb };
 				constexpr VkDeviceSize offsets { 0 };
@@ -658,25 +658,13 @@ namespace Alabaster {
 	void Renderer3D::update_uniform_buffers(const std::optional<glm::mat4>& model)
 	{
 		const auto image_index = Application::the().swapchain().frame();
-		const std::array<PointLight, 10> point_lights = {
-			data->point_light_buffer[0],
-			data->point_light_buffer[1],
-			data->point_light_buffer[2],
-			data->point_light_buffer[3],
-			data->point_light_buffer[4],
-			data->point_light_buffer[5],
-			data->point_light_buffer[6],
-			data->point_light_buffer[7],
-			data->point_light_buffer[8],
-			data->point_light_buffer[9],
-		};
 
 		UBO ubo { .model = model.value_or(default_model),
 			.view = camera->get_view_matrix(),
 			.projection = camera->get_projection_matrix(),
 			.view_projection = ubo.projection * ubo.view,
 			.num_lights = glm::vec4(10),
-			.point_lights = point_lights };
+			.point_lights = data->point_light_buffer };
 
 		data->uniforms[image_index]->set_data(&ubo, sizeof(UBO), 0);
 	}
