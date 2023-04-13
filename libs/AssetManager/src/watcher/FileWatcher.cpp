@@ -4,7 +4,6 @@
 #include "core/exceptions/AlabasterException.hpp"
 
 #include <algorithm>
-#include <execution>
 
 namespace AssetManager {
 

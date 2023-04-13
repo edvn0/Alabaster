@@ -8,7 +8,7 @@ enable_testing()
 file(GLOB_RECURSE sources main.cpp compiler/**.cpp)
 
 add_executable(AssetManagerTests ${sources})
-target_link_libraries(AssetManagerTests gmock_main GTest::gtest_main Alabaster::AssetManager Alabaster::Core)
+target_link_libraries(AssetManagerTests gmock_main ${GTEST_LIBRARIES} Alabaster::AssetManager Alabaster::Core)
 
 include(GoogleTest)
 gtest_discover_tests(AssetManagerTests)

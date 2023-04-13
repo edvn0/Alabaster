@@ -44,7 +44,7 @@ target_link_libraries(
 	Alabaster::Core
 	Alabaster::AssetManager)
 
-if(ALABASTER_BUILD_TESTING)
+if(${ALABASTER_BUILD_TESTING})
 	add_subdirectory(tests)
 endif()
 

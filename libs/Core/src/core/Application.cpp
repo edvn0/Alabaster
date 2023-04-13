@@ -82,7 +82,6 @@ namespace Alabaster {
 
 		on_init();
 
-		static std::size_t frametime_index = 0;
 		while (!window->should_close() && is_running) {
 			double newTime = Clock::get_ms();
 			double frameTime = newTime - statistics.last_frametime;

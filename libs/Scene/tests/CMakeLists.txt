@@ -8,7 +8,7 @@ enable_testing()
 file(GLOB_RECURSE sources main.cpp)
 
 add_executable(SceneTests ${sources})
-target_link_libraries(SceneTests gmock_main GTest::gtest_main Alabaster::SceneSystem Alabaster::Core)
+target_link_libraries(SceneTests gmock_main ${GTEST_LIBRARIES} Alabaster::SceneSystem Alabaster::Core)
 
 include(GoogleTest)
 gtest_discover_tests(SceneTests)

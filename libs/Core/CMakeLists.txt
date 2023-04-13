@@ -60,7 +60,7 @@ target_link_libraries(
 	tinyobjloader
 	effolkronium_random)
 
-if(ALABASTER_BUILD_TESTING)
+if(${ALABASTER_BUILD_TESTING})
 	add_subdirectory(tests)
 endif()
 

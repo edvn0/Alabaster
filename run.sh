@@ -55,11 +55,7 @@ else
 	export CMAKE_GENERATOR="$generator"
 fi
 
-if [ "$force_configure" = "ON" ]; then
-	rm -rf "$build_and_generator_folder"
-fi
-
-if ! [ -d "$build_and_generator_folder" ]; then
+if ! [ -d "$build_and_generator_folder" ] || [ "$force_configure" = "ON" ]; then
 	cmake -B "$build_and_generator_folder" \
 		-D GLFW_INSTALL=OFF \
 		-D GLFW_BUILD_DOCS=OFF \
@@ -67,6 +63,7 @@ if ! [ -d "$build_and_generator_folder" ]; then
 		-D GLFW_BUILD_EXAMPLES=OFF \
 		-D CMAKE_BUILD_TYPE="$build_type" \
 		-D ALABASTER_BUILD_TESTING="$build_testing" \
+		-D BUILD_TESTING="$build_testing" \
 		-D ENABLE_HLSL=ON \
 		-D ENTT_BUILD_TESTING=OFF \
 		-D Random_BuildTests=OFF \

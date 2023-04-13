@@ -15,7 +15,7 @@ file(
 	platform/**.cpp)
 
 add_executable(CoreTests ${sources})
-target_link_libraries(CoreTests GTest::gtest_main Alabaster::Core)
+target_link_libraries(CoreTests ${GTEST_LIBRARIES} Alabaster::Core)
 
 include(GoogleTest)
 gtest_discover_tests(CoreTests)
