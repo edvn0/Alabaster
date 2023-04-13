@@ -67,7 +67,7 @@ namespace SceneSystem {
 			~MoveScript() override = default;
 			void on_create() override { Alabaster::Log::info("Created entity!!!"); }
 			void on_delete() override { Alabaster::Log::info("Deleted entity!!!"); }
-			void on_update(const float ts)
+			void on_update(const float ts) override
 			{
 				auto& component = get_component<Component::Transform>();
 				component.position += ts * 0.1;
