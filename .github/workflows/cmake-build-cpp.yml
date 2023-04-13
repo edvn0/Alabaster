@@ -26,6 +26,11 @@ jobs:
                       os: ubuntu-latest
                       cc: gcc
                       cxx: g++
+                    - name: Ubuntu Latest Clang
+                      artifact: Linux-Clang.7z
+                      os: ubuntu-latest
+                      cc: clang-15
+                      cxx: clang++-15
                     - name: MacOS Latest Clang
                       artifact: MacOS-Clang.7z
                       os: macos-latest
@@ -44,6 +49,9 @@ jobs:
                   if ("${{ runner.os }}" STREQUAL "Linux")
                     execute_process(COMMAND sudo apt-get install libxinerama-dev libxcursor-dev libxi-dev)
                     execute_process(COMMAND sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev)
+                    execute_process(COMMAND wget https://apt.llvm.org/llvm.sh)
+                    execute_process(COMMAND sudo chmod +x llvm.sh)
+                    execute_process(COMMAND sudo ./llvm.sh 15)
                   endif()
             - name: Download Ninja and CMake
               shell: cmake -P {0}
@@ -158,6 +166,7 @@ jobs:
                       -D GLFW_BUILD_TESTS=OFF
                       -D GLFW_BUILD_EXAMPLES=OFF
                       -D BUILD_TESTING=ON
+                      -D ALABASTER_BUILD_TESTING=ON
                       -D ENABLE_HLSL=ON
                       -D ENABLE_CTEST=OFF
                       -D ENTT_BUILD_TESTING=OFF
@@ -313,6 +322,9 @@ jobs:
                        os: ubuntu-latest
                      - name: Ubuntu Latest GCC
                        artifact: Linux-GCC.7z
+                       os: ubuntu-latest
+                     - name: Ubuntu Latest Clang
+                       artifact: Linux-Clang.7z
                        os: ubuntu-latest
                      - name: macOS Latest Clang
                        artifact: MacOS-Clang.7z
