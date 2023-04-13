@@ -38,6 +38,10 @@ target_link_libraries(
 	spirv-cross-glsl
 )
 
+if(ALABASTER_LINUX)
+	target_link_libraries(${PROJECT_NAME} PRIVATE tbb)
+endif()
+
 if(ALABASTER_BUILD_TESTING)
 	add_subdirectory(tests)
 endif()
