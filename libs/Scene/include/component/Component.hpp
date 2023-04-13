@@ -238,11 +238,11 @@ namespace SceneSystem::Component {
 			name = std::move(current_name);
 			create = [... arg = std::forward<Args>(args)](
 						 Behaviour& behaviour) { behaviour.entity = static_cast<ScriptEntity*>(new T(std::forward<Args>(arg)...)); };
-			destroy = [](Behaviour& behaviour) {
-				delete behaviour.entity;
-				behaviour.entity = nullptr;
-			};
+			setup_entity_destruction();
 		}
+
+	private:
+		void setup_entity_destruction();
 	};
 	template <> inline constexpr std::string_view component_name<Component::Behaviour> = "behaviour";
 

@@ -2,6 +2,8 @@
 
 #include "component/Component.hpp"
 
+#include "component/ScriptEntity.hpp"
+
 namespace SceneSystem {
 
 	static uuids::basic_uuid_random_generator uuid_generator(Alabaster::Random::engine());
@@ -82,5 +84,13 @@ namespace SceneSystem {
 		// note: could also check if ray origin is inside sphere radius
 		return false;
 	};
+
+	void Component::Behaviour::setup_entity_destruction()
+	{
+		destroy = [](Behaviour& behaviour) {
+			delete behaviour.entity;
+			behaviour.entity = nullptr;
+		};
+	}
 
 } // namespace SceneSystem
