@@ -113,7 +113,7 @@ namespace SceneSystem {
 				get_component<Component::Transform>().position = { sin * radius, height, cos * radius };
 			}
 			void on_delete() override { Alabaster::Log::info("Deleted entity!!!"); }
-			void on_update(const float ts)
+			void on_update(const float ts) override
 			{
 				auto& component = get_component<Component::Transform>();
 				auto& pos = component.position;
@@ -311,13 +311,11 @@ namespace SceneSystem {
 		});
 
 		const auto point_light_view = registry.view<Component::Transform, const Component::PointLight, const Component::Mesh>();
-		const auto size = point_light_view.size_hint();
-		std::size_t i = 0;
-		point_light_view.each([&renderer = scene_renderer, size = size, i = i++](
-								  Component::Transform& transform, const Component::PointLight& light, const Component::Mesh& mesh) {
-			renderer->submit_point_light_data({ glm::vec4(transform.position, 1.0), light.ambience });
-			renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, light.ambience);
-		});
+		point_light_view.each(
+			[&renderer = scene_renderer](Component::Transform& transform, const Component::PointLight& light, const Component::Mesh& mesh) {
+				renderer->submit_point_light_data({ glm::vec4(transform.position, 1.0), light.ambience });
+				renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, light.ambience);
+			});
 		scene_renderer->commit_point_light_data();
 
 		const auto basic_geometry_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();

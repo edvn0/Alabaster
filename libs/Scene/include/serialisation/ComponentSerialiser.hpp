@@ -13,7 +13,7 @@ namespace SceneSystem {
 
 	using namespace nlohmann;
 
-	template <typename Func> static constexpr auto map(const auto& vec_ts, Func&& apply)
+	template <typename Func> static auto map(const auto& vec_ts, Func&& apply)
 	{
 		auto output = json::array();
 		for (const auto& t : vec_ts) {
