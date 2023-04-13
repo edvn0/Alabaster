@@ -32,7 +32,7 @@ namespace SceneSystem {
 		auto simple_sphere_model = Mesh::from_file("sphere.obj");
 		auto cube_model = Mesh::from_file("cube.obj");
 
-		const auto&& [w, h] = Application::the().get_window()->size();
+		const auto&& [w, h] = Application::the().get_window().size();
 		FramebufferSpecification fbs;
 		fbs.width = w;
 		fbs.height = h;
@@ -73,7 +73,7 @@ namespace SceneSystem {
 				component.position += ts * 0.1;
 			}
 		};
-		sphere_one.add_component<Component::Behaviour>().bind<MoveScript>("MoveScript");
+		sphere_one.add_behaviour<MoveScript>("MoveScript");
 
 		Entity sphere_two = create_entity(fmt::format("Sphere-{}", 1));
 		sphere_two.add_component<Component::Mesh>(sphere_model);
@@ -98,28 +98,35 @@ namespace SceneSystem {
 		class MoveInCircle : public ScriptEntity {
 		public:
 			~MoveInCircle() override = default;
-			explicit MoveInCircle(float in_radius, float in_height)
+			explicit MoveInCircle(const float in_radius, const float in_height, const float beginning_position)
 				: radius(in_radius)
 				, height(in_height)
+				, current_pos(beginning_position)
 			{
 			}
-			void on_create() override { Alabaster::Log::info("Created entity!!!"); }
+			void on_create() override
+			{
+				Alabaster::Log::info("Created entity!!!");
+				get_component<Component::Transform>().scale = { 0.05, 0.05, 0.05 };
+				const auto cos = glm::cos(current_pos);
+				const auto sin = glm::sin(current_pos);
+				get_component<Component::Transform>().position = { sin * radius, height, cos * radius };
+			}
 			void on_delete() override { Alabaster::Log::info("Deleted entity!!!"); }
 			void on_update(const float ts)
 			{
 				auto& component = get_component<Component::Transform>();
 				auto& pos = component.position;
-				const auto cos = glm::cos(glm::radians(position_index));
-				const auto sin = glm::sin(glm::radians(position_index));
-				position_index += ts;
+				current_pos += 5.0f * ts;
 
-				pos = { sin * radius, height, cos * radius };
+				pos.x = radius * glm::sin(glm::radians(current_pos));
+				pos.z = radius * glm::cos(glm::radians(current_pos));
 			}
 
 		private:
 			float radius;
 			float height;
-			float position_index = 0;
+			float current_pos = 0;
 		};
 		for (auto& point_light : point_lights) {
 			auto& transform = point_light.get_transform();
@@ -138,7 +145,9 @@ namespace SceneSystem {
 			ambience.w = 1;
 			point_light.add_component<Component::PointLight>(ambience);
 			point_light.add_component<Component::Mesh>(simple_sphere_model);
-			point_light.add_behaviour<MoveInCircle>("MoveInCircle", radius, height);
+			const float start_pos = static_cast<float>(index) * division;
+			Alabaster::Log::info("Current pos: {}", start_pos);
+			point_light.add_behaviour<MoveInCircle>("MoveInCircle", radius, height, start_pos);
 		}
 
 		auto sun = create_entity("The Sun");
@@ -207,7 +216,7 @@ namespace SceneSystem {
 
 		int x_offset;
 		int y_offset;
-		glfwGetWindowPos(Alabaster::Application::the().get_window()->native(), &x_offset, &y_offset);
+		glfwGetWindowPos(Alabaster::Application::the().get_window().native(), &x_offset, &y_offset);
 
 		const auto offset_x = static_cast<float>(x_offset);
 		const auto offset_y = static_cast<float>(y_offset);
@@ -383,9 +392,9 @@ namespace SceneSystem {
 
 	void Scene::initialise(AssetManager::FileWatcher&)
 	{
-		auto&& [w, h] = Alabaster::Application::the().get_window()->size();
+		auto&& [w, h] = Alabaster::Application::the().get_window().size();
 
-		scene_camera = std::make_shared<Alabaster::EditorCamera>(74.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
+		scene_camera = std::make_shared<Alabaster::EditorCamera>(45.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
 		scene_renderer = std::make_unique<Alabaster::Renderer3D>(scene_camera);
 		command_buffer = std::make_unique<Alabaster::CommandBuffer>(3);
 		selected_entity = std::make_unique<Entity>();

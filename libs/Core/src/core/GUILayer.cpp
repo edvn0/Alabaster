@@ -66,7 +66,7 @@ namespace Alabaster {
 		vk_check(vkCreateDescriptorPool(device, &pool_info, nullptr, &imgui_descriptor_pool));
 
 		// Setup Platform/Renderer bindings
-		ImGui_ImplGlfw_InitForVulkan(window->native(), true);
+		ImGui_ImplGlfw_InitForVulkan(window.native(), true);
 		ImGui_ImplVulkan_InitInfo init_info = {};
 		init_info.Instance = vulkan_context.instance();
 		init_info.PhysicalDevice = vulkan_context.physical_device();
@@ -74,10 +74,10 @@ namespace Alabaster {
 		init_info.Queue = vulkan_context.graphics_queue();
 		init_info.DescriptorPool = imgui_descriptor_pool;
 		init_info.MinImageCount = 2;
-		auto& swapchain = Application::the().get_window()->get_swapchain();
-		init_info.ImageCount = swapchain->get_image_count();
+		auto& swapchain = Application::the().get_window().get_swapchain();
+		init_info.ImageCount = swapchain.get_image_count();
 		init_info.CheckVkResultFn = vk_check;
-		ImGui_ImplVulkan_Init(&init_info, swapchain->get_render_pass());
+		ImGui_ImplVulkan_Init(&init_info, swapchain.get_render_pass());
 
 		const std::filesystem::path path = Alabaster::IO::font("FreePixel.ttf");
 		ImGui::GetIO().Fonts->AddFontFromFileTTF(path.string().c_str(), 14.0f);
@@ -123,15 +123,15 @@ namespace Alabaster {
 		static constexpr VkClearColorValue clear_colour { { 0.1f, 0.1f, 0.1f, 0.0f } };
 		static constexpr VkClearDepthStencilValue depth_stencil_clear { .depth = 1.0f, .stencil = 0 };
 
-		const auto& swapchain = Application::the().get_window()->get_swapchain();
+		const auto& swapchain = Application::the().get_window().get_swapchain();
 		std::array<VkClearValue, 2> clear_values {};
 		clear_values[0].color = clear_colour;
 		clear_values[1].depthStencil = depth_stencil_clear;
 
-		const auto width = swapchain->get_width();
-		const auto height = swapchain->get_height();
+		const auto width = swapchain.get_width();
+		const auto height = swapchain.get_height();
 
-		const VkCommandBuffer draw_command_buffer = swapchain->get_current_drawbuffer();
+		const VkCommandBuffer draw_command_buffer = swapchain.get_current_drawbuffer();
 
 		VkCommandBufferBeginInfo begin_info = {};
 		begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -141,14 +141,14 @@ namespace Alabaster {
 
 		VkRenderPassBeginInfo render_pass_begin_info = {};
 		render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-		render_pass_begin_info.renderPass = swapchain->get_render_pass();
+		render_pass_begin_info.renderPass = swapchain.get_render_pass();
 		render_pass_begin_info.renderArea.offset.x = 0;
 		render_pass_begin_info.renderArea.offset.y = 0;
 		render_pass_begin_info.renderArea.extent.width = width;
 		render_pass_begin_info.renderArea.extent.height = height;
 		render_pass_begin_info.clearValueCount = static_cast<std::uint32_t>(clear_values.size());
 		render_pass_begin_info.pClearValues = clear_values.data();
-		render_pass_begin_info.framebuffer = swapchain->get_current_framebuffer();
+		render_pass_begin_info.framebuffer = swapchain.get_current_framebuffer();
 
 		vkCmdBeginRenderPass(draw_command_buffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS);
 
@@ -157,8 +157,8 @@ namespace Alabaster {
 			const auto& command_buffer = imgui_buffer->get_buffer();
 			VkCommandBufferInheritanceInfo inheritance_info = {};
 			inheritance_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO;
-			inheritance_info.renderPass = swapchain->get_render_pass();
-			inheritance_info.framebuffer = swapchain->get_current_framebuffer();
+			inheritance_info.renderPass = swapchain.get_render_pass();
+			inheritance_info.framebuffer = swapchain.get_current_framebuffer();
 
 			VkCommandBufferBeginInfo cbi = {};
 			cbi.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -188,7 +188,7 @@ namespace Alabaster {
 
 			ImDrawData* main_draw_data = ImGui::GetDrawData();
 			if (!scaled_already) {
-				const auto&& [sx, sy] = Application::the().get_window()->framebuffer_scale();
+				const auto&& [sx, sy] = Application::the().get_window().framebuffer_scale();
 				scale_x = sx;
 				scale_y = sy;
 				scaled_already = true;

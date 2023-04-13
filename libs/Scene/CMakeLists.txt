@@ -22,10 +22,10 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/entt/single_include
 	${THIRD_PARTY_DIR}/json/single_include
 	${THIRD_PARTY_DIR}/stduuid/include
-    ${THIRD_PARTY_DIR}/glfw/include
-    ${THIRD_PARTY_DIR}/imguizmo
-    ${THIRD_PARTY_DIR}/imgui
-    ${THIRD_PARTY_DIR}/gsl/include
+	${THIRD_PARTY_DIR}/glfw/include
+	${THIRD_PARTY_DIR}/imguizmo
+	${THIRD_PARTY_DIR}/imgui
+	${THIRD_PARTY_DIR}/gsl/include
 	../Core/include/
 	../AssetManager/include/
 	INTERFACE ${Vulkan_INCLUDE_DIRS}
@@ -38,11 +38,15 @@ target_link_libraries(
 	magic_enum
 	effolkronium_random
 	imgui
-    imguizmo
+	imguizmo
 	nlohmann_json
 	stduuid
 	Alabaster::Core
 	Alabaster::AssetManager)
+
+if(ALABASTER_BUILD_TESTING)
+	add_subdirectory(tests)
+endif()
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/scene_pch.hpp)
 default_register_project(${PROJECT_NAME})

@@ -63,7 +63,7 @@ namespace Alabaster {
 		window->destroy();
 	}
 
-	void Application::resize(int w, int h) { window->get_swapchain()->on_resize(w, h); }
+	void Application::resize(int w, int h) { window->get_swapchain().on_resize(w, h); }
 
 	GUILayer& Application::gui_layer()
 	{
@@ -116,9 +116,9 @@ namespace Alabaster {
 		on_shutdown();
 	}
 
-	Swapchain& Application::swapchain() { return *window->get_swapchain(); }
+	Swapchain& Application::swapchain() { return window->get_swapchain(); }
 
-	Swapchain& Application::swapchain() const { return *window->get_swapchain(); }
+	Swapchain& Application::swapchain() const { return window->get_swapchain(); }
 
 	void Application::render_imgui()
 	{
@@ -181,7 +181,7 @@ namespace Alabaster {
 			return false;
 		}
 
-		window->get_swapchain()->on_resize(width, height);
+		window->get_swapchain().on_resize(width, height);
 
 		return false;
 	}

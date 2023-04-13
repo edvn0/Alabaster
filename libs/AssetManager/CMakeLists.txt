@@ -21,7 +21,7 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/spdlog/include
 	${THIRD_PARTY_DIR}/debugbreak
 	${THIRD_PARTY_DIR}/magic_enum/include
-    ${THIRD_PARTY_DIR}/gsl/include
+	${THIRD_PARTY_DIR}/gsl/include
 	../Core/include/
 	INTERFACE ${Vulkan_INCLUDE_DIRS}
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
@@ -34,9 +34,13 @@ target_link_libraries(
 	effolkronium_random
 	Alabaster::Core
 	shaderc
-    spirv-cross-core
-    spirv-cross-glsl
+	spirv-cross-core
+	spirv-cross-glsl
 )
+
+if(ALABASTER_BUILD_TESTING)
+	add_subdirectory(tests)
+endif()
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/am_pch.hpp)
 default_register_project(${PROJECT_NAME})

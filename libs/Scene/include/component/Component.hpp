@@ -236,7 +236,8 @@ namespace SceneSystem::Component {
 		template <IsScriptable T, typename... Args> void bind(std::string_view current_name, Args&&... args)
 		{
 			name = std::move(current_name);
-			create = [&](Behaviour& behaviour) { behaviour.entity = static_cast<ScriptEntity*>(new T(std::forward<Args>(args)...)); };
+			create = [... arg = std::forward<Args>(args)](
+						 Behaviour& behaviour) { behaviour.entity = static_cast<ScriptEntity*>(new T(std::forward<Args>(arg)...)); };
 			destroy = [](Behaviour& behaviour) {
 				delete behaviour.entity;
 				behaviour.entity = nullptr;

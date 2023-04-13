@@ -83,6 +83,7 @@ namespace Alabaster {
 
 		std::shared_ptr<Camera> camera;
 		RendererData* data;
+		bool scene_has_begun { false };
 	};
 
 } // namespace Alabaster

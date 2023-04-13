@@ -22,7 +22,7 @@ namespace Alabaster {
 		: spec(specification)
 	{
 		if (spec.width == 0 || spec.height == 0) {
-			const auto&& [w, h] = Application::the().get_window()->size();
+			const auto&& [w, h] = Application::the().get_window().size();
 			width = w;
 			height = h;
 		} else {
@@ -130,8 +130,8 @@ namespace Alabaster {
 		if (!spec.swap_chain_target) {
 			invalidate();
 		} else {
-			auto& sc = Application::the().get_window()->get_swapchain();
-			render_pass = sc->get_render_pass();
+			auto& sc = Application::the().get_window().get_swapchain();
+			render_pass = sc.get_render_pass();
 
 			clear_values.clear();
 			clear_values.emplace_back().color = { { 0.0f, 0.0f, 0.0f, 1.0f } };

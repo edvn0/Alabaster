@@ -92,8 +92,8 @@ namespace Alabaster {
 		}
 
 		static Application& the();
-		inline const std::unique_ptr<Window>& get_window() { return window; };
-		inline const std::unique_ptr<Window>& get_window() const { return window; }
+		inline Window& get_window() { return *window; };
+		inline Window& get_window() const { return *window; }
 		Swapchain& swapchain();
 		Swapchain& swapchain() const;
 		GUILayer& gui_layer();

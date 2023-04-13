@@ -243,7 +243,7 @@ namespace Alabaster {
 		: camera(cam)
 		, data(new RendererData())
 	{
-		const auto&& [w, h] = Application::the().get_window()->size();
+		const auto&& [w, h] = Application::the().get_window().size();
 		FramebufferSpecification fbs;
 		fbs.width = w;
 		fbs.height = h;
@@ -338,6 +338,8 @@ namespace Alabaster {
 
 	void Renderer3D::begin_scene()
 	{
+		Alabaster::assert_that(!scene_has_begun);
+		scene_has_begun = true;
 		reset_data(*data);
 		update_uniform_buffers();
 		data->push_constant = PC();
@@ -518,6 +520,8 @@ namespace Alabaster {
 
 	void Renderer3D::end_scene(const CommandBuffer& command_buffer, const std::shared_ptr<Framebuffer>& target)
 	{
+		Alabaster::assert_that(scene_has_begun);
+		scene_has_begun = false;
 		Renderer::begin_render_pass(command_buffer, target);
 		if (data->quad_indices_submitted > 0) {
 			const auto vertex_count = data->quad_vertices_submitted;
@@ -611,10 +615,6 @@ namespace Alabaster {
 	{
 		const VkDescriptorSet& descriptor = data->descriptor_sets[Renderer::current_frame()];
 
-		const Pipeline* initial_pipeline = nullptr;
-		VkPipelineLayout initial_layout = nullptr;
-		const Mesh* initial_mesh = nullptr;
-
 		for (std::uint32_t i = 0; i < data->meshes_submitted; i++) {
 			const auto& mesh = data->mesh[i];
 			const auto& vb = mesh->get_vertex_buffer();
@@ -623,32 +623,22 @@ namespace Alabaster {
 			const auto& mesh_transform = data->mesh_transform[i];
 			const auto& mesh_colour = data->mesh_colour[i];
 
-			const auto new_mesh = mesh != initial_mesh;
-
 			data->push_constant.object_transform = mesh_transform;
 			data->push_constant.object_colour = mesh_colour;
 			const auto& pc = data->push_constant;
 			vkCmdPushConstants(command_buffer.get_buffer(), pipeline->get_vulkan_pipeline_layout(),
 				VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, sizeof(PC), &pc);
 
-			if (new_mesh || initial_layout != pipeline->get_vulkan_pipeline_layout()) {
-				initial_layout = pipeline->get_vulkan_pipeline_layout();
-				vkCmdBindDescriptorSets(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, initial_layout, 0, 1, &descriptor, 0, nullptr);
-			}
+			vkCmdBindDescriptorSets(
+				command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline_layout(), 0, 1, &descriptor, 0, nullptr);
 
-			if (new_mesh || initial_pipeline != pipeline) {
-				initial_pipeline = pipeline;
-				vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, initial_pipeline->get_vulkan_pipeline());
-			}
+			vkCmdBindPipeline(command_buffer.get_buffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->get_vulkan_pipeline());
 
-			if (new_mesh || initial_mesh != mesh) {
-				initial_mesh = mesh;
-				static const std::array vbs { *vb };
-				constexpr VkDeviceSize offsets { 0 };
-				vkCmdBindVertexBuffers(command_buffer.get_buffer(), 0, 1, vbs.data(), &offsets);
+			const std::array vbs { *vb };
+			constexpr VkDeviceSize offsets { 0 };
+			vkCmdBindVertexBuffers(command_buffer.get_buffer(), 0, 1, vbs.data(), &offsets);
 
-				vkCmdBindIndexBuffer(command_buffer.get_buffer(), *ib, 0, VK_INDEX_TYPE_UINT32);
-			}
+			vkCmdBindIndexBuffer(command_buffer.get_buffer(), *ib, 0, VK_INDEX_TYPE_UINT32);
 
 			vkCmdDrawIndexed(command_buffer.get_buffer(), static_cast<std::uint32_t>(mesh->get_index_count()), 1, 0, 0, 0);
 			data->draw_calls++;

@@ -33,8 +33,8 @@ namespace Alabaster {
 
 		void set_event_callback(const EventCallback& cb) { user_data.callback = cb; }
 
-		const std::unique_ptr<Swapchain>& get_swapchain() { return swapchain; }
-		const std::unique_ptr<Swapchain>& get_swapchain() const { return swapchain; }
+		Swapchain& get_swapchain() { return *swapchain; }
+		Swapchain& get_swapchain() const { return *swapchain; }
 
 		std::pair<int, int> framebuffer_extent() const;
 		std::pair<float, float> framebuffer_scale() const;

@@ -14,7 +14,6 @@ namespace SceneSystem {
 		Entity() = default;
 		explicit Entity(Scene* scene, entt::entity entity_handle, const std::string& name = "Unnamed entity");
 		explicit Entity(Scene* scene, const std::string& name = "Unnamed entity");
-		explicit Entity(const std::unique_ptr<Scene>& scene, const std::string& name = "Unnamed entity");
 		explicit Entity(const std::shared_ptr<Scene>& scene, const std::string& name = "Unnamed entity");
 		~Entity() = default;
 

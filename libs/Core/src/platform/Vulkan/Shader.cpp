@@ -15,7 +15,7 @@ namespace Alabaster {
 
 	auto create_default_bindings()
 	{
-		std::array<VkDescriptorSetLayoutBinding, 3> bindings;
+		std::array<VkDescriptorSetLayoutBinding, 3> bindings {};
 		bindings[0].binding = 0;
 		bindings[0].stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
 		bindings[0].pImmutableSamplers = nullptr; // Optional
