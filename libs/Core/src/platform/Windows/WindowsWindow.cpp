@@ -99,12 +99,12 @@ namespace Alabaster {
 
 		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int new_width, int new_height) {
-			auto& [width, height, callback] = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
+			auto& [w, h, callback] = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
 			WindowResizeEvent event((std::uint32_t)new_width, (std::uint32_t)new_height);
 			callback(event);
-			width = new_width;
-			height = new_height;
+			w = new_width;
+			h = new_height;
 		});
 
 		glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {
