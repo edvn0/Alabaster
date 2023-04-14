@@ -18,6 +18,8 @@
         "files.associations": {
             "*.module": "php",
             "*.sass": "css",
+            "*.frag": "hlsl",
+            "*.vert": "hlsl",
             "*wmc": "xml",
             "*kml": "xml",
             "typeinfo": "cpp",
@@ -151,7 +153,11 @@
             "syncstream": "cpp",
             "pointers": "cpp",
             "span_ext": "cpp",
-            "*.def": "cpp"
+            "*.def": "cpp",
+            "util": "cpp",
+            "gsl_util": "cpp",
+            "*.hpp11": "cpp",
+            "resumable": "cpp"
         },
         "search.exclude": {
             "**/node_modules": true,
@@ -178,17 +184,17 @@
             "**/.git/subtree-cache/**": true,
             "**/node_modules/*/**": true
         },
-        "cmakeFormat.exePath": "cmake-format",
         "cmake.buildDirectory": "${workspaceFolder}/build-Debug-VS",
         "cmake.configureSettings": {
-            "VULKAN_SDK": "C:\\VulkanSDK\\1.3.239.0",
-            "Vulkan_LIBRARY": "C:\\VulkanSDK\\1.3.239.0\\Lib\\vulkan-1.lib",
+            "VULKAN_SDK": "C:\\VulkanSDK\\1.3.243.0",
+            "Vulkan_LIBRARY": "C:\\VulkanSDK\\1.3.243.0\\Lib\\vulkan-1.lib",
             "CMAKE_BUILD_TYPE": "Debug",
             "GLFW_INSTALL": false,
             "GLFW_BUILD_DOCS": false,
             "GLFW_BUILD_TESTS": false,
             "GLFW_BUILD_EXAMPLES": false,
             "BUILD_TESTING": true,
+            "ALABASTER_BUILD_TESTING": true,
             "ENABLE_HLSL": true,
             "ENABLE_CTEST": false,
             "ENTT_BUILD_TESTING": false,
@@ -284,7 +290,7 @@
                     "-r",
                     "OFF",
                     "-t",
-                    "OFF"
+                    "ON"
                 ],
                 "type": "shell",
                 "group": "build",

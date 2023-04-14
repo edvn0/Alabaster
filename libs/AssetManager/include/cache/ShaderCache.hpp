@@ -42,7 +42,7 @@ namespace AssetManager {
 
 	private:
 		std::vector<std::pair<std::filesystem::path, std::filesystem::path>> extract_into_pairs_of_shaders(
-			const std::vector<std::string>& sorted_shaders_in_directory);
+			const std::vector<std::string>& sorted_shaders_in_directory) const;
 
 		std::unordered_map<std::string, std::shared_ptr<Alabaster::Shader>> shaders;
 	};

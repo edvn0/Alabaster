@@ -71,6 +71,25 @@ namespace Alabaster {
 		invalidate();
 	}
 
+	Texture::Texture(const void* data, std::size_t size)
+	{
+		if (!load_image(data, static_cast<std::uint32_t>(size))) {
+			throw AlabasterException("Could not load image.");
+		}
+
+		properties.debug_name = "FromMemory";
+
+		ImageSpecification image_spec;
+		image_spec.format = format;
+		image_spec.width = width;
+		image_spec.height = height;
+		image_spec.mips = properties.generate_mips ? Texture::get_mip_level_count() : 1;
+		image_spec.debug_name = properties.debug_name;
+		image = Image::create(image_spec);
+
+		invalidate();
+	}
+
 	Texture::~Texture()
 	{
 		if (!destroyed) {
@@ -115,7 +134,9 @@ namespace Alabaster {
 	{
 		if (!IO::is_file(in_path))
 			return false;
-		int w, h, channels;
+		int w;
+		int h;
+		int channels;
 
 		if (stbi_is_hdr(in_path.c_str())) {
 			image_data.data = (byte*)stbi_loadf(path.string().c_str(), &w, &h, &channels, 4);

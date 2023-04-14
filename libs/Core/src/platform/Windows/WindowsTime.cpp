@@ -14,9 +14,7 @@ namespace Alabaster::Time {
 		ss << std::put_time(&time, "%c %Z");
 
 		auto time_stamp { ss.str() };
-		static auto replace = [](auto& data, char what, char with) mutable {
-			std::ranges::replace(data.begin(), data.end(), what, with);
-		};
+		static auto replace = [](auto& data, char what, char with) mutable { std::ranges::replace(data.begin(), data.end(), what, with); };
 
 		replace(time_stamp, ' ', '_');
 		replace(time_stamp, ':', '_');

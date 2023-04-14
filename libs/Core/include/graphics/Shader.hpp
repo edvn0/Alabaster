@@ -20,7 +20,7 @@ namespace Alabaster {
 		const std::array<VkPipelineShaderStageCreateInfo, 2>& stages() const { return shader_stages; };
 
 		void destroy();
-
+		const auto& get_path() const { return shader_path; }
 		const std::vector<VkDescriptorSetLayout>& descriptor_set_layouts() const { return layouts; }
 
 	private:

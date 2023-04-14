@@ -25,6 +25,16 @@ namespace AssetManager {
 		return static_cast<FileStatus>(static_cast<int>(left) & static_cast<int>(right));
 	}
 
+	namespace FileStatuses {
+		static constexpr FileStatus C = FileStatus::Created;
+		static constexpr FileStatus D = FileStatus::Deleted;
+		static constexpr FileStatus M = FileStatus::Modified;
+		static constexpr FileStatus CD = FileStatus::Created | FileStatus::Deleted;
+		static constexpr FileStatus CM = FileStatus::Created | FileStatus::Modified;
+		static constexpr FileStatus DM = FileStatus::Deleted | FileStatus::Modified;
+		static constexpr FileStatus All = FileStatus::Created | FileStatus::Deleted | FileStatus::Modified;
+	} // namespace FileStatuses
+
 	struct FileInformation {
 		FileType type;
 		std::string_view path;
@@ -43,6 +53,7 @@ namespace AssetManager {
 		void on_modified(const std::function<void(const FileInformation&)>& activation_function);
 		void on_deleted(const std::function<void(const FileInformation&)>& activation_function);
 		void on_created_or_deleted(const std::function<void(const FileInformation&)>& activation_function);
+		void on(FileStatus info, const std::function<void(const FileInformation&)>& activation_function);
 
 		~FileWatcher() { stop(); }
 

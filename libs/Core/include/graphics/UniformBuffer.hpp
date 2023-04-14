@@ -18,7 +18,7 @@ namespace Alabaster {
 		UniformBuffer(VkDeviceSize device_size, std::uint32_t input_binding)
 			: UniformBuffer(static_cast<std::uint32_t>(device_size), input_binding) {};
 
-		void set_data(const void* data, std::uint32_t size, std::uint32_t offset = 0);
+		void set_data(const void* data, const std::uint32_t in_size, const std::uint32_t offset = 0) const;
 		std::uint32_t get_binding() const { return binding; }
 
 		const auto& get_buffer() const { return buffer; }

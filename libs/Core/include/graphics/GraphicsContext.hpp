@@ -12,19 +12,14 @@ namespace Alabaster {
 		void operator=(const GraphicsContext&) = delete;
 		GraphicsContext(GraphicsContext&&) = delete;
 
-		explicit GraphicsContext();
 		~GraphicsContext() = default;
-		static inline GraphicsContext& the()
-		{
-			static auto context = std::make_unique<GraphicsContext>();
-			return *context;
-		}
+		static inline GraphicsContext& the() { return *(!context ? (context = new GraphicsContext()) : context); }
 
 		void destroy();
 
-		inline VkInstance instance() { return vk_instance; };
-		inline VkPhysicalDevice physical_device() { return vk_physical_device; };
-		inline VkDevice device() { return vk_device; };
+		inline VkInstance& instance() { return vk_instance; };
+		inline VkPhysicalDevice& physical_device() { return vk_physical_device; };
+		inline VkDevice& device() { return vk_device; };
 
 		inline std::uint32_t graphics_queue_family() { return queues[QueueType::Graphics].family; }
 		inline VkQueue graphics_queue() { return queues[QueueType::Graphics].queue; }
@@ -49,6 +44,10 @@ namespace Alabaster {
 		void create_physical_device();
 		void find_queue_families();
 		void setup_debug_messenger();
+
+		explicit GraphicsContext();
+
+		static inline GraphicsContext* context;
 
 		VkInstance vk_instance;
 		VkPhysicalDevice vk_physical_device { nullptr };

@@ -47,11 +47,11 @@ namespace Alabaster {
 		allocation = allocator.allocate_buffer(buffer_info, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, buffer);
 	}
 
-	void UniformBuffer::set_data(const void* data, std::uint32_t input_size, std::uint32_t offset)
+	auto UniformBuffer::set_data(const void* data, const std::uint32_t in_size, const std::uint32_t offset) const -> void
 	{
 		Allocator allocator("UniformBuffer");
-		uint8_t* mapped = allocator.map_memory<uint8_t>(allocation);
-		std::memcpy(mapped, (const uint8_t*)data + offset, input_size);
+		auto* mapped = allocator.map_memory<uint8_t>(allocation);
+		std::memcpy(mapped, static_cast<const uint8_t*>(data) + offset, in_size);
 		allocator.unmap_memory(allocation);
 	}
 

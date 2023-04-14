@@ -16,11 +16,6 @@ namespace SceneSystem {
 	{
 	}
 
-	Entity::Entity(const std::unique_ptr<Scene>& in_scene, const std::string& in_name)
-		: Entity(in_scene.get(), entt::null, in_name)
-	{
-	}
-
 	Entity::Entity(const std::shared_ptr<Scene>& in_scene, const std::string& in_name)
 		: Entity(in_scene.get(), entt::null, in_name)
 	{

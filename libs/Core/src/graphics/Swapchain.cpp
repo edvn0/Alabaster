@@ -21,14 +21,15 @@ namespace Alabaster {
 
 	void Swapchain::init(GLFWwindow* window_handle)
 	{
+		glfw_window = window_handle;
 		instance = GraphicsContext::the().instance();
 		device = GraphicsContext::the().device();
 
-		glfwCreateWindowSurface(instance, window_handle, nullptr, &surface);
+		glfwCreateWindowSurface(instance, glfw_window, nullptr, &surface);
 
 		// Get available queue family properties
 		uint32_t queue_count;
-		vkGetPhysicalDeviceQueueFamilyProperties(GraphicsContext::the().physical_device(), &queue_count, NULL);
+		vkGetPhysicalDeviceQueueFamilyProperties(GraphicsContext::the().physical_device(), &queue_count, nullptr);
 
 		std::vector<VkQueueFamilyProperties> queue_props(queue_count);
 		vkGetPhysicalDeviceQueueFamilyProperties(GraphicsContext::the().physical_device(), &queue_count, queue_props.data());
@@ -87,14 +88,14 @@ namespace Alabaster {
 		vk_check(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(GraphicsContext::the().physical_device(), surface, &surf_caps));
 
 		uint32_t present_mode_count;
-		vk_check(vkGetPhysicalDeviceSurfacePresentModesKHR(GraphicsContext::the().physical_device(), surface, &present_mode_count, NULL));
+		vk_check(vkGetPhysicalDeviceSurfacePresentModesKHR(GraphicsContext::the().physical_device(), surface, &present_mode_count, nullptr));
 		assert_that(present_mode_count > 0);
 		std::vector<VkPresentModeKHR> present_modes(present_mode_count);
 		vk_check(
 			vkGetPhysicalDeviceSurfacePresentModesKHR(GraphicsContext::the().physical_device(), surface, &present_mode_count, present_modes.data()));
 
 		VkExtent2D swapchain_extent {};
-		if (surf_caps.currentExtent.width == (uint32_t)-1) {
+		if (surf_caps.currentExtent.width == std::numeric_limits<std::uint32_t>::max()) {
 			swapchain_extent.width = *in_width;
 			swapchain_extent.height = *in_height;
 		} else {
@@ -150,18 +151,18 @@ namespace Alabaster {
 
 		VkSwapchainCreateInfoKHR swapchain_ci = {};
 		swapchain_ci.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-		swapchain_ci.pNext = NULL;
+		swapchain_ci.pNext = nullptr;
 		swapchain_ci.surface = surface;
 		swapchain_ci.minImageCount = desired_number_of_swapchain_images;
 		swapchain_ci.imageFormat = color_format;
 		swapchain_ci.imageColorSpace = color_space;
 		swapchain_ci.imageExtent = { swapchain_extent.width, swapchain_extent.height };
 		swapchain_ci.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-		swapchain_ci.preTransform = (VkSurfaceTransformFlagBitsKHR)pre_transform;
+		swapchain_ci.preTransform = static_cast<VkSurfaceTransformFlagBitsKHR>(pre_transform);
 		swapchain_ci.imageArrayLayers = 1;
 		swapchain_ci.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		swapchain_ci.queueFamilyIndexCount = 0;
-		swapchain_ci.pQueueFamilyIndices = NULL;
+		swapchain_ci.pQueueFamilyIndices = nullptr;
 		swapchain_ci.presentMode = swapchain_present_mode;
 		swapchain_ci.oldSwapchain = old_swapchain;
 		swapchain_ci.clipped = VK_TRUE;
@@ -180,11 +181,11 @@ namespace Alabaster {
 		if (old_swapchain)
 			vkDestroySwapchainKHR(device, old_swapchain, nullptr);
 
-		for (auto& image : images)
-			vkDestroyImageView(device, image.ImageView, nullptr);
+		for (auto& [Image, ImageView] : images)
+			vkDestroyImageView(device, ImageView, nullptr);
 		images.clear();
 
-		vk_check(vkGetSwapchainImagesKHR(device, swap_chain, &image_count, NULL));
+		vk_check(vkGetSwapchainImagesKHR(device, swap_chain, &image_count, nullptr));
 		images.resize(image_count);
 		vulkan_images.resize(image_count);
 		vk_check(vkGetSwapchainImagesKHR(device, swap_chain, &image_count, vulkan_images.data()));
@@ -193,7 +194,7 @@ namespace Alabaster {
 		for (uint32_t i = 0; i < image_count; i++) {
 			VkImageViewCreateInfo color_attachment_view = {};
 			color_attachment_view.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-			color_attachment_view.pNext = NULL;
+			color_attachment_view.pNext = nullptr;
 			color_attachment_view.format = color_format;
 			color_attachment_view.image = vulkan_images[i];
 			color_attachment_view.components = { VK_COMPONENT_SWIZZLE_R, VK_COMPONENT_SWIZZLE_G, VK_COMPONENT_SWIZZLE_B, VK_COMPONENT_SWIZZLE_A };
@@ -211,8 +212,8 @@ namespace Alabaster {
 		}
 
 		{
-			for (auto& command_buffer : command_buffers)
-				vkDestroyCommandPool(device, command_buffer.CommandPool, nullptr);
+			for (auto& [CommandPool, CommandBuffer] : command_buffers)
+				vkDestroyCommandPool(device, CommandPool, nullptr);
 
 			VkCommandPoolCreateInfo cmd_pool_info = {};
 			cmd_pool_info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -225,11 +226,11 @@ namespace Alabaster {
 			command_buffer_allocate_info.commandBufferCount = 1;
 
 			command_buffers.resize(image_count);
-			for (auto& command_buffer : command_buffers) {
-				vk_check(vkCreateCommandPool(device, &cmd_pool_info, nullptr, &command_buffer.CommandPool));
+			for (auto& [CommandPool, CommandBuffer] : command_buffers) {
+				vk_check(vkCreateCommandPool(device, &cmd_pool_info, nullptr, &CommandPool));
 
-				command_buffer_allocate_info.commandPool = command_buffer.CommandPool;
-				vk_check(vkAllocateCommandBuffers(device, &command_buffer_allocate_info, &command_buffer.CommandBuffer));
+				command_buffer_allocate_info.commandPool = CommandPool;
+				vk_check(vkAllocateCommandBuffers(device, &command_buffer_allocate_info, &CommandBuffer));
 			}
 		}
 
@@ -336,16 +337,16 @@ namespace Alabaster {
 		if (swap_chain)
 			vkDestroySwapchainKHR(device, swap_chain, nullptr);
 
-		for (auto& image : images)
-			vkDestroyImageView(device, image.ImageView, nullptr);
+		for (const auto& [Image, ImageView] : images)
+			vkDestroyImageView(device, ImageView, nullptr);
 
-		for (auto& command_buffer : command_buffers)
-			vkDestroyCommandPool(device, command_buffer.CommandPool, nullptr);
+		for (const auto& [CommandPool, CommandBuffer] : command_buffers)
+			vkDestroyCommandPool(device, CommandPool, nullptr);
 
 		if (render_pass)
 			vkDestroyRenderPass(device, render_pass, nullptr);
 
-		for (auto framebuffer : framebuffers)
+		for (const auto framebuffer : framebuffers)
 			vkDestroyFramebuffer(device, framebuffer, nullptr);
 
 		if (semaphores.RenderComplete)
@@ -354,7 +355,7 @@ namespace Alabaster {
 		if (semaphores.PresentComplete)
 			vkDestroySemaphore(device, semaphores.PresentComplete, nullptr);
 
-		for (auto& fence : wait_fences)
+		for (const auto& fence : wait_fences)
 			vkDestroyFence(device, fence, nullptr);
 
 		vkDestroySurfaceKHR(GraphicsContext::the().instance(), surface, nullptr);
@@ -364,6 +365,13 @@ namespace Alabaster {
 
 	void Swapchain::on_resize(uint32_t in_width, uint32_t in_height)
 	{
+		int fb_width = 0;
+		int fb_height = 0;
+		glfwGetFramebufferSize(glfw_window, &fb_width, &fb_height);
+		while (fb_width == 0 || fb_height == 0) {
+			glfwGetFramebufferSize(glfw_window, &fb_width, &fb_height);
+			glfwWaitEvents();
+		}
 		vkDeviceWaitIdle(device);
 		create(&in_width, &in_height, this->vsync);
 		vkDeviceWaitIdle(device);
@@ -382,7 +390,7 @@ namespace Alabaster {
 	void Swapchain::present()
 	{
 
-		VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		constexpr VkPipelineStageFlags wait_stage_mask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
 
 		VkSubmitInfo present_submit_info = {};
 		present_submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -401,7 +409,7 @@ namespace Alabaster {
 		{
 			VkPresentInfoKHR present_info = {};
 			present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-			present_info.pNext = NULL;
+			present_info.pNext = nullptr;
 			present_info.swapchainCount = 1;
 			present_info.pSwapchains = &swap_chain;
 			present_info.pImageIndices = &current_image_index;
@@ -444,7 +452,7 @@ namespace Alabaster {
 	void Swapchain::find_image_format_and_color_space()
 	{
 		std::uint32_t format_count;
-		vk_check(vkGetPhysicalDeviceSurfaceFormatsKHR(GraphicsContext::the().physical_device(), surface, &format_count, NULL));
+		vk_check(vkGetPhysicalDeviceSurfaceFormatsKHR(GraphicsContext::the().physical_device(), surface, &format_count, nullptr));
 		assert_that(format_count > 0);
 
 		std::vector<VkSurfaceFormatKHR> surface_formats(format_count);

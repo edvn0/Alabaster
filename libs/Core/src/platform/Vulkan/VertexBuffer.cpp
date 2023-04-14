@@ -57,9 +57,8 @@ namespace Alabaster {
 		vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, vulkan_buffer);
 
-		ImmediateCommandBuffer immediate_command_buffer { "Vertex Buffer" };
-		immediate_command_buffer.add_destruction_callback(
-			[staging_buffer, staging_buffer_allocation](Allocator& alloc) { alloc.destroy_buffer(staging_buffer, staging_buffer_allocation); });
+		ImmediateCommandBuffer immediate_command_buffer { "Vertex Buffer",
+			[staging_buffer, staging_buffer_allocation](Allocator& alloc) { alloc.destroy_buffer(staging_buffer, staging_buffer_allocation); } };
 
 		VkBufferCopy copy_region = {};
 		copy_region.size = buffer_size;
@@ -74,8 +73,8 @@ namespace Alabaster {
 		if (!vulkan_buffer)
 			return;
 
-		VkBuffer buffer = vulkan_buffer;
-		VmaAllocation allocation = memory_allocation;
+		const VkBuffer buffer = vulkan_buffer;
+		const VmaAllocation allocation = memory_allocation;
 		Allocator allocator("VertexBuffer");
 		allocator.destroy_buffer(buffer, allocation);
 
@@ -83,9 +82,15 @@ namespace Alabaster {
 		destroyed = true;
 	}
 
-	void VertexBuffer::set_data(const void* buffer, std::uint32_t size, std::uint32_t offset)
+	void VertexBuffer::set_data(const void* data, std::uint32_t size, std::uint32_t offset) const
 	{
-		std::memcpy(vertex_data.data, static_cast<const uint8_t*>(buffer) + offset, size);
+		std::memcpy(vertex_data.data, static_cast<const uint8_t*>(data) + offset, size);
+		offline_set_data(vertex_data.data, size, offset);
+	}
+
+	void VertexBuffer::set_data(const void* data, const std::size_t size, const std::size_t offset) const
+	{
+		std::memcpy(vertex_data.data, static_cast<const uint8_t*>(data) + offset, size);
 		offline_set_data(vertex_data.data, size, offset);
 	}
 
@@ -93,11 +98,19 @@ namespace Alabaster {
 
 	VkBuffer VertexBuffer::operator*() const { return vulkan_buffer; }
 
-	void VertexBuffer::offline_set_data(const void* buffer, std::uint32_t size, std::uint32_t offset)
+	void VertexBuffer::offline_set_data(const void* buffer, std::uint32_t size, std::uint32_t offset) const
 	{
 		Allocator allocator("VertexBuffer");
 		auto* data_pointer = allocator.map_memory<uint8_t>(memory_allocation);
-		memcpy(data_pointer, static_cast<const uint8_t*>(buffer) + offset, size);
+		std::memcpy(data_pointer, static_cast<const uint8_t*>(buffer) + offset, size);
+		allocator.unmap_memory(memory_allocation);
+	}
+
+	void VertexBuffer::offline_set_data(const void* buffer, const std::size_t size, std::size_t offset) const
+	{
+		Allocator allocator("VertexBuffer");
+		auto* data_pointer = allocator.map_memory<uint8_t>(memory_allocation);
+		std::memcpy(data_pointer, static_cast<const uint8_t*>(buffer) + offset, size);
 		allocator.unmap_memory(memory_allocation);
 	}
 

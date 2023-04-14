@@ -17,6 +17,7 @@ namespace Alabaster {
 	public:
 		Texture(const std::filesystem::path& path, TextureProperties properties);
 		Texture(ImageFormat format, std::uint32_t width, uint32_t height, const void* data, TextureProperties properties);
+		explicit Texture(const void* data, std::size_t size);
 		~Texture();
 		void resize(const glm::uvec2& size);
 		void resize(std::uint32_t width, uint32_t height);
@@ -43,7 +44,14 @@ namespace Alabaster {
 		uint64_t get_hash() const { return (uint64_t)image->get_descriptor_info().imageView; }
 
 	private:
+		/// @brief Loads the image data from disk, sets up width, height and format.
+		/// @param path path of the texture
+		/// @return false if could not load the data
 		bool load_image(const std::string& path);
+
+		/// @brief Loads the image data from memory, sets up width, height and format.
+		/// @param path path of the texture
+		/// @return false if could not load the data
 		bool load_image(const void* data, std::uint32_t size);
 
 		std::filesystem::path path;
@@ -71,6 +79,8 @@ namespace Alabaster {
 		}
 
 		static std::shared_ptr<Texture> from_filename(const std::filesystem::path& filename, const TextureProperties& props);
+
+		template <std::size_t Size> static std::shared_ptr<Texture> from_data(const void* data) { return std::make_shared<Texture>(data, Size); }
 	};
 
 } // namespace Alabaster

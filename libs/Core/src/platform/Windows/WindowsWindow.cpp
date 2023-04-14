@@ -55,28 +55,28 @@ namespace Alabaster {
 		swapchain = std::make_unique<Swapchain>();
 		swapchain->init(handle);
 
-		auto w = std::uint32_t(width);
-		auto h = std::uint32_t(height);
+		auto w = width;
+		auto h = height;
 		swapchain->create(&w, &h, arguments.sync_mode == SyncMode::VSync);
 
 		setup_events();
 	}
 
-	const std::pair<int, int> Window::framebuffer_extent() const
+	std::pair<int, int> Window::framebuffer_extent() const
 	{
 		int tw, th;
 		glfwGetFramebufferSize(handle, &tw, &th);
 		return { tw, th };
 	}
 
-	const std::pair<std::uint32_t, std::uint32_t> Window::size() const
+	std::pair<std::uint32_t, std::uint32_t> Window::size() const
 	{
 		int tw, th;
 		glfwGetWindowSize(handle, &tw, &th);
 		return { static_cast<std::uint32_t>(tw), static_cast<std::uint32_t>(th) };
 	}
 
-	const std::pair<float, float> Window::framebuffer_scale() const
+	std::pair<float, float> Window::framebuffer_scale() const
 	{
 		float tw, th;
 		glfwGetWindowContentScale(handle, &tw, &th);
@@ -99,12 +99,12 @@ namespace Alabaster {
 
 		// Set GLFW callbacks
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int new_width, int new_height) {
-			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
+			auto& [w, h, callback] = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
 
 			WindowResizeEvent event((std::uint32_t)new_width, (std::uint32_t)new_height);
-			data.callback(event);
-			data.width = new_width;
-			data.height = new_height;
+			callback(event);
+			w = new_width;
+			h = new_height;
 		});
 
 		glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {

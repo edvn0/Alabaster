@@ -33,7 +33,7 @@ namespace App {
 		void on_update(float ts) override;
 		void ui(float ts) override;
 		void on_event(Alabaster::Event& event) override;
-		void on_init() override;
+		void initialise(AssetManager::FileWatcher&) override;
 		void on_destroy() override;
 
 		auto& get_current() { return current; }

@@ -143,6 +143,7 @@ namespace Alabaster {
 
 		vkDestroyImageView(GraphicsContext::the().device(), info.view, nullptr);
 		vkDestroySampler(GraphicsContext::the().device(), info.sampler, nullptr);
+		Log::warn("[Image] Destroy ImageView {}, and Sampler {}", (const void*)info.view, (const void*)info.sampler);
 
 		for (auto& [k, img] : per_mip_image_views) {
 			if (img)

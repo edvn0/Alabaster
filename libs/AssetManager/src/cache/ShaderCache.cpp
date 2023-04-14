@@ -21,9 +21,8 @@ namespace AssetManager {
 		}
 
 		for (std::size_t i = 0; i < a.size() - 1; i++) {
-			const auto current = a[i];
-			const auto next = a[i + 1];
-			if (!true_if_next_is_after_current_function(current, next)) {
+			const auto& current = a[i];
+			if (const auto& next = a[i + 1]; !true_if_next_is_after_current_function(current, next)) {
 				return false;
 			}
 		}
@@ -33,14 +32,14 @@ namespace AssetManager {
 	void ShaderCache::load_from_directory(const std::filesystem::path& shader_directory)
 	{
 		using namespace Alabaster::FS;
-		auto all_files_in_shaders = in_directory<std::string, false>(shader_directory, { ".vert", ".frag" }, true);
+		const auto all_files_in_shaders = in_directory<std::string, false>(shader_directory, { ".vert", ".frag" }, true);
 
 		const auto shader_pairs = extract_into_pairs_of_shaders(all_files_in_shaders);
 
 		std::vector<std::future<ShaderCodeAndName>> results;
 		Alabaster::assert_that(shader_pairs.size() == all_files_in_shaders.size() / 2);
 
-		ShaderCompiler compiler;
+		const ShaderCompiler compiler;
 		for (const auto& [vert, frag] : shader_pairs) {
 
 			const auto& shader_name = remove_extension<std::filesystem::path>(vert);
@@ -72,7 +71,7 @@ namespace AssetManager {
 	}
 
 	std::vector<std::pair<std::filesystem::path, std::filesystem::path>> ShaderCache::extract_into_pairs_of_shaders(
-		const std::vector<std::string>& sorted_shaders_in_directory)
+		const std::vector<std::string>& sorted_shaders_in_directory) const
 	{
 		Alabaster::assert_that(check_is_sorted(sorted_shaders_in_directory, [](auto&& a, auto&& b) { return b > a; }), "Input vector is not sorted.");
 

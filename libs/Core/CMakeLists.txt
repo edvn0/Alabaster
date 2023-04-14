@@ -6,16 +6,16 @@ project(Core)
 find_package(Vulkan REQUIRED)
 find_package(Python3 COMPONENTS Interpreter)
 
-file(GLOB_RECURSE sources 
-  av_pch.hpp 
-  Alabaster.hpp
-  "src/core/**.cpp"
-  "src/graphics/**.cpp"
-  "src/ui/**.cpp"
-  "src/utilities/**.cpp"
-  "src/platform/stb/**.cpp"
-  "src/platform/Vulkan/**.cpp"
-  "src/platform/ImGui/**.cpp"
+file(GLOB_RECURSE sources
+	av_pch.hpp
+	Alabaster.hpp
+	"src/core/**.cpp"
+	"src/graphics/**.cpp"
+	"src/ui/**.cpp"
+	"src/utilities/**.cpp"
+	"src/platform/stb/**.cpp"
+	"src/platform/Vulkan/**.cpp"
+	"src/platform/ImGui/**.cpp"
 )
 set(input_sources "${sources}")
 set(all_sources "")
@@ -37,12 +37,12 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/magic_enum/include
 	${THIRD_PARTY_DIR}/random/include
 	${THIRD_PARTY_DIR}/imgui
-    ${THIRD_PARTY_DIR}/imguizmo
+	${THIRD_PARTY_DIR}/imguizmo
 	${THIRD_PARTY_DIR}/imgui/backends
 	${THIRD_PARTY_DIR}/stb
 	${THIRD_PARTY_DIR}/tinyobjloader
 	${THIRD_PARTY_DIR}/VulkanMemoryAllocator/include
-    ${THIRD_PARTY_DIR}/gsl/include
+	${THIRD_PARTY_DIR}/gsl/include
 	INTERFACE ${Vulkan_INCLUDE_DIRS}
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../AssetManager/include)
 
@@ -50,7 +50,7 @@ target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE glfw
 	imgui
-    imguizmo
+	imguizmo
 	Vulkan::Vulkan
 	spdlog
 	magic_enum
@@ -59,6 +59,10 @@ target_link_libraries(
 	VulkanMemoryAllocator
 	tinyobjloader
 	effolkronium_random)
+
+if(${ALABASTER_BUILD_TESTING})
+	add_subdirectory(tests)
+endif()
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/av_pch.hpp)
 default_register_project(${PROJECT_NAME})

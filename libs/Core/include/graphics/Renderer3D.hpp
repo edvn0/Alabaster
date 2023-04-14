@@ -19,87 +19,33 @@ namespace Alabaster {
 	class IndexBuffer;
 	class CommandBuffer;
 	class Camera;
+	class Texture;
 
-	struct QuadVertex {
+	struct RendererData;
+
+	struct PointLight {
 		glm::vec4 position;
-		glm::vec4 colour;
-		glm::vec3 normals;
-		glm::vec2 uvs;
-	};
-
-	struct LineVertex {
-		glm::vec4 position;
-		glm::vec4 colour;
-	};
-
-	struct UBO {
-		glm::mat4 model;
-		glm::mat4 view;
-		glm::mat4 projection;
-		glm::mat4 view_projection;
-	};
-
-	struct PC {
-		glm::vec4 light_position;
-		glm::vec4 light_colour;
-		glm::vec4 light_ambience { 0.1f };
-		glm::vec4 object_colour;
-		glm::mat4 object_transform;
-	};
-
-	struct RendererData {
-		static constexpr std::uint32_t max_vertices = 4 * 100;
-		static constexpr std::uint32_t max_meshes = 400;
-		static constexpr std::uint32_t max_indices = 6 * max_vertices;
-		std::uint32_t draw_calls { 0 };
-
-		std::uint32_t quad_indices_submitted { 0 };
-		std::uint32_t quad_vertices_submitted { 0 };
-		std::array<QuadVertex, max_vertices> quad_buffer;
-		std::unique_ptr<VertexBuffer> quad_vertex_buffer;
-		std::unique_ptr<IndexBuffer> quad_index_buffer;
-
-		std::uint32_t line_indices_submitted { 0 };
-		std::uint32_t line_vertices_submitted { 0 };
-		std::array<LineVertex, max_vertices> line_buffer;
-		std::unique_ptr<VertexBuffer> line_vertex_buffer;
-		std::unique_ptr<IndexBuffer> line_index_buffer;
-
-		std::vector<std::unique_ptr<UniformBuffer>> uniforms;
-
-		std::vector<VkDescriptorSet> descriptor_sets;
-		VkDescriptorSetLayout descriptor_set_layout;
-		VkDescriptorPool descriptor_pool;
-		std::shared_ptr<Framebuffer> framebuffer;
-
-		std::uint32_t meshes_submitted { 0 };
-		std::array<Mesh*, max_meshes> mesh;
-		std::array<glm::mat4, max_meshes> mesh_transform {};
-		std::array<glm::vec4, max_meshes> mesh_colour;
-		std::array<Pipeline*, max_meshes> mesh_pipeline_submit;
-
-		PC push_constant;
-
-		std::unordered_map<std::string_view, std::unique_ptr<Pipeline>> pipelines;
+		glm::vec4 ambience;
 	};
 
 	class Renderer3D {
 	public:
 		explicit Renderer3D(const std::shared_ptr<Camera>& camera) noexcept;
+		~Renderer3D() = default;
 
 		void begin_scene();
 
 		void quad(const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
-			float rotation_degrees = 0.0f);
-		void quad(const glm::mat4& transform, const glm::vec4& colour);
+			float rotation_degrees = 0.0f, int texture_id = 0);
+		void quad(const glm::mat4& transform, const glm::vec4& colour, int texture_id = 0);
 
 		void mesh(const std::shared_ptr<Mesh>& mesh, const std::shared_ptr<Pipeline>& pipeline = nullptr, const glm::vec3& pos = { 0, 0, 0 },
 			const glm::mat4& rotation_matrix = glm::mat4 { 1.0f }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 });
 		void mesh(const std::shared_ptr<Mesh>& mesh, const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 },
 			const glm::vec3& scale = { 1, 1, 1 });
-		void mesh(const std::shared_ptr<Mesh>& mesh, glm::mat4 transform, const std::shared_ptr<Pipeline>& pipeline = nullptr,
+		void mesh(const std::shared_ptr<Mesh>& mesh, const glm::mat4& transform, const std::shared_ptr<Pipeline>& pipeline = nullptr,
 			const glm::vec4& colour = { 1, 1, 1, 1 });
-		void mesh(const std::shared_ptr<Mesh>& mesh, glm::mat4 transform, const glm::vec4& colour = { 1, 1, 1, 1 });
+		void mesh(const std::shared_ptr<Mesh>& mesh, const glm::mat4& transform, const glm::vec4& colour = { 1, 1, 1, 1 });
 
 		void line(const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
 		void line(float size, const glm::vec3& from, const glm::vec3& to, const glm::vec4& color);
@@ -109,6 +55,11 @@ namespace Alabaster {
 		void end_scene(const CommandBuffer& command_buffer, const std::shared_ptr<Framebuffer>& target);
 
 		void set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience = 1.0f);
+		void set_light_data(const glm::vec3& light_position, const glm::vec4& colour, const glm::vec4& ambience);
+		void submit_point_light_data(const PointLight& point_light);
+		void commit_point_light_data();
+
+		std::size_t default_push_constant_size() const;
 
 		void destroy();
 		void reset_stats();
@@ -131,7 +82,8 @@ namespace Alabaster {
 		void invalidate_pipelines();
 
 		std::shared_ptr<Camera> camera;
-		RendererData data;
+		RendererData* data;
+		bool scene_has_begun { false };
 	};
 
 } // namespace Alabaster

@@ -5,6 +5,7 @@
 #include "core/events/ApplicationEvent.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Swapchain.hpp"
+#include "utilities/HashStringView.hpp"
 
 #include <map>
 #include <memory>
@@ -14,6 +15,17 @@ namespace AssetManager {
 }
 
 namespace Alabaster {
+
+	template <typename T>
+	concept ConstructibleLayer = requires(T* t, AssetManager::FileWatcher& watcher) {
+		{
+			t->initialise(watcher)
+		} -> std::same_as<bool>;
+		{
+			t->get_name()
+		} -> std::same_as<std::string_view>;
+		new T();
+	};
 
 	class Window;
 	class GUILayer;
@@ -33,9 +45,10 @@ namespace Alabaster {
 
 	struct ApplicationStatistics {
 		double app_ts { 7.5 };
-		float cpu_time;
-		float frame_time;
-		float last_frametime;
+		double cpu_time { 0.0f };
+		double frame_time { 0.0f };
+		double last_frametime { 0.0f };
+		double mean { 0.0f };
 	};
 
 	class Application {
@@ -59,10 +72,11 @@ namespace Alabaster {
 
 		void resize(int w, int h);
 
-		void push_layer(Layer* layer)
+		template <ConstructibleLayer L> void push_layer()
 		{
-			layer->initialise();
-			layers.emplace(layer->name(), std::move(layer));
+			L* layer = new L();
+			layer->initialise(*file_watcher);
+			layers.emplace(layer->get_name(), std::move(layer));
 		}
 
 		void pop_layer(const std::string& name)
@@ -78,8 +92,8 @@ namespace Alabaster {
 		}
 
 		static Application& the();
-		inline const std::unique_ptr<Window>& get_window() { return window; };
-		inline const std::unique_ptr<Window>& get_window() const { return window; }
+		inline Window& get_window() { return *window; };
+		inline Window& get_window() const { return *window; }
 		Swapchain& swapchain();
 		Swapchain& swapchain() const;
 		GUILayer& gui_layer();
@@ -94,12 +108,13 @@ namespace Alabaster {
 		bool on_window_change(WindowMinimizeEvent& event);
 		bool on_window_change(WindowCloseEvent& event);
 		void render_imgui();
+		void render_layers();
 		void update_layers(float ts);
 		void update_layers(double ts);
 
 		void stop();
 
-		std::map<std::string, Layer*> layers;
+		std::unordered_map<std::string, Layer*, HashStringView, std::equal_to<>> layers;
 		std::unique_ptr<Window> window;
 
 		std::unique_ptr<AssetManager::FileWatcher> file_watcher;

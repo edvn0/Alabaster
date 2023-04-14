@@ -73,21 +73,21 @@ namespace Alabaster {
 		setup_events();
 	}
 
-	const std::pair<int, int> Window::framebuffer_extent() const
+	std::pair<int, int> Window::framebuffer_extent() const
 	{
 		int tw, th;
 		glfwGetFramebufferSize(handle, &tw, &th);
 		return { tw, th };
 	}
 
-	const std::pair<float, float> Window::framebuffer_scale() const
+	std::pair<float, float> Window::framebuffer_scale() const
 	{
 		float tw, th;
 		glfwGetWindowContentScale(handle, &tw, &th);
 		return { tw, th };
 	}
 
-	const std::pair<std::uint32_t, std::uint32_t> Window::size() const
+	std::pair<std::uint32_t, std::uint32_t> Window::size() const
 	{
 		int window_size, window_height;
 		glfwGetWindowSize(handle, &window_size, &window_height);
@@ -108,7 +108,7 @@ namespace Alabaster {
 
 	void Window::setup_events()
 	{
-		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow*, int, int) { Application::the().get_window()->resize_status = true; });
+		glfwSetFramebufferSizeCallback(handle, [](GLFWwindow*, int, int) { Application::the().get_window().resize_status = true; });
 
 		glfwSetWindowSizeCallback(handle, [](GLFWwindow* window, int in_width, int in_height) {
 			auto& data = *static_cast<UserData*>(glfwGetWindowUserPointer(window));
@@ -118,7 +118,7 @@ namespace Alabaster {
 			data.width = in_width;
 			data.height = in_height;
 
-			Application::the().get_window()->resize_status = true;
+			Application::the().get_window().resize_status = true;
 		});
 
 		glfwSetWindowCloseCallback(handle, [](GLFWwindow* window) {

@@ -8,7 +8,12 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/norm.hpp>
 #include <uuid.h>
+
+namespace SceneSystem {
+	class ScriptEntity;
+}
 
 namespace SceneSystem::Component {
 
@@ -151,6 +156,10 @@ namespace SceneSystem::Component {
 			: colour(col)
 			, texture(tex)
 		{
+			// If the norm is > 1, we normalize to RGB, I.e. divide by 255.
+			// l1 against 4 components is fine (max of sum of four components is 4)
+			if ((col.x + col.y + col.z + col.w) > 4.0f)
+				colour = colour / 255.0f;
 		}
 
 		explicit Texture() = default;
@@ -159,8 +168,17 @@ namespace SceneSystem::Component {
 	template <> inline constexpr std::string_view component_name<Component::Texture> = "texture";
 
 	struct Light {
-		bool is_light { true };
+		glm::vec4 ambience { 1.0f };
 
+		template <typename T>
+		Light(const T& amb)
+			: ambience(amb)
+		{
+			// If the norm is > 1, we normalize to RGB, I.e. divide by 255.
+			// l1 against 4 components is fine (max of sum of four components is 4)
+			if ((ambience.x + ambience.y + ambience.z + ambience.w) > 4.0f)
+				ambience = ambience / 255.0f;
+		}
 		Light() = default;
 		~Light() = default;
 	};
@@ -176,13 +194,72 @@ namespace SceneSystem::Component {
 	};
 	template <> inline constexpr std::string_view component_name<Component::Camera> = "camera";
 
+	struct PointLight {
+		glm::vec4 ambience { 1.0f };
+
+		template <typename T>
+		PointLight(const T& amb)
+			: ambience(amb)
+		{
+			// If the l1 norm is > 1, we normalize to RGB, I.e. divide by 255.
+			// l1 against 4 components is fine (max of sum of four components is 4)
+			if ((ambience.x + ambience.y + ambience.z + ambience.w) > 4.0f)
+				ambience = ambience / 255.0f;
+		}
+
+		PointLight() = default;
+		~PointLight() = default;
+	};
+	template <> inline constexpr std::string_view component_name<Component::PointLight> = "point_light";
+
+	template <typename T>
+	concept IsScriptable = requires(T t, float ts) {
+		{
+			t.on_update(ts)
+		} -> std::same_as<void>;
+		{
+			t.on_create()
+		} -> std::same_as<void>;
+		{
+			t.on_delete()
+		} -> std::same_as<void>;
+	};
+	struct Behaviour {
+		ScriptEntity* entity { nullptr };
+		std::string_view name;
+
+		Behaviour() = default;
+
+		std::function<void(Behaviour&)> create;
+		std::function<void(Behaviour&)> destroy;
+
+		template <IsScriptable T, typename... Args> void bind(std::string_view current_name, Args&&... args)
+		{
+			name = std::move(current_name);
+			create = [... arg = std::forward<Args>(args)](
+						 Behaviour& behaviour) { behaviour.entity = static_cast<ScriptEntity*>(new T(std::forward<Args>(arg)...)); };
+			setup_entity_destruction();
+		}
+
+	private:
+		void setup_entity_destruction();
+	};
+	template <> inline constexpr std::string_view component_name<Component::Behaviour> = "behaviour";
+
 	namespace Detail {
 		template <typename T, typename... U>
 		concept IsAnyOf = (std::same_as<T, U> || ...);
 	}
 
 	template <typename T>
-	concept IsComponent
-		= Detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light, SphereIntersectible, QuadIntersectible>;
+	concept IsComponent = Detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light, PointLight,
+		SphereIntersectible, QuadIntersectible, Behaviour>;
+
+	template <typename T>
+	concept IsValidComponent = IsComponent<T> && requires(T component) {
+		{
+			component.is_valid()
+		} -> std::same_as<bool>;
+	};
 
 } // namespace SceneSystem::Component

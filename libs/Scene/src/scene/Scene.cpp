@@ -4,36 +4,19 @@
 
 #include "cache/ResourceCache.hpp"
 #include "component/Component.hpp"
-#include "core/Application.hpp"
-#include "core/Input.hpp"
-#include "core/Random.hpp"
-#include "core/Window.hpp"
+#include "component/ScriptEntity.hpp"
 #include "entity/Entity.hpp"
-#include "graphics/Camera.hpp"
-#include "graphics/CommandBuffer.hpp"
-#include "graphics/Framebuffer.hpp"
-#include "graphics/GraphicsContext.hpp"
-#include "graphics/IndexBuffer.hpp"
-#include "graphics/Mesh.hpp"
-#include "graphics/Pipeline.hpp"
-#include "graphics/PushConstantRange.hpp"
-#include "graphics/Renderer.hpp"
-#include "graphics/Renderer3D.hpp"
-#include "graphics/Vertex.hpp"
-#include "graphics/VertexBufferLayout.hpp"
 #include "serialisation/SceneDeserialiser.hpp"
 #include "serialisation/SceneSerialiser.hpp"
-#include "ui/ImGuizmo.hpp"
 
+#include <Alabaster.hpp>
 #include <GLFW/glfw3.h>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 
 namespace SceneSystem {
 
-	static glm::vec4 pos { -5, 5, 5, 1.0f };
-	static glm::vec4 col { 255 / 255.0, 153 / 255.0, 51 / 255.0, 255.0f / 255.0 };
-	static float ambience { 1.0f };
+	static constexpr auto mouse_picking_interval_ms = 100.0;
 
 	template <class Position = glm::vec3> static constexpr auto axes(const auto& renderer, const Position& position, auto length = 1.0f)
 	{
@@ -45,11 +28,11 @@ namespace SceneSystem {
 	void Scene::build_scene()
 	{
 		using namespace Alabaster;
-		auto viking_room_model = Mesh::from_file("viking_room.obj");
-		auto sphere_model = Mesh::from_file("sphere.obj");
+		auto sphere_model = Mesh::from_file("sphere_subdivided.obj");
+		auto simple_sphere_model = Mesh::from_file("sphere.obj");
 		auto cube_model = Mesh::from_file("cube.obj");
 
-		const auto&& [w, h] = Application::the().get_window()->size();
+		const auto&& [w, h] = Application::the().get_window().size();
 		FramebufferSpecification fbs;
 		fbs.width = w;
 		fbs.height = h;
@@ -60,7 +43,7 @@ namespace SceneSystem {
 		fbs.clear_depth_on_load = true;
 		framebuffer = Framebuffer::create(fbs);
 
-		PipelineSpecification sun_spec { .shader = AssetManager::asset<Alabaster::Shader>("mesh"),
+		PipelineSpecification sun_spec { .shader = AssetManager::asset<Alabaster::Shader>("mesh_light"),
 			.debug_name = "Sun Pipeline",
 			.render_pass = framebuffer->get_renderpass(),
 			.topology = Topology::TriangleList,
@@ -68,39 +51,112 @@ namespace SceneSystem {
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
 				VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
-			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
+			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, scene_renderer->default_push_constant_size()) } };
 		auto sun_pipeline = Pipeline::create(sun_spec);
 
 		Entity sphere_one = create_entity(fmt::format("Sphere-{}", 0));
 		sphere_one.add_component<Component::Mesh>(sphere_model);
-		Component::Transform& sphere_one_transform = sphere_one.get_component<Component::Transform>();
-		sphere_one_transform.position = { 3, -6, 5 };
+		auto& sphere_one_transform = sphere_one.get_component<Component::Transform>();
+		sphere_one_transform.scale = glm::vec3 { 0.1f };
+		sphere_one_transform.position = { -0.35, -0.5, .5f };
 		sphere_one.add_component<Component::Texture>(Alabaster::random_vec4(0, 1));
 		sphere_one.add_component<Component::Pipeline>(sun_pipeline);
 		sphere_one.add_component<Component::SphereIntersectible>();
+		class MoveScript : public ScriptEntity {
+		public:
+			~MoveScript() override = default;
+			void on_create() override { Alabaster::Log::info("Created entity!!!"); }
+			void on_delete() override { Alabaster::Log::info("Deleted entity!!!"); }
+			void on_update(const float ts) override
+			{
+				auto& component = get_component<Component::Transform>();
+				component.position += ts * 0.1;
+			}
+		};
+		sphere_one.add_behaviour<MoveScript>("MoveScript");
 
 		Entity sphere_two = create_entity(fmt::format("Sphere-{}", 1));
 		sphere_two.add_component<Component::Mesh>(sphere_model);
-		Component::Transform& sphere_two_transform = sphere_two.get_component<Component::Transform>();
-		sphere_two_transform.position = { 1, -6, 5 };
+		auto& sphere_two_transform = sphere_two.get_component<Component::Transform>();
+		sphere_two_transform.scale = glm::vec3 { 0.1f };
+		sphere_two_transform.position = { .35, -0.5, .5f };
 		sphere_two.add_component<Component::Texture>(Alabaster::random_vec4(0, 1));
 		sphere_two.add_component<Component::Pipeline>(sun_pipeline);
 		sphere_two.add_component<Component::SphereIntersectible>();
 
 		Entity floor = create_entity("Floor");
 		floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
-		Component::Transform& floor_transform = floor.get_component<Component::Transform>();
-		floor_transform.scale = { 200, 200, .2 };
+		auto& floor_transform = floor.get_component<Component::Transform>();
+		floor_transform.scale = { 5, 5, .2 };
 		floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
 		floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
 
+		static std::array point_lights { create_entity("LightOne"), create_entity("LightTwo"), create_entity("LightThree"),
+			create_entity("LightFour"), create_entity("LightFive"), create_entity("LightSix"), create_entity("LightSeven"),
+			create_entity("LightEight"), create_entity("LightNine"), create_entity("LightTen") };
+
+		class MoveInCircle : public ScriptEntity {
+		public:
+			~MoveInCircle() override = default;
+			explicit MoveInCircle(const float in_radius, const float in_height, const float beginning_position)
+				: radius(in_radius)
+				, height(in_height)
+				, current_pos(beginning_position)
+			{
+			}
+			void on_create() override
+			{
+				Alabaster::Log::info("Created entity!!!");
+				get_component<Component::Transform>().scale = { 0.05, 0.05, 0.05 };
+				const auto cos = glm::cos(current_pos);
+				const auto sin = glm::sin(current_pos);
+				get_component<Component::Transform>().position = { sin * radius, height, cos * radius };
+			}
+			void on_delete() override { Alabaster::Log::info("Deleted entity!!!"); }
+			void on_update(const float ts) override
+			{
+				auto& component = get_component<Component::Transform>();
+				auto& pos = component.position;
+				current_pos += 5.0f * ts;
+
+				pos.x = radius * glm::sin(glm::radians(current_pos));
+				pos.z = radius * glm::cos(glm::radians(current_pos));
+			}
+
+		private:
+			float radius;
+			float height;
+			float current_pos = 0;
+		};
+		for (auto& point_light : point_lights) {
+			auto& transform = point_light.get_transform();
+
+			constexpr auto height = -0.5f;
+			constexpr auto radius = 2.0f;
+
+			static int index = 0;
+			constexpr auto division = (2 * glm::pi<float>()) / point_lights.size();
+			const auto cos = glm::cos(index * division);
+			const auto sin = glm::sin(index * division);
+			index++;
+
+			transform.position = { sin * radius, height, cos * radius };
+			auto ambience = random_vec4(0, 1);
+			ambience.w = 1;
+			point_light.add_component<Component::PointLight>(ambience);
+			point_light.add_component<Component::Mesh>(simple_sphere_model);
+			const float start_pos = static_cast<float>(index) * division;
+			Alabaster::Log::info("Current pos: {}", start_pos);
+			point_light.add_behaviour<MoveInCircle>("MoveInCircle", radius, height, start_pos);
+		}
+
 		auto sun = create_entity("The Sun");
-		sun.add_component<Component::Light>();
+		sun.add_component<Component::Light>(glm::vec4 { 252., 144., 3., 255 });
 		sun.add_component<Component::Mesh>(sphere_model);
-		sun.add_component<Component::Texture>(glm::vec4 { 1, 1, 1, 1 });
+		sun.add_component<Component::Texture>(glm::vec4 { 252., 144., 3., 255 });
 		auto& sun_transform = sun.get_transform();
-		sun_transform.position = { 10, -10, 5 };
-		sun_transform.scale = { 10, 10, 10 };
+		sun_transform.position = { -3, -1.5, -1 };
+		sun_transform.scale = glm::vec3 { 0.5 };
 	}
 
 	Scene::Scene() noexcept
@@ -111,27 +167,32 @@ namespace SceneSystem {
 
 	Scene::~Scene() = default;
 
-	void Scene::pick_entity(const glm::vec3& ray_wor)
+	void Scene::step()
+	{
+		// TODO: We should step
+		(void)this;
+	}
+
+	void Scene::pick_entity(const glm::vec3& ray_world)
 	{
 		const auto camera_position = scene_camera->get_position();
 		entt::entity found_entity = entt::null;
 		float t_dist = 1000.0f;
 
-		auto spheres = registry.view<const Component::SphereIntersectible>();
-		spheres.each([&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::SphereIntersectible& sphere) {
-			float distance = 1000.0f;
-			const bool intersected = sphere.intersects_with(ray_wor, camera_position, distance);
-			if (intersected && distance < t_dist) {
-				t_dist = distance;
-				found_entity = entity;
-			}
-		});
+		const auto spheres = registry.view<const Component::SphereIntersectible>();
+		spheres.each(
+			[&camera_position, &ray_world, &t_dist, &found_entity](const entt::entity& entity, const Component::SphereIntersectible& sphere) {
+				float distance = 1000.0f;
+				if (const bool intersected = sphere.intersects_with(ray_world, camera_position, distance); intersected && distance < t_dist) {
+					t_dist = distance;
+					found_entity = entity;
+				}
+			});
 
-		auto quads = registry.view<const Component::QuadIntersectible>();
-		quads.each([&camera_position, &ray_wor, &t_dist, &found_entity](const entt::entity& entity, const Component::QuadIntersectible& quad) {
+		const auto quads = registry.view<const Component::QuadIntersectible>();
+		quads.each([&camera_position, &ray_world, &t_dist, &found_entity](const entt::entity& entity, const Component::QuadIntersectible& quad) {
 			float distance = 1000.0f;
-			const bool intersected = quad.intersects_with(ray_wor, camera_position, distance);
-			if (intersected && distance < t_dist) {
+			if (const bool intersected = quad.intersects_with(ray_world, camera_position, distance); intersected && distance < t_dist) {
 				t_dist = distance;
 				found_entity = entity;
 			}
@@ -146,7 +207,7 @@ namespace SceneSystem {
 
 	template <class Vec = glm::vec3> static constexpr auto xy(const Vec& vec) { return vec.xy; }
 
-	void Scene::update_selected_entity() { *selected_entity = *hovered_entity; }
+	void Scene::update_selected_entity() const { *selected_entity = *hovered_entity; }
 
 	void Scene::pick_mouse()
 	{
@@ -155,7 +216,7 @@ namespace SceneSystem {
 
 		int x_offset;
 		int y_offset;
-		glfwGetWindowPos(Alabaster::Application::the().get_window()->native(), &x_offset, &y_offset);
+		glfwGetWindowPos(Alabaster::Application::the().get_window().native(), &x_offset, &y_offset);
 
 		const auto offset_x = static_cast<float>(x_offset);
 		const auto offset_y = static_cast<float>(y_offset);
@@ -189,14 +250,34 @@ namespace SceneSystem {
 
 	void Scene::update(float ts)
 	{
-		pick_mouse();
+		mouse_picking_accumulator += ts;
+		if (mouse_picking_accumulator >= mouse_picking_interval_ms) {
+			pick_mouse();
+			update_intersectibles();
+
+			auto scripts = registry.view<Component::Behaviour>();
+			scripts.each([this](const auto entity, Component::Behaviour& behaviour) {
+				if (behaviour.entity)
+					return;
+				behaviour.create(behaviour);
+				behaviour.entity->entity = Entity { this, entity };
+				behaviour.entity->on_create();
+			});
+
+			scripts.each([ts](Component::Behaviour& behaviour) { behaviour.entity->on_update(ts); });
+
+			mouse_picking_accumulator = 0;
+		}
 
 		scene_camera->on_update(ts);
+	}
+
+	void Scene::render()
+	{
 		command_buffer->begin();
 		scene_renderer->begin_scene();
 		scene_renderer->reset_stats();
-		draw_entities_in_scene(ts);
-		update_intersectibles();
+		draw_entities_in_scene();
 		scene_renderer->end_scene(*command_buffer, framebuffer);
 		command_buffer->end();
 		command_buffer->submit();
@@ -204,33 +285,57 @@ namespace SceneSystem {
 
 	void Scene::update_intersectibles()
 	{
-		auto mesh_view = registry.view<const Component::Transform, Component::SphereIntersectible>();
-		mesh_view.each([](const Component::Transform& transform, Component::SphereIntersectible& intersectible) {
+		const auto sphere_intersectible_view = registry.view<const Component::Transform, Component::SphereIntersectible>();
+		sphere_intersectible_view.each([](const Component::Transform& transform, Component::SphereIntersectible& intersectible) {
 			intersectible.update(transform.position, transform.scale, transform.rotation);
 		});
 	}
 
-	void Scene::draw_entities_in_scene(float)
+	void Scene::draw_entities_in_scene()
 	{
-		axes(scene_renderer, glm::vec3 { -100, -0.1, 100 }, 400.0f);
-		scene_renderer->set_light_data(pos, col, ambience);
+		axes(scene_renderer, glm::vec3 { -2.5, -0.1, 2.5 }, 5.0f);
 
-		auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>(
+		const auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>(
 			entt::exclude<Component::Light>);
 		mesh_view.each(
 			[&renderer = scene_renderer](const Component::Transform& transform, const Component::Mesh& mesh, const Component::Texture& texture,
 				const Component::Pipeline& pipeline) { renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour); });
 
-		auto light_view = registry.view<const Component::Transform, const Component::Light, const Component::Texture, const Component::Mesh>();
-		light_view.each([&renderer = scene_renderer](const Component::Transform& transform, const Component::Light, const Component::Texture& texture,
-							const Component::Mesh& mesh) { renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, texture.colour); });
+		const auto light_view = registry.view<const Component::Transform, const Component::Light, Component::Texture, const Component::Mesh>(
+			entt::exclude<Component::PointLight>);
+		light_view.each([&renderer = scene_renderer](const Component::Transform& transform, const Component::Light& light,
+							Component::Texture& texture, const Component::Mesh& mesh) {
+			texture.colour = light.ambience;
+			renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, texture.colour);
+			renderer->set_light_data(transform.position, texture.colour, light.ambience);
+		});
 
-		auto quad_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
-		quad_view.each([&renderer = scene_renderer](
-						   const Component::Transform& transform, const Component::BasicGeometry& geom, const Component::Texture& texture) {
-			if (geom.geometry == Component::Geometry::Quad) {
-				const auto base_pos = transform.to_matrix();
-				renderer->quad(base_pos, texture.colour);
+		const auto point_light_view = registry.view<Component::Transform, const Component::PointLight, const Component::Mesh>();
+		point_light_view.each(
+			[&renderer = scene_renderer](Component::Transform& transform, const Component::PointLight& light, const Component::Mesh& mesh) {
+				renderer->submit_point_light_data({ glm::vec4(transform.position, 1.0), light.ambience });
+				renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, light.ambience);
+			});
+		scene_renderer->commit_point_light_data();
+
+		const auto basic_geometry_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();
+		basic_geometry_view.each([&renderer = scene_renderer, quad_texture_index = quad_texture_index](
+									 const Component::Transform& transform, const Component::BasicGeometry& geom, const Component::Texture& texture) {
+			const auto base_pos = transform.to_matrix();
+			switch (geom.geometry) {
+			case Component::Geometry::Rect: {
+				renderer->quad(base_pos, texture.colour, quad_texture_index);
+				return;
+			}
+			case Component::Geometry::Quad: {
+				renderer->quad(base_pos, texture.colour, quad_texture_index);
+				return;
+			}
+			case Component::Geometry::Circle: {
+				// const auto base_pos = transform.to_matrix();
+				// renderer->circle(base_pos, texture.colour, quad_texture_index);
+				return;
+			}
 			}
 		});
 	}
@@ -240,11 +345,25 @@ namespace SceneSystem {
 		scene_camera->on_event(event);
 
 		Alabaster::EventDispatcher dispatch(event);
+		dispatch.dispatch<Alabaster::KeyPressedEvent>([&quad_index = quad_texture_index](const Alabaster::KeyPressedEvent& key_event) {
+			if (key_event.get_key_code() != Alabaster::Key::L)
+				return false;
+
+			quad_index++;
+			quad_index = quad_index % 3;
+
+			return false;
+		});
+
 		dispatch.dispatch<Alabaster::WindowResizeEvent>([this](const Alabaster::WindowResizeEvent& e) {
+			if (e.width() == 0 || e.height() == 0)
+				return true;
+
 			const auto vertical_fov = glm::degrees(scene_camera->get_vertical_fov());
 			scene_camera.reset(new Alabaster::EditorCamera(
 				vertical_fov, static_cast<float>(e.width()), static_cast<float>(e.height()), 0.1f, 1000.0f, scene_camera.get()));
 			scene_renderer->set_camera(scene_camera);
+			// framebuffer->resize(e.width(), e.height());
 			return false;
 		});
 	}
@@ -260,14 +379,20 @@ namespace SceneSystem {
 		if (command_buffer)
 			command_buffer->destroy();
 
+		auto scripts = registry.view<Component::Behaviour>();
+		scripts.each([](Component::Behaviour& behaviour) {
+			behaviour.entity->on_delete();
+			behaviour.destroy(behaviour);
+		});
+
 		registry.clear();
 	}
 
-	void Scene::initialise()
+	void Scene::initialise(AssetManager::FileWatcher&)
 	{
-		auto&& [w, h] = Alabaster::Application::the().get_window()->size();
+		auto&& [w, h] = Alabaster::Application::the().get_window().size();
 
-		scene_camera = std::make_shared<Alabaster::EditorCamera>(74.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
+		scene_camera = std::make_shared<Alabaster::EditorCamera>(45.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
 		scene_renderer = std::make_unique<Alabaster::Renderer3D>(scene_camera);
 		command_buffer = std::make_unique<Alabaster::CommandBuffer>(3);
 		selected_entity = std::make_unique<Entity>();

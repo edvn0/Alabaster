@@ -22,6 +22,11 @@ namespace Alabaster {
 			, flags(in_flags)
 		{
 		}
+		constexpr PushConstantRange(PushConstantKind in_flags, std::size_t in_size)
+			: size(static_cast<std::uint32_t>(in_size))
+			, flags(in_flags)
+		{
+		}
 		constexpr PushConstantRange()
 			: size(0)
 			, flags(PushConstantKind::Both)
@@ -36,6 +41,7 @@ namespace Alabaster {
 	struct PushConstantRanges {
 		explicit PushConstantRanges(const std::initializer_list<PushConstantRange>& in);
 		const auto& get_ranges() const { return output_ranges; }
+		const auto& get_input_ranges() const { return ranges; }
 
 		auto size() const { return ranges.size(); }
 

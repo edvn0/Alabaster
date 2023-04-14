@@ -33,7 +33,7 @@ namespace AssetManager {
 	inline auto& the() { return ResourceCache::the(); }
 
 	template <typename T> struct get_asset {
-		const std::shared_ptr<T>& operator()(const std::string& name) const;
+		const std::shared_ptr<T>& operator()(const std::string& name) const = delete;
 	};
 
 	template <> struct get_asset<Alabaster::Texture> {
@@ -44,7 +44,7 @@ namespace AssetManager {
 		const std::shared_ptr<Alabaster::Shader>& operator()(const std::string& name) const { return the().shader(name); }
 	};
 
-	template <typename T> const std::shared_ptr<T>& asset(const std::string& name)
+	template <typename T, typename String> const std::shared_ptr<T>& asset(String&& name)
 	{
 		try {
 			return get_asset<T>()(name);

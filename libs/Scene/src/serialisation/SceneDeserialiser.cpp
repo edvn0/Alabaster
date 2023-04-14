@@ -36,7 +36,9 @@ namespace SceneSystem {
 
 	using namespace SceneSystem::Component;
 
-	static std::unordered_set<std::string> unmapped_deserialisation;
+	namespace {
+		static std::unordered_set<std::string> unmapped_deserialisation;
+	}
 
 	template <IsComponent T> static constexpr auto handle_component(const nlohmann::json& json_node, auto& entity)
 	{
@@ -49,7 +51,7 @@ namespace SceneSystem {
 			if (!json_node.contains(name))
 				throw ComponentMissingInJsonNodeException("Could not find key for this object");
 
-			if (const auto component = json_node[name]; component.is_object()) {
+			if (const nlohmann::json& component = json_node[name]; component.is_object()) {
 				try {
 					deserialise_component<T>()(component, entity);
 				} catch (const std::exception& exc) {

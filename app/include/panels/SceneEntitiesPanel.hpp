@@ -30,7 +30,7 @@ namespace App {
 		void on_update(float ts) override;
 		void ui(float ts) override;
 		void on_event(Alabaster::Event& event) override;
-		void on_init() override { Alabaster::Log::info("[SceneEntitiesPanel] Initialised."); };
+		void initialise(AssetManager::FileWatcher&) override { Alabaster::Log::info("[SceneEntitiesPanel] Initialised."); };
 		void on_destroy() override { Alabaster::Log::info("[SceneEntitiesPanel] Destroyed."); };
 		void register_file_watcher(AssetManager::FileWatcher&) { }
 

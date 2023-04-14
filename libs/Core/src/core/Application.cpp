@@ -30,7 +30,9 @@ namespace Alabaster {
 		window = std::make_unique<Window>(args);
 		window->set_event_callback([this](Event& event) { on_event(event); });
 
-		push_layer(new GUILayer());
+		file_watcher = std::make_unique<AssetManager::FileWatcher>(IO::resources());
+
+		push_layer<GUILayer>();
 
 		Renderer::init();
 
@@ -61,7 +63,7 @@ namespace Alabaster {
 		window->destroy();
 	}
 
-	void Application::resize(int w, int h) { window->get_swapchain()->on_resize(w, h); }
+	void Application::resize(int w, int h) { window->get_swapchain().on_resize(w, h); }
 
 	GUILayer& Application::gui_layer()
 	{
@@ -73,43 +75,49 @@ namespace Alabaster {
 
 	void Application::run()
 	{
-		file_watcher = std::make_unique<AssetManager::FileWatcher>(IO::resources());
+
+		statistics.last_frametime = Clock::get_ms<float>();
+		const double dt = 0.01;
+		double accumulator = 0.0;
 
 		on_init();
 
-		static std::size_t frametime_index = 0;
 		while (!window->should_close() && is_running) {
-			Timer<float> on_cpu;
+			double newTime = Clock::get_ms();
+			double frameTime = newTime - statistics.last_frametime;
+			statistics.last_frametime = newTime;
+			statistics.frame_time = frameTime;
+
+			accumulator += frameTime;
+
+			Timer<double> layer_update;
+			while (accumulator >= dt) {
+				update_layers(dt);
+				accumulator -= dt;
+			}
+			const auto updated_timer = layer_update.elapsed();
+			statistics.cpu_time = updated_timer;
 
 			window->update();
 
 			swapchain().begin_frame();
 			Renderer::begin();
 			{
-				update_layers(statistics.app_ts);
+				render_layers();
 				gui_layer().begin();
 				render_imgui();
 				gui_layer().end();
 			}
 			Renderer::end();
 			swapchain().end_frame();
-
-			statistics.cpu_time = on_cpu.elapsed();
-			frametime_queue[frametime_index] = statistics.cpu_time;
-			float time = Clock::get_ms<float>();
-			statistics.frame_time = time - statistics.last_frametime;
-			statistics.app_ts = glm::min<float>(statistics.frame_time, 0.0333f);
-			statistics.last_frametime = time;
-
-			frametime_index = (frametime_index + 1) % frametime_queue.size();
 		}
 
 		on_shutdown();
 	}
 
-	Swapchain& Application::swapchain() { return *window->get_swapchain(); }
+	Swapchain& Application::swapchain() { return window->get_swapchain(); }
 
-	Swapchain& Application::swapchain() const { return *window->get_swapchain(); }
+	Swapchain& Application::swapchain() const { return window->get_swapchain(); }
 
 	void Application::render_imgui()
 	{
@@ -128,9 +136,16 @@ namespace Alabaster {
 
 	void Application::update_layers(double ts)
 	{
-		auto time_step = float(ts);
+		auto time_step = static_cast<float>(ts);
 		for (const auto& [key, layer] : layers) {
 			layer->update(time_step);
+		}
+	}
+
+	void Application::render_layers()
+	{
+		for (const auto& [key, layer] : layers) {
+			layer->render();
 		}
 	}
 
@@ -165,7 +180,7 @@ namespace Alabaster {
 			return false;
 		}
 
-		window->get_swapchain()->on_resize(width, height);
+		window->get_swapchain().on_resize(width, height);
 
 		return false;
 	}

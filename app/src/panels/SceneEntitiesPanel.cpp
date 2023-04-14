@@ -187,7 +187,7 @@ namespace App {
 		float line_height = GImGui->Font->FontSize + GImGui->Style.FramePadding.y + frame_padding * 2.0f;
 		ImGui::Separator();
 
-		const auto leaf_id = (void*)typeid(T).hash_code();
+		const auto leaf_id = (const void*)typeid(T).hash_code();
 		bool open = ImGui::TreeNodeEx(leaf_id, tree_node_flags, "%s", name.c_str());
 		ImGui::PopStyleVar();
 		ImGui::SameLine(content_region_available.x - line_height * 0.5f);
@@ -235,7 +235,10 @@ namespace App {
 		if (ImGui::BeginPopup("AddComponent")) {
 			display_add_component_entry<SceneSystem::Component::Camera>("Camera");
 			display_add_component_entry<SceneSystem::Component::Texture>("Texture");
-
+			display_add_component_entry<SceneSystem::Component::Pipeline>("Pipeline");
+			display_add_component_entry<SceneSystem::Component::Mesh>("Mesh");
+			display_add_component_entry<SceneSystem::Component::SphereIntersectible>("SphereIntersectible");
+			display_add_component_entry<SceneSystem::Component::PointLight>("PointLight");
 			ImGui::EndPopup();
 		}
 
@@ -247,12 +250,21 @@ namespace App {
 			draw_vec3_control("Scale", component.scale, 1.0f);
 		});
 
+		draw_component<SceneSystem::Component::Light>(
+			entity, "Light", [](SceneSystem::Component::Light& component) { ImGui::ColorEdit3("Ambience", glm::value_ptr(component.ambience)); });
+
+		draw_component<SceneSystem::Component::PointLight>(entity, "PointLight",
+			[](SceneSystem::Component::PointLight& component) { ImGui::ColorEdit3("Ambience", glm::value_ptr(component.ambience)); });
+
 		draw_component<SceneSystem::Component::Texture>(entity, "Texture", [](SceneSystem::Component::Texture& component) {
 			ImGui::ColorEdit4("Colour", glm::value_ptr(component.colour));
 
 			if (component.texture)
 				Alabaster::UI::image(component.texture->get_descriptor_info(), ImVec2(200, 200));
 		});
+
+		draw_component<SceneSystem::Component::Behaviour>(
+			entity, "Behaviour", [](const SceneSystem::Component::Behaviour& component) { ImGui::Text("Script name: %s", component.name.data()); });
 
 		draw_component<SceneSystem::Component::SphereIntersectible>(entity, "SphereIntersectible",
 			[](SceneSystem::Component::SphereIntersectible& component) { draw_vec3_control("World position", component.world_position); });
@@ -262,10 +274,25 @@ namespace App {
 			ImGui::Text("Type: %s", name.data());
 		});
 
-		draw_component<SceneSystem::Component::Mesh>(entity, "Mesh",
-			[](const SceneSystem::Component::Mesh& component) { ImGui::Text("Mesh path: %s", component.mesh->get_asset_path().string().data()); });
+		draw_component<SceneSystem::Component::Mesh>(entity, "Mesh", [](const SceneSystem::Component::Mesh& component) {
+			if (component.mesh) {
+				ImGui::Text("Mesh path: %s", component.mesh->get_asset_path().string().data());
+				return;
+			}
+			ImGui::Button("Component mesh");
+			const auto path = Alabaster::UI::accept_drag_drop("AlabasterLayer::DragDropPayload");
+			if (!path)
+				return;
+
+			ImGui::Text("%s", (*path).c_str());
+		});
 
 		draw_component<SceneSystem::Component::Pipeline>(entity, "Pipeline", [](SceneSystem::Component::Pipeline& component) {
+			if (!component.pipeline) {
+				ImGui::Text("Has a null pipeline.");
+				return;
+			}
+
 			auto& info = component.pipeline->get_specification();
 			ImGui::Text("Pipeline %s\nLine width: %f", info.debug_name.c_str(), info.line_width);
 			ImGui::Button("Pipeline shader");
@@ -273,7 +300,7 @@ namespace App {
 			if (!path)
 				return;
 
-			auto fp = *path;
+			const auto fp = *path;
 			const auto filename_wo_extension = fp.filename().replace_extension();
 			const auto directory = fp.parent_path();
 			const auto extension = fp.extension();
@@ -317,7 +344,7 @@ namespace App {
 		}
 
 		bool entity_deleted = false;
-		if (ImGui::BeginPopupContextItem()) {
+		if (ImGui::BeginPopupContextWindow("##testtest")) {
 			if (ImGui::MenuItem("Delete Entity"))
 				entity_deleted = true;
 
@@ -325,9 +352,9 @@ namespace App {
 		}
 
 		if (opened) {
-			ImGuiTreeNodeFlags opened_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-			const auto leaf_id = (const char*)&entity.get_component<SceneSystem::Component::ID>().identifier;
-			if (bool was_opened = ImGui::TreeNodeEx(leaf_id, opened_flags, "%s", tag.c_str()))
+			constexpr auto opened_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
+			const auto leaf_id = reinterpret_cast<const char*>(&entity.get_component<SceneSystem::Component::ID>().identifier);
+			if (ImGui::TreeNodeEx(leaf_id, opened_flags, "%s", tag.c_str()))
 				ImGui::TreePop();
 			ImGui::TreePop();
 		}
@@ -355,7 +382,6 @@ namespace App {
 			draw_entity_node(entity);
 		});
 
-		// Right-click on blank space
 		if (ImGui::BeginPopupContextWindow("EmptyEntityId", 1)) {
 			if (ImGui::MenuItem("Create Empty Entity"))
 				scene.create_entity("Empty Entity");

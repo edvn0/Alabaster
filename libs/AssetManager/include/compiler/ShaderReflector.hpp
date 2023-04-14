@@ -9,8 +9,17 @@
 
 namespace AssetManager {
 
+	struct UniformBufferDefinition {
+		std::string_view name;
+		std::uint32_t size;
+		std::uint32_t member_count;
+		std::uint32_t binding;
+		std::uint32_t descriptor_set;
+	};
+
 	struct ShaderReflectionData {
 		std::vector<Alabaster::PushConstantRange> push_constant_ranges;
+		std::vector<UniformBufferDefinition> uniform_buffers;
 	};
 
 	class ShaderReflector {

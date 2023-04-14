@@ -120,12 +120,13 @@ namespace Alabaster::UI {
 
 	bool is_item_hovered() { return ImGui::IsItemHovered(); }
 
-	void remove_image(const VkDescriptorImageInfo& info)
+	void remove_image(const VkDescriptorImageInfo&)
 	{
-		if (cached_views.contains(info.imageView)) {
-			ImGui_ImplVulkan_RemoveTexture(cached_views[info.imageView]);
-			cached_views.erase(info.imageView);
-		}
+		// Look back into history
 	}
+
+	static std::atomic_bool block_all_events { false };
+	void block_events(const bool should_block) { block_all_events = should_block; }
+	bool is_blocking_events() { return block_all_events; }
 
 } // namespace Alabaster::UI

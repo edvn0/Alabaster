@@ -25,9 +25,10 @@ namespace Alabaster {
 
 		~Timer() = default;
 
-		FloatLike elapsed()
+		[[nodiscard]] FloatLike elapsed()
 		{
-			constexpr auto out = [](auto&& f, auto start) { return static_cast<FloatLike>(f() - static_cast<FloatLike>(start)); };
+			constexpr auto out
+				= [](auto&& clock_function, auto start) { return static_cast<FloatLike>(clock_function() - static_cast<FloatLike>(start)); };
 			if constexpr (in == ClockGranularity::SECONDS) {
 				return out(Clock::get_seconds<FloatLike>, start_time);
 			} else if constexpr (in == ClockGranularity::MILLIS) {
@@ -44,5 +45,9 @@ namespace Alabaster {
 
 	template class Timer<float, ClockGranularity::MILLIS>;
 	template class Timer<double, ClockGranularity::MILLIS>;
+	template class Timer<float, ClockGranularity::NANOS>;
+	template class Timer<double, ClockGranularity::NANOS>;
+	template class Timer<float, ClockGranularity::SECONDS>;
+	template class Timer<double, ClockGranularity::SECONDS>;
 
 } // namespace Alabaster

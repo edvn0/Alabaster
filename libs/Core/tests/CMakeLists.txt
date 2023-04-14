@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.14)
 project(CoreTests)
 
 set(CMAKE_CXX_STANDARD 20)
-
-enable_testing()
+set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
 
 file(
 	GLOB_RECURSE
@@ -15,6 +14,7 @@ file(
 	platform/**.cpp)
 
 add_executable(CoreTests ${sources})
+target_include_directories(CoreTests PRIVATE "${THIRD_PARTY_DIR}/googletest/googletest/include")
 target_link_libraries(CoreTests GTest::gtest_main Alabaster::Core)
 
 include(GoogleTest)

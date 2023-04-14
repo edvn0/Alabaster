@@ -5,22 +5,56 @@
 #include "core/Application.hpp"
 #include "core/Input.hpp"
 
-#include <GLFW/glfw3.h>
-#include <glm/gtc/quaternion.hpp>
-#include <glm/gtx/quaternion.hpp>
-
 namespace Alabaster {
 
+	Camera::Camera(const glm::mat4& projection, const glm::mat4& unreversed_projection)
+		: projection_matrix(projection)
+		, unreversed_projection_matrix(unreversed_projection) {};
+
+	Camera::Camera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane)
+		: projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, far_plane, near_plane))
+		, unreversed_projection_matrix(glm::perspectiveFov(glm::radians(degree_fov), width, height, near_plane, far_plane)) {};
+
+	void Camera::set_ortho_projection_matrix(const float width, const float height, const float near_plane, const float far_plane)
+	{
+		projection_matrix = glm::ortho(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, far_plane, near_plane);
+		unreversed_projection_matrix = glm::ortho(-width * 0.5f, width * 0.5f, -height * 0.5f, height * 0.5f, near_plane, far_plane);
+	}
+
+	void Camera::set_perspective_projection_matrix(
+		const float radians_fov, const float width, const float height, const float near_plane, const float far_plane)
+	{
+		projection_matrix = glm::perspectiveFov(radians_fov, width, height, far_plane, near_plane);
+		unreversed_projection_matrix = glm::perspectiveFov(radians_fov, width, height, near_plane, far_plane);
+	}
+
 	EditorCamera::EditorCamera(
-		const float deg_fov, const float width, const float height, const float near_plane, const float far_plane, EditorCamera* previous_camera)
-		: Camera(glm::perspectiveFov(glm::radians(deg_fov), width, height, near_plane, far_plane),
-			glm::perspectiveFov(glm::radians(deg_fov), width, height, far_plane, near_plane))
+		const float degree_fov, const float width, const float height, const float near_plane, const float far_plane, EditorCamera* previous_camera)
+		: Camera(glm::perspectiveFov(glm::radians(degree_fov), width, height, near_plane, far_plane),
+			glm::perspectiveFov(glm::radians(degree_fov), width, height, far_plane, near_plane))
 		, focal_point(0.0f)
-		, vertical_fov(glm::radians(deg_fov))
+		, vertical_fov(glm::radians(degree_fov))
 		, near_clip(near_plane)
 		, far_clip(far_plane)
 	{
-		init(previous_camera);
+		if (previous_camera) {
+			position = previous_camera->position;
+			position_delta = previous_camera->position_delta;
+			yaw = previous_camera->yaw;
+			yaw_delta = previous_camera->yaw_delta;
+			pitch = previous_camera->pitch;
+			pitch_delta = previous_camera->pitch_delta;
+
+			focal_point = previous_camera->focal_point;
+		}
+
+		distance = glm::distance(position, focal_point);
+
+		position = calculate_position();
+		const glm::quat orientation = get_orientation();
+		direction = glm::eulerAngles(orientation) * (180.0f / glm::pi<float>());
+		view_matrix = glm::translate(glm::mat4(1.0f), position) * glm::mat4(orientation);
+		view_matrix = glm::inverse(view_matrix);
 	}
 
 	void EditorCamera::init(EditorCamera* previous_camera)

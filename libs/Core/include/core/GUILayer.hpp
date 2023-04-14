@@ -13,8 +13,9 @@ namespace Alabaster {
 		~GUILayer() override = default;
 
 		void on_event(Event&) override;
-		bool initialise() override;
+		bool initialise(AssetManager::FileWatcher&) override;
 		void update(float) override {};
+		void render() override {};
 		void ui(float) override;
 		void ui() override {};
 		void destroy() override;

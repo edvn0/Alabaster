@@ -4,7 +4,6 @@
 #include "core/exceptions/AlabasterException.hpp"
 
 #include <algorithm>
-#include <execution>
 
 namespace AssetManager {
 
@@ -75,10 +74,8 @@ namespace AssetManager {
 
 			for (auto& file : std::filesystem::recursive_directory_iterator(root)) {
 				auto current_file_last_write_time = std::filesystem::last_write_time(file);
-				const auto path = file.path();
 				const auto view = file.path().string();
 
-				// File creation
 				if (!paths.contains(view)) {
 					const auto type_if_not_directory
 						= std::filesystem::is_directory(file) ? FileType::DIRECTORY : to_filetype(file.path().extension());
@@ -87,11 +84,10 @@ namespace AssetManager {
 						.type = type_if_not_directory, .path = view, .last_modified = current_file_last_write_time, .status = FileStatus::Created
 					};
 
-					const auto current = paths[file.path().string()];
+					const auto& current = paths[file.path().string()];
 					for_each(current, activations);
-					// File modification
 				} else {
-					auto current = paths[file.path().string()];
+					auto& current = paths[file.path().string()];
 
 					if (current.last_modified != current_file_last_write_time) {
 						current.last_modified = current_file_last_write_time;
@@ -124,6 +120,8 @@ namespace AssetManager {
 	{
 		register_callback(FileStatus::Deleted | FileStatus::Created, activations, in);
 	}
+
+	void FileWatcher::on(FileStatus status, const std::function<void(const FileInformation&)>& in) { register_callback(status, activations, in); }
 
 	void FileWatcher::stop()
 	{
