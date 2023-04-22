@@ -6,9 +6,16 @@
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/Renderer3D.hpp"
 
-#include <AssetManager.hpp>
 #include <entt/entt.hpp>
 #include <uuid.h>
+
+namespace AssetManager {
+	class FileWatcher;
+}
+
+namespace Scripting {
+	class ScriptEngine;
+}
 
 namespace SceneSystem {
 
@@ -84,6 +91,7 @@ namespace SceneSystem {
 
 		std::unique_ptr<Entity> selected_entity { nullptr };
 		std::unique_ptr<Entity> hovered_entity { nullptr };
+		std::unique_ptr<Scripting::ScriptEngine> engine { nullptr };
 
 		std::shared_ptr<Alabaster::EditorCamera> scene_camera;
 		std::shared_ptr<Alabaster::Framebuffer> framebuffer;

@@ -17,18 +17,19 @@ namespace Alabaster::IO {
 	std::filesystem::path shaders() { return root / std::filesystem::path { "shaders" }; }
 	std::filesystem::path models() { return root / std::filesystem::path { "models" }; }
 	std::filesystem::path scenes() { return root / std::filesystem::path { "scene" }; }
+	std::filesystem::path scripts() { return root / std::filesystem::path { "scripts" }; }
 	std::filesystem::path editor_resources() { return root / std::filesystem::path { "editor" }; }
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{
 #ifdef ALABASTER_WINDOWS
-		(void)mode;
-		std::ifstream stream(filename, std::ios::in | std::ios::ate);
+		std::ifstream stream(filename, static_cast<int>(mode | OpenMode::AtEnd));
 #else
-		std::ifstream stream(filename, static_cast<std::ios_base::openmode>(mode));
+		std::ifstream stream(filename, static_cast<std::ios_base::openmode>(mode | OpenMode::AtEnd));
 #endif
+
 		if (!stream) {
-			throw AlabasterException("Could not open filestream to shader file.");
+			throw AlabasterException("{}", "Could not open filestream to shader file.");
 		}
 
 		auto size = stream.tellg();

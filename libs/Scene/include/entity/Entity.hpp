@@ -15,7 +15,7 @@ namespace SceneSystem {
 		explicit Entity(Scene* scene, entt::entity entity_handle, const std::string& name = "Unnamed entity");
 		explicit Entity(Scene* scene, const std::string& name = "Unnamed entity");
 		explicit Entity(const std::shared_ptr<Scene>& scene, const std::string& name = "Unnamed entity");
-		~Entity() = default;
+		virtual ~Entity();
 
 		Entity(const Entity& other);
 		Entity& operator=(const Entity& other) = default;
@@ -86,14 +86,16 @@ namespace SceneSystem {
 		bool is_valid() const { return is_valid(entity_handle); }
 		template <typename Handle> bool is_valid(Handle&& handle) const { return std::forward<Handle>(handle) != entt::null; }
 
-		const auto& get_transform() const { return get_component<Component::Transform>(); }
-		auto& get_transform() { return get_component<Component::Transform>(); }
-		const auto& get_tag() const { return get_component<Component::Tag>(); }
-		auto& get_tag() { return get_component<Component::Tag>(); }
+		const Component::Transform& get_immutable_transform() const { return get_component<Component::Transform>(); }
+		virtual Component::Transform& get_transform();
+		const Component::Tag& get_immutable_tag() const { return get_component<Component::Tag>(); }
+		virtual Component::Tag& get_tag() { return get_component<Component::Tag>(); }
 
 	private:
 		Scene* scene { nullptr };
 		entt::entity entity_handle { entt::null };
+
+		Component::Transform t {};
 
 		friend Scene;
 	};

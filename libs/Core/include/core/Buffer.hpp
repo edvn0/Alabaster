@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <string>
@@ -26,6 +27,14 @@ namespace Alabaster {
 			Buffer buffer;
 			buffer.allocate(in_size);
 			std::memcpy(buffer.data, in_data, in_size);
+			return buffer;
+		}
+
+		static Buffer copy(const void* in_data, std::size_t in_size)
+		{
+			Buffer buffer;
+			buffer.allocate(static_cast<std::uint32_t>(in_size));
+			std::memcpy(buffer.data, in_data, static_cast<std::uint32_t>(in_size));
 			return buffer;
 		}
 

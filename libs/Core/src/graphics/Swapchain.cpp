@@ -27,23 +27,17 @@ namespace Alabaster {
 
 		glfwCreateWindowSurface(instance, glfw_window, nullptr, &surface);
 
-		// Get available queue family properties
 		uint32_t queue_count;
 		vkGetPhysicalDeviceQueueFamilyProperties(GraphicsContext::the().physical_device(), &queue_count, nullptr);
 
 		std::vector<VkQueueFamilyProperties> queue_props(queue_count);
 		vkGetPhysicalDeviceQueueFamilyProperties(GraphicsContext::the().physical_device(), &queue_count, queue_props.data());
 
-		// Iterate over each queue to learn whether it supports presenting:
-		// Find a queue with present support
-		// Will be used to present the swap chain images to the windowing system
 		std::vector<VkBool32> supports_present(queue_count);
 		for (uint32_t i = 0; i < queue_count; i++) {
 			vkGetPhysicalDeviceSurfaceSupportKHR(GraphicsContext::the().physical_device(), i, surface, &supports_present[i]);
 		}
 
-		// Search for a graphics and a present queue in the array of queue
-		// families, try to find one that supports both
 		uint32_t graphics_queue_node_index = UINT32_MAX;
 		uint32_t present_queue_node_index = UINT32_MAX;
 		for (uint32_t i = 0; i < queue_count; i++) {
@@ -61,8 +55,6 @@ namespace Alabaster {
 		}
 
 		if (present_queue_node_index == UINT32_MAX) {
-			// If there's no queue that supports both present and graphics
-			// try to find a separate present queue
 			for (uint32_t i = 0; i < queue_count; ++i) {
 				if (supports_present[i] == VK_TRUE) {
 					present_queue_node_index = i;
@@ -442,7 +434,7 @@ namespace Alabaster {
 				on_resize(width, height);
 				return 9877; // Magic number
 			} else {
-				throw AlabasterException("Could not acquire new image.");
+				throw AlabasterException("{}", "Could not acquire new image.");
 			}
 		}
 

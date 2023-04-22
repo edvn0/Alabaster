@@ -14,6 +14,12 @@ Thumbs.db
 .idea
 cmake-*
 
+__pycache__
+app/resources/scripts/*.pyc
+app/resources/scripts/*.exp
+app/resources/scripts/*.pyd
+app/resources/scripts/*.pdb
+
 *.prof
 
 VS

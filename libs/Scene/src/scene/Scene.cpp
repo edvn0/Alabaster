@@ -11,10 +11,13 @@
 
 #include <Alabaster.hpp>
 #include <GLFW/glfw3.h>
+#include <Scripting.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 
 namespace SceneSystem {
+
+	using namespace std::string_view_literals;
 
 	static constexpr auto mouse_picking_interval_ms = 100.0;
 
@@ -117,7 +120,7 @@ namespace SceneSystem {
 			{
 				auto& component = get_component<Component::Transform>();
 				auto& pos = component.position;
-				current_pos += 5.0f * ts;
+				current_pos += 100.0f * ts;
 
 				pos.x = radius * glm::sin(glm::radians(current_pos));
 				pos.z = radius * glm::cos(glm::radians(current_pos));
@@ -397,6 +400,9 @@ namespace SceneSystem {
 		command_buffer = std::make_unique<Alabaster::CommandBuffer>(3);
 		selected_entity = std::make_unique<Entity>();
 
+		engine = std::make_unique<Scripting::ScriptEngine>();
+		engine->set_scene(this);
+
 		build_scene();
 	}
 
@@ -435,11 +441,11 @@ namespace SceneSystem {
 
 	Entity Scene::create_entity(const Entity& name)
 	{
-		Entity entity { this, name.entity_handle, name.get_tag().tag };
+		Entity entity { this, name.entity_handle, name.get_immutable_tag().tag };
 		entity.add_component<Component::ID>();
 		entity.add_component<Component::Transform>();
 		auto& tag = entity.emplace_component<Component::Tag>();
-		tag.tag = name.get_tag().tag.empty() ? "Entity" : name.get_tag().tag;
+		tag.tag = name.get_immutable_tag().tag.empty() ? "Entity" : name.get_immutable_tag().tag;
 
 		return entity;
 	}

@@ -20,7 +20,8 @@ namespace Alabaster {
 
 		template <typename Format, typename... Args>
 		explicit AlabasterException(Format&& fmt, Args&&... args) noexcept
-			: std::runtime_error(std::string { fmt::vformat(std::forward<Format>(fmt), fmt::make_format_args(std::forward<Args>(args)...)) })
+			: std::runtime_error(std::string {
+				fmt::vformat(static_cast<fmt::string_view>(std::forward<Format>(fmt)), fmt::make_format_args(std::forward<Args>(args)...)) })
 		{
 		}
 	};

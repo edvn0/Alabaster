@@ -13,7 +13,7 @@ namespace Alabaster {
 	enum class OpenMode : unsigned int;
 	constexpr unsigned int map_to_std(const OpenMode& open_mode);
 
-	enum class OpenMode : unsigned int { Read, Write, AtEnd, Binary, Truncate, Append };
+	enum class OpenMode : unsigned int { Read = 0, Write = 1, AtEnd = 2, Binary = 4, Truncate = 8, Append = 16 };
 
 	constexpr OpenMode operator|(const OpenMode& current, const OpenMode& other)
 	{

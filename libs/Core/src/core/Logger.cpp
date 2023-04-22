@@ -26,7 +26,7 @@ namespace Alabaster {
 		case LoggerLevel::Debug:
 			return spdlog::level::debug;
 		default:
-			throw AlabasterException(fmt::format("to_spdlog throw, value of level: {}", enum_name(level)));
+			throw AlabasterException("to_spdlog throw, value of level: {}", enum_name(level));
 		};
 	};
 

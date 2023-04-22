@@ -3,6 +3,7 @@ set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
 function(register_for_project PROJECT HAS_TESTS)
 	find_package(Vulkan REQUIRED)
 	find_program(CLANG_FORMAT "clang-format")
+	find_package(Python COMPONENTS Development Interpreter)
 
 	if(CLANG_FORMAT)
 		set(formattable_files ${sources})
@@ -28,6 +29,10 @@ function(register_for_project PROJECT HAS_TESTS)
 		target_compile_options(
 			${PROJECT} PRIVATE -Wall -Wextra -Wpedantic -Wshadow -Werror
 			-Wno-nullability-extension)
+	endif()
+
+	if ("${Python_FOUND}")
+		target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_HAS_PYTHON)
 	endif()
 
 	if(CMAKE_BUILD_TYPE STREQUAL "Debug")

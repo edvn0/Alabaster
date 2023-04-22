@@ -4,6 +4,8 @@
 
 namespace SceneSystem {
 
+	Entity::~Entity() = default;
+
 	Entity::Entity(Scene* input_scene, entt::entity handle, const std::string&)
 		: scene(input_scene)
 		, entity_handle(handle)
@@ -24,6 +26,15 @@ namespace SceneSystem {
 	Entity::Entity(Scene* in_scene, const std::string& in_name)
 		: Entity(in_scene, entt::null, in_name)
 	{
+	}
+
+	Component::Transform& Entity::get_transform()
+	{
+		if (!scene) {
+			return t;
+		}
+
+		return get_component<Component::Transform>();
 	}
 
 } // namespace SceneSystem

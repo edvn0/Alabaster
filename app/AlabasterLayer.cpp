@@ -240,10 +240,10 @@ void AlabasterLayer::viewport()
 			glm::vec4 perspective;
 			glm::decompose(transform, scale, rotation, translation, skew, perspective);
 
-			auto deltaRotation = rotation - entity_transform.rotation;
+			auto delta_rotation = rotation - entity_transform.rotation;
 
 			entity_transform.position = translation;
-			entity_transform.rotation += deltaRotation;
+			entity_transform.rotation += delta_rotation;
 			entity_transform.scale = scale;
 		}
 	}

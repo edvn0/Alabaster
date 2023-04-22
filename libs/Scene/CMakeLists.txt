@@ -3,7 +3,7 @@ include("${CMAKE_SOURCE_DIR}/cmake/common_alabaster.cmake")
 
 project(SceneSystem)
 
-file(GLOB_RECURSE sources scene_pch.hpp Scene.hpp include/**.hpp src/**.cpp)
+file(GLOB_RECURSE sources include/scene_pch.hpp include/Scene.hpp include/**.hpp src/**.cpp)
 
 add_library(${PROJECT_NAME} ${sources})
 add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
@@ -26,8 +26,6 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/imguizmo
 	${THIRD_PARTY_DIR}/imgui
 	${THIRD_PARTY_DIR}/gsl/include
-	../Core/include/
-	../AssetManager/include/
 	INTERFACE ${Vulkan_INCLUDE_DIRS}
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -42,7 +40,8 @@ target_link_libraries(
 	nlohmann_json
 	stduuid
 	Alabaster::Core
-	Alabaster::AssetManager)
+	Alabaster::AssetManager
+	Alabaster::Scripting)
 
 if(${ALABASTER_BUILD_TESTING})
 	add_subdirectory(tests)

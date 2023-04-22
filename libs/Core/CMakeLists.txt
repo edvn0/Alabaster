@@ -26,7 +26,8 @@ add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 target_include_directories(
 	${PROJECT_NAME}
-	PUBLIC $<INSTALL_INTERFACE:include>
+	PUBLIC 
+    $<INSTALL_INTERFACE:include>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
 	${THIRD_PARTY_DIR}/glm
@@ -43,22 +44,28 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/tinyobjloader
 	${THIRD_PARTY_DIR}/VulkanMemoryAllocator/include
 	${THIRD_PARTY_DIR}/gsl/include
-	INTERFACE ${Vulkan_INCLUDE_DIRS}
-	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../AssetManager/include)
+	INTERFACE 
+    ${Vulkan_INCLUDE_DIRS}
+	PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries(
 	${PROJECT_NAME}
-	PRIVATE glfw
-	imgui
+	PRIVATE 
+    glfw
 	imguizmo
 	Vulkan::Vulkan
-	spdlog
 	magic_enum
-	fmt::fmt
 	ProgramOptionsHxx
 	VulkanMemoryAllocator
 	tinyobjloader
-	effolkronium_random)
+	effolkronium_random
+    Alabaster::AssetManager
+	PUBLIC
+	spdlog
+	imgui
+	fmt::fmt
+)
 
 if(${ALABASTER_BUILD_TESTING})
 	add_subdirectory(tests)
