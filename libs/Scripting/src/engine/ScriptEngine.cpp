@@ -4,37 +4,36 @@
 
 #include "component/Component.hpp"
 #include "engine/ScriptingEngine.hpp"
+#include "entity/Entity.hpp"
 #include "scene/Scene.hpp"
 
 namespace Scripting {
 
-	template <typename T> static const auto id(T&& entity)
-	{
-		using namespace SceneSystem::Component;
-		return entity.get_component<ID>().identifier;
-	}
+	template <typename T> static auto id(T&& entity) { return entity.template get_component<SceneSystem::Component::ID>().identifier; }
 
 	static constexpr auto valid(auto& scene) { Alabaster::assert_that(scene, "Scene must never be null"); }
 
-	ScriptEngine::~ScriptEngine() { }
+	ScriptEngine::~ScriptEngine() { engine.destroy(); }
 
 	ScriptEngine::ScriptEngine()
-		: engine(ScriptingEngine::create())
-		, current_scene(nullptr)
+		: current_scene(nullptr)
 	{
+		engine.initialise();
 	}
 
 	void ScriptEngine::set_scene(SceneSystem::Scene* scene) { current_scene.reset(scene); }
 
-	void ScriptEngine::entity_on_create(SceneSystem::Entity entity)
+	const SceneSystem::Scene* ScriptEngine::get_scene() const { return current_scene.get(); }
+
+	void ScriptEngine::entity_on_create(SceneSystem::Entity& entity)
 	{
 		valid(current_scene);
 		entity_map[id(entity)] = entity;
 	}
 
-	void ScriptEngine::entity_on_update(SceneSystem::Entity entity, float) { valid(current_scene); }
+	void ScriptEngine::entity_on_update(SceneSystem::Entity&, float) { valid(current_scene); }
 
-	void ScriptEngine::entity_on_delete(SceneSystem::Entity entity)
+	void ScriptEngine::entity_on_delete(SceneSystem::Entity& entity)
 	{
 		valid(current_scene);
 

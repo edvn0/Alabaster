@@ -150,4 +150,16 @@ namespace Alabaster {
 		return 0;
 	}
 
+	const VkCommandBuffer& CommandBuffer::get_buffer() const { return active; }
+
+	VkCommandBuffer& CommandBuffer::get_buffer() { return active; }
+
+	const VkCommandPool& CommandBuffer::get_command_pool() const { return pool; }
+
+	VkCommandPool& CommandBuffer::get_command_pool() { return pool; }
+
+	CommandBuffer::operator VkCommandBuffer() { return active; }
+
+	VkCommandBuffer CommandBuffer::operator*() { return active; }
+
 } // namespace Alabaster

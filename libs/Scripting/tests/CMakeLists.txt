@@ -7,8 +7,18 @@ set(CMAKE_CXX_STANDARD 20)
 file(GLOB_RECURSE sources main.cpp interpreter_tests.cpp)
 
 add_executable(ScriptingTests ${sources})
-target_include_directories(ScriptingTests PRIVATE "${THIRD_PARTY_DIR}/googletest/googletest/include")
-target_link_libraries(ScriptingTests gmock_main GTest::gtest_main Alabaster::Scripting Alabaster::SceneSystem)
+target_include_directories(ScriptingTests PRIVATE 
+    "${THIRD_PARTY_DIR}/googletest/googletest/include"
+    "${THIRD_PARTY_DIR}/stduuid/include"
+    "${THIRD_PARTY_DIR}/fmt/include"
+)
+target_link_libraries(ScriptingTests
+    PRIVATE
+    gmock_main 
+    GTest::gtest_main
+    Alabaster::Scripting
+    Alabaster::SceneSystem
+)
 
 include(GoogleTest)
 gtest_discover_tests(ScriptingTests)

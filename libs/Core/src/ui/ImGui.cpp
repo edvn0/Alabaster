@@ -3,6 +3,7 @@
 #include "ui/ImGui.hpp"
 
 #include "codes/MouseCode.hpp"
+#include "core/Common.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Image.hpp"
 #include "graphics/Texture.hpp"
@@ -11,15 +12,6 @@
 #include <vulkan/vulkan.h>
 
 namespace Alabaster::UI {
-
-	template <typename T> static constexpr auto reinterpret_as(auto in)
-	{
-#ifndef ALABASTER_MACOS
-		return std::bit_cast<T>(in);
-#else
-		return reinterpret_cast<T>(in);
-#endif
-	}
 
 	static std::unordered_map<VkImageView, VkDescriptorSet> cached_views;
 

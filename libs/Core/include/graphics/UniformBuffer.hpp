@@ -6,9 +6,9 @@
 
 #include "core/Buffer.hpp"
 
-#include <vulkan/vulkan.h>
-
+using VkDeviceSize = std::uint64_t;
 using VmaAllocation = struct VmaAllocation_T*;
+using VkBuffer = struct VkBuffer_T*;
 
 namespace Alabaster {
 

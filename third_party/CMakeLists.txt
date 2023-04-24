@@ -1,3 +1,7 @@
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/third_party/libs)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/third_party/libs)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/third_party/libs)
+
 add_subdirectory(pybind11)
 add_subdirectory(glfw)
 add_subdirectory(imgui)

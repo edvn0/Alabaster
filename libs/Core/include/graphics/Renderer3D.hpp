@@ -9,7 +9,8 @@
 #include <memory>
 #include <optional>
 #include <vector>
-#include <vulkan/vulkan.h>
+
+using VkRenderPass = struct VkRenderPass_T*;
 
 namespace Alabaster {
 

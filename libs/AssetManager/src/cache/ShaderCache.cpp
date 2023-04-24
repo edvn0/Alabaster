@@ -13,6 +13,12 @@ namespace AssetManager {
 	struct ShaderCodeAndName {
 		std::string name;
 		Alabaster::Shader shader;
+
+		ShaderCodeAndName(const auto& in_name, auto&& in_shader)
+			: name(in_name)
+			, shader(std::move(in_shader))
+		{
+		}
 	};
 
 	static constexpr auto check_is_sorted = [](auto&& a, auto&& true_if_next_is_after_current_function) -> bool {
@@ -47,10 +53,8 @@ namespace AssetManager {
 			const auto& vertex_path = vert;
 			const auto& fragment_path = frag;
 
-			auto task = [=]() -> ShaderCodeAndName {
-				Alabaster::Shader shader = compiler.compile(shader_name, vertex_path, fragment_path);
-				return { shader_name, std::move(shader) };
-			};
+			auto task
+				= [=]() -> ShaderCodeAndName { return ShaderCodeAndName(shader_name, compiler.compile(shader_name, vertex_path, fragment_path)); };
 
 			results.push_back(std::async(std::launch::async, std::move(task)));
 		}
@@ -65,7 +69,7 @@ namespace AssetManager {
 				continue;
 			}
 			auto&& code = res.get();
-			auto shader = std::make_shared<Alabaster::Shader>(code.shader);
+			auto shader = std::make_shared<Alabaster::Shader>(std::move(code.shader));
 			shaders.insert(std::make_pair(code.name, shader));
 		}
 	}

@@ -4,8 +4,9 @@
 
 #include <array>
 #include <vector>
-#include <vulkan/vulkan.h>
-typedef struct VmaAllocation_T* VmaAllocation;
+
+using VmaAllocation = struct VmaAllocation_T*;
+using VkBuffer = struct VkBuffer_T*;
 
 namespace Alabaster {
 
@@ -29,9 +30,9 @@ namespace Alabaster {
 
 		std::uint32_t count() const { return buffer_count; };
 
-		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
+		VkBuffer get_vulkan_buffer() const;
 
-		VkBuffer operator*() const { return vulkan_buffer; }
+		VkBuffer operator*() const;
 
 	public:
 		inline static std::unique_ptr<IndexBuffer> create(std::vector<Index>&& indices)

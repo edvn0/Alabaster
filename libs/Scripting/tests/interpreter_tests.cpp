@@ -1,22 +1,23 @@
-#include "platform/python/PythonEntity.hpp"
+#include "engine/ScriptEngine.hpp"
 
+#include <SceneSystem.hpp>
 #include <gtest/gtest.h>
-#include <pybind11/embed.h>
+#include <memory>
 #include <string>
 
-namespace py = pybind11;
-using namespace py::literals;
-
-TEST(InterpreterTests, SomeTest)
+TEST(InterpreterTests, SceneIsNull)
 {
-	py::scoped_interpreter guard {};
+	Scripting::ScriptEngine engine;
+	engine.set_scene(nullptr);
 
-	auto locals = py::dict("name"_a = "World", "number"_a = 42);
-	py::exec(R"(
-        message = "Hello, {name}! The answer is {number}".format(**locals())
-    )",
-		py::globals(), locals);
+	ASSERT_EQ(engine.get_scene(), nullptr);
+}
 
-	auto message = locals["message"].cast<std::string>();
-	ASSERT_EQ(message, "Hello, World! The answer is 42");
+TEST(InterpreterTests, SceneIsNotNull)
+{
+	auto scene = std::make_unique<SceneSystem::Scene>();
+	Scripting::ScriptEngine engine;
+	engine.set_scene(scene.get());
+
+	ASSERT_EQ(engine.get_scene(), scene.get());
 }

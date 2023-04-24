@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/ScriptingEngine.hpp"
 #include "entity/Entity.hpp"
 #include "uuid.h"
 
@@ -7,8 +8,6 @@
 #include <memory>
 
 namespace Scripting {
-
-	class ScriptingEngine;
 
 	class ScriptEngine {
 		using EntityUUIDMap = std::unordered_map<uuids::uuid, SceneSystem::Entity>;
@@ -18,15 +17,15 @@ namespace Scripting {
 		ScriptEngine();
 
 		void set_scene(SceneSystem::Scene*);
+		const SceneSystem::Scene* get_scene() const;
 
-		void entity_on_create(SceneSystem::Entity entity);
-		void entity_on_update(SceneSystem::Entity entity, float ts);
-		void entity_on_delete(SceneSystem::Entity entity);
+		void entity_on_create(SceneSystem::Entity& entity);
+		void entity_on_update(SceneSystem::Entity& entity, float ts);
+		void entity_on_delete(SceneSystem::Entity& entity);
 
 	private:
 		EntityUUIDMap entity_map;
-
-		std::unique_ptr<ScriptingEngine> engine;
+		ScriptingEngine engine;
 		std::unique_ptr<SceneSystem::Scene> current_scene;
 	};
 

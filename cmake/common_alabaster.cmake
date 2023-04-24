@@ -31,6 +31,12 @@ function(register_for_project PROJECT HAS_TESTS)
 			-Wno-nullability-extension)
 	endif()
 
+    if(NOT ${ALABASTER_OS} STREQUAL "Windows")
+        target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-declarations)
+        set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+        set_property(TARGET fmt PROPERTY POSITION_INDEPENDENT_CODE ON)
+    endif()
+
 	if ("${Python_FOUND}")
 		target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_HAS_PYTHON)
 	endif()

@@ -5,8 +5,6 @@ project(
 	VERSION 0.0.1
 	LANGUAGES CXX)
 
-message(STATUS "${CMAKE_CXX_COMPILER}")
-
 if(WIN32)
 	set(FT_DISABLE_HARFBUZZ ON)
 	set(ALABASTER_OS "Windows")
@@ -29,7 +27,7 @@ else()
     set(ALABASTER_COMPILER "gnu")
 endif()
 
-message(STATUS "ALABASTER: Chosen OS: ${ALABASTER_OS}, chosen compiler: ${ALABASTER_COMPILER}")
+message(STATUS "Alabaster: Chosen OS: ${ALABASTER_OS}, chosen compiler: ${ALABASTER_COMPILER}")
 
 if(CMAKE_GENERATOR STREQUAL "Xcode")
 	set(XCODE_SCHEME_ENABLE_GPU_API_VALIDATION ON)

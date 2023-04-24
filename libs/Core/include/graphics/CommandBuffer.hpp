@@ -8,7 +8,11 @@
 #include <queue>
 #include <string_view>
 #include <vector>
-#include <vulkan/vulkan.h>
+
+struct VkCommandBufferBeginInfo;
+using VkCommandBuffer = struct VkCommandBuffer_T*;
+using VkCommandPool = struct VkCommandPool_T*;
+using VkFence = struct VkFence_T*;
 
 namespace Alabaster {
 
@@ -34,13 +38,13 @@ namespace Alabaster {
 
 		virtual std::uint32_t get_buffer_index();
 
-		auto& get_buffer() const { return active; }
-		auto& get_buffer() { return active; }
-		auto& get_command_pool() const { return pool; }
-		auto& get_command_pool() { return pool; }
+		const VkCommandBuffer& get_buffer() const;
+		VkCommandBuffer& get_buffer();
+		const VkCommandPool& get_command_pool() const;
+		VkCommandPool& get_command_pool();
 
-		explicit operator VkCommandBuffer() { return active; }
-		VkCommandBuffer operator*() { return active; }
+		explicit operator VkCommandBuffer();
+		VkCommandBuffer operator*();
 
 		void add_destruction_callback(DeallocationCallback&& cb) { destruction_callbacks.push(std::move(cb)); }
 

@@ -3,7 +3,7 @@
 #include "compiler/ShaderCompiler.hpp"
 
 #include "compiler/ShaderReflector.hpp"
-#include "debug_break.h"
+#include "core/Common.hpp"
 #include "utilities/FileInputOutput.hpp"
 
 #include <future>
@@ -29,7 +29,7 @@ namespace AssetManager {
 
 		if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
 			Alabaster::Log::error("[ShaderCompiler] {}", result.GetErrorMessage());
-			debug_break();
+			Alabaster::stop();
 			return "";
 		}
 

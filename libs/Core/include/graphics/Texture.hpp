@@ -31,7 +31,7 @@ namespace Alabaster {
 		glm::uvec2 get_size() const { return { width, height }; }
 
 		const std::shared_ptr<Image>& get_image() const { return image; }
-		const VkDescriptorImageInfo& get_descriptor_info() const { return image->get_descriptor_info(); }
+		const VkDescriptorImageInfo& get_descriptor_info() const;
 
 		Buffer get_writeable_buffer();
 		bool loaded() const { return image_data; }
@@ -41,7 +41,7 @@ namespace Alabaster {
 
 		void generate_mips();
 
-		uint64_t get_hash() const { return (uint64_t)image->get_descriptor_info().imageView; }
+		uint64_t get_hash() const;
 
 	private:
 		/// @brief Loads the image data from disk, sets up width, height and format.

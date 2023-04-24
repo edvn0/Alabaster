@@ -10,7 +10,7 @@
 #include "graphics/Renderer.hpp"
 
 #include <memory>
-#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -27,7 +27,7 @@ namespace Alabaster {
 		buffer_create_info.size = buffer_size;
 		buffer_create_info.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 
-		memory_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, vulkan_buffer);
 	}
 
 	IndexBuffer::IndexBuffer(const void* data, std::uint32_t count)
@@ -43,7 +43,7 @@ namespace Alabaster {
 		buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		VkBuffer staging_buffer;
-		VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
+		VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, staging_buffer);
 
 		auto* dest = allocator.map_memory<std::uint32_t*>(staging_buffer_allocation);
 		std::memcpy(dest, index_data.data, index_data.size);
@@ -53,7 +53,7 @@ namespace Alabaster {
 		vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		vertex_buffer_create_info.size = buffer_size;
 		vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, Allocator::Usage::AUTO_PREFER_DEVICE, vulkan_buffer);
 
 		ImmediateCommandBuffer immediate_command_buffer { "Index Buffer",
 			[staging_buffer, staging_buffer_allocation](Allocator& alloc) { alloc.destroy_buffer(staging_buffer, staging_buffer_allocation); } };
@@ -85,6 +85,10 @@ namespace Alabaster {
 		std::memcpy(index_data.data, (uint8_t*)buffer + offset, size);
 		offline_set_data(index_data.data, size, offset);
 	}
+
+	VkBuffer IndexBuffer::get_vulkan_buffer() const { return vulkan_buffer; }
+
+	VkBuffer IndexBuffer::operator*() const { return vulkan_buffer; }
 
 	void IndexBuffer::offline_set_data(const void* buffer, std::uint32_t size, std::uint32_t offset)
 	{

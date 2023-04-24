@@ -47,16 +47,6 @@ if(MSVC)
 	target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
 
-add_custom_command(TARGET AlabasterApp PRE_BUILD COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target alabaster_entity)
-
-add_custom_command(
-	TARGET AlabasterApp
-	POST_BUILD
-	COMMAND
-	${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/resources
-	$<TARGET_FILE_DIR:AlabasterApp>/resources 
-)
-
 if(CLANG_FORMAT)
     add_dependencies(${PROJECT_NAME} clang-format-app)
 endif()

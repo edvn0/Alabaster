@@ -44,7 +44,7 @@ namespace Alabaster {
 		buffer_info.size = size;
 
 		Allocator allocator("UniformBuffer");
-		allocation = allocator.allocate_buffer(buffer_info, VMA_MEMORY_USAGE_AUTO, VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT, buffer);
+		allocation = allocator.allocate_buffer(buffer_info, Allocator::Usage::AUTO, Allocator::Creation::HOST_ACCESS_SEQUENTIAL_WRITE_BIT, buffer);
 	}
 
 	auto UniformBuffer::set_data(const void* data, const std::uint32_t in_size, const std::uint32_t offset) const -> void

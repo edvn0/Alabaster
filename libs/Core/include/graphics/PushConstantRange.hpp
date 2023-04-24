@@ -3,7 +3,10 @@
 #include <glm/glm.hpp>
 #include <initializer_list>
 #include <vector>
-#include <vulkan/vulkan.h>
+
+using VkFlags = uint32_t;
+using VkShaderStageFlags = VkFlags;
+struct VkPushConstantRange;
 
 namespace Alabaster {
 
@@ -14,7 +17,7 @@ namespace Alabaster {
 		return static_cast<PushConstantKind>(static_cast<std::uint32_t>(a) | static_cast<std::uint32_t>(b));
 	}
 
-	constexpr VkShaderStageFlags to_vulkan_flags(PushConstantKind kind);
+	VkShaderStageFlags to_vulkan_flags(PushConstantKind kind);
 
 	struct PushConstantRange {
 		constexpr PushConstantRange(PushConstantKind in_flags, std::uint32_t in_size)
@@ -40,14 +43,11 @@ namespace Alabaster {
 
 	struct PushConstantRanges {
 		explicit PushConstantRanges(const std::initializer_list<PushConstantRange>& in);
-		const auto& get_ranges() const { return output_ranges; }
 		const auto& get_input_ranges() const { return ranges; }
-
 		auto size() const { return ranges.size(); }
 
 	private:
 		std::vector<PushConstantRange> ranges;
-		std::vector<VkPushConstantRange> output_ranges;
 	};
 
 } // namespace Alabaster

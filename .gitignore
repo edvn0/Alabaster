@@ -19,6 +19,7 @@ app/resources/scripts/*.pyc
 app/resources/scripts/*.exp
 app/resources/scripts/*.pyd
 app/resources/scripts/*.pdb
+app/resources/scripts/*.so
 
 *.prof
 

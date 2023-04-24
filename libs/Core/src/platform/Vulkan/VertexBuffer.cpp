@@ -10,6 +10,7 @@
 #include "graphics/Renderer.hpp"
 
 #include <memory>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -25,7 +26,7 @@ namespace Alabaster {
 		buffer_create_info.size = buffer_size;
 		buffer_create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 
-		memory_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, vulkan_buffer);
 	}
 
 	VertexBuffer::VertexBuffer(const void* data, std::size_t size)
@@ -45,7 +46,7 @@ namespace Alabaster {
 		buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		VkBuffer staging_buffer;
-		VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
+		VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, staging_buffer);
 
 		auto* dest = allocator.map_memory<uint8_t>(staging_buffer_allocation);
 		std::memcpy(dest, vertex_data.data, buffer_size);
@@ -55,7 +56,7 @@ namespace Alabaster {
 		vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		vertex_buffer_create_info.size = buffer_size;
 		vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, Allocator::Usage::AUTO_PREFER_DEVICE, vulkan_buffer);
 
 		ImmediateCommandBuffer immediate_command_buffer { "Vertex Buffer",
 			[staging_buffer, staging_buffer_allocation](Allocator& alloc) { alloc.destroy_buffer(staging_buffer, staging_buffer_allocation); } };

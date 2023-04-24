@@ -5,9 +5,11 @@
 #include "core/Common.hpp"
 #include "core/exceptions/AlabasterException.hpp"
 
+#include <vulkan/vulkan.h>
+
 namespace Alabaster {
 
-	constexpr VkShaderStageFlags to_vulkan_flags(PushConstantKind kind)
+	VkShaderStageFlags to_vulkan_flags(PushConstantKind kind)
 	{
 		switch (kind) {
 		case PushConstantKind::Vertex:
@@ -24,15 +26,5 @@ namespace Alabaster {
 	PushConstantRanges::PushConstantRanges(const std::initializer_list<PushConstantRange>& in)
 		: ranges(in)
 	{
-		std::uint32_t offset = 0;
-		for (const auto& range : ranges) {
-			VkPushConstantRange out {};
-			out.offset = offset;
-			out.size = range.size;
-			out.stageFlags = to_vulkan_flags(range.flags);
-			output_ranges.push_back(out);
-			offset += range.size;
-		}
 	}
-
 } // namespace Alabaster

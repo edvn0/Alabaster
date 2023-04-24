@@ -319,10 +319,8 @@ namespace App {
 			}
 
 			AssetManager::ShaderCompiler compiler;
-			auto shader = compiler.compile(fp.string(), Alabaster::IO::shader(vertex_filename), Alabaster::IO::shader(fragment_filename));
-			(void)shader.descriptor_set_layouts();
-
-			info.shader = std::make_shared<Alabaster::Shader>(shader);
+			info.shader = std::make_shared<Alabaster::Shader>(
+				compiler.compile(fp.string(), Alabaster::IO::shader(vertex_filename), Alabaster::IO::shader(fragment_filename)));
 			try {
 				component.pipeline->invalidate();
 			} catch (const std::exception& e) {

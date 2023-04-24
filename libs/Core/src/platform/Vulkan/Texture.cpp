@@ -7,6 +7,7 @@
 
 #include <AssetManager.hpp>
 #include <stb_image.h>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -197,7 +198,7 @@ namespace Alabaster {
 			buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 			buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			VkBuffer staging_buffer;
-			VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, VMA_MEMORY_USAGE_CPU_TO_GPU, staging_buffer);
+			VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, staging_buffer);
 
 			uint8_t* dest_data = allocator.map_memory<uint8_t>(staging_buffer_allocation);
 			memcpy(dest_data, image_data.data, size);
@@ -309,6 +310,8 @@ namespace Alabaster {
 
 	Buffer Texture::get_writeable_buffer() { return image_data; }
 
+	const VkDescriptorImageInfo& Texture::get_descriptor_info() const { return image->get_descriptor_info(); }
+
 	const std::filesystem::path& Texture::get_path() const { return path; }
 
 	uint32_t Texture::get_mip_level_count() const { return Utilities::calculate_mip_count(width, height); }
@@ -383,5 +386,7 @@ namespace Alabaster {
 			VK_ACCESS_SHADER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_PIPELINE_STAGE_TRANSFER_BIT,
 			VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, subresource_range);
 	}
+
+	uint64_t Texture::get_hash() const { return (uint64_t)image->get_descriptor_info().imageView; }
 
 } // namespace Alabaster

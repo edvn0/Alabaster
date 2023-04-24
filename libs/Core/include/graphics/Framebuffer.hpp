@@ -2,16 +2,31 @@
 
 #include "graphics/Image.hpp"
 
+#include <array>
 #include <functional>
 #include <glm/glm.hpp>
 #include <map>
 #include <memory>
+#include <variant>
 #include <vector>
-#include <vulkan/vulkan.h>
+
+using VkRenderPass = struct VkRenderPass_T*;
+using VkFramebuffer = struct VkFramebuffer_T*;
+
+union VkClearValue;
 
 namespace Alabaster {
 
 	enum class FramebufferBlendMode { None = 0, OneZero, SrcAlphaOneMinusSrcAlpha, Additive, Zero_SrcColor };
+
+	using ColourValue = std::variant<std::array<float, 4>, std::array<int, 4>, std::array<std::uint32_t, 4>>;
+
+	struct DepthStencilValue {
+		float depth;
+		uint32_t stencil;
+	};
+
+	using ClearValue = std::variant<ColourValue, DepthStencilValue>;
 
 	struct FramebufferTextureSpecification {
 		FramebufferTextureSpecification() = default;
@@ -99,7 +114,7 @@ namespace Alabaster {
 		const VkRenderPass& get_renderpass() const { return render_pass; }
 		const VkFramebuffer& get_framebuffer() const { return frame_buffer; }
 
-		const std::vector<VkClearValue>& get_clear_values() const { return clear_values; }
+		const std::vector<ClearValue>& get_clear_values() const { return clear_values; }
 		const FramebufferSpecification& get_specification() const { return spec; }
 
 		void invalidate();
@@ -116,7 +131,7 @@ namespace Alabaster {
 		std::vector<std::shared_ptr<Image>> attachment_images;
 		std::shared_ptr<Image> depth_image;
 
-		std::vector<VkClearValue> clear_values;
+		std::vector<ClearValue> clear_values;
 
 		VkRenderPass render_pass { nullptr };
 		VkFramebuffer frame_buffer { nullptr };

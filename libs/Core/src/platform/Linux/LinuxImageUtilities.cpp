@@ -224,7 +224,7 @@ namespace Alabaster::Utilities {
 		image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 		Allocator allocator("Create Image");
-		image->allocation = allocator.allocate_image(image_info, VMA_MEMORY_USAGE_AUTO_PREFER_DEVICE, image->image);
+		image->allocation = allocator.allocate_image(image_info, Allocator::Usage::AUTO_PREFER_DEVICE, image->image);
 	}
 
 	void insert_image_memory_barrier(VkCommandBuffer command_buffer, VkImage image, VkAccessFlags src_access_mask, VkAccessFlags dst_access_mask,

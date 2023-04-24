@@ -9,6 +9,11 @@
 
 namespace Alabaster {
 
+	template <class... Fs> struct Overload : Fs... {
+		using Fs::operator()...;
+	};
+	template <class... Fs> Overload(Fs...) -> Overload<Fs...>;
+
 	static RenderQueue global_release_queues[3];
 
 	static bool frame_started { false };
@@ -37,7 +42,19 @@ namespace Alabaster {
 		render_pass_info.framebuffer = fb->get_framebuffer();
 		render_pass_info.renderArea.offset = { 0, 0 };
 		render_pass_info.renderArea.extent = extent;
-		render_pass_info.pClearValues = fb->get_clear_values().data();
+		std::vector<VkClearValue> clear_values;
+		for (const auto& clear : fb->get_clear_values()) {
+			auto& clear_value = clear_values.emplace_back();
+			std::visit(Overload { [&clear_value](ColourValue value) {
+									 auto arr = std::get<0>(value);
+									 clear_value.color = { { arr[0], arr[1], arr[2], arr[3] } };
+								 },
+						   [&clear_value](DepthStencilValue value) {
+							   clear_value.depthStencil = { value.depth, value.stencil };
+						   } },
+				clear);
+		}
+		render_pass_info.pClearValues = clear_values.data();
 		render_pass_info.clearValueCount = static_cast<std::uint32_t>(fb->get_clear_values().size());
 
 		verify(buffer.get_buffer(), "[Renderer - Begin Render Pass] Command buffer is not active.");
@@ -46,12 +63,12 @@ namespace Alabaster {
 		if (explicit_clear) {
 			std::array<VkClearAttachment, 2> clears;
 			auto& colour = clears[0];
-			colour.clearValue = fb->get_clear_values()[0];
+			colour.clearValue = clear_values[0];
 			colour.colorAttachment = 0;
 			colour.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
 
 			auto& depth = clears[1];
-			depth.clearValue = fb->get_clear_values()[1];
+			depth.clearValue = clear_values[1];
 			depth.colorAttachment = 1;
 			depth.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
 

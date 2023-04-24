@@ -2,9 +2,11 @@
 
 #include "graphics/Allocator.hpp"
 
-#define VMA_IMPLEMENTATION
 #include "core/Common.hpp"
 #include "graphics/GraphicsContext.hpp"
+
+#include <vk_mem_alloc.h>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -38,12 +40,11 @@ namespace Alabaster {
 
 	Allocator::~Allocator() = default;
 
-	VmaAllocation Allocator::allocate_buffer(
-		VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VmaAllocationCreateFlags flags, VkBuffer& out_buffer)
+	VmaAllocation Allocator::allocate_buffer(VkBufferCreateInfo buffer_create_info, Usage usage, Creation flags, VkBuffer& out_buffer)
 	{
 		VmaAllocationCreateInfo allocation_create_info = {};
-		allocation_create_info.usage = usage;
-		allocation_create_info.flags = flags;
+		allocation_create_info.usage = static_cast<VmaMemoryUsage>(usage);
+		allocation_create_info.flags = static_cast<VmaAllocationCreateFlags>(flags);
 
 		VmaAllocation allocation;
 		vk_check(vmaCreateBuffer(vma_data().allocator, &buffer_create_info, &allocation_create_info, &out_buffer, &allocation, nullptr));
@@ -55,10 +56,10 @@ namespace Alabaster {
 		return allocation;
 	}
 
-	VmaAllocation Allocator::allocate_buffer(VkBufferCreateInfo buffer_create_info, VmaMemoryUsage usage, VkBuffer& out_buffer)
+	VmaAllocation Allocator::allocate_buffer(VkBufferCreateInfo buffer_create_info, Usage usage, VkBuffer& out_buffer)
 	{
 		VmaAllocationCreateInfo allocation_create_info = {};
-		allocation_create_info.usage = usage;
+		allocation_create_info.usage = static_cast<VmaMemoryUsage>(usage);
 
 		VmaAllocation allocation;
 		vk_check(vmaCreateBuffer(vma_data().allocator, &buffer_create_info, &allocation_create_info, &out_buffer, &allocation, nullptr));
@@ -70,12 +71,11 @@ namespace Alabaster {
 		return allocation;
 	}
 
-	VmaAllocation Allocator::allocate_image(
-		VkImageCreateInfo image_create_info, VmaMemoryUsage usage, VmaAllocationCreateFlags flags, VkImage& out_image)
+	VmaAllocation Allocator::allocate_image(VkImageCreateInfo image_create_info, Usage usage, Creation flags, VkImage& out_image)
 	{
 		VmaAllocationCreateInfo allocation_create_info = {};
-		allocation_create_info.usage = usage;
-		allocation_create_info.flags = flags;
+		allocation_create_info.usage = static_cast<VmaMemoryUsage>(usage);
+		allocation_create_info.flags = static_cast<VmaAllocationCreateFlags>(flags);
 
 		VmaAllocation allocation;
 		vk_check(vmaCreateImage(vma_data().allocator, &image_create_info, &allocation_create_info, &out_image, &allocation, nullptr));
@@ -86,10 +86,10 @@ namespace Alabaster {
 		return allocation;
 	}
 
-	VmaAllocation Allocator::allocate_image(VkImageCreateInfo image_create_info, VmaMemoryUsage usage, VkImage& out_image)
+	VmaAllocation Allocator::allocate_image(VkImageCreateInfo image_create_info, Usage usage, VkImage& out_image)
 	{
 		VmaAllocationCreateInfo allocation_create_info = {};
-		allocation_create_info.usage = usage;
+		allocation_create_info.usage = static_cast<VmaMemoryUsage>(usage);
 
 		VmaAllocation allocation;
 		vk_check(vmaCreateImage(vma_data().allocator, &image_create_info, &allocation_create_info, &out_image, &allocation, nullptr));

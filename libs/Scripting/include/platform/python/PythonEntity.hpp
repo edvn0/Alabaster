@@ -1,6 +1,7 @@
 #pragma once
 
-#include <SceneSystem.hpp>
+#include "component/Component.hpp"
+#include "entity/Entity.hpp"
 
 namespace Scripting::Python {
 

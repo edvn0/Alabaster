@@ -6,11 +6,13 @@ class MoveableEntity(Entity):
         self.t = self.get_transform()
     
     def on_update(self):
-        self.t += 1.0
+        self.t = self.get_transform()
+        return self.t
 
 
 if __name__ == "__main__":
     a = MoveableEntity()
     for i in range(10):
-        a.on_update()
+        t = a.on_update()
+        print(t)
 
