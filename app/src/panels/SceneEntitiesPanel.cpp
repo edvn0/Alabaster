@@ -1,6 +1,10 @@
 #include "panels/SceneEntitiesPanel.hpp"
 
 #include "component/Component.hpp"
+#include "graphics/Camera.hpp"
+#include "graphics/Mesh.hpp"
+#include "graphics/Pipeline.hpp"
+#include "graphics/Texture.hpp"
 #include "ui/ImGui.hpp"
 
 #include <AssetManager.hpp>
@@ -351,7 +355,7 @@ namespace App {
 
 		if (opened) {
 			constexpr auto opened_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-			const auto leaf_id = reinterpret_cast<const char*>(&entity.get_component<SceneSystem::Component::ID>().identifier);
+			const auto leaf_id = Alabaster::reinterpret_as<const char*>(&entity.get_component<SceneSystem::Component::ID>().identifier);
 			if (ImGui::TreeNodeEx(leaf_id, opened_flags, "%s", tag.c_str()))
 				ImGui::TreePop();
 			ImGui::TreePop();

@@ -117,7 +117,11 @@ fi
 
 run_tests() {
     if [ "$build_type" == "Debug" ] && [ "$build_testing" == "ON" ]; then
-        ctest -j10 -C Debug --test-dir "$build_and_generator_folder"
+        local test_targets=("SceneTests" "CoreTests" "ScriptingTests" "AssetManagerTests")
+        for test_target in ${test_targets[@]}; do
+            cmake --build "$build_and_generator_folder" --target "$test_target"
+        done
+        ctest -j10 -C Debug --test-dir "$build_and_generator_folder" --output-on-failure
     fi
 }
 

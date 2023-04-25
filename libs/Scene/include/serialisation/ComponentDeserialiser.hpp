@@ -2,6 +2,10 @@
 
 #include "component/Component.hpp"
 #include "entity/Entity.hpp"
+#include "graphics/Camera.hpp"
+#include "graphics/Mesh.hpp"
+#include "graphics/Pipeline.hpp"
+#include "graphics/Texture.hpp"
 #include "serialisation/JsonSubcomponentSerialiser.hpp"
 #include "uuid.h"
 
@@ -50,7 +54,7 @@ namespace SceneSystem {
 	template <> struct deserialise_component<Component::Camera> {
 		void operator()(const nlohmann::json& json, Entity& out)
 		{
-			const auto camera_type = json.get<Alabaster::CameraType>();
+			const auto camera_type = json.get<Component::ComponentCameraType>();
 
 			out.put_component<Component::Camera>(camera_type);
 		}

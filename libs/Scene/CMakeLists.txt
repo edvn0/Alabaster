@@ -7,7 +7,6 @@ file(GLOB_RECURSE sources include/scene_pch.hpp include/Scene.hpp include/**.hpp
 
 add_library(${PROJECT_NAME} ${sources})
 add_library(Alabaster::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
 target_include_directories(
 	${PROJECT_NAME}
 	PUBLIC $<INSTALL_INTERFACE:include>
@@ -32,20 +31,9 @@ target_include_directories(
 target_link_libraries(
 	${PROJECT_NAME}
 	PRIVATE Vulkan::Vulkan
-	spdlog
-	magic_enum
-	effolkronium_random
-	imgui
-	imguizmo
-	nlohmann_json
-	stduuid
 	Alabaster::Core
 	Alabaster::AssetManager
 	Alabaster::Scripting)
-
-if(${ALABASTER_BUILD_TESTING})
-	add_subdirectory(tests)
-endif()
-
+    
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/scene_pch.hpp)
 default_register_project(${PROJECT_NAME})

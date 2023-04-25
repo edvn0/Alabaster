@@ -1,10 +1,6 @@
 #pragma once
 
-#include "graphics/Camera.hpp"
-#include "graphics/Mesh.hpp"
-#include "graphics/Pipeline.hpp"
-#include "graphics/Texture.hpp"
-
+#include <CoreForward.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/norm.hpp>
@@ -183,13 +179,14 @@ namespace SceneSystem::Component {
 	};
 	template <> inline constexpr std::string_view component_name<Component::Light> = "light";
 
+	enum class ComponentCameraType { Perspective, Orthographic };
 	struct Camera {
 		Camera() = default;
-		Camera(Alabaster::CameraType type)
+		Camera(ComponentCameraType type)
 			: camera_type(type) {};
 		~Camera() = default;
 
-		Alabaster::CameraType camera_type = Alabaster::CameraType::Perspective;
+		ComponentCameraType camera_type = ComponentCameraType::Perspective;
 	};
 	template <> inline constexpr std::string_view component_name<Component::Camera> = "camera";
 

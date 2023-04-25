@@ -2,6 +2,9 @@
 
 #include "component/Component.hpp"
 #include "entity/Entity.hpp"
+#include "graphics/Mesh.hpp"
+#include "graphics/Pipeline.hpp"
+#include "graphics/Texture.hpp"
 #include "serialisation/JsonSubcomponentSerialiser.hpp"
 #include "uuid.h"
 
@@ -60,7 +63,7 @@ namespace SceneSystem {
 			auto mesh_object = json::object();
 			mesh_object["basic_geometry"] = entity.get_component<Component::BasicGeometry>().geometry;
 
-			out["mesh"] = mesh_object;
+			out["geometry"] = mesh_object;
 		};
 	};
 

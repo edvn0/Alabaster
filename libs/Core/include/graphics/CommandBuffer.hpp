@@ -9,11 +9,6 @@
 #include <string_view>
 #include <vector>
 
-struct VkCommandBufferBeginInfo;
-using VkCommandBuffer = struct VkCommandBuffer_T*;
-using VkCommandPool = struct VkCommandPool_T*;
-using VkFence = struct VkFence_T*;
-
 namespace Alabaster {
 
 	enum class QueueChoice { Graphics = 0, Compute = 1 };

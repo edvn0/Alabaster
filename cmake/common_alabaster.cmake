@@ -1,10 +1,6 @@
 set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
 
 function(register_for_project PROJECT HAS_TESTS)
-	find_package(Vulkan REQUIRED)
-	find_program(CLANG_FORMAT "clang-format")
-	find_package(Python COMPONENTS Development Interpreter)
-
 	if(CLANG_FORMAT)
 		set(formattable_files ${sources})
 
@@ -63,6 +59,10 @@ function(register_for_project PROJECT HAS_TESTS)
 	if(CLANG_FORMAT)
 		add_dependencies(${PROJECT_NAME} "clang-format-${PROJECT_NAME}")
 	endif()
+
+    if(${ALABASTER_BUILD_TESTING})
+        add_subdirectory(tests)
+    endif()
 endfunction()
 
 function(default_register_project PROJECT)

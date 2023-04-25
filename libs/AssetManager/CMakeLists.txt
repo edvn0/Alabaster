@@ -36,9 +36,5 @@ target_link_libraries(
 	spirv-cross-glsl
 )
 
-if(${ALABASTER_BUILD_TESTING})
-	add_subdirectory(tests)
-endif()
-
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/am_pch.hpp)
 default_register_project(${PROJECT_NAME})

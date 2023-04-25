@@ -10,6 +10,10 @@
 #include <magic_enum.hpp>
 #include <string_view>
 
+#ifndef ALABASTER_MACOS
+#include <bit>
+#endif
+
 #ifdef SUPPORT_EXHAUSTED_EXT
 #undef SUPPORT_EXHAUSTED_EXT
 #endif

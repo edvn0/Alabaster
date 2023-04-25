@@ -3,9 +3,6 @@ include("${CMAKE_SOURCE_DIR}/cmake/common_alabaster.cmake")
 
 project(Core)
 
-find_package(Vulkan REQUIRED)
-find_package(Python3 COMPONENTS Interpreter)
-
 file(GLOB_RECURSE sources
 	av_pch.hpp
 	Alabaster.hpp
@@ -66,10 +63,6 @@ target_link_libraries(
 	imgui
 	fmt::fmt
 )
-
-if(${ALABASTER_BUILD_TESTING})
-	add_subdirectory(tests)
-endif()
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/av_pch.hpp)
 default_register_project(${PROJECT_NAME})

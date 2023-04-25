@@ -5,6 +5,10 @@ project(
 	VERSION 0.0.1
 	LANGUAGES CXX)
 
+find_package(Vulkan REQUIRED)
+find_program(CLANG_FORMAT "clang-format")
+find_package(Python COMPONENTS Development Interpreter)
+
 if(WIN32)
 	set(FT_DISABLE_HARFBUZZ ON)
 	set(ALABASTER_OS "Windows")

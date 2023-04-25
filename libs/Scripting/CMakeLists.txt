@@ -3,8 +3,6 @@ include("${CMAKE_SOURCE_DIR}/cmake/common_alabaster.cmake")
 
 project(Scripting)
 
-find_package(Python COMPONENTS Interpreter Development)
-
 file(GLOB_RECURSE sources include/script_pch.hpp include/Scripting.hpp include/**.hpp src/engine/**.cpp)
 
 if(${Python_FOUND})
@@ -36,11 +34,7 @@ target_link_libraries(
     Alabaster::Core
     Alabaster::SceneSystem
     Python::Python)
-
-if("${ALABASTER_BUILD_TESTING}")
-    add_subdirectory(tests)
-endif()
-
+    
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/script_pch.hpp)
 default_register_project(${PROJECT_NAME})
 

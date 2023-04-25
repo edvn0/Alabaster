@@ -9,15 +9,16 @@ file(GLOB_RECURSE sources main.cpp interpreter_tests.cpp)
 add_executable(ScriptingTests ${sources})
 target_include_directories(ScriptingTests PRIVATE 
     "${THIRD_PARTY_DIR}/googletest/googletest/include"
-    "${THIRD_PARTY_DIR}/stduuid/include"
-    "${THIRD_PARTY_DIR}/fmt/include"
+    "${THIRD_PARTY_DIR}/VulkanMemoryAllocator/include"
 )
 target_link_libraries(ScriptingTests
     PRIVATE
+    Alabaster::Core
+    Alabaster::SceneSystem
+    Alabaster::Scripting
+    VulkanMemoryAllocator
     gmock_main 
     GTest::gtest_main
-    Alabaster::Scripting
-    Alabaster::SceneSystem
 )
 
 include(GoogleTest)

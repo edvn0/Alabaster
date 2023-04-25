@@ -2,10 +2,10 @@
 
 #include "engine/ScriptingEngine.hpp"
 #include "entity/Entity.hpp"
-#include "uuid.h"
 
 #include <SceneForward.hpp>
 #include <memory>
+#include <uuid.h>
 
 namespace Scripting {
 
@@ -24,9 +24,9 @@ namespace Scripting {
 		void entity_on_delete(SceneSystem::Entity& entity);
 
 	private:
+		std::unique_ptr<SceneSystem::Scene> current_scene;
 		EntityUUIDMap entity_map;
 		ScriptingEngine engine;
-		std::unique_ptr<SceneSystem::Scene> current_scene;
 	};
 
 } // namespace Scripting

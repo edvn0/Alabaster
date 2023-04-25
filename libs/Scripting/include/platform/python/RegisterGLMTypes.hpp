@@ -36,7 +36,7 @@ namespace Scripting::Python::GLM {
 	} // namespace Names
 
 	namespace Sizes {
-		template <class G> constexpr std::size_t glm_size;
+		template <class G> constexpr std::size_t glm_size = 0;
 		template <> constexpr std::size_t glm_size<glm::mat2> = 2;
 		template <> constexpr std::size_t glm_size<glm::mat3> = 3;
 		template <> constexpr std::size_t glm_size<glm::mat4> = 4;
