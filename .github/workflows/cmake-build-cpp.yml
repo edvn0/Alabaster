@@ -150,15 +150,15 @@ jobs:
                   -D GLFW_BUILD_DOCS=OFF
                   -D GLFW_BUILD_TESTS=OFF
                   -D GLFW_BUILD_EXAMPLES=OFF
-                  -D BUILD_TESTING=ON
                   -D ALABASTER_BUILD_TESTING=ON
+                  -D BUILD_TESTING=ON
                   -D ENABLE_HLSL=ON
-                  -D ENABLE_CTEST=OFF
                   -D ENTT_BUILD_TESTING=OFF
                   -D INSTALL_GTEST=OFF
-                  -D SPIRV_SKIP_EXECUTABLES=ON
                   -D Random_BuildTests=OFF
+                  -D SPIRV_SKIP_EXECUTABLES=ON
                   -D BUILD_SHARED_LIBS=OFF
+                  -D SPDLOG_BUILD_PIC=ON
                   -D SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS=OFF
                   -D SPIRV_CROSS_SHARED=OFF
                   -D SPIRV_CROSS_STATIC=ON
@@ -172,7 +172,11 @@ jobs:
                   -D SPIRV_CROSS_ENABLE_C_API=OFF
                   -D SPIRV_CROSS_ENABLE_UTIL=OFF
                   -D SPIRV_CROSS_SKIP_INSTALL=ON
+                  -D SPIRV_SKIP_TESTS=ON
                   -D SHADERC_SKIP_INSTALL=ON
+                  -D ENABLE_CTEST=OFF
+                  -D ENABLE_GLSLANG_BINARIES=OFF
+                  -D ENABLE_SPVREMAPPER=OFF
                   -D SHADERC_SKIP_TESTS=ON
                   -D SHADERC_SKIP_EXAMPLES=ON
                   -D SHADERC_SKIP_COPYRIGHT_CHECK=ON
@@ -184,7 +188,6 @@ jobs:
                   -D SPIRV_WARN_EVERYTHING=OFF
                   -D SPIRV_COLOR_TERMINAL=OFF
                   -D SPIRV_TOOLS_LIBRARY_TYPE=STATIC
-                  -D SPIRV_TOOLS_BUILD_STATIC=OFF
                   -D SPDLOG_FMT_EXTERNAL=ON
                   -D UUID_USING_CXX20_SPAN=ON
                 RESULT_VARIABLE result

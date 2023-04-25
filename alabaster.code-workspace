@@ -184,7 +184,7 @@
             "**/.git/subtree-cache/**": true,
             "**/node_modules/*/**": true
         },
-        "cmake.buildDirectory": "${workspaceFolder}/build-Debug-VS",
+        "cmake.buildDirectory": "${workspaceFolder}/build-Debug-Ninja",
         "cmake.configureSettings": {
             "VULKAN_SDK": "C:\\VulkanSDK\\1.3.243.0",
             "Vulkan_LIBRARY": "C:\\VulkanSDK\\1.3.243.0\\Lib\\vulkan-1.lib",

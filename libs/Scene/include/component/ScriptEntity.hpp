@@ -12,10 +12,11 @@ namespace SceneSystem {
 		ScriptEntity() = default;
 
 		template <Component::IsComponent T> T& get_component() { return entity.get_component<T>(); }
-
 		template <Component::IsComponent T> const T& get_component() const { return entity.get_component<T>(); }
 
-	protected:
+		virtual Component::Transform& get_transform() { return entity.get_component<Component::Transform>(); };
+		virtual Component::Tag& get_tag() { return entity.get_component<Component::Tag>(); };
+
 		virtual void on_update(const float ts) = 0;
 		virtual void on_create() = 0;
 		virtual void on_delete() = 0;

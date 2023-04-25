@@ -28,13 +28,4 @@ namespace SceneSystem {
 	{
 	}
 
-	Component::Transform& Entity::get_transform()
-	{
-		if (!scene) {
-			return t;
-		}
-
-		return get_component<Component::Transform>();
-	}
-
 } // namespace SceneSystem

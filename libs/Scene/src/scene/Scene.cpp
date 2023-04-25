@@ -441,11 +441,11 @@ namespace SceneSystem {
 
 	Entity Scene::create_entity(const Entity& name)
 	{
-		Entity entity { this, name.entity_handle, name.get_immutable_tag().tag };
+		Entity entity { this, name.entity_handle, name.get_tag().tag };
 		entity.add_component<Component::ID>();
 		entity.add_component<Component::Transform>();
 		auto& tag = entity.emplace_component<Component::Tag>();
-		tag.tag = name.get_immutable_tag().tag.empty() ? "Entity" : name.get_immutable_tag().tag;
+		tag.tag = name.get_tag().tag.empty() ? "Entity" : name.get_tag().tag;
 
 		return entity;
 	}
