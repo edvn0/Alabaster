@@ -249,13 +249,12 @@ namespace Alabaster {
 	bool Pipeline::operator!=(const Pipeline& other) const { return pipeline != other.pipeline; }
 	bool Pipeline::operator()(const Pipeline* other) const { return spec.debug_name < other->spec.debug_name; }
 
-	void Pipeline::destroy()
+	Pipeline::~Pipeline()
 	{
 		vkDestroyPipelineCache(GraphicsContext::the().device(), pipeline_cache, nullptr);
 		vkDestroyPipelineLayout(GraphicsContext::the().device(), pipeline_layout, nullptr);
 		vkDestroyPipeline(GraphicsContext::the().device(), pipeline, nullptr);
 		Log::info("[Pipeline] Destroyed pipeline {} and its dependents.", spec.debug_name);
-		destroyed = true;
 	}
 
 } // namespace Alabaster

@@ -14,6 +14,8 @@
 
 namespace Alabaster {
 
+	static constexpr auto debug_name = "IndexBuffer";
+
 	IndexBuffer::IndexBuffer(std::uint32_t count)
 		: buffer_size(count * sizeof(std::uint32_t))
 		, buffer_count(count)
@@ -27,7 +29,7 @@ namespace Alabaster {
 		buffer_create_info.size = buffer_size;
 		buffer_create_info.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 
-		memory_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, vulkan_buffer, debug_name);
 	}
 
 	IndexBuffer::IndexBuffer(const void* data, std::uint32_t count)
@@ -43,7 +45,8 @@ namespace Alabaster {
 		buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		VkBuffer staging_buffer;
-		VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, staging_buffer);
+		VmaAllocation staging_buffer_allocation
+			= allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, staging_buffer, debug_name);
 
 		auto* dest = allocator.map_memory<std::uint32_t*>(staging_buffer_allocation);
 		std::memcpy(dest, index_data.data, index_data.size);
@@ -53,7 +56,7 @@ namespace Alabaster {
 		vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		vertex_buffer_create_info.size = buffer_size;
 		vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, Allocator::Usage::AUTO_PREFER_DEVICE, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, Allocator::Usage::AUTO_PREFER_DEVICE, vulkan_buffer, debug_name);
 
 		ImmediateCommandBuffer immediate_command_buffer { "Index Buffer",
 			[staging_buffer, staging_buffer_allocation](Allocator& alloc) { alloc.destroy_buffer(staging_buffer, staging_buffer_allocation); } };
@@ -66,7 +69,7 @@ namespace Alabaster {
 		Log::info("[IndexBuffer] Initialised with size: {}", human_readable_size);
 	}
 
-	void IndexBuffer::destroy()
+	IndexBuffer::~IndexBuffer()
 	{
 		if (!vulkan_buffer)
 			return;
@@ -77,7 +80,6 @@ namespace Alabaster {
 		allocator.destroy_buffer(buffer, allocation);
 
 		index_data.release();
-		destroyed = true;
 	}
 
 	void IndexBuffer::set_data(const void* buffer, std::uint32_t size, std::uint32_t offset)

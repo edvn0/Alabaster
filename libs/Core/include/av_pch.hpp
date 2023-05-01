@@ -2,6 +2,7 @@
 
 #include <array>
 #include <concepts>
+#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <glm/ext/matrix_clip_space.hpp>
@@ -15,6 +16,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <regex>
 #include <set>
 #include <sstream>

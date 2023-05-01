@@ -9,11 +9,7 @@
 #include <future>
 #include <shaderc/shaderc.hpp>
 
-#ifdef ALABASTER_DEBUG
 static constexpr auto should_optimize = false;
-#else
-static constexpr auto should_optimize = true;
-#endif
 
 namespace AssetManager {
 

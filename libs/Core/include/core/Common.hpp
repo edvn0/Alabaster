@@ -10,10 +10,6 @@
 #include <magic_enum.hpp>
 #include <string_view>
 
-#ifndef ALABASTER_MACOS
-#include <bit>
-#endif
-
 #ifdef SUPPORT_EXHAUSTED_EXT
 #undef SUPPORT_EXHAUSTED_EXT
 #endif
@@ -63,7 +59,12 @@ namespace Alabaster {
 		return std::equal(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(), [](char a, char b) { return std::tolower(a) == std::tolower(b); });
 	}
 
-	static constexpr auto enum_name = [](auto&& in) { return magic_enum::enum_name(in); };
+	static constexpr auto enum_name = []<class T>(T&& in) { return magic_enum::enum_name(std::forward<T>(in)); };
+    
+    template<class Out, class In = int>
+    static constexpr auto enum_value(In&& value) {
+        return magic_enum::enum_cast<Out>(std::forward<In>(value));
+    }
 
 	template <class T> struct vk_result {
 		std::string_view operator()(auto&) { return ""; }
@@ -76,15 +77,6 @@ namespace Alabaster {
 		} -> std::same_as<bool>;
 	};
 	static constexpr auto non_empty = [](const has_empty auto& in) { return not in.empty(); };
-
-	template <typename T> static constexpr auto reinterpret_as(auto in)
-	{
-#ifndef ALABASTER_MACOS
-		return std::bit_cast<T>(in);
-#else
-		return reinterpret_cast<T>(in);
-#endif
-	}
 
 #ifdef ALABASTER_DEBUG
 

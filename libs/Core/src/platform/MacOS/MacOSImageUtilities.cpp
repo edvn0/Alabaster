@@ -74,7 +74,7 @@ namespace Alabaster::Utilities {
 	}
 
 	void transition_image_layout(
-		VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, CommandBuffer* buffer, VkImageSubresourceRange* range)
+		VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, const CommandBuffer* buffer, VkImageSubresourceRange* range)
 	{
 		const auto& command_buffer = buffer ? buffer->get_buffer() : ImmediateCommandBuffer { "Image Layout Transition" }.get_buffer();
 
@@ -430,17 +430,6 @@ namespace Alabaster::Utilities {
 		VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, const std::unique_ptr<CommandBuffer>& cmd_buffer)
 	{
 		copy_buffer_to_image(buffer, image_info, w, h, cmd_buffer.get());
-	}
-
-	void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer,
-		VkImageSubresourceRange* range)
-	{
-		transition_image_layout(image, old_layout, new_layout, buffer.get(), range);
-	}
-
-	void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer)
-	{
-		transition_image_layout(image, old_layout, new_layout, buffer.get());
 	}
 
 	void create_image_view(VkFormat format, VkImageAspectFlagBits bits, std::unique_ptr<DepthImage>& image)

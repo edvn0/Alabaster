@@ -3,10 +3,10 @@
 #include "ui/ImGui.hpp"
 
 #include "codes/MouseCode.hpp"
-#include "core/Common.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Image.hpp"
 #include "graphics/Texture.hpp"
+#include "utilities/BitCast.hpp"
 
 #include <imgui_impl_vulkan.h>
 #include <vulkan/vulkan.h>
@@ -20,14 +20,14 @@ namespace Alabaster::UI {
 		const auto& [sampler, image_view, layout] = image_info;
 		if (cached_views.contains(image_view)) {
 			const auto set = cached_views[image_view];
-			ImGui::Image(reinterpret_as<ImU64>(set), size, uv0, uv1);
+			ImGui::Image(BitCast::reinterpret_as<ImU64>(set), size, uv0, uv1);
 			return;
 		}
 
 		if (!image_view)
 			return;
 		const auto texture_id = ImGui_ImplVulkan_AddTexture(sampler, image_view, layout);
-		ImGui::Image(reinterpret_as<ImU64>(texture_id), size, uv0, uv1);
+		ImGui::Image(BitCast::reinterpret_as<ImU64>(texture_id), size, uv0, uv1);
 
 		cached_views[image_view] = texture_id;
 	}
@@ -56,14 +56,14 @@ namespace Alabaster::UI {
 		const auto& [sampler, image_view, layout] = image_info;
 		if (cached_views.contains(image_view)) {
 			const auto set = cached_views[image_view];
-			return ImGui::ImageButton(reinterpret_as<ImU64>(set), size, uv0, uv1);
+			return ImGui::ImageButton(BitCast::reinterpret_as<ImU64>(set), size, uv0, uv1);
 		}
 
 		if (!image_view)
 			return false;
 		const auto texture_id = ImGui_ImplVulkan_AddTexture(sampler, image_view, layout);
 		cached_views[image_view] = texture_id;
-		return ImGui::ImageButton(reinterpret_as<ImU64>(texture_id), size, uv0, uv1);
+		return ImGui::ImageButton(BitCast::reinterpret_as<ImU64>(texture_id), size, uv0, uv1);
 	}
 
 	bool image_button(const std::shared_ptr<Alabaster::Image>& img, float square_size)

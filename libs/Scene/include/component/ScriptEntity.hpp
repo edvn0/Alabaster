@@ -15,24 +15,26 @@ namespace SceneSystem {
 		virtual ~ScriptEntity() = default;
 		ScriptEntity() = default;
 
-		template <Component::IsComponent T> T& get_component() { return entity.get_component<T>(); }
-		template <Component::IsComponent T> const T& get_component() const { return entity.get_component<T>(); }
+		template <Component::IsComponent T> T& get_component() { return script_entity.get_component<T>(); }
+		template <Component::IsComponent T> const T& get_component() const { return script_entity.get_component<T>(); }
 
-		virtual Component::Transform& get_transform() { return entity.get_component<Component::Transform>(); };
-		virtual Component::Tag& get_tag() { return entity.get_component<Component::Tag>(); };
+		virtual Component::Transform& get_transform() { return script_entity.get_component<Component::Transform>(); };
+		virtual Component::Tag& get_tag() { return script_entity.get_component<Component::Tag>(); };
 
-		virtual void on_update(const float ts) = 0;
-		virtual void on_create() = 0;
-		virtual void on_delete() = 0;
+		virtual void on_update(const float) {
+			// NO-OP
+		};
+		virtual void on_create() {
+			// NO-OP
+		};
+		virtual void on_delete() {
+			// NO-OP
+		};
 
-		Entity entity;
+		virtual void set_entity(Entity e) { script_entity = e; };
+
+		Entity script_entity;
 		friend Scene;
-	};
-
-	/// @brief Class for scripting binding to CPP
-	class ScriptableEntity {
-	public:
-		std::string_view name;
 	};
 
 } // namespace SceneSystem

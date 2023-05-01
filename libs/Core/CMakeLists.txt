@@ -34,6 +34,7 @@ target_include_directories(
 	${THIRD_PARTY_DIR}/debugbreak
 	${THIRD_PARTY_DIR}/magic_enum/include
 	${THIRD_PARTY_DIR}/random/include
+	${THIRD_PARTY_DIR}/stduuid/include
 	${THIRD_PARTY_DIR}/imgui
 	${THIRD_PARTY_DIR}/imguizmo
 	${THIRD_PARTY_DIR}/imgui/backends

@@ -50,10 +50,10 @@ namespace Alabaster {
 		explicit Allocator(const std::string& tag);
 		~Allocator();
 
-		VmaAllocation allocate_buffer(VkBufferCreateInfo bci, Usage usage, Creation flags, VkBuffer& out_buffer);
-		VmaAllocation allocate_buffer(VkBufferCreateInfo bci, Usage usage, VkBuffer& out_buffer);
-		VmaAllocation allocate_image(VkImageCreateInfo ici, Usage usage, Creation flags, VkImage& out_image);
-		VmaAllocation allocate_image(VkImageCreateInfo ici, Usage usage, VkImage& out_image);
+		VmaAllocation allocate_buffer(VkBufferCreateInfo bci, Usage usage, Creation flags, VkBuffer& out_buffer, std::string_view name = "No name");
+		VmaAllocation allocate_buffer(VkBufferCreateInfo bci, Usage usage, VkBuffer& out_buffer, std::string_view name = "No name");
+		VmaAllocation allocate_image(VkImageCreateInfo ici, Usage usage, Creation flags, VkImage& out_image, std::string_view name = "No name");
+		VmaAllocation allocate_image(VkImageCreateInfo ici, Usage usage, VkImage& out_image, std::string_view name = "No name");
 		void free(VmaAllocation allocation);
 		void destroy_image(VkImage image, VmaAllocation allocation);
 		void destroy_buffer(VkBuffer buffer, VmaAllocation allocation);

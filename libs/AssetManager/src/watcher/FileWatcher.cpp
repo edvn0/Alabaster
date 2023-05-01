@@ -91,7 +91,35 @@ namespace AssetManager {
 
 					if (current.last_modified != current_file_last_write_time) {
 						current.last_modified = current_file_last_write_time;
+						current.status = FileStatus::Modified;
 						for_each(current, activations);
+					}
+				}
+			}
+
+			for (auto& additional : additional_paths) {
+				for (auto& file : std::filesystem::directory_iterator { root / additional }) {
+					auto current_file_last_write_time = std::filesystem::last_write_time(file);
+					const auto view = file.path().string();
+
+					if (!paths.contains(view)) {
+						const auto type_if_not_directory
+							= std::filesystem::is_directory(file) ? FileType::DIRECTORY : to_filetype(file.path().extension());
+
+						paths[file.path().string()] = FileInformation {
+							.type = type_if_not_directory, .path = view, .last_modified = current_file_last_write_time, .status = FileStatus::Created
+						};
+
+						const auto& current = paths[file.path().string()];
+						for_each(current, activations);
+					} else {
+						auto& current = paths[file.path().string()];
+
+						if (current.last_modified != current_file_last_write_time) {
+							current.last_modified = current_file_last_write_time;
+							current.status = FileStatus::Modified;
+							for_each(current, activations);
+						}
 					}
 				}
 			}
@@ -122,6 +150,8 @@ namespace AssetManager {
 	}
 
 	void FileWatcher::on(FileStatus status, const std::function<void(const FileInformation&)>& in) { register_callback(status, activations, in); }
+
+	void FileWatcher::add_watched_paths(const std::filesystem::path& path) { additional_paths.insert(path.string()); }
 
 	void FileWatcher::stop()
 	{

@@ -25,7 +25,7 @@ namespace Alabaster {
 		instance = GraphicsContext::the().instance();
 		device = GraphicsContext::the().device();
 
-		glfwCreateWindowSurface(instance, glfw_window, nullptr, &surface);
+		vk_check(glfwCreateWindowSurface(instance, glfw_window, nullptr, &surface));
 
 		uint32_t queue_count;
 		vkGetPhysicalDeviceQueueFamilyProperties(GraphicsContext::the().physical_device(), &queue_count, nullptr);
@@ -104,7 +104,7 @@ namespace Alabaster {
 		VkPresentModeKHR swapchain_present_mode = VK_PRESENT_MODE_FIFO_KHR;
 
 		if (!in_vsync) {
-			for (size_t i = 0; i < present_mode_count; i++) {
+			for (std::size_t i = 0; i < present_mode_count; i++) {
 				if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
 					swapchain_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
 					break;
@@ -441,6 +441,12 @@ namespace Alabaster {
 		return image_index;
 	}
 
+#ifndef PREFER_BGRA
+	static constexpr VkFormat preferred_format = VK_FORMAT_B8G8R8A8_SRGB;
+#else
+	static constexpr VkFormat preferred_format = VK_FORMAT_R8G8B8A8_SRGB;
+#endif
+
 	void Swapchain::find_image_format_and_color_space()
 	{
 		std::uint32_t format_count;
@@ -456,7 +462,7 @@ namespace Alabaster {
 		} else {
 			bool found_wanted_format = false;
 			for (auto&& surface_format : surface_formats) {
-				if (surface_format.format == VK_FORMAT_B8G8R8A8_SRGB) {
+				if (surface_format.format == preferred_format) {
 					color_format = surface_format.format;
 					color_space = surface_format.colorSpace;
 					found_wanted_format = true;

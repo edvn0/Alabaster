@@ -32,8 +32,7 @@ namespace SceneSystem {
 		void render();
 		void initialise(AssetManager::FileWatcher& watcher);
 		void on_event(Alabaster::Event& event);
-		void shutdown();
-		void ui(float ts);
+		void ui();
 
 		template <class Bound> void update_viewport_sizes(const glm::vec2& sizes, Bound&& bounds, const glm::vec2& offset)
 		{
@@ -55,18 +54,17 @@ namespace SceneSystem {
 
 		[[nodiscard]] const auto& get_registry() const { return registry; }
 		auto& get_registry() { return registry; }
-
 		template <Component::IsComponent... T> auto all_with() { return registry.view<T...>(); }
-
 		template <typename Func> void for_each_entity(Func&& func) { registry.each(std::forward<Func>(func)); }
-
 		[[nodiscard]] auto get_name() const { return to_string(Component::ID().identifier) + std::to_string(registry.alive()); }
-
-		[[nodiscard]] const std::shared_ptr<Alabaster::Image>& final_image() const;
 
 		[[nodiscard]] const Entity* get_selected_entity() const { return selected_entity.get(); }
 		Entity* get_selected_entity() { return selected_entity.get(); }
 
+		const Alabaster::Framebuffer& get_framebuffer() const { return *framebuffer; }
+		const Alabaster::Renderer3D& get_renderer() const { return *scene_renderer; }
+
+		[[nodiscard]] const std::shared_ptr<Alabaster::Image>& final_image() const;
 		void update_selected_entity() const;
 
 		[[nodiscard]] const auto& get_camera() const { return scene_camera; }
@@ -89,18 +87,20 @@ namespace SceneSystem {
 		glm::vec2 viewport_size { 0 };
 		glm::vec2 viewport_offset { 0 };
 
-		std::unique_ptr<Entity> selected_entity { nullptr };
-		std::unique_ptr<Entity> hovered_entity { nullptr };
-		std::unique_ptr<Scripting::ScriptEngine> engine { nullptr };
-
-		std::shared_ptr<Alabaster::EditorCamera> scene_camera;
-		std::shared_ptr<Alabaster::Framebuffer> framebuffer;
-		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
-		std::unique_ptr<Alabaster::CommandBuffer> command_buffer;
-
 		bool paused { false };
 		int quad_texture_index { 0 };
 		double mouse_picking_accumulator { 0 };
+		double script_update_accumulator { 0 };
+
+		std::unique_ptr<Entity> selected_entity { nullptr };
+		std::unique_ptr<Entity> hovered_entity { nullptr };
+
+		std::unique_ptr<Scripting::ScriptEngine> engine;
+		std::unique_ptr<Alabaster::EditorCamera> scene_camera;
+
+		std::shared_ptr<Alabaster::CommandBuffer> command_buffer;
+		std::unique_ptr<Alabaster::Framebuffer> framebuffer;
+		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 
 		friend Entity;
 	};

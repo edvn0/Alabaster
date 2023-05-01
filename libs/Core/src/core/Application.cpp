@@ -10,9 +10,9 @@
 #include "core/Window.hpp"
 #include "core/events/ApplicationEvent.hpp"
 #include "core/events/Event.hpp"
+#include "filesystem/FileSystem.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Renderer.hpp"
-#include "utilities/FileInputOutput.hpp"
 
 #include <AssetManager.hpp>
 
@@ -30,15 +30,11 @@ namespace Alabaster {
 		window = std::make_unique<Window>(args);
 		window->set_event_callback([this](Event& event) { on_event(event); });
 
-		file_watcher = std::make_unique<AssetManager::FileWatcher>(IO::resources());
+		file_watcher = std::make_unique<AssetManager::FileWatcher>(FileSystem::executable());
 
 		push_layer<GUILayer>();
 
 		Renderer::init();
-
-		for (auto i = 0; i < 500; i++) {
-			frametime_queue[i] = 8.5;
-		}
 	}
 
 	Application::~Application()
@@ -68,45 +64,43 @@ namespace Alabaster {
 	GUILayer& Application::gui_layer()
 	{
 		if (!ui_layer) {
-			ui_layer = static_cast<GUILayer*>(layers.at("GUILayer"));
+			ui_layer = static_cast<GUILayer*>(layers.at("GUILayer").get());
 		}
 		return *ui_layer;
 	}
 
 	void Application::run()
 	{
-
-		statistics.last_frametime = Clock::get_ms<float>();
-		const double dt = 0.01;
+		static constexpr double dt = 0.01;
 		double accumulator = 0.0;
 
 		on_init();
 
+		last_frametime_ms = Clock::get_ms();
 		while (!window->should_close() && is_running) {
-			double newTime = Clock::get_ms();
-			double frameTime = newTime - statistics.last_frametime;
-			statistics.last_frametime = newTime;
-			statistics.frame_time = frameTime;
+			double new_time = Clock::get_ms();
+			double frame_time = new_time - last_frametime_ms;
+			last_frametime_ms = new_time;
+			statistics.frame_time = frame_time;
 
-			accumulator += frameTime;
+			accumulator += frame_time;
 
 			Timer<double> layer_update;
 			while (accumulator >= dt) {
 				update_layers(dt);
 				accumulator -= dt;
 			}
-			const auto updated_timer = layer_update.elapsed();
-			statistics.cpu_time = updated_timer;
 
 			window->update();
+
+			const auto updated_timer = layer_update.elapsed();
+			statistics.cpu_time = updated_timer;
 
 			swapchain().begin_frame();
 			Renderer::begin();
 			{
 				render_layers();
-				gui_layer().begin();
 				render_imgui();
-				gui_layer().end();
 			}
 			Renderer::end();
 			swapchain().end_frame();
@@ -121,10 +115,11 @@ namespace Alabaster {
 
 	void Application::render_imgui()
 	{
-		auto time_step = float(statistics.app_ts);
+		gui_layer().begin();
 		for (const auto& [key, layer] : layers) {
-			layer->ui(time_step);
+			layer->ui();
 		}
+		gui_layer().end();
 	}
 
 	void Application::update_layers(float ts)
@@ -148,8 +143,6 @@ namespace Alabaster {
 			layer->render();
 		}
 	}
-
-	double Application::frametime() { return statistics.app_ts; }
 
 	void Application::on_shutdown()
 	{
@@ -180,7 +173,9 @@ namespace Alabaster {
 			return false;
 		}
 
+		auto before_resize = Clock::get_ms();
 		window->get_swapchain().on_resize(width, height);
+		last_frametime_ms -= Clock::get_ms() - before_resize;
 
 		return false;
 	}

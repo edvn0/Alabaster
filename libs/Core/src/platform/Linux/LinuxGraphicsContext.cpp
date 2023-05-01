@@ -110,6 +110,7 @@ namespace Alabaster {
 
 	void GraphicsContext::destroy()
 	{
+		delete context;
 		vkDeviceWaitIdle(device());
 
 		vkDestroyCommandPool(device(), command_pool, nullptr);

@@ -5,7 +5,10 @@
 #include "graphics/VertexBufferLayout.hpp"
 
 #include <initializer_list>
+#include <memory>
+#include <optional>
 #include <string>
+#include <vector>
 
 using VkPipelineLayout = struct VkPipelineLayout_T*;
 using VkPipeline = struct VkPipeline_T*;
@@ -48,15 +51,7 @@ namespace Alabaster {
 
 	class Pipeline {
 	public:
-		explicit Pipeline(PipelineSpecification pipe_spec)
-			: spec(std::move(pipe_spec)) {};
-		~Pipeline()
-		{
-			if (!destroyed)
-				destroy();
-		}
-
-		void destroy();
+		~Pipeline();
 
 		void invalidate();
 
@@ -71,18 +66,20 @@ namespace Alabaster {
 
 		inline static std::shared_ptr<Pipeline> create(PipelineSpecification spec)
 		{
-			auto pipeline = std::make_shared<Pipeline>(spec);
+			auto pipeline = std::shared_ptr<Pipeline>(new Pipeline { spec });
 			pipeline->invalidate();
 			return pipeline;
 		}
 
 	private:
-		bool destroyed { false };
 		PipelineSpecification spec;
 		VkPipelineLayout pipeline_layout {};
 		VkPipeline pipeline {};
 		VkPipelineCache pipeline_cache = nullptr;
 		std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
+
+		explicit Pipeline(PipelineSpecification pipe_spec)
+			: spec(std::move(pipe_spec)) {};
 	};
 
 } // namespace Alabaster

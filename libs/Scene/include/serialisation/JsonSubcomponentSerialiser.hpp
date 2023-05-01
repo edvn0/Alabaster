@@ -84,9 +84,9 @@ namespace nlohmann {
 		using type = uuids::uuid;
 		static void to_json(json& j, const type& uuid) { j = uuids::to_string(uuid); }
 
-		static void from_json(const json& /*unnamed*/, type& opt) { opt = uuids::uuid(); }
+		static void from_json(const json& json, type& opt) { opt = *uuids::uuid().from_string(json.get<std::string>()); }
 
 		// preferred version
-		static type from_json(const json& /*unnamed*/) { return uuids::uuid(); }
+		static type from_json(const json& json) { return *uuids::uuid().from_string(json.get<std::string>()); }
 	};
 } // namespace nlohmann

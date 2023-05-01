@@ -14,55 +14,15 @@
 
 namespace Alabaster::IO {
 
-	void init_with_cwd(const std::filesystem::path& path);
-
-	std::filesystem::path resources();
-	std::filesystem::path textures();
-	std::filesystem::path shaders();
-	std::filesystem::path models();
-	std::filesystem::path fonts();
-	std::filesystem::path scenes();
-	std::filesystem::path scripts();
-	std::filesystem::path editor_resources();
-
-	template <typename Path = std::filesystem::path> std::filesystem::path shader(const Path& path)
-	{
-		return IO::shaders() / std::filesystem::path { path };
-	}
-	template <typename Path = std::filesystem::path> std::filesystem::path model(const Path& path)
-	{
-		return IO::models() / std::filesystem::path { path };
-	}
-	template <typename Path = std::filesystem::path> std::filesystem::path texture(const Path& path)
-	{
-		return IO::textures() / std::filesystem::path { path };
-	}
-	template <typename Path = std::filesystem::path> std::filesystem::path font(const Path& path)
-	{
-		return IO::fonts() / std::filesystem::path { path };
-	}
-	template <typename Path = std::filesystem::path> std::filesystem::path scene(const Path& path)
-	{
-		return IO::scenes() / std::filesystem::path { path };
-	}
-	template <typename Path = std::filesystem::path> std::filesystem::path script(const Path& path)
-	{
-		return IO::scripts() / std::filesystem::path { path };
-	}
+	std::optional<std::filesystem::path> get_resource_root();
 
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);
-
 	std::string read_file(std::filesystem::path&& filename, OpenMode mode = OpenMode::Read | OpenMode::Binary | OpenMode::AtEnd);
 
 	bool exists(const std::filesystem::path& path);
-
 	bool is_file(const std::filesystem::path& path);
-
 	std::filesystem::path independent_path(const std::string& path);
-
 	std::filesystem::path slashed_to_fp(const std::string& slashed_string);
-
-	std::optional<std::filesystem::path> get_resource_root();
 
 	template <typename T>
 	concept Printable = requires(T t, std::ofstream& of) {

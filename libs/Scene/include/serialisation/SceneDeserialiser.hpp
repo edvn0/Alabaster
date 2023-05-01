@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "filesystem/FileSystem.hpp"
 #include "scene/Scene.hpp"
 
 #include <filesystem>
@@ -14,7 +15,7 @@ namespace SceneSystem {
 	public:
 		SceneDeserialiser(const std::filesystem::path& in_scene_path, Scene& out)
 			: scene(out)
-			, scene_path(Alabaster::IO::scene(in_scene_path)) {};
+			, scene_path(Alabaster::FileSystem::scene(in_scene_path)) {};
 
 		void deserialise();
 

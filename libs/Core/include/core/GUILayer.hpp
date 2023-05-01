@@ -1,11 +1,12 @@
 #pragma once
 
 #include "core/Application.hpp"
-#include "graphics/CommandBuffer.hpp"
 
 namespace Alabaster {
 
 	static constexpr std::string_view gui_layer_name = "GUILayer";
+
+	class CommandBuffer;
 
 	class GUILayer : public Layer {
 	public:
@@ -16,8 +17,7 @@ namespace Alabaster {
 		bool initialise(AssetManager::FileWatcher&) override;
 		void update(float) override {};
 		void render() override {};
-		void ui(float) override;
-		void ui() override {};
+		void ui() override;
 		void destroy() override;
 
 		void block_events(bool set_blocking) { should_block = set_blocking; }
@@ -28,10 +28,9 @@ namespace Alabaster {
 	private:
 		std::string_view name() override { return gui_layer_name; }
 
-		VkDescriptorPool imgui_descriptor_pool { nullptr };
-		std::unique_ptr<CommandBuffer> imgui_command_buffer { std::make_unique<CommandBuffer>(3, QueueChoice::Graphics, false) };
-
 		bool should_block { false };
+		VkDescriptorPool imgui_descriptor_pool { nullptr };
+		std::shared_ptr<CommandBuffer> imgui_command_buffer;
 	};
 
 } // namespace Alabaster

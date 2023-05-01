@@ -51,7 +51,7 @@ namespace SceneSystem {
 			if (!json_node.contains(name))
 				throw ComponentMissingInJsonNodeException("Could not find key for this object");
 
-			if (const nlohmann::json& component = json_node[name]; component.is_object()) {
+			if (const nlohmann::json& component = json_node[name]; component.is_object() || component.is_string() || component.is_array()) {
 				try {
 					deserialise_component<T>()(component, entity);
 				} catch (const std::exception& exc) {

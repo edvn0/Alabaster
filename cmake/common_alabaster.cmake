@@ -1,7 +1,7 @@
 set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
 
 function(register_for_project PROJECT HAS_TESTS)
-	if(CLANG_FORMAT)
+	if(CLANG_FORMAT AND ${ALABASTER_IS_BUILD_TOOL} STREQUAL "OFF" AND ${ALABASTER_SHOULD_FORMAT} STREQUAL "ON")
 		set(formattable_files ${sources})
 
 		add_custom_target(
@@ -17,6 +17,8 @@ function(register_for_project PROJECT HAS_TESTS)
 		target_compile_definitions(${PROJECT} PRIVATE ALABASTER_LINUX)
 	endif()
 
+	message(STATUS "Alabaster: Chosen OS as compile definition is: ${ALABASTER_OS}")
+
 	target_compile_features(${PROJECT} PRIVATE cxx_std_20)
 
 	if(MSVC)
@@ -27,22 +29,23 @@ function(register_for_project PROJECT HAS_TESTS)
 			-Wno-nullability-extension)
 	endif()
 
-    if(NOT ${ALABASTER_OS} STREQUAL "Windows")
-        target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-declarations)
-        set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
-        set_property(TARGET fmt PROPERTY POSITION_INDEPENDENT_CODE ON)
-    endif()
+	if(NOT ${ALABASTER_OS} STREQUAL "Windows")
+		target_compile_options(${PROJECT_NAME} PRIVATE -Wno-deprecated-declarations)
+		set_property(TARGET ${PROJECT_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+		set_property(TARGET fmt PROPERTY POSITION_INDEPENDENT_CODE ON)
+	endif()
 
-	if ("${Python_FOUND}")
+	if("${Python_FOUND}")
 		target_compile_definitions(${PROJECT_NAME} PRIVATE ALABASTER_HAS_PYTHON)
 	endif()
 
-	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+	if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL
+        "RelWithDebInfo")
 		target_compile_definitions(${PROJECT} PRIVATE ALABASTER_VALIDATION)
 		target_compile_definitions(${PROJECT} PRIVATE ALABASTER_DEBUG)
 		target_compile_definitions(${PROJECT} PRIVATE ALABASTER_EXCEPTIONS)
 	elseif(CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL
-		"RelWithDebInfo")
+    "MinSizeRel")
 		target_compile_definitions(${PROJECT} PRIVATE ALABASTER_PROFILE)
 		target_compile_definitions(${PROJECT} PRIVATE ALABASTER_RELEASE)
 	endif()
@@ -56,13 +59,13 @@ function(register_for_project PROJECT HAS_TESTS)
 		target_link_libraries(${PROJECT} PRIVATE -static-libgcc -static-libstdc++)
 	endif()
 
-	if(CLANG_FORMAT)
+	if(CLANG_FORMAT AND ${ALABASTER_IS_BUILD_TOOL} STREQUAL "OFF" AND ${ALABASTER_SHOULD_FORMAT} STREQUAL "ON")
 		add_dependencies(${PROJECT_NAME} "clang-format-${PROJECT_NAME}")
 	endif()
 
-    if(${ALABASTER_BUILD_TESTING})
-        add_subdirectory(tests)
-    endif()
+	if(${ALABASTER_BUILD_TESTING} STREQUAL "ON" AND ${HAS_TESTS} STREQUAL "ON")
+		add_subdirectory(tests)
+	endif()
 endfunction()
 
 function(default_register_project PROJECT)

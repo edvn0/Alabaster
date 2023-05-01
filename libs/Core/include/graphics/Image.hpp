@@ -94,9 +94,7 @@ namespace Alabaster {
 
 	class Image {
 	public:
-		explicit Image(const ImageSpecification& specification) noexcept;
-
-		void destroy();
+		~Image();
 		void resize(const uint32_t width, const uint32_t height)
 		{
 			spec.width = width;
@@ -138,19 +136,17 @@ namespace Alabaster {
 
 	private:
 		ImageSpecification spec;
-
 		Buffer image_data;
-
 		ImageInfo info;
 
 		std::vector<VkImageView> per_layer_image_views;
 		std::map<uint32_t, VkImageView> per_mip_image_views;
 		std::unique_ptr<VkDescriptorImageInfo> descriptor_image_info;
 
-		bool destroyed { false };
+		explicit Image(const ImageSpecification& specification) noexcept;
 
 	public:
-		static std::shared_ptr<Image> create(ImageSpecification spec) { return std::make_shared<Image>(spec); }
+		static std::shared_ptr<Image> create(ImageSpecification spec) { return std::shared_ptr<Image>(new Image { spec }); }
 	};
 
 } // namespace Alabaster

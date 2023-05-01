@@ -3,14 +3,12 @@
 #include "component/Component.hpp"
 
 #include "component/ScriptEntity.hpp"
-#include "core/Random.hpp"
+#include "core/UUID.hpp"
 
 namespace SceneSystem {
 
-	static uuids::basic_uuid_random_generator uuid_generator(Alabaster::Random::engine());
-
 	Component::ID::ID()
-		: identifier(uuid_generator())
+		: identifier(Alabaster::UUID::random_uuid())
 	{
 	}
 

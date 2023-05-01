@@ -24,28 +24,7 @@ namespace Alabaster {
 		assert_that(spec.width > 0 && spec.height > 0);
 	}
 
-	void Image::destroy()
-	{
-		if (destroyed) {
-			return;
-		}
-		if (info.image) {
-			vkDestroyImageView(GraphicsContext::the().device(), info.view, nullptr);
-			vkDestroySampler(GraphicsContext::the().device(), info.sampler, nullptr);
-
-			for (auto& view : per_layer_image_views) {
-				if (view)
-					vkDestroyImageView(GraphicsContext::the().device(), view, nullptr);
-			}
-
-			Allocator allocator(fmt::format("Image-{}", spec.debug_name));
-			allocator.destroy_image(info.image, info.allocation);
-
-			Log::warn("[Image] Destroy ImageView {}", (const void*)info.view);
-			per_layer_image_views.clear();
-		}
-		destroyed = true;
-	}
+	Image::~Image() { release(); }
 
 	void Image::invalidate()
 	{
@@ -84,7 +63,7 @@ namespace Alabaster {
 		image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 		image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
 		image_create_info.usage = usage;
-		info.allocation = allocator.allocate_image(image_create_info, Allocator::Usage::GPU_ONLY, info.image);
+		info.allocation = allocator.allocate_image(image_create_info, Allocator::Usage::GPU_ONLY, info.image, spec.debug_name);
 
 		VkImageViewCreateInfo image_view_create_info {};
 		image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;

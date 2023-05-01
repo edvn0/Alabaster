@@ -13,11 +13,11 @@ namespace Alabaster {
 
 	std::shared_ptr<Texture> Texture::from_filename(const std::filesystem::path& path, const TextureProperties& props)
 	{
-		const auto actual_path = IO::texture(path);
+		const auto actual_path = FileSystem::texture(path);
 		const auto filename_as_string = actual_path.filename().string();
 		if (const auto& tex = AssetManager::asset<Texture>(filename_as_string))
 			return tex;
-		return std::make_shared<Texture>(IO::texture(actual_path), props);
+		return std::shared_ptr<Texture>(new Texture { FileSystem::texture(actual_path), props });
 	}
 
 	Texture::Texture(const std::filesystem::path& tex_path, const TextureProperties props)
@@ -93,19 +93,10 @@ namespace Alabaster {
 
 	Texture::~Texture()
 	{
-		if (!destroyed) {
-			destroy();
-		}
-	}
-
-	void Texture::destroy()
-	{
 		if (image)
 			image->release();
 
 		image_data.release();
-
-		destroyed = true;
 	}
 
 	bool Texture::load_image(const void* data, uint32_t size)
@@ -198,7 +189,8 @@ namespace Alabaster {
 			buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 			buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 			VkBuffer staging_buffer;
-			VmaAllocation staging_buffer_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, staging_buffer);
+			VmaAllocation staging_buffer_allocation
+				= allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, staging_buffer, "Allocator staging buffer");
 
 			uint8_t* dest_data = allocator.map_memory<uint8_t>(staging_buffer_allocation);
 			memcpy(dest_data, image_data.data, size);

@@ -3,7 +3,3 @@ repos:
     rev: v16.0.2
     hooks:
       - id: clang-format
-  - repo: https://github.com/mpalmer/action-validator
-    rev: v0.5.1
-    hooks:
-     - id: action-validator

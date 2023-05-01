@@ -31,8 +31,8 @@ namespace Alabaster {
 
 	class Renderer3D {
 	public:
-		explicit Renderer3D(const std::shared_ptr<Camera>& camera) noexcept;
-		~Renderer3D() = default;
+		explicit Renderer3D(Camera* camera) noexcept;
+		~Renderer3D();
 
 		void begin_scene();
 
@@ -53,7 +53,7 @@ namespace Alabaster {
 		void text(std::string text, glm::vec3 position, float font_size = 11.0f);
 
 		void end_scene(const CommandBuffer& command_buffer);
-		void end_scene(const CommandBuffer& command_buffer, const std::shared_ptr<Framebuffer>& target);
+		void end_scene(const CommandBuffer& command_buffer, const Framebuffer& target);
 
 		void set_light_data(const glm::vec4& light_position, const glm::vec4& colour, float ambience = 1.0f);
 		void set_light_data(const glm::vec3& light_position, const glm::vec4& colour, const glm::vec4& ambience);
@@ -62,10 +62,9 @@ namespace Alabaster {
 
 		std::size_t default_push_constant_size() const;
 
-		void destroy();
 		void reset_stats();
 
-		void set_camera(const std::shared_ptr<Camera>& cam);
+		void set_camera(const Camera& cam);
 
 		const VkRenderPass& get_render_pass() const;
 
@@ -82,7 +81,7 @@ namespace Alabaster {
 
 		void invalidate_pipelines();
 
-		std::shared_ptr<Camera> camera;
+		Camera* camera;
 		RendererData* data;
 		bool scene_has_begun { false };
 	};

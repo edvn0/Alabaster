@@ -6,6 +6,7 @@
 #include "core/Logger.hpp"
 #include "core/Utilities.hpp"
 #include "entity/Entity.hpp"
+#include "filesystem/FileSystem.hpp"
 #include "scene/Scene.hpp"
 #include "serialisation/ComponentSerialiser.hpp"
 #include "utilities/Time.hpp"
@@ -31,15 +32,20 @@ namespace SceneSystem {
 	nlohmann::json serialise_entity(Entity& entity)
 	{
 		auto output_object = nlohmann::json::object();
+		handle_component_serialisation<Component::Mesh>(entity, output_object);
+		handle_component_serialisation<Component::Transform>(entity, output_object);
 		handle_component_serialisation<Component::ID>(entity, output_object);
 		handle_component_serialisation<Component::Tag>(entity, output_object);
-		handle_component_serialisation<Component::Mesh>(entity, output_object);
-		handle_component_serialisation<Component::SphereIntersectible>(entity, output_object);
-		handle_component_serialisation<Component::Camera>(entity, output_object);
 		handle_component_serialisation<Component::Texture>(entity, output_object);
-		handle_component_serialisation<Component::Transform>(entity, output_object);
 		handle_component_serialisation<Component::BasicGeometry>(entity, output_object);
 		handle_component_serialisation<Component::Pipeline>(entity, output_object);
+		handle_component_serialisation<Component::Camera>(entity, output_object);
+		handle_component_serialisation<Component::Light>(entity, output_object);
+		handle_component_serialisation<Component::PointLight>(entity, output_object);
+		handle_component_serialisation<Component::SphereIntersectible>(entity, output_object);
+		handle_component_serialisation<Component::QuadIntersectible>(entity, output_object);
+		handle_component_serialisation<Component::Behaviour>(entity, output_object);
+		handle_component_serialisation<Component::ScriptBehaviour>(entity, output_object);
 		return output_object;
 	}
 
@@ -102,7 +108,7 @@ namespace SceneSystem {
 
 		try {
 			const auto filename = time_stamp + "_" + scene.get_name() + ".scene";
-			const auto output_file = Alabaster::IO::scene(filename);
+			const auto output_file = Alabaster::FileSystem::scene(filename);
 			std::ofstream scene_output(output_file);
 			if (!scene_output) {
 				Alabaster::Log::warn("[SceneSerialiser] Could not write scene to {}.", output_file.string());

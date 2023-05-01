@@ -17,13 +17,7 @@ namespace AssetManager {
 		void load_from_directory(const std::filesystem::path& texture_path,
 			const std::unordered_set<std::string, StringHash, std::equal_to<>>& include_extensions = { ".tga", ".png", ".jpeg", ".jpg" });
 
-		void destroy()
-		{
-			for (const auto& [key, tex] : textures) {
-				tex->destroy();
-			}
-			textures.clear();
-		}
+		void destroy() { textures.clear(); }
 
 		[[nodiscard]] const std::shared_ptr<Alabaster::Texture>& get_from_cache(const std::string& name)
 		{

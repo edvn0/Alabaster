@@ -11,6 +11,14 @@
 #include <pybind11/pybind11.h>
 #include <string_view>
 
+#ifndef ALABASTER_VISIBILITY
+#ifdef ALABASTER_LINUX
+#define ALABASTER_VISIBILITY __attribute__((visibility("hidden")))
+#else
+#define ALABASTER_VISIBILITY
+#endif
+#endif
+
 namespace Scripting::Python::GLM {
 
 	namespace py = pybind11;
@@ -53,6 +61,14 @@ namespace Scripting::Python::GLM {
 				[&m = m]() {
 					py::class_<T>(m, Names::glm_name<T>.data())
 						.def(py::init<>())
+						.def(py::self + py::self)
+						.def(py::self += py::self)
+						.def(py::self *= float())
+						.def(py::self += float())
+						.def(py::self -= float())
+						.def(float() * py::self)
+						.def(py::self * float())
+						.def(-py::self)
 						.def("__repr__", &glm::to_string<T>)
 						.def("__str__", &glm::to_string<T>)
 						.def("__getitem__", [](T& self, unsigned index) {
@@ -73,11 +89,12 @@ namespace Scripting::Registration {
 	using namespace SceneSystem;
 	using namespace SceneSystem::Component;
 
-	template <> struct RegisterBoundType<Python::GLM::Types::MathObjects> {
+	template <> struct ALABASTER_VISIBILITY RegisterBoundType<Python::GLM::Types::MathObjects> {
 		py::module_& m;
 
 		void operator()() { Python::GLM::Pybind::register_glm_classes(m, Python::GLM::Types::MathObjects {}); }
 	};
 
 	using PythonGLMBinding = RegisterBoundType<Python::GLM::Types::MathObjects>;
+
 } // namespace Scripting::Registration

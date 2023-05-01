@@ -14,6 +14,19 @@
 
 namespace Alabaster {
 
+	VertexBuffer::~VertexBuffer()
+	{
+		if (!vulkan_buffer)
+			return;
+
+		const VkBuffer buffer = vulkan_buffer;
+		const VmaAllocation allocation = memory_allocation;
+		Allocator allocator("VertexBuffer");
+		allocator.destroy_buffer(buffer, allocation);
+
+		vertex_data.release();
+	}
+
 	VertexBuffer::VertexBuffer(std::uint32_t size)
 		: buffer_size(size)
 	{
@@ -26,7 +39,7 @@ namespace Alabaster {
 		buffer_create_info.size = buffer_size;
 		buffer_create_info.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
 
-		memory_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(buffer_create_info, Allocator::Usage::CPU_TO_GPU, vulkan_buffer, "VertexBuffer");
 	}
 
 	VertexBuffer::VertexBuffer(const void* data, std::size_t size)
@@ -56,7 +69,7 @@ namespace Alabaster {
 		vertex_buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 		vertex_buffer_create_info.size = buffer_size;
 		vertex_buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, Allocator::Usage::AUTO_PREFER_DEVICE, vulkan_buffer);
+		memory_allocation = allocator.allocate_buffer(vertex_buffer_create_info, Allocator::Usage::AUTO_PREFER_DEVICE, vulkan_buffer, "VertexBuffer");
 
 		ImmediateCommandBuffer immediate_command_buffer { "Vertex Buffer",
 			[staging_buffer, staging_buffer_allocation](Allocator& alloc) { alloc.destroy_buffer(staging_buffer, staging_buffer_allocation); } };
@@ -67,20 +80,6 @@ namespace Alabaster {
 
 		const auto human_readable_size = Utilities::human_readable_size(buffer_size);
 		Log::info("[VertexBuffer] Initialised with size: {}", human_readable_size);
-	}
-
-	void VertexBuffer::destroy()
-	{
-		if (!vulkan_buffer)
-			return;
-
-		const VkBuffer buffer = vulkan_buffer;
-		const VmaAllocation allocation = memory_allocation;
-		Allocator allocator("VertexBuffer");
-		allocator.destroy_buffer(buffer, allocation);
-
-		vertex_data.release();
-		destroyed = true;
 	}
 
 	void VertexBuffer::set_data(const void* data, std::uint32_t size, std::uint32_t offset) const

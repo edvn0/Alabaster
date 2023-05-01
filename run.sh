@@ -63,6 +63,7 @@ if ! [ -d "$build_and_generator_folder" ] || [ "$force_configure" = "ON" ]; then
         -D GLFW_BUILD_EXAMPLES=OFF \
         -D CMAKE_BUILD_TYPE="$build_type" \
         -D ALABASTER_BUILD_TESTING="$build_testing" \
+        -D ALABASTER_IS_BUILD_TOOL=OFF \
         -D BUILD_TESTING="$build_testing" \
         -D ENABLE_HLSL=ON \
         -D ENTT_BUILD_TESTING=OFF \

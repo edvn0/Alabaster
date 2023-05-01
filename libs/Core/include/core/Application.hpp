@@ -16,8 +16,10 @@ namespace AssetManager {
 
 namespace Alabaster {
 
+	// clang-format off
 	template <typename T>
-	concept ConstructibleLayer = requires(T* t, AssetManager::FileWatcher& watcher) {
+	concept ConstructibleLayer = requires(T* t, AssetManager::FileWatcher& watcher)
+	{
 		{
 			t->initialise(watcher)
 		} -> std::same_as<bool>;
@@ -26,6 +28,7 @@ namespace Alabaster {
 		} -> std::same_as<std::string_view>;
 		new T();
 	};
+	// clang-format on
 
 	class Window;
 	class GUILayer;
@@ -44,22 +47,16 @@ namespace Alabaster {
 	};
 
 	struct ApplicationStatistics {
-		double app_ts { 7.5 };
 		double cpu_time { 0.0f };
 		double frame_time { 0.0f };
-		double last_frametime { 0.0f };
-		double mean { 0.0f };
 	};
 
 	class Application {
 	public:
+		explicit Application(const ApplicationArguments& args);
 		void run();
 		void exit();
 
-		double frametime();
-
-	public:
-		explicit Application(const ApplicationArguments& args);
 		Application(const Application&) = delete;
 		Application(Application&&) = delete;
 		void operator=(const Application&) = delete;
@@ -74,7 +71,7 @@ namespace Alabaster {
 
 		template <ConstructibleLayer L> void push_layer()
 		{
-			L* layer = new L();
+			auto layer = std::make_unique<L>();
 			layer->initialise(*file_watcher);
 			layers.emplace(layer->get_name(), std::move(layer));
 		}
@@ -83,12 +80,8 @@ namespace Alabaster {
 		{
 			verify(layers.contains(name), "Layer map did not contain name " + name + ".");
 
-			auto found_it = layers.find(name);
-			verify(found_it != layers.end());
-
-			const auto& [key, layer] = *found_it;
+			auto&& layer = std::move(layers.at(name));
 			layer->destroy();
-			layers.erase(key);
 		}
 
 		static Application& the();
@@ -114,15 +107,13 @@ namespace Alabaster {
 
 		void stop();
 
-		std::unordered_map<std::string, Layer*, HashStringView, std::equal_to<>> layers;
+		std::unordered_map<std::string, std::unique_ptr<Layer>, HashStringView, std::equal_to<>> layers;
 		std::unique_ptr<Window> window;
 
 		std::unique_ptr<AssetManager::FileWatcher> file_watcher;
 
 		ApplicationStatistics statistics {};
-
-		std::array<double, 500> frametime_queue;
-
+		double last_frametime_ms { 0 };
 		bool is_running { true };
 		GUILayer* ui_layer { nullptr };
 	};

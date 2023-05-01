@@ -12,7 +12,7 @@ namespace SceneSystem {
 
 namespace SceneSystem::Component {
 
-	template <typename T> inline constexpr std::string_view component_name;
+	template <typename T> inline constexpr std::string_view component_name = "";
 
 	struct ID {
 		uuids::uuid identifier;
@@ -119,6 +119,8 @@ namespace SceneSystem::Component {
 		Mesh() = default;
 		explicit Mesh(const std::shared_ptr<Alabaster::Mesh>& mesh);
 		~Mesh() = default;
+
+		inline bool valid() const { return mesh != nullptr; }
 	};
 	template <> inline constexpr std::string_view component_name<Component::Mesh> = "mesh";
 
@@ -210,19 +212,20 @@ namespace SceneSystem::Component {
 
 	template <typename T>
 	concept IsScriptable = requires(T t, float ts) {
-		{
-			t.on_update(ts)
-		} -> std::same_as<void>;
-		{
-			t.on_create()
-		} -> std::same_as<void>;
-		{
-			t.on_delete()
-		} -> std::same_as<void>;
-	};
+							   {
+								   t.on_update(ts)
+							   } -> std::same_as<void>;
+							   {
+								   t.on_create()
+							   } -> std::same_as<void>;
+							   {
+								   t.on_delete()
+							   } -> std::same_as<void>;
+						   };
 	struct Behaviour {
 		ScriptEntity* entity { nullptr };
 		std::string_view name;
+		bool bound { false };
 
 		Behaviour() = default;
 
@@ -235,7 +238,10 @@ namespace SceneSystem::Component {
 			create = [... arg = std::forward<Args>(args)](
 						 Behaviour& behaviour) { behaviour.entity = static_cast<ScriptEntity*>(new T(std::forward<Args>(arg)...)); };
 			setup_entity_destruction();
+			bound = true;
 		}
+
+		bool is_valid() const { return bound; }
 
 	private:
 		void setup_entity_destruction();
@@ -245,6 +251,7 @@ namespace SceneSystem::Component {
 	struct ScriptBehaviour {
 		std::string_view script_name;
 	};
+	template <> inline constexpr std::string_view component_name<Component::ScriptBehaviour> = "script_behaviour";
 
 	namespace Detail {
 		template <typename T, typename... U>
@@ -257,9 +264,9 @@ namespace SceneSystem::Component {
 
 	template <typename T>
 	concept IsValidComponent = IsComponent<T> && requires(T component) {
-		{
-			component.is_valid()
-		} -> std::same_as<bool>;
-	};
+													 {
+														 component.is_valid()
+													 } -> std::same_as<bool>;
+												 };
 
 } // namespace SceneSystem::Component

@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 	Alabaster::Log::info(
 		"[EntryPoint] Width: {}, Height: {}, Name: {}, SyncMode: {}", props.width, props.height, props.name, magic_enum::enum_name(props.sync_mode));
 
-	Alabaster::IO::init_with_cwd(*root);
+	Alabaster::FileSystem::init_with_cwd(*root);
 
 	try {
 		app = Alabaster::create(props);
@@ -78,12 +78,11 @@ int main(int argc, char** argv)
 	} catch (const std::system_error& e) {
 		Alabaster::Log::error("{}", e.what());
 	}
+	delete app;
+
 	Alabaster::Renderer::shutdown();
 	AssetManager::ResourceCache::the().shutdown();
 	Alabaster::Allocator::shutdown();
-
-	delete app;
-
 	Alabaster::GraphicsContext::the().destroy();
 
 	Alabaster::Log::critical("Exiting application.");

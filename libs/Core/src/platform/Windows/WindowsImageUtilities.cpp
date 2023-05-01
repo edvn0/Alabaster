@@ -71,7 +71,7 @@ namespace Alabaster::Utilities {
 	}
 
 	void transition_image_layout(
-		VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, CommandBuffer* buffer, VkImageSubresourceRange* range)
+		VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, const CommandBuffer* buffer, VkImageSubresourceRange* range)
 	{
 		const auto& command_buffer = buffer ? buffer->get_buffer() : ImmediateCommandBuffer { "Image Layout Transition" }.get_buffer();
 
@@ -114,7 +114,7 @@ namespace Alabaster::Utilities {
 		vkCmdPipelineBarrier(command_buffer, source_stage, dst_stage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 	}
 
-	void copy_buffer_to_image(VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, CommandBuffer* cmd_buffer)
+	void copy_buffer_to_image(VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, const CommandBuffer* cmd_buffer)
 	{
 		const auto command_buffer = cmd_buffer ? cmd_buffer->get_buffer() : ImmediateCommandBuffer { "Image Copy" }.get_buffer();
 
@@ -417,23 +417,6 @@ namespace Alabaster::Utilities {
 		auto format = find_supported_format({ VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
 			VK_IMAGE_TILING_OPTIMAL, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
 		return format;
-	}
-
-	void copy_buffer_to_image(
-		VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, const std::unique_ptr<CommandBuffer>& cmd_buffer)
-	{
-		copy_buffer_to_image(buffer, image_info, w, h, cmd_buffer.get());
-	}
-
-	void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer,
-		VkImageSubresourceRange* range)
-	{
-		transition_image_layout(image, old_layout, new_layout, buffer.get(), range);
-	}
-
-	void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer)
-	{
-		transition_image_layout(image, old_layout, new_layout, buffer.get());
 	}
 
 	void create_image_view(VkFormat format, VkImageAspectFlagBits bits, std::unique_ptr<DepthImage>& image)

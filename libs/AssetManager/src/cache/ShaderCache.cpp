@@ -2,8 +2,8 @@
 
 #include "cache/ShaderCache.hpp"
 
+#include "filesystem/FileSystem.hpp"
 #include "utilities/FileInputOutput.hpp"
-#include "utilities/FileSystem.hpp"
 
 #include <future>
 #include <shaderc/shaderc.hpp>
@@ -37,8 +37,8 @@ namespace AssetManager {
 
 	void ShaderCache::load_from_directory(const std::filesystem::path& shader_directory)
 	{
-		using namespace Alabaster::FS;
-		const auto all_files_in_shaders = in_directory<std::string, false>(shader_directory, { ".vert", ".frag" }, true);
+		using namespace Alabaster::FileSystem;
+		const auto all_files_in_shaders = in_directory<std::string>(shader_directory, { ".vert", ".frag" }, true);
 
 		const auto shader_pairs = extract_into_pairs_of_shaders(all_files_in_shaders);
 
@@ -68,9 +68,13 @@ namespace AssetManager {
 			if (!res.valid()) {
 				continue;
 			}
-			auto&& code = res.get();
-			auto shader = std::make_shared<Alabaster::Shader>(std::move(code.shader));
-			shaders.insert(std::make_pair(code.name, shader));
+			try {
+				auto&& code = res.get();
+				auto shader = std::make_shared<Alabaster::Shader>(std::move(code.shader));
+				shaders.insert(std::make_pair(code.name, shader));
+			} catch (const std::exception& e) {
+				Alabaster::Log::info("{}", e.what());
+			}
 		}
 	}
 

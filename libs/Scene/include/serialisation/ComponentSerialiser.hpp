@@ -30,11 +30,14 @@ namespace SceneSystem {
 	};
 
 	template <> struct serialise_component<Component::ID> {
-		void operator()(Entity& entity, auto& out) { out["id"] = entity.get_component<Component::ID>().identifier; }
+		void operator()(Entity& entity, auto& out)
+		{
+			out[Component::component_name<Component::ID>] = entity.get_component<Component::ID>().identifier;
+		}
 	};
 
 	template <> struct serialise_component<Component::Tag> {
-		void operator()(Entity& entity, auto& out) { out["tag"] = entity.get_component<Component::Tag>().tag; }
+		void operator()(Entity& entity, auto& out) { out[Component::component_name<Component::Tag>] = entity.get_component<Component::Tag>().tag; }
 	};
 
 	template <> struct serialise_component<Component::Texture> {
@@ -43,7 +46,7 @@ namespace SceneSystem {
 			auto texture_object = json::object();
 			texture_object["colour"] = entity.get_component<Component::Texture>().colour;
 
-			out["texture"] = texture_object;
+			out[Component::component_name<Component::Texture>] = texture_object;
 		};
 	};
 
@@ -53,7 +56,7 @@ namespace SceneSystem {
 			auto mesh_object = json::object();
 			mesh_object["asset_path"] = entity.get_component<Component::Mesh>().mesh->get_asset_path().string();
 
-			out["mesh"] = mesh_object;
+			out[Component::component_name<Component::Mesh>] = mesh_object;
 		};
 	};
 
@@ -61,9 +64,9 @@ namespace SceneSystem {
 		void operator()(Entity& entity, auto& out)
 		{
 			auto mesh_object = json::object();
-			mesh_object["basic_geometry"] = entity.get_component<Component::BasicGeometry>().geometry;
+			mesh_object["basic_geometry"] = Alabaster::enum_name(entity.get_component<Component::BasicGeometry>().geometry);
 
-			out["geometry"] = mesh_object;
+			out[Component::component_name<Component::BasicGeometry>] = mesh_object;
 		};
 	};
 
@@ -76,7 +79,7 @@ namespace SceneSystem {
 			transform["rotation"] = entity_transform.rotation;
 			transform["scale"] = entity_transform.scale;
 
-			out["transform"] = transform;
+			out[Component::component_name<Component::Transform>] = transform;
 		};
 	};
 
@@ -87,8 +90,58 @@ namespace SceneSystem {
 			auto sphere_intersectible = json::object();
 			sphere_intersectible["radius"] = sphere_intersectible_component.radius;
 			sphere_intersectible["world_position"] = sphere_intersectible_component.world_position;
-			out["sphere_intersectible"] = sphere_intersectible;
+			out[Component::component_name<Component::SphereIntersectible>] = sphere_intersectible;
 		};
+	};
+
+	template <> struct serialise_component<Component::QuadIntersectible> {
+		void operator()(Entity& entity, auto& out)
+		{
+			const auto& quad_intersectible_component = entity.get_component<Component::QuadIntersectible>();
+			auto quad_intersectible = json::object();
+			quad_intersectible["normal"] = quad_intersectible_component.normal;
+			quad_intersectible["world_position"] = quad_intersectible_component.world_position;
+			out[Component::component_name<Component::QuadIntersectible>] = quad_intersectible;
+		};
+	};
+
+	template <> struct serialise_component<Component::Light> {
+		void operator()(Entity& entity, auto& out)
+		{
+			auto light = json::object();
+			auto light_component = entity.get_component<Component::Light>();
+			light["ambiance"] = light_component.ambience;
+			out[Component::component_name<Component::Light>] = light;
+		}
+	};
+
+	template <> struct serialise_component<Component::PointLight> {
+		void operator()(Entity& entity, auto& out)
+		{
+			auto point_light = json::object();
+			auto point_light_component = entity.get_component<Component::PointLight>();
+			point_light["ambience"] = point_light_component.ambience;
+			out[Component::component_name<Component::PointLight>] = point_light;
+		}
+	};
+
+	template <> struct serialise_component<Component::Behaviour> {
+		void operator()(Entity& entity, auto& out)
+		{
+			auto behaviour = json::object();
+			auto behaviour_component = entity.get_component<Component::Behaviour>();
+			behaviour["name"] = behaviour_component.name;
+			out[Component::component_name<Component::Behaviour>] = behaviour;
+		}
+	};
+
+	template <> struct serialise_component<Component::ScriptBehaviour> {
+		void operator()(Entity& entity, auto& out)
+		{
+			auto script_behaviour = json::object();
+			script_behaviour["script_name"] = entity.get_component<Component::ScriptBehaviour>().script_name;
+			out[Component::component_name<Component::ScriptBehaviour>] = script_behaviour;
+		}
 	};
 
 	template <> struct serialise_component<Component::Camera> {
@@ -97,7 +150,7 @@ namespace SceneSystem {
 			const auto& camera_component = entity.get_component<Component::Camera>();
 			auto camera = json::object();
 			camera["type"] = Alabaster::enum_name(camera_component.camera_type);
-			out["camera"] = camera;
+			out[Component::component_name<Component::Camera>] = camera;
 		};
 	};
 
@@ -106,7 +159,7 @@ namespace SceneSystem {
 		{
 			const auto& pipeline_component = entity.get_component<Component::Pipeline>();
 			auto pipeline = json::object();
-			out["pipeline"] = pipeline;
+			out[Component::component_name<Component::Pipeline>] = pipeline;
 			if (!pipeline_component.pipeline)
 				return;
 
