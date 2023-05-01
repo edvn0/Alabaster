@@ -3,6 +3,7 @@
 #include "engine/ScriptEngine.hpp"
 
 #include "component/Component.hpp"
+#include "component/ScriptEntity.hpp"
 #include "engine/ScriptingEngine.hpp"
 #include "entity/Entity.hpp"
 #include "scene/Scene.hpp"
@@ -25,26 +26,10 @@ namespace Scripting {
 
 	const SceneSystem::Scene* ScriptEngine::get_scene() const { return current_scene.get(); }
 
-	void ScriptEngine::entity_on_create(SceneSystem::Entity& entity)
-	{
-		valid(current_scene);
-		entity_map[id(entity)] = entity;
-	}
+	void ScriptEngine::entity_on_create(SceneSystem::Entity&) { valid(current_scene); }
 
 	void ScriptEngine::entity_on_update(SceneSystem::Entity&, float) { valid(current_scene); }
 
-	void ScriptEngine::entity_on_delete(SceneSystem::Entity& entity)
-	{
-		valid(current_scene);
-
-		const auto identifier = id(entity);
-		for (auto it = entity_map.begin(); it != entity_map.end();) {
-			if (id(it->second) == identifier) {
-				it = entity_map.erase(it);
-			} else {
-				++it;
-			}
-		}
-	}
+	void ScriptEngine::entity_on_delete(SceneSystem::Entity&) { valid(current_scene); }
 
 } // namespace Scripting

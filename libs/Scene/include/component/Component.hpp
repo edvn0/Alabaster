@@ -242,6 +242,10 @@ namespace SceneSystem::Component {
 	};
 	template <> inline constexpr std::string_view component_name<Component::Behaviour> = "behaviour";
 
+	struct ScriptBehaviour {
+		std::string_view script_name;
+	};
+
 	namespace Detail {
 		template <typename T, typename... U>
 		concept IsAnyOf = (std::same_as<T, U> || ...);
@@ -249,7 +253,7 @@ namespace SceneSystem::Component {
 
 	template <typename T>
 	concept IsComponent = Detail::IsAnyOf<T, Mesh, Transform, ID, Tag, Texture, BasicGeometry, Pipeline, Camera, Light, PointLight,
-		SphereIntersectible, QuadIntersectible, Behaviour>;
+		SphereIntersectible, QuadIntersectible, Behaviour, ScriptBehaviour>;
 
 	template <typename T>
 	concept IsValidComponent = IsComponent<T> && requires(T component) {

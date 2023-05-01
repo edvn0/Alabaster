@@ -10,7 +10,7 @@
 namespace Scripting {
 
 	class ScriptEngine {
-		using EntityUUIDMap = std::unordered_map<uuids::uuid, SceneSystem::Entity>;
+		using EntityUUIDMap = std::unordered_map<uuids::uuid, SceneSystem::ScriptableEntity>;
 
 	public:
 		~ScriptEngine();

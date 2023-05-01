@@ -240,6 +240,7 @@ namespace App {
 			display_add_component_entry<SceneSystem::Component::Camera>("Camera");
 			display_add_component_entry<SceneSystem::Component::Texture>("Texture");
 			display_add_component_entry<SceneSystem::Component::Pipeline>("Pipeline");
+			display_add_component_entry<SceneSystem::Component::ScriptBehaviour>("ScriptBehaviour");
 			display_add_component_entry<SceneSystem::Component::Mesh>("Mesh");
 			display_add_component_entry<SceneSystem::Component::SphereIntersectible>("SphereIntersectible");
 			display_add_component_entry<SceneSystem::Component::PointLight>("PointLight");
@@ -290,6 +291,9 @@ namespace App {
 
 			ImGui::Text("%s", (*path).c_str());
 		});
+
+		draw_component<SceneSystem::Component::ScriptBehaviour>(
+			entity, "ScriptBehaviour", [](auto& component) { ImGui::Text("Script: %s", component.script_name.data()); });
 
 		draw_component<SceneSystem::Component::Pipeline>(entity, "Pipeline", [](SceneSystem::Component::Pipeline& component) {
 			if (!component.pipeline) {

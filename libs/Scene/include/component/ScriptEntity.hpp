@@ -2,10 +2,14 @@
 
 #include "entity/Entity.hpp"
 
+#include <entt/entt.hpp>
+#include <string_view>
+
 namespace SceneSystem {
 
 	class Scene;
 
+	/// @brief Base class for two way client binding (API)
 	class ScriptEntity {
 	public:
 		virtual ~ScriptEntity() = default;
@@ -23,6 +27,12 @@ namespace SceneSystem {
 
 		Entity entity;
 		friend Scene;
+	};
+
+	/// @brief Class for scripting binding to CPP
+	class ScriptableEntity {
+	public:
+		std::string_view name;
 	};
 
 } // namespace SceneSystem
