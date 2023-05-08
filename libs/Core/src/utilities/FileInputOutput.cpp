@@ -2,33 +2,22 @@
 
 #include "utilities/FileInputOutput.hpp"
 
+#include "filesystem/FileSystem.hpp"
+
 #include <sstream>
 
 namespace Alabaster::IO {
 
-	std::filesystem::path root;
-
-	void init_with_cwd(const std::filesystem::path& path) { root = path; }
-
-	std::filesystem::path resources() { return root; }
-
-	std::filesystem::path textures() { return root / std::filesystem::path { "textures" }; }
-	std::filesystem::path fonts() { return root / std::filesystem::path { "fonts" }; }
-	std::filesystem::path shaders() { return root / std::filesystem::path { "shaders" }; }
-	std::filesystem::path models() { return root / std::filesystem::path { "models" }; }
-	std::filesystem::path scenes() { return root / std::filesystem::path { "scene" }; }
-	std::filesystem::path editor_resources() { return root / std::filesystem::path { "editor" }; }
-
 	std::string read_file(const std::filesystem::path& filename, OpenMode mode)
 	{
 #ifdef ALABASTER_WINDOWS
-		(void)mode;
-		std::ifstream stream(filename, std::ios::in | std::ios::ate);
+		std::ifstream stream(filename, static_cast<int>(mode | OpenMode::AtEnd));
 #else
-		std::ifstream stream(filename, static_cast<std::ios_base::openmode>(mode));
+		std::ifstream stream(filename, static_cast<std::ios_base::openmode>(mode | OpenMode::AtEnd));
 #endif
+
 		if (!stream) {
-			throw AlabasterException("Could not open filestream to shader file.");
+			throw AlabasterException("{}", "Could not open filestream to shader file.");
 		}
 
 		auto size = stream.tellg();
@@ -43,22 +32,21 @@ namespace Alabaster::IO {
 
 		return std::string(buffer.begin(), buffer.end());
 	}
-
 	std::string read_file(std::filesystem::path&& filename, OpenMode mode) { return IO::read_file(filename, mode); }
-
-	bool exists(const std::filesystem::path& path) { return std::filesystem::exists(path) || std::filesystem::exists(resources() / path); }
-
+	bool exists(const std::filesystem::path& path)
+	{
+		return std::filesystem::exists(path) || std::filesystem::exists(FileSystem::resources() / path);
+	}
 	bool is_file(const std::filesystem::path& path)
 	{
-		auto regular_file = std::filesystem::is_regular_file(path) || std::filesystem::is_regular_file(resources() / path);
+		const auto regular_file = std::filesystem::is_regular_file(path) || std::filesystem::is_regular_file(FileSystem::resources() / path);
 		return IO::exists(path) && regular_file;
 	}
-
 	std::filesystem::path independent_path(const std::string& path)
 	{
-		verify(path.find("/") != std::string::npos);
+		verify(path.find('/') != std::string::npos);
 
-		auto vector = [&path] {
+		const auto vector = [&path] {
 			std::stringstream stream(path);
 			std::string item;
 			std::vector<std::string> split_strings;

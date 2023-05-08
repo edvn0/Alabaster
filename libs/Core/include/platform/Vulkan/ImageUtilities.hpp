@@ -55,19 +55,11 @@ namespace Alabaster::Utilities {
 
 	void create_image_view(VkFormat format, VkImageAspectFlagBits bits, std::unique_ptr<DepthImage>& image);
 
-	void transition_image_layout(
-		VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, CommandBuffer* buffer, VkImageSubresourceRange* range = nullptr);
-
-	void transition_image_layout(
-		VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, const std::unique_ptr<CommandBuffer>& buffer = nullptr);
-
-	void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout,
-		const std::unique_ptr<CommandBuffer>& buffer = nullptr, VkImageSubresourceRange* range = nullptr);
-
-	void copy_buffer_to_image(VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, CommandBuffer* cmd_buffer);
+	void transition_image_layout(VkImage image, VkImageLayout old_layout, VkImageLayout new_layout, const CommandBuffer* buffer = nullptr,
+		VkImageSubresourceRange* range = nullptr);
 
 	void copy_buffer_to_image(
-		VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, const std::unique_ptr<CommandBuffer>& cmd_buffer = nullptr);
+		VkBuffer buffer, const ImageInfo& image_info, std::uint32_t w, std::uint32_t h, const CommandBuffer* cmd_buffer = nullptr);
 
 	const std::unordered_set<std::string>& image_extensions();
 

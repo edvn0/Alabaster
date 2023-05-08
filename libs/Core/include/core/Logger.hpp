@@ -3,7 +3,6 @@
 #include <filesystem>
 
 // clang-format off
-#define YAML_CPP_STATIC_DEFINE
 #include <spdlog/fmt/ostr.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/spdlog.h>
@@ -21,15 +20,17 @@ namespace Alabaster {
 		static void init();
 		static void shutdown();
 
-		static LoggerWrapper get_core_logger() { return core_logger; };
-		static LoggerWrapper get_client_logger() { return client_logger; };
+		static LoggerWrapper get_core_logger();
+		static LoggerWrapper get_script_logger();
 
 		static void set_level(LoggerLevel level);
 		static void cycle_levels();
 
 	private:
 		static inline LoggerWrapper core_logger;
-		static inline LoggerWrapper client_logger;
+		static inline LoggerWrapper script_logger;
+
+		static inline bool initialised { false };
 	};
 
 	namespace Log {
@@ -65,5 +66,39 @@ namespace Alabaster {
 		}
 
 	} // namespace Log
+
+	namespace ScriptLog {
+
+		template <typename... Args> static constexpr auto info(auto&& fmt, Args&&... args) -> void
+		{
+			::Alabaster::Logger::get_script_logger()->info(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+		}
+
+		template <typename... Args> static constexpr auto debug(auto&& fmt, Args&&... args) -> void
+		{
+			::Alabaster::Logger::get_script_logger()->debug(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+		}
+
+		template <typename... Args> static constexpr auto warn(auto&& fmt, Args&&... args) -> void
+		{
+			::Alabaster::Logger::get_script_logger()->warn(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+		}
+
+		template <typename... Args> static constexpr auto error(auto&& fmt, Args&&... args) -> void
+		{
+			::Alabaster::Logger::get_script_logger()->error(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+		}
+
+		template <typename... Args> static constexpr auto critical(auto&& fmt, Args&&... args) -> void
+		{
+			::Alabaster::Logger::get_script_logger()->critical(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+		}
+
+		template <typename... Args> static constexpr auto trace(auto&& fmt, Args&&... args) -> void
+		{
+			::Alabaster::Logger::get_script_logger()->trace(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+		}
+
+	} // namespace ScriptLog
 
 } // namespace Alabaster

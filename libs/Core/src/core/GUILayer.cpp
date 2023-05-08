@@ -5,11 +5,11 @@
 #include "core/Common.hpp"
 #include "core/Window.hpp"
 #include "core/events/KeyEvent.hpp"
+#include "filesystem/FileSystem.hpp"
 #include "graphics/CommandBuffer.hpp"
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Shader.hpp"
 #include "ui/ImGuizmo.hpp"
-#include "utilities/FileInputOutput.hpp"
 
 #include <AssetManager.hpp>
 #include <GLFW/glfw3.h>
@@ -30,6 +30,8 @@ namespace Alabaster {
 
 	bool GUILayer::initialise(AssetManager::FileWatcher& watcher)
 	{
+		imgui_command_buffer = CommandBuffer::create(3, QueueChoice::Graphics, false);
+
 		ImGui::CreateContext();
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
@@ -79,14 +81,18 @@ namespace Alabaster {
 		init_info.CheckVkResultFn = vk_check;
 		ImGui_ImplVulkan_Init(&init_info, swapchain.get_render_pass());
 
-		const std::filesystem::path path = Alabaster::IO::font("FreePixel.ttf");
-		ImGui::GetIO().Fonts->AddFontFromFileTTF(path.string().c_str(), 14.0f);
+#ifdef PREFER_FREE_PIXEL
+		const std::vector<std::filesystem::path> paths = Alabaster::FileSystem::find_fonts_with_name("FreePixel");
+#else
+		const std::vector<std::filesystem::path> paths = Alabaster::FileSystem::find_fonts_with_name("Borgen");
+#endif
 
-		{
+		for (const auto& path : paths) {
+			Alabaster::Log::info("[GUILayer] Initialised font {}.", path.string());
+			ImGui::GetIO().Fonts->AddFontFromFileTTF(path.string().c_str(), 14.0f);
+
 			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer { "Fonts Texture" }.get_buffer());
-
 			vk_check(vkDeviceWaitIdle(GraphicsContext::the().device()));
-
 			ImGui_ImplVulkan_DestroyFontUploadObjects();
 		}
 
@@ -94,7 +100,7 @@ namespace Alabaster {
 			if (info.to_path().extension() != ".ttf")
 				return;
 
-			ImGui::GetIO().Fonts->AddFontFromFileTTF(info.path.data(), 11.0f);
+			ImGui::GetIO().Fonts->AddFontFromFileTTF(info.path.data(), 14.0f);
 
 			ImGui_ImplVulkan_CreateFontsTexture(ImmediateCommandBuffer { "Fonts Texture" }.get_buffer());
 
@@ -216,13 +222,12 @@ namespace Alabaster {
 		}
 	}
 
-	void GUILayer::ui(float) { }
+	void GUILayer::ui() { }
 
 	void GUILayer::destroy()
 	{
 		const auto& device = GraphicsContext::the().device();
 		vk_check(vkDeviceWaitIdle(device));
-		imgui_command_buffer->destroy();
 
 		ImGui_ImplVulkan_Shutdown();
 		ImGui_ImplGlfw_Shutdown();

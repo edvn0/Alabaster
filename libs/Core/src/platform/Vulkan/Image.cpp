@@ -19,32 +19,12 @@ namespace Alabaster {
 
 	Image::Image(const ImageSpecification& specification) noexcept
 		: spec(specification)
+		, descriptor_image_info(std::make_unique<VkDescriptorImageInfo>())
 	{
 		assert_that(spec.width > 0 && spec.height > 0);
 	}
 
-	void Image::destroy()
-	{
-		if (destroyed) {
-			return;
-		}
-		if (info.image) {
-			vkDestroyImageView(GraphicsContext::the().device(), info.view, nullptr);
-			vkDestroySampler(GraphicsContext::the().device(), info.sampler, nullptr);
-
-			for (auto& view : per_layer_image_views) {
-				if (view)
-					vkDestroyImageView(GraphicsContext::the().device(), view, nullptr);
-			}
-
-			Allocator allocator(fmt::format("Image-{}", spec.debug_name));
-			allocator.destroy_image(info.image, info.allocation);
-
-			Log::warn("[Image] Destroy ImageView {}", (const void*)info.view);
-			per_layer_image_views.clear();
-		}
-		destroyed = true;
-	}
+	Image::~Image() { release(); }
 
 	void Image::invalidate()
 	{
@@ -83,7 +63,7 @@ namespace Alabaster {
 		image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
 		image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
 		image_create_info.usage = usage;
-		info.allocation = allocator.allocate_image(image_create_info, VMA_MEMORY_USAGE_GPU_ONLY, info.image);
+		info.allocation = allocator.allocate_image(image_create_info, Allocator::Usage::GPU_ONLY, info.image, spec.debug_name);
 
 		VkImageViewCreateInfo image_view_create_info {};
 		image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -189,6 +169,8 @@ namespace Alabaster {
 		}
 	}
 
+	VkImageView Image::get_layer_image_view(std::uint32_t layer) { return per_layer_image_views[layer]; }
+
 	VkImageView Image::get_mip_image_view(uint32_t mip)
 	{
 		if (per_mip_image_views.find(mip) == per_mip_image_views.end()) {
@@ -221,18 +203,20 @@ namespace Alabaster {
 	void Image::update_descriptor()
 	{
 		if (spec.format == ImageFormat::DEPTH24STENCIL8 || spec.format == ImageFormat::DEPTH32F || spec.format == ImageFormat::DEPTH32FSTENCIL8UINT)
-			descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			descriptor_image_info->imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 		else if (spec.usage == ImageUsage::Storage)
-			descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+			descriptor_image_info->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 		else
-			descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			descriptor_image_info->imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 		if (spec.usage == ImageUsage::Storage)
-			descriptor_image_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+			descriptor_image_info->imageLayout = VK_IMAGE_LAYOUT_GENERAL;
 
-		descriptor_image_info.imageView = info.view;
-		descriptor_image_info.sampler = info.sampler;
+		descriptor_image_info->imageView = info.view;
+		descriptor_image_info->sampler = info.sampler;
 	}
+
+	const VkDescriptorImageInfo& Image::get_descriptor_info() const { return *descriptor_image_info; }
 
 	void Image::create_per_specific_layer_image_views(const std::vector<uint32_t>& layer_indices)
 	{

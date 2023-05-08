@@ -38,7 +38,7 @@ namespace Alabaster {
 			return 1;
 		default: {
 			Log::error("Unknown ShaderDataType!");
-			debug_break();
+			stop();
 		}
 		}
 
@@ -91,7 +91,7 @@ namespace Alabaster {
 				return 1;
 			default: {
 				Log::error("Never reach here in VertexBuffer.");
-				debug_break();
+				stop();
 			}
 			}
 

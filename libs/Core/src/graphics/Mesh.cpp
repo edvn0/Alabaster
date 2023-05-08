@@ -4,6 +4,7 @@
 
 #include "core/Clock.hpp"
 #include "core/Common.hpp"
+#include "filesystem/FileSystem.hpp"
 #include "graphics/IndexBuffer.hpp"
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBuffer.hpp"
@@ -82,7 +83,7 @@ namespace Alabaster {
 	std::tuple<Mesh::Vertices, Mesh::Indices> Mesh::load_model()
 	{
 		tinyobj::ObjReaderConfig reader_config;
-		reader_config.mtl_search_path = IO::textures().string();
+		reader_config.mtl_search_path = FileSystem::textures().string();
 
 		tinyobj::ObjReader reader;
 
@@ -103,22 +104,6 @@ namespace Alabaster {
 		return handle_vertices(attrib, shapes);
 	}
 
-	Mesh::~Mesh()
-	{
-		if (!destroyed) {
-			destroy();
-		}
-	}
-
-	void Mesh::destroy()
-	{
-		if (vertex_buffer)
-			vertex_buffer->destroy();
-
-		if (index_buffer)
-			index_buffer->destroy();
-
-		destroyed = true;
-	}
+	Mesh::~Mesh() { }
 
 } // namespace Alabaster

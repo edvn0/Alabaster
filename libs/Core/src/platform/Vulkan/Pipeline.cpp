@@ -10,7 +10,7 @@
 #include "graphics/Shader.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 
-#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 
@@ -35,7 +35,7 @@ namespace Alabaster {
 			return VK_FORMAT_R32G32B32A32_SINT;
 		default: {
 			Log::error("Unknown shader data type format.");
-			debug_break();
+			stop();
 		}
 		}
 
@@ -64,11 +64,20 @@ namespace Alabaster {
 			pipeline_layout_create_info.pSetLayouts = spec.descriptor_set_layouts.data();
 		}
 
+		std::vector<VkPushConstantRange> output_ranges;
 		if (spec.ranges) {
 			const auto& used = *spec.ranges;
-			const auto& range = used.get_ranges();
-			pipeline_layout_create_info.pushConstantRangeCount = static_cast<std::uint32_t>(range.size());
-			pipeline_layout_create_info.pPushConstantRanges = range.data();
+			std::uint32_t offset = 0;
+			for (const auto& range : used.get_input_ranges()) {
+				VkPushConstantRange out {};
+				out.offset = offset;
+				out.size = range.size;
+				out.stageFlags = to_vulkan_flags(range.flags);
+				output_ranges.push_back(out);
+				offset += range.size;
+			}
+			pipeline_layout_create_info.pushConstantRangeCount = static_cast<std::uint32_t>(output_ranges.size());
+			pipeline_layout_create_info.pPushConstantRanges = output_ranges.data();
 		}
 
 		vk_check(vkCreatePipelineLayout(device, &pipeline_layout_create_info, nullptr, &pipeline_layout));
@@ -233,13 +242,19 @@ namespace Alabaster {
 		}
 	}
 
-	void Pipeline::destroy()
+	PipelineSpecification& Pipeline::get_specification() { return spec; }
+	VkPipelineLayout Pipeline::get_vulkan_pipeline_layout() const { return pipeline_layout; }
+	VkPipeline Pipeline::get_vulkan_pipeline() const { return pipeline; }
+	const PipelineSpecification& Pipeline::get_specification() const { return spec; }
+	bool Pipeline::operator!=(const Pipeline& other) const { return pipeline != other.pipeline; }
+	bool Pipeline::operator()(const Pipeline* other) const { return spec.debug_name < other->spec.debug_name; }
+
+	Pipeline::~Pipeline()
 	{
 		vkDestroyPipelineCache(GraphicsContext::the().device(), pipeline_cache, nullptr);
 		vkDestroyPipelineLayout(GraphicsContext::the().device(), pipeline_layout, nullptr);
 		vkDestroyPipeline(GraphicsContext::the().device(), pipeline, nullptr);
 		Log::info("[Pipeline] Destroyed pipeline {} and its dependents.", spec.debug_name);
-		destroyed = true;
 	}
 
 } // namespace Alabaster

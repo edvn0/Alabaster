@@ -28,7 +28,7 @@ namespace App {
 		void draw_entity_node(SceneSystem::Entity& entity);
 
 		void on_update(float ts) override;
-		void ui(float ts) override;
+		void ui() override;
 		void on_event(Alabaster::Event& event) override;
 		void initialise(AssetManager::FileWatcher&) override { Alabaster::Log::info("[SceneEntitiesPanel] Initialised."); };
 		void on_destroy() override { Alabaster::Log::info("[SceneEntitiesPanel] Destroyed."); };

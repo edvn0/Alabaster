@@ -75,12 +75,6 @@ namespace Alabaster {
 		resize(width, height, true);
 	}
 
-	void Framebuffer::destroy()
-	{
-		destroyed = true;
-		release();
-	}
-
 	void Framebuffer::release()
 	{
 		if (!frame_buffer) {
@@ -113,7 +107,7 @@ namespace Alabaster {
 		if (depth_image) {
 			const auto potential_attachment_index = static_cast<std::uint32_t>(spec.attachments.size() - 1);
 			if (!spec.existing_images.contains(potential_attachment_index)) {
-				depth_image->destroy();
+				depth_image->release();
 				Log::info("[Framebuffer] Destroying framebuffer depth image.");
 			}
 		}
@@ -134,7 +128,7 @@ namespace Alabaster {
 			render_pass = sc.get_render_pass();
 
 			clear_values.clear();
-			clear_values.emplace_back().color = { { 0.0f, 0.0f, 0.0f, 1.0f } };
+			clear_values.emplace_back().emplace<ColourValue>(std::array<float, 4> { 0, 0, 0, 1.0f });
 		}
 
 		for (const auto& callback : resize_callbacks)
@@ -197,7 +191,8 @@ namespace Alabaster {
 					attachment_description.finalLayout = VK_IMAGE_LAYOUT_DEPTH_READ_ONLY_OPTIMAL;
 					depth_attachment_reference = { attachment_index, VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL };
 				}
-				clear_values[attachment_index].depthStencil = { spec.depth_clear_value, 0 };
+				clear_values[attachment_index] = DepthStencilValue { spec.depth_clear_value, 0 };
+
 			} else {
 				std::shared_ptr<Image> color_attachment;
 				if (spec.existing_framebuffer) {
@@ -248,7 +243,8 @@ namespace Alabaster {
 				attachment_description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 				const auto& clear_color = spec.clear_colour;
-				clear_values[attachment_index].color = { { clear_color.r, clear_color.g, clear_color.b, clear_color.a } };
+				clear_values[attachment_index].emplace<ColourValue>(
+					std::array<float, 4> { clear_color.r, clear_color.g, clear_color.b, clear_color.a });
 				color_attachment_references.emplace_back(VkAttachmentReference { attachment_index, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
 			}
 

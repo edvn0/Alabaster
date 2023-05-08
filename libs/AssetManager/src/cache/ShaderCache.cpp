@@ -2,8 +2,8 @@
 
 #include "cache/ShaderCache.hpp"
 
+#include "filesystem/FileSystem.hpp"
 #include "utilities/FileInputOutput.hpp"
-#include "utilities/FileSystem.hpp"
 
 #include <future>
 #include <shaderc/shaderc.hpp>
@@ -13,6 +13,12 @@ namespace AssetManager {
 	struct ShaderCodeAndName {
 		std::string name;
 		Alabaster::Shader shader;
+
+		ShaderCodeAndName(const auto& in_name, auto&& in_shader)
+			: name(in_name)
+			, shader(std::move(in_shader))
+		{
+		}
 	};
 
 	static constexpr auto check_is_sorted = [](auto&& a, auto&& true_if_next_is_after_current_function) -> bool {
@@ -31,8 +37,8 @@ namespace AssetManager {
 
 	void ShaderCache::load_from_directory(const std::filesystem::path& shader_directory)
 	{
-		using namespace Alabaster::FS;
-		const auto all_files_in_shaders = in_directory<std::string, false>(shader_directory, { ".vert", ".frag" }, true);
+		using namespace Alabaster::FileSystem;
+		const auto all_files_in_shaders = in_directory<std::string>(shader_directory, { ".vert", ".frag" }, true);
 
 		const auto shader_pairs = extract_into_pairs_of_shaders(all_files_in_shaders);
 
@@ -47,10 +53,8 @@ namespace AssetManager {
 			const auto& vertex_path = vert;
 			const auto& fragment_path = frag;
 
-			auto task = [=]() -> ShaderCodeAndName {
-				Alabaster::Shader shader = compiler.compile(shader_name, vertex_path, fragment_path);
-				return { shader_name, std::move(shader) };
-			};
+			auto task
+				= [=]() -> ShaderCodeAndName { return ShaderCodeAndName(shader_name, compiler.compile(shader_name, vertex_path, fragment_path)); };
 
 			results.push_back(std::async(std::launch::async, std::move(task)));
 		}
@@ -64,9 +68,13 @@ namespace AssetManager {
 			if (!res.valid()) {
 				continue;
 			}
-			auto&& code = res.get();
-			auto shader = std::make_shared<Alabaster::Shader>(code.shader);
-			shaders.insert(std::make_pair(code.name, shader));
+			try {
+				auto&& code = res.get();
+				auto shader = std::make_shared<Alabaster::Shader>(std::move(code.shader));
+				shaders.insert(std::make_pair(code.name, shader));
+			} catch (const std::exception& e) {
+				Alabaster::Log::info("{}", e.what());
+			}
 		}
 	}
 

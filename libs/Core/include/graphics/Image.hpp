@@ -17,9 +17,13 @@
 #include <memory>
 #include <optional>
 #include <string>
-#include <vulkan/vulkan.h>
 
-typedef struct VmaAllocation_T* VmaAllocation;
+using VkImage = struct VkImage_T*;
+using VkImageView = struct VkImageView_T*;
+using VkSampler = struct VkSampler_T*;
+using VmaAllocation = struct VmaAllocation_T*;
+
+struct VkDescriptorImageInfo;
 
 namespace Alabaster {
 
@@ -90,9 +94,7 @@ namespace Alabaster {
 
 	class Image {
 	public:
-		explicit Image(const ImageSpecification& specification) noexcept;
-
-		void destroy();
+		~Image();
 		void resize(const uint32_t width, const uint32_t height)
 		{
 			spec.width = width;
@@ -119,7 +121,7 @@ namespace Alabaster {
 		auto& get_info() { return info; }
 
 		void create_per_layer_image_view();
-		VkImageView get_layer_image_view(std::uint32_t layer) { return per_layer_image_views[layer]; }
+		VkImageView get_layer_image_view(std::uint32_t layer);
 		VkImageView get_mip_image_view(std::uint32_t mip);
 
 		Buffer get_buffer() const { return image_data; }
@@ -129,24 +131,22 @@ namespace Alabaster {
 
 		void update_descriptor();
 
-		const auto& get_descriptor_info() const { return descriptor_image_info; }
+		const VkDescriptorImageInfo& get_descriptor_info() const;
 		void create_per_specific_layer_image_views(const std::vector<std::uint32_t>& layer_indices);
 
 	private:
 		ImageSpecification spec;
-
 		Buffer image_data;
-
 		ImageInfo info;
 
 		std::vector<VkImageView> per_layer_image_views;
 		std::map<uint32_t, VkImageView> per_mip_image_views;
-		VkDescriptorImageInfo descriptor_image_info {};
+		std::unique_ptr<VkDescriptorImageInfo> descriptor_image_info;
 
-		bool destroyed { false };
+		explicit Image(const ImageSpecification& specification) noexcept;
 
 	public:
-		static std::shared_ptr<Image> create(ImageSpecification spec) { return std::make_shared<Image>(spec); }
+		static std::shared_ptr<Image> create(ImageSpecification spec) { return std::shared_ptr<Image>(new Image { spec }); }
 	};
 
 } // namespace Alabaster

@@ -3,11 +3,18 @@
 #include "graphics/PushConstantRange.hpp"
 #include "graphics/Shader.hpp"
 #include "graphics/VertexBufferLayout.hpp"
-#include "vulkan/vulkan_core.h"
 
 #include <initializer_list>
+#include <memory>
+#include <optional>
 #include <string>
-#include <vulkan/vulkan.h>
+#include <vector>
+
+using VkPipelineLayout = struct VkPipelineLayout_T*;
+using VkPipeline = struct VkPipeline_T*;
+using VkRenderPass = struct VkRenderPass_T*;
+using VkPipelineCache = struct VkPipelineCache_T*;
+using VkDescriptorSetLayout = struct VkDescriptorSetLayout_T*;
 
 namespace Alabaster {
 
@@ -44,42 +51,35 @@ namespace Alabaster {
 
 	class Pipeline {
 	public:
-		explicit Pipeline(PipelineSpecification pipe_spec)
-			: spec(std::move(pipe_spec)) {};
-		~Pipeline()
-		{
-			if (!destroyed)
-				destroy();
-		}
-
-		void destroy();
+		~Pipeline();
 
 		void invalidate();
 
-		PipelineSpecification& get_specification() { return spec; }
-		const PipelineSpecification& get_specification() const { return spec; }
+		PipelineSpecification& get_specification();
+		const PipelineSpecification& get_specification() const;
 
-		VkPipelineLayout get_vulkan_pipeline_layout() const { return pipeline_layout; }
-		VkPipeline get_vulkan_pipeline() const { return pipeline; }
+		VkPipelineLayout get_vulkan_pipeline_layout() const;
+		VkPipeline get_vulkan_pipeline() const;
 
-		bool operator!=(const Pipeline& other) const { return pipeline != other.pipeline; }
-		bool operator()(const Pipeline* other) const { return spec.debug_name < other->spec.debug_name; }
+		bool operator!=(const Pipeline& other) const;
+		bool operator()(const Pipeline* other) const;
 
 		inline static std::shared_ptr<Pipeline> create(PipelineSpecification spec)
 		{
-			auto pipeline = std::make_shared<Pipeline>(spec);
+			auto pipeline = std::shared_ptr<Pipeline>(new Pipeline { spec });
 			pipeline->invalidate();
 			return pipeline;
 		}
 
 	private:
-		bool destroyed { false };
 		PipelineSpecification spec;
 		VkPipelineLayout pipeline_layout {};
 		VkPipeline pipeline {};
 		VkPipelineCache pipeline_cache = nullptr;
 		std::vector<VkDescriptorSetLayout> descriptor_set_layouts;
-		std::vector<VkPushConstantRange> push_constants_ranges;
+
+		explicit Pipeline(PipelineSpecification pipe_spec)
+			: spec(std::move(pipe_spec)) {};
 	};
 
 } // namespace Alabaster

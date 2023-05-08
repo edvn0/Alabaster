@@ -21,8 +21,7 @@ public:
 
 	void update(float ts) override;
 	void render() override;
-	void ui(float ts) override;
-	void ui() override { }
+	void ui() override;
 	bool initialise(AssetManager::FileWatcher&) override;
 	void destroy() override;
 	void on_event(Alabaster::Event& event) override;
@@ -33,13 +32,18 @@ private:
 	void viewport();
 	void take_step();
 	void ui_toolbar();
+	void build_scene(SceneSystem::Scene&);
 
 	void serialise_scene();
 
 	std::string_view name() override { return "AlabasterLayer"; }
 
-	std::unique_ptr<SceneSystem::Scene> editor_scene;
-	std::vector<std::unique_ptr<App::Panel>> panels;
+	glm::vec2 viewport_size = { 0.0f, 0.0f };
+	std::array<glm::vec2, 2> viewport_bounds = { glm::vec2 { 0.0f, 0.0f }, glm::vec2 { 0.0f, 0.0f } };
+	bool viewport_focused { false };
+	bool viewport_hovered { false };
+	ImGuizmo::OPERATION gizmo_type { ImGuizmo::OPERATION::TRANSLATE };
+	SceneSystem::SceneState scene_state { SceneSystem::SceneState::Edit };
 
 	// Taken from "https://www.flaticon.com/authors/jungsa" and "https://www.flaticon.com/packs/music-multimedia-7?word=play%20pause"
 	std::shared_ptr<Alabaster::Texture> icon_play { AssetManager::asset<Alabaster::Texture>("play-button.png") };
@@ -49,10 +53,6 @@ private:
 	std::shared_ptr<Alabaster::Texture> icon_pause { AssetManager::asset<Alabaster::Texture>("pause-button.png") };
 	std::shared_ptr<Alabaster::Texture> icon_step { AssetManager::asset<Alabaster::Texture>("step-button.png") };
 
-	glm::vec2 viewport_size = { 0.0f, 0.0f };
-	std::array<glm::vec2, 2> viewport_bounds = { glm::vec2 { 0.0f, 0.0f }, glm::vec2 { 0.0f, 0.0f } };
-	bool viewport_focused { false };
-	bool viewport_hovered { false };
-	ImGuizmo::OPERATION gizmo_type { ImGuizmo::OPERATION::TRANSLATE };
-	SceneSystem::SceneState scene_state { SceneSystem::SceneState::Edit };
+	std::vector<std::unique_ptr<App::Panel>> panels;
+	std::unique_ptr<SceneSystem::Scene> editor_scene;
 };

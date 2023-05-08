@@ -25,25 +25,19 @@ namespace Alabaster {
 		instance = GraphicsContext::the().instance();
 		device = GraphicsContext::the().device();
 
-		glfwCreateWindowSurface(instance, glfw_window, nullptr, &surface);
+		vk_check(glfwCreateWindowSurface(instance, glfw_window, nullptr, &surface));
 
-		// Get available queue family properties
 		uint32_t queue_count;
 		vkGetPhysicalDeviceQueueFamilyProperties(GraphicsContext::the().physical_device(), &queue_count, nullptr);
 
 		std::vector<VkQueueFamilyProperties> queue_props(queue_count);
 		vkGetPhysicalDeviceQueueFamilyProperties(GraphicsContext::the().physical_device(), &queue_count, queue_props.data());
 
-		// Iterate over each queue to learn whether it supports presenting:
-		// Find a queue with present support
-		// Will be used to present the swap chain images to the windowing system
 		std::vector<VkBool32> supports_present(queue_count);
 		for (uint32_t i = 0; i < queue_count; i++) {
 			vkGetPhysicalDeviceSurfaceSupportKHR(GraphicsContext::the().physical_device(), i, surface, &supports_present[i]);
 		}
 
-		// Search for a graphics and a present queue in the array of queue
-		// families, try to find one that supports both
 		uint32_t graphics_queue_node_index = UINT32_MAX;
 		uint32_t present_queue_node_index = UINT32_MAX;
 		for (uint32_t i = 0; i < queue_count; i++) {
@@ -61,8 +55,6 @@ namespace Alabaster {
 		}
 
 		if (present_queue_node_index == UINT32_MAX) {
-			// If there's no queue that supports both present and graphics
-			// try to find a separate present queue
 			for (uint32_t i = 0; i < queue_count; ++i) {
 				if (supports_present[i] == VK_TRUE) {
 					present_queue_node_index = i;
@@ -112,7 +104,7 @@ namespace Alabaster {
 		VkPresentModeKHR swapchain_present_mode = VK_PRESENT_MODE_FIFO_KHR;
 
 		if (!in_vsync) {
-			for (size_t i = 0; i < present_mode_count; i++) {
+			for (std::size_t i = 0; i < present_mode_count; i++) {
 				if (present_modes[i] == VK_PRESENT_MODE_MAILBOX_KHR) {
 					swapchain_present_mode = VK_PRESENT_MODE_MAILBOX_KHR;
 					break;
@@ -442,12 +434,18 @@ namespace Alabaster {
 				on_resize(width, height);
 				return 9877; // Magic number
 			} else {
-				throw AlabasterException("Could not acquire new image.");
+				throw AlabasterException("{}", "Could not acquire new image.");
 			}
 		}
 
 		return image_index;
 	}
+
+#ifndef PREFER_BGRA
+	static constexpr VkFormat preferred_format = VK_FORMAT_B8G8R8A8_SRGB;
+#else
+	static constexpr VkFormat preferred_format = VK_FORMAT_R8G8B8A8_SRGB;
+#endif
 
 	void Swapchain::find_image_format_and_color_space()
 	{
@@ -464,7 +462,7 @@ namespace Alabaster {
 		} else {
 			bool found_wanted_format = false;
 			for (auto&& surface_format : surface_formats) {
-				if (surface_format.format == VK_FORMAT_B8G8R8A8_SRGB) {
+				if (surface_format.format == preferred_format) {
 					color_format = surface_format.format;
 					color_space = surface_format.colorSpace;
 					found_wanted_format = true;

@@ -31,7 +31,7 @@ namespace App {
 		bool can_traverse_up() const;
 
 		void on_update(float ts) override;
-		void ui(float ts) override;
+		void ui() override;
 		void on_event(Alabaster::Event& event) override;
 		void initialise(AssetManager::FileWatcher&) override;
 		void on_destroy() override;

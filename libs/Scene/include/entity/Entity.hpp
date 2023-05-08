@@ -15,7 +15,7 @@ namespace SceneSystem {
 		explicit Entity(Scene* scene, entt::entity entity_handle, const std::string& name = "Unnamed entity");
 		explicit Entity(Scene* scene, const std::string& name = "Unnamed entity");
 		explicit Entity(const std::shared_ptr<Scene>& scene, const std::string& name = "Unnamed entity");
-		~Entity() = default;
+		~Entity();
 
 		Entity(const Entity& other);
 		Entity& operator=(const Entity& other) = default;
@@ -83,13 +83,15 @@ namespace SceneSystem {
 
 		bool operator==(const Entity& other) const { return entity_handle == other.entity_handle && scene == other.scene; }
 
-		bool is_valid() const { return is_valid(entity_handle); }
-		template <typename Handle> bool is_valid(Handle&& handle) const { return std::forward<Handle>(handle) != entt::null; }
+		[[nodiscard]] bool is_valid() const { return is_valid(entity_handle); }
+		template <typename Handle> [[nodiscard]] bool is_valid(Handle&& handle) const { return std::forward<Handle>(handle) != entt::null; }
 
-		const auto& get_transform() const { return get_component<Component::Transform>(); }
-		auto& get_transform() { return get_component<Component::Transform>(); }
-		const auto& get_tag() const { return get_component<Component::Tag>(); }
-		auto& get_tag() { return get_component<Component::Tag>(); }
+		const Component::Transform& get_transform() const { return get_component<Component::Transform>(); }
+		Component::Transform& get_transform() { return get_component<Component::Transform>(); }
+		const Component::Tag& get_tag() const { return get_component<Component::Tag>(); }
+		Component::Tag& get_tag() { return get_component<Component::Tag>(); }
+
+		entt::entity get_entity() const { return entity_handle; }
 
 	private:
 		Scene* scene { nullptr };

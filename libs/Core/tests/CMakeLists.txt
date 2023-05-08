@@ -7,7 +7,6 @@ set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
 file(
 	GLOB_RECURSE
 	sources
-	main.cpp
 	core/**.cpp
 	graphics/**.cpp
 	utils/**.cpp

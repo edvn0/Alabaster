@@ -4,6 +4,8 @@
 
 namespace SceneSystem {
 
+	Entity::~Entity() = default;
+
 	Entity::Entity(Scene* input_scene, entt::entity handle, const std::string&)
 		: scene(input_scene)
 		, entity_handle(handle)

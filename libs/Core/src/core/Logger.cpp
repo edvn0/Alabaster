@@ -26,42 +26,64 @@ namespace Alabaster {
 		case LoggerLevel::Debug:
 			return spdlog::level::debug;
 		default:
-			throw AlabasterException(fmt::format("to_spdlog throw, value of level: {}", enum_name(level)));
+			throw AlabasterException("to_spdlog throw, value of level: {}", enum_name(level));
 		};
 	};
 
 	void Logger::init()
 	{
-		spdlog::set_pattern("%^[%T] %n: %v%$");
+		initialised = true;
+
+		spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e %l: %v");
 		core_logger = spdlog::stdout_color_mt("Engine");
 		core_logger->set_level(spdlog::level::trace);
-		client_logger = spdlog::stdout_color_mt("App");
-		client_logger->set_level(spdlog::level::trace);
+		script_logger = spdlog::stdout_color_mt("Script");
+		script_logger->set_level(spdlog::level::trace);
 
-#ifdef ALABASTER_DEBUG
 		Logger::set_level(LoggerLevel::Debug);
-#elif defined(ALABASTER_RELEASE)
-		Logger::set_level(LoggerLevel::Error);
-#endif
+
+		initialised = true;
+		Log::critical("[Logger] Initialised.");
+		ScriptLog::critical("[Logger] Initialised.");
 	}
 
 	void Logger::init(const std::filesystem::path& log_dir)
 	{
+
 		std::string logger_dir_engine = (log_dir / "engine.log").string();
 		std::string logger_dir_app = (log_dir / "app.log").string();
-		spdlog::set_pattern("%^[%T] %n: %v%$");
+		spdlog::set_pattern("%Y-%m-%d %H:%M:%S.%e %l : %v");
 		core_logger = spdlog::basic_logger_mt("Engine", logger_dir_engine);
 		core_logger->set_level(spdlog::level::trace);
-		client_logger = spdlog::basic_logger_mt("App", logger_dir_app);
-		client_logger->set_level(spdlog::level::trace);
+		script_logger = spdlog::basic_logger_mt("Script", logger_dir_app);
+		script_logger->set_level(spdlog::level::trace);
+
+		initialised = true;
+		Log::critical("[Logger] Initialised.");
+		ScriptLog::critical("[Logger] Initialised.");
 	}
 
 	void Logger::shutdown()
 	{
-		client_logger.reset();
+		Log::critical("[Logger] Shutdown.");
+		ScriptLog::critical("[Logger] Shutdown.");
+
+		script_logger.reset();
 		core_logger.reset();
 		spdlog::drop_all();
 	}
+
+	Logger::LoggerWrapper Logger::get_core_logger()
+	{
+		Alabaster::verify(initialised, "Logger is not initialised.");
+		return core_logger;
+	}
+
+	Logger::LoggerWrapper Logger::get_script_logger()
+	{
+		Alabaster::verify(initialised, "Logger is not initialised.");
+		return script_logger;
+	};
 
 	void Logger::cycle_levels()
 	{
@@ -116,9 +138,8 @@ namespace Alabaster {
 		}
 		}
 
-		Log::critical("[Logger] Current logger level changed to {}", enum_name(current));
 		spdlog::level::level_enum spd_level = to_spdlog(current);
-		client_logger->set_level(spd_level);
+		script_logger->set_level(spd_level);
 		core_logger->set_level(spd_level);
 	}
 

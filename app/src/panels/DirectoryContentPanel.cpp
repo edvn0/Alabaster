@@ -89,7 +89,7 @@ namespace App {
 
 	bool DirectoryContentPanel::can_traverse_up() const { return current != initial && depth_from_initial > 0; }
 
-	void DirectoryContentPanel::ui(float ts)
+	void DirectoryContentPanel::ui()
 	{
 		bool force_reload = false;
 		if (Alabaster::Input::all(Alabaster::Key::LeftControl, Alabaster::Key::LeftShift, Alabaster::Key::R)) {
@@ -195,11 +195,6 @@ namespace App {
 
 	void DirectoryContentPanel::on_destroy()
 	{
-		for (auto it = icons.begin(); it != icons.end();) {
-			it->second->destroy();
-			Alabaster::UI::remove_image(it->second->get_descriptor_info());
-			it = icons.erase(it);
-		}
 		current_directory_content.clear();
 		path_and_content_cache.clear();
 	}

@@ -10,7 +10,7 @@
 
 namespace Alabaster {
 
-#if ALABASTER_DEBUG
+#ifndef ALABASTER_RELEASE
 	static const std::vector<const char*> requested_validation_layers { "VK_LAYER_KHRONOS_validation" };
 #else
 	static const std::vector<const char*> requested_validation_layers;
@@ -104,6 +104,7 @@ namespace Alabaster {
 
 	void GraphicsContext::destroy()
 	{
+
 		vkDeviceWaitIdle(device());
 
 		vkDestroyCommandPool(device(), command_pool, nullptr);
@@ -112,11 +113,13 @@ namespace Alabaster {
 		destroy_debug_messenger(vk_instance, debug_messenger, nullptr);
 		vkDestroyDevice(vk_device, nullptr);
 		vkDestroyInstance(vk_instance, nullptr);
+
+		delete context;
 	}
 
 	void GraphicsContext::setup_debug_messenger()
 	{
-#if ALABASTER_DEBUG
+#ifndef ALABASTER_RELEASE
 		VkDebugUtilsMessengerCreateInfoEXT create_info {};
 		populate_debug_messenger(create_info);
 

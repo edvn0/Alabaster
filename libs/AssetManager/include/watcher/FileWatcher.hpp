@@ -37,7 +37,7 @@ namespace AssetManager {
 
 	struct FileInformation {
 		FileType type;
-		std::string_view path;
+		std::string path;
 		std::filesystem::file_time_type last_modified;
 		FileStatus status = FileStatus::Created;
 
@@ -55,6 +55,8 @@ namespace AssetManager {
 		void on_created_or_deleted(const std::function<void(const FileInformation&)>& activation_function);
 		void on(FileStatus info, const std::function<void(const FileInformation&)>& activation_function);
 
+		void add_watched_paths(const std::filesystem::path& path);
+
 		~FileWatcher() { stop(); }
 
 	private:
@@ -71,6 +73,7 @@ namespace AssetManager {
 		std::filesystem::path root;
 		std::chrono::duration<int, std::milli> delay;
 		std::unordered_map<std::string, FileInformation, StringHash, std::equal_to<>> paths {};
+		std::unordered_set<std::string, StringHash> additional_paths {};
 		std::atomic_bool running { true };
 		std::thread thread;
 	};

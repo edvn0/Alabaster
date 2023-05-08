@@ -4,8 +4,9 @@
 
 #include <array>
 #include <vector>
-#include <vulkan/vulkan.h>
-typedef struct VmaAllocation_T* VmaAllocation;
+
+using VmaAllocation = struct VmaAllocation_T*;
+using VkBuffer = struct VkBuffer_T*;
 
 namespace Alabaster {
 
@@ -13,40 +14,30 @@ namespace Alabaster {
 
 	class IndexBuffer {
 	public:
-		explicit IndexBuffer(std::uint32_t count);
-
-		IndexBuffer(const void* data, std::uint32_t count);
-
-		~IndexBuffer()
-		{
-			if (!destroyed)
-				destroy();
-		}
-
-		void destroy();
+		~IndexBuffer();
 
 		void set_data(const void* buffer, std::uint32_t size, std::uint32_t offset);
 
 		std::uint32_t count() const { return buffer_count; };
 
-		VkBuffer get_vulkan_buffer() const { return vulkan_buffer; }
+		VkBuffer get_vulkan_buffer() const;
 
-		VkBuffer operator*() const { return vulkan_buffer; }
+		VkBuffer operator*() const;
 
 	public:
-		inline static std::unique_ptr<IndexBuffer> create(std::vector<Index>&& indices)
+		inline static std::shared_ptr<IndexBuffer> create(std::vector<Index>&& indices)
 		{
-			return std::make_unique<IndexBuffer>(indices.data(), static_cast<std::uint32_t>(indices.size()));
+			return std::shared_ptr<IndexBuffer>(new IndexBuffer { indices.data(), static_cast<std::uint32_t>(indices.size()) });
 		}
 
-		inline static std::unique_ptr<IndexBuffer> create(const std::vector<Index>& indices)
+		inline static std::shared_ptr<IndexBuffer> create(const std::vector<Index>& indices)
 		{
-			return std::make_unique<IndexBuffer>(indices.data(), static_cast<std::uint32_t>(indices.size()));
+			return std::shared_ptr<IndexBuffer>(new IndexBuffer { indices.data(), static_cast<std::uint32_t>(indices.size()) });
 		}
 
-		inline static std::unique_ptr<IndexBuffer> create(std::size_t count)
+		inline static std::shared_ptr<IndexBuffer> create(std::size_t count)
 		{
-			return std::make_unique<IndexBuffer>(static_cast<std::uint32_t>(count));
+			return std::shared_ptr<IndexBuffer>(new IndexBuffer { static_cast<std::uint32_t>(count) });
 		}
 
 	private:
@@ -58,9 +49,9 @@ namespace Alabaster {
 
 		VkBuffer vulkan_buffer { nullptr };
 
-		bool destroyed { false };
+		explicit IndexBuffer(std::uint32_t count);
+		IndexBuffer(const void* data, std::uint32_t count);
 
-	private:
 		void offline_set_data(const void* buffer, std::uint32_t size, std::uint32_t offset);
 	};
 

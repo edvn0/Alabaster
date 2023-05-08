@@ -4,7 +4,7 @@
 #include "cache/ResourceCache.hpp"
 
 #include "core/exceptions/AlabasterException.hpp"
-#include "utilities/FileInputOutput.hpp"
+#include "filesystem/FileSystem.hpp"
 
 #include <filesystem>
 
@@ -12,10 +12,10 @@ namespace AssetManager {
 
 	ResourceCache::ResourceCache()
 	{
-		shader_cache.load_from_directory(Alabaster::IO::shaders());
-		texture_cache.load_from_directory(Alabaster::IO::textures(), { ".png", ".tga", ".jpg", ".jpeg", ".bmp" });
-		texture_cache.load_from_directory(Alabaster::IO::fonts(), { ".png", ".tga", ".jpg", ".jpeg", ".bmp" });
-		texture_cache.load_from_directory(Alabaster::IO::editor_resources(), { "*" });
+		shader_cache.load_from_directory(Alabaster::FileSystem::shaders());
+		texture_cache.load_from_directory(Alabaster::FileSystem::textures(), { ".png", ".tga", ".jpg", ".jpeg", ".bmp" });
+		texture_cache.load_from_directory(Alabaster::FileSystem::fonts(), { ".png", ".tga", ".jpg", ".jpeg", ".bmp" });
+		texture_cache.load_from_directory(Alabaster::FileSystem::editor_resources(), { "*" });
 	}
 
 	void ResourceCache::initialise() { the(); }

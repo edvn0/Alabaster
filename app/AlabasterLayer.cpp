@@ -4,6 +4,7 @@
 #include "AssetManager.hpp"
 #include "FileDragDropHandler.hpp"
 #include "SceneSystem.hpp"
+#include "component/ScriptEntity.hpp"
 #include "core/GUILayer.hpp"
 #include "core/Logger.hpp"
 #include "core/exceptions/AlabasterException.hpp"
@@ -26,18 +27,152 @@ static bool is_dockspace_open { true };
 
 static bool global_imgui_is_blocking { false };
 
+void AlabasterLayer::build_scene(SceneSystem::Scene& scene)
+{
+	using namespace Alabaster;
+
+	auto sphere_model = Alabaster::Mesh::from_file("sphere_subdivided.obj");
+	auto simple_sphere_model = Alabaster::Mesh::from_file("sphere.obj");
+	auto cube_model = Alabaster::Mesh::from_file("cube.obj");
+	PipelineSpecification sun_spec { .shader = AssetManager::asset<Alabaster::Shader>("mesh_light"),
+		.debug_name = "Sun Pipeline",
+		.render_pass = scene.get_framebuffer().get_renderpass(),
+		.topology = Topology::TriangleList,
+		.vertex_layout
+		= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float3, "position"), VertexBufferElement(ShaderDataType::Float4, "colour"),
+			VertexBufferElement(ShaderDataType::Float3, "normal"), VertexBufferElement(ShaderDataType::Float3, "tangent"),
+			VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
+		.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, scene.get_renderer().default_push_constant_size()) } };
+	auto sun_pipeline = Alabaster::Pipeline::create(sun_spec);
+
+	Entity sphere_one = scene.create_entity(fmt::format("Sphere-{}", 0));
+	sphere_one.add_component<Component::Mesh>(sphere_model);
+	auto& sphere_one_transform = sphere_one.get_component<Component::Transform>();
+	sphere_one_transform.scale = glm::vec3 { 0.1f };
+	sphere_one_transform.position = { -0.35, -0.5, .5f };
+	sphere_one.add_component<Component::Texture>(Alabaster::random_vec4(0, 1));
+	sphere_one.add_component<Component::Pipeline>(sun_pipeline);
+	sphere_one.add_component<Component::SphereIntersectible>();
+
+	Entity sphere_two = scene.create_entity(fmt::format("Sphere-{}", 1));
+	sphere_two.add_component<Component::Mesh>(sphere_model);
+	auto& sphere_two_transform = sphere_two.get_component<Component::Transform>();
+	sphere_two_transform.scale = glm::vec3 { 0.1f };
+	sphere_two_transform.position = { .35, -0.5, .5f };
+	sphere_two.add_component<Component::Texture>(Alabaster::random_vec4(0, 1));
+	sphere_two.add_component<Component::Pipeline>(sun_pipeline);
+	sphere_two.add_component<Component::SphereIntersectible>();
+
+	Entity floor = scene.create_entity("Floor");
+	floor.add_component<Component::BasicGeometry>(Component::Geometry::Quad);
+	auto& floor_transform = floor.get_component<Component::Transform>();
+	floor_transform.scale = { 5, 5, .2 };
+	floor_transform.rotation = glm::rotate(glm::mat4 { 1.0f }, glm::radians(90.0f), { 1, 0, 0 });
+	floor.add_component<Component::Texture>(glm::vec4 { 0.3f, 0.2f, 0.3f, 0.7f });
+
+	static std::array point_lights { scene.create_entity("LightOne"), scene.create_entity("LightTwo"), scene.create_entity("LightThree"),
+		scene.create_entity("LightFour"), scene.create_entity("LightFive"), scene.create_entity("LightSix"), scene.create_entity("LightSeven"),
+		scene.create_entity("LightEight"), scene.create_entity("LightNine"), scene.create_entity("LightTen") };
+
+	class MoveInCircle : public ScriptEntity {
+	public:
+		~MoveInCircle() override = default;
+		explicit MoveInCircle(const float in_radius, const float in_height, const float beginning_position)
+			: radius(in_radius)
+			, height(in_height)
+			, current_pos(glm::degrees(beginning_position))
+		{
+		}
+		void on_create() override
+		{
+			get_component<Component::Transform>().scale = { 0.05, 0.05, 0.05 };
+			const auto cos = glm::cos(current_pos);
+			const auto sin = glm::sin(current_pos);
+			get_component<Component::Transform>().position = { sin * radius, height, cos * radius };
+		}
+		void on_update(const float ts) override
+		{
+			auto& component = get_component<Component::Transform>();
+			auto& pos = component.position;
+			current_pos += 50.0f * ts;
+
+			pos.x = radius * glm::sin(glm::radians(current_pos));
+			pos.z = radius * glm::cos(glm::radians(current_pos));
+		}
+
+	private:
+		float radius;
+		float height;
+		float current_pos = 0;
+	};
+	for (auto& point_light : point_lights) {
+		auto& transform = point_light.get_transform();
+
+		constexpr auto height = -0.5f;
+		constexpr auto radius = 2.0f;
+
+		static int index = 0;
+		constexpr auto division = (2 * glm::pi<float>()) / point_lights.size();
+		const auto cos = glm::cos(index * division);
+		const auto sin = glm::sin(index * division);
+		index++;
+
+		transform.position = { sin * radius, height, cos * radius };
+		auto ambience = random_vec4(0, 1);
+		ambience.w = 1;
+		point_light.add_component<Component::PointLight>(ambience);
+		point_light.add_component<Component::Mesh>(simple_sphere_model);
+		const float start_pos = static_cast<float>(index) * division;
+		Alabaster::Log::info("Current pos: {}", start_pos);
+		point_light.add_behaviour<MoveInCircle>("MoveInCircle", radius, height, start_pos);
+		// point_light.add_component<Component::ScriptBehaviour>("Move");
+	}
+
+	auto sun = scene.create_entity("The Sun");
+	sun.add_component<Component::Light>(glm::vec4 { 252., 144., 3., 255 });
+	sun.add_component<Component::Mesh>(sphere_model);
+	sun.add_component<Component::Texture>(glm::vec4 { 252., 144., 3., 255 });
+	sun.add_component<Component::ScriptBehaviour>("move");
+	auto& sun_transform = sun.get_transform();
+	sun_transform.position = { -3, -1.5, -1 };
+	sun_transform.scale = glm::vec3 { 0.5 };
+
+#ifdef ALABASTER_DEBUG
+	auto debug_component = create_entity("DebugComponent");
+	debug_component.add_component<Component::Mesh>();
+	debug_component.add_component<Component::Transform>();
+	debug_component.add_component<Component::ID>();
+	debug_component.add_component<Component::Tag>();
+	debug_component.add_component<Component::Texture>();
+	debug_component.add_component<Component::BasicGeometry>();
+	debug_component.add_component<Component::Pipeline>();
+	debug_component.add_component<Component::Camera>();
+	debug_component.add_component<Component::Light>();
+	debug_component.add_component<Component::PointLight>();
+	// debug_component.add_component<Component::SphereIntersectible>();
+	// debug_component.add_component<Component::QuadIntersectible>();
+	debug_component.add_component<Component::Behaviour>();
+	debug_component.add_component<Component::ScriptBehaviour>();
+#endif
+}
+
 bool AlabasterLayer::initialise(AssetManager::FileWatcher& file_watcher)
 {
 	editor_scene = std::make_unique<Scene>();
 	editor_scene->initialise(file_watcher);
 
 	panels.push_back(std::make_unique<App::SceneEntitiesPanel>(*editor_scene));
-	panels.push_back(std::make_unique<App::DirectoryContentPanel>(IO::resources()));
+#ifdef USE_EXPERIMENTAL_FEATURES
+	panels.push_back(std::make_unique<App::DirectoryContentPanel>(FileSystem::resources()));
+#endif
 	panels.push_back(std::make_unique<App::StatisticsPanel>(Application::the().get_statistics()));
 
 	for (const auto& panel : panels) {
 		panel->initialise(file_watcher);
 	}
+
+	build_scene(*editor_scene);
+
 	return true;
 }
 
@@ -111,9 +246,9 @@ void AlabasterLayer::update(float ts)
 
 void AlabasterLayer::render() { editor_scene->render(); }
 
-void AlabasterLayer::ui(float ts)
+void AlabasterLayer::ui()
 {
-	editor_scene->ui(ts);
+	editor_scene->ui();
 
 	static bool persistent = true;
 	const bool opt_fullscreen = persistent;
@@ -157,7 +292,7 @@ void AlabasterLayer::ui(float ts)
 		menu_bar();
 
 		for (const auto& panel : panels) {
-			panel->ui(ts);
+			panel->ui();
 		}
 
 		viewport();
@@ -240,10 +375,10 @@ void AlabasterLayer::viewport()
 			glm::vec4 perspective;
 			glm::decompose(transform, scale, rotation, translation, skew, perspective);
 
-			auto deltaRotation = rotation - entity_transform.rotation;
+			auto delta_rotation = rotation - entity_transform.rotation;
 
 			entity_transform.position = translation;
-			entity_transform.rotation += deltaRotation;
+			entity_transform.rotation += delta_rotation;
 			entity_transform.scale = scale;
 		}
 	}
@@ -364,7 +499,6 @@ void AlabasterLayer::handle_drag_drop() const
 
 void AlabasterLayer::destroy()
 {
-	editor_scene->shutdown();
 	for (auto const& panel : panels) {
 		panel->on_destroy();
 	}

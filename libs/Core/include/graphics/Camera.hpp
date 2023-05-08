@@ -16,6 +16,7 @@ namespace Alabaster {
 	class Camera {
 	public:
 		Camera() = default;
+		Camera(const Camera&) = default;
 		Camera(const glm::mat4& projection, const glm::mat4& unreversed_projection);
 		Camera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane);
 

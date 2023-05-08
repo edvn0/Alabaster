@@ -4,7 +4,7 @@ project(SceneTests)
 set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
 set(CMAKE_CXX_STANDARD 20)
 
-file(GLOB_RECURSE sources main.cpp)
+file(GLOB_RECURSE sources compiler/**.cpp)
 
 add_executable(SceneTests ${sources})
 target_include_directories(SceneTests PRIVATE "${THIRD_PARTY_DIR}/googletest/googletest/include")

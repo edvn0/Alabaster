@@ -20,7 +20,7 @@ namespace App {
 	public:
 		virtual ~Panel() = default;
 		virtual void on_update(float ts) = 0;
-		virtual void ui(float ts) = 0;
+		virtual void ui() = 0;
 		virtual void on_event(Alabaster::Event&) = 0;
 		virtual void initialise(AssetManager::FileWatcher&) = 0;
 		virtual void on_destroy() = 0;

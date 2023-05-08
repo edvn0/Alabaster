@@ -29,6 +29,14 @@ namespace Alabaster {
 			return buffer;
 		}
 
+		static Buffer copy(const void* in_data, std::size_t in_size)
+		{
+			Buffer buffer;
+			buffer.allocate(static_cast<std::uint32_t>(in_size));
+			std::memcpy(buffer.data, in_data, static_cast<std::uint32_t>(in_size));
+			return buffer;
+		}
+
 		void allocate(std::uint32_t in_size)
 		{
 			delete[] static_cast<byte*>(this->data);

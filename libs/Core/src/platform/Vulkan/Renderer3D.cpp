@@ -61,16 +61,16 @@ namespace Alabaster {
 		std::uint32_t quad_indices_submitted { 0 };
 		std::uint32_t quad_vertices_submitted { 0 };
 		std::array<QuadVertex, max_vertices> quad_buffer;
-		std::unique_ptr<VertexBuffer> quad_vertex_buffer;
-		std::unique_ptr<IndexBuffer> quad_index_buffer;
+		std::shared_ptr<VertexBuffer> quad_vertex_buffer;
+		std::shared_ptr<IndexBuffer> quad_index_buffer;
 
 		std::uint32_t line_indices_submitted { 0 };
 		std::uint32_t line_vertices_submitted { 0 };
 		std::array<LineVertex, max_vertices> line_buffer;
-		std::unique_ptr<VertexBuffer> line_vertex_buffer;
-		std::unique_ptr<IndexBuffer> line_index_buffer;
+		std::shared_ptr<VertexBuffer> line_vertex_buffer;
+		std::shared_ptr<IndexBuffer> line_index_buffer;
 
-		std::vector<std::unique_ptr<UniformBuffer>> uniforms;
+		std::vector<std::shared_ptr<UniformBuffer>> uniforms;
 
 		std::vector<VkDescriptorSet> descriptor_sets;
 		VkDescriptorSetLayout descriptor_set_layout;
@@ -85,7 +85,7 @@ namespace Alabaster {
 
 		PC push_constant;
 
-		std::unordered_map<std::string_view, std::unique_ptr<Pipeline>> pipelines;
+		std::unordered_map<std::string_view, std::shared_ptr<Pipeline>> pipelines;
 
 		std::size_t point_light_index { 0 };
 		std::array<PointLight, 10> point_light_buffer;
@@ -239,7 +239,7 @@ namespace Alabaster {
 		}
 	}
 
-	Renderer3D::Renderer3D(const std::shared_ptr<Camera>& cam) noexcept
+	Renderer3D::Renderer3D(Camera* cam) noexcept
 		: camera(cam)
 		, data(new RendererData())
 	{
@@ -259,7 +259,7 @@ namespace Alabaster {
 		constexpr VkDeviceSize uniform_buffer_size = sizeof(UBO);
 
 		for (std::size_t i = 0; i < data->image_count; i++) {
-			data->uniforms.emplace_back(std::make_unique<UniformBuffer>(uniform_buffer_size, 0));
+			data->uniforms.push_back(UniformBuffer::create(uniform_buffer_size, 0));
 		}
 
 		create_descriptor_set_layout();
@@ -267,7 +267,6 @@ namespace Alabaster {
 		create_descriptor_sets();
 
 		// QUAD STUFF
-
 		PipelineSpecification quad_spec { .shader = AssetManager::the().shader("quad_light"),
 			.debug_name = "Quad Pipeline",
 			.render_pass = data->framebuffer->get_renderpass(),
@@ -276,7 +275,7 @@ namespace Alabaster {
 				VertexBufferElement(ShaderDataType::Float4, "colour"), VertexBufferElement(ShaderDataType::Float3, "normals"),
 				VertexBufferElement(ShaderDataType::Float2, "uvs"), VertexBufferElement(ShaderDataType::Int, "texture_id") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) } };
-		data->pipelines.try_emplace("quad"sv, std::make_unique<Pipeline>(quad_spec));
+		data->pipelines.try_emplace("quad"sv, Pipeline::create(quad_spec));
 
 		data->quad_vertex_buffer = VertexBuffer::create(RendererData::max_vertices * sizeof(QuadVertex));
 		data->line_vertex_buffer = VertexBuffer::create(RendererData::max_vertices * sizeof(LineVertex));
@@ -308,7 +307,7 @@ namespace Alabaster {
 				VertexBufferElement(ShaderDataType::Float3, "bitangent"), VertexBufferElement(ShaderDataType::Float2, "uvs") },
 			.ranges = PushConstantRanges { PushConstantRange(PushConstantKind::Both, sizeof(PC)) },
 		};
-		data->pipelines.try_emplace("mesh"sv, std::make_unique<Pipeline>(mesh_spec));
+		data->pipelines.try_emplace("mesh"sv, Pipeline::create(mesh_spec));
 
 		PipelineSpecification line_spec { .shader = AssetManager::the().shader("line"),
 			.debug_name = "Line Pipeline",
@@ -317,7 +316,7 @@ namespace Alabaster {
 			.vertex_layout
 			= VertexBufferLayout { VertexBufferElement(ShaderDataType::Float4, "position"), VertexBufferElement(ShaderDataType::Float4, "colour") },
 			.line_width = 5.0f };
-		data->pipelines.try_emplace("line"sv, std::make_unique<Pipeline>(line_spec));
+		data->pipelines.try_emplace("line"sv, Pipeline::create(line_spec));
 
 		std::vector<std::uint32_t> line_indices;
 		line_indices.resize(RendererData::max_indices);
@@ -518,7 +517,7 @@ namespace Alabaster {
 		// Flush ignores these for now...
 	}
 
-	void Renderer3D::end_scene(const CommandBuffer& command_buffer, const std::shared_ptr<Framebuffer>& target)
+	void Renderer3D::end_scene(const CommandBuffer& command_buffer, const Framebuffer& target)
 	{
 		Alabaster::assert_that(scene_has_begun);
 		scene_has_begun = false;
@@ -551,7 +550,7 @@ namespace Alabaster {
 		Renderer::end_render_pass(command_buffer);
 	}
 
-	void Renderer3D::end_scene(const CommandBuffer& command_buffer) { end_scene(command_buffer, data->framebuffer); }
+	void Renderer3D::end_scene(const CommandBuffer& command_buffer) { end_scene(command_buffer, *data->framebuffer); }
 
 	void Renderer3D::draw_quads(const CommandBuffer& command_buffer)
 	{
@@ -659,30 +658,17 @@ namespace Alabaster {
 		data->uniforms[image_index]->set_data(&ubo, sizeof(UBO), 0);
 	}
 
-	void Renderer3D::destroy()
+	Renderer3D::~Renderer3D()
 	{
 		const auto& device = GraphicsContext::the().device();
-		data->pipelines.clear();
-
-		data->framebuffer->destroy();
-
-		data->quad_vertex_buffer->destroy();
-		data->quad_index_buffer->destroy();
-		data->line_vertex_buffer->destroy();
-		data->line_index_buffer->destroy();
-
-#ifdef ALABASTER_WINDOWS
-		std::ranges::for_each(data->uniforms.begin(), data->uniforms.end(), [](auto& uni) { uni->destroy(); });
-#else
-		std::for_each(data->uniforms.begin(), data->uniforms.end(), [](auto& uni) { uni->destroy(); });
-#endif
-
 		vkDestroyDescriptorPool(device, data->descriptor_pool, nullptr);
 		vkDestroyDescriptorSetLayout(device, data->descriptor_set_layout, nullptr);
+
+		delete data;
 	}
 
 	const VkRenderPass& Renderer3D::get_render_pass() const { return data->framebuffer->get_renderpass(); }
 
-	void Renderer3D::set_camera(const std::shared_ptr<Camera>& cam) { camera = cam; }
+	void Renderer3D::set_camera(const Camera& cam) { *camera = cam; }
 
 } // namespace Alabaster

@@ -5,7 +5,9 @@ project(
 	VERSION 0.0.1
 	LANGUAGES CXX)
 
-message(STATUS "${CMAKE_CXX_COMPILER}")
+find_package(Vulkan REQUIRED)
+find_program(CLANG_FORMAT "clang-format")
+find_package(Python COMPONENTS Development Interpreter)
 
 if(WIN32)
 	set(FT_DISABLE_HARFBUZZ ON)
@@ -29,7 +31,7 @@ else()
     set(ALABASTER_COMPILER "gnu")
 endif()
 
-message(STATUS "ALABASTER: Chosen OS: ${ALABASTER_OS}, chosen compiler: ${ALABASTER_COMPILER}")
+message(STATUS "Alabaster: Chosen OS: ${ALABASTER_OS}, chosen compiler: ${ALABASTER_COMPILER}. \nTest config: BUILD_TESTING:${BUILD_TESTING}, ALABASTER_BUILD_TESTING: ${ALABASTER_BUILD_TESTING}.")
 
 if(CMAKE_GENERATOR STREQUAL "Xcode")
 	set(XCODE_SCHEME_ENABLE_GPU_API_VALIDATION ON)

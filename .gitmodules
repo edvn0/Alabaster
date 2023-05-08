@@ -1,57 +1,60 @@
 [submodule "third_party/glfw"]
-    path = third_party/glfw
-    url = https://github.com/edvn0/glfw
+path = third_party/glfw
+url = https://github.com/edvn0/glfw
 [submodule "third_party/imgui"]
-    path = third_party/imgui
-    url = https://github.com/edvn0/imgui
+path = third_party/imgui
+url = https://github.com/edvn0/imgui
 [submodule "third_party/spdlog"]
-	path = third_party/spdlog
-	url = https://github.com/edvn0/spdlog
+path = third_party/spdlog
+url = https://github.com/edvn0/spdlog
 [submodule "third_party/magic_enum"]
-	path = third_party/magic_enum
-	url = https://github.com/edvn0/magic_enum.git
+path = third_party/magic_enum
+url = https://github.com/edvn0/magic_enum.git
 [submodule "third_party/VulkanMemoryAllocator"]
-	path = third_party/VulkanMemoryAllocator
-	url = https://github.com/edvn0/VulkanMemoryAllocator.git
+path = third_party/VulkanMemoryAllocator
+url = https://github.com/edvn0/VulkanMemoryAllocator.git
 [submodule "third_party/googletest"]
-	path = third_party/googletest
-	url = https://github.com/google/googletest.git
+path = third_party/googletest
+url = https://github.com/google/googletest.git
 [submodule "third_party/glm"]
-	path = third_party/glm
-	url = https://github.com/edvn0/glm
+path = third_party/glm
+url = https://github.com/edvn0/glm
 [submodule "third_party/stb"]
-	path = third_party/stb
-	url = https://github.com/edvn0/stb
+path = third_party/stb
+url = https://github.com/edvn0/stb
 [submodule "third_party/tinyobjloader"]
-	path = third_party/tinyobjloader
-	url = https://github.com/edvn0/tinyobjloader
+path = third_party/tinyobjloader
+url = https://github.com/edvn0/tinyobjloader
 [submodule "third_party/random"]
-	path = third_party/random
-	url = https://github.com/effolkronium/random
+path = third_party/random
+url = https://github.com/effolkronium/random
 [submodule "third_party/shaderc"]
-	path = third_party/shaderc
-	url = https://github.com/edvn0/shaderc
+path = third_party/shaderc
+url = https://github.com/edvn0/shaderc
 [submodule "third_party/ProgramOptions"]
-	path = third_party/ProgramOptions
-	url = https://github.com/Fytch/ProgramOptions.hxx
+path = third_party/ProgramOptions
+url = https://github.com/Fytch/ProgramOptions.hxx
 [submodule "third_party/fmt"]
-	path = third_party/fmt
-	url = https://github.com/fmtlib/fmt.git
+path = third_party/fmt
+url = https://github.com/fmtlib/fmt.git
 [submodule "third_party/spirv-cross"]
-	path = third_party/spirv-cross
-	url = https://github.com/KhronosGroup/SPIRV-Cross.git
+path = third_party/spirv-cross
+url = https://github.com/KhronosGroup/SPIRV-Cross.git
 [submodule "third_party/entt"]
-	path = third_party/entt
-	url = https://github.com/skypjack/entt.git
+path = third_party/entt
+url = https://github.com/skypjack/entt.git
 [submodule "third_party/stduuid"]
-	path = third_party/stduuid
-	url = https://github.com/mariusbancila/stduuid.git
+path = third_party/stduuid
+url = https://github.com/mariusbancila/stduuid.git
 [submodule "third_party/json"]
-	path = third_party/json
-	url = https://github.com/nlohmann/json.git
+path = third_party/json
+url = https://github.com/nlohmann/json.git
 [submodule "third_party/gsl"]
-	path = third_party/gsl
-	url = https://github.com/microsoft/GSL.git
+path = third_party/gsl
+url = https://github.com/microsoft/GSL.git
 [submodule "third_party/imguizmo"]
-	path = third_party/imguizmo
-	url = https://github.com/edvn0/ImGuizmo.git
+path = third_party/imguizmo
+url = https://github.com/edvn0/ImGuizmo.git
+[submodule "third_party/pybind11"]
+	path = third_party/pybind11
+	url = https://github.com/edvn0/pybind11

@@ -1,7 +1,13 @@
 #include "panels/SceneEntitiesPanel.hpp"
 
 #include "component/Component.hpp"
+#include "filesystem/FileSystem.hpp"
+#include "graphics/Camera.hpp"
+#include "graphics/Mesh.hpp"
+#include "graphics/Pipeline.hpp"
+#include "graphics/Texture.hpp"
 #include "ui/ImGui.hpp"
+#include "utilities/BitCast.hpp"
 
 #include <AssetManager.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -217,11 +223,13 @@ namespace App {
 		if (entity.has_component<SceneSystem::Component::Tag>()) {
 			auto& tag = entity.get_tag().tag;
 
+			static constexpr auto buffer_size = 64;
+
 			std::string buffer;
-			buffer.reserve(500);
-			std::memset(buffer.data(), 0, sizeof(buffer));
-			tag.copy(buffer.data(), 499);
-			if (ImGui::InputText("##Tag", buffer.data(), sizeof(buffer))) {
+			buffer.reserve(buffer_size);
+			std::memset(buffer.data(), 0, buffer_size);
+			tag.copy(buffer.data(), buffer_size);
+			if (ImGui::InputText("##Tag", buffer.data(), buffer_size, ImGuiInputTextFlags_EnterReturnsTrue)) {
 				tag = std::string(buffer);
 			}
 		}
@@ -236,6 +244,7 @@ namespace App {
 			display_add_component_entry<SceneSystem::Component::Camera>("Camera");
 			display_add_component_entry<SceneSystem::Component::Texture>("Texture");
 			display_add_component_entry<SceneSystem::Component::Pipeline>("Pipeline");
+			display_add_component_entry<SceneSystem::Component::ScriptBehaviour>("ScriptBehaviour");
 			display_add_component_entry<SceneSystem::Component::Mesh>("Mesh");
 			display_add_component_entry<SceneSystem::Component::SphereIntersectible>("SphereIntersectible");
 			display_add_component_entry<SceneSystem::Component::PointLight>("PointLight");
@@ -287,6 +296,23 @@ namespace App {
 			ImGui::Text("%s", (*path).c_str());
 		});
 
+		draw_component<SceneSystem::Component::ScriptBehaviour>(entity, "ScriptBehaviour", [](SceneSystem::Component::ScriptBehaviour& component) {
+			std::string buffer;
+
+			static constexpr auto buffer_size = 64;
+
+			buffer.reserve(buffer_size);
+			std::memset(buffer.data(), 0, buffer_size);
+			component.script_name.copy(buffer.data(), buffer_size);
+			if (ImGui::InputText("##ScriptBehaviourName", buffer.data(), buffer_size, ImGuiInputTextFlags_EnterReturnsTrue)) {
+				if (!Alabaster::FileSystem::find_file(buffer, Alabaster::FileSystem::scripts().string(), { ".cs", ".py" })) {
+					Alabaster::Log::warn("[SceneEntitiesPanel] {} is not a script in this CWD.", buffer.data());
+					return;
+				}
+				component.script_name = buffer;
+			}
+		});
+
 		draw_component<SceneSystem::Component::Pipeline>(entity, "Pipeline", [](SceneSystem::Component::Pipeline& component) {
 			if (!component.pipeline) {
 				ImGui::Text("Has a null pipeline.");
@@ -319,10 +345,8 @@ namespace App {
 			}
 
 			AssetManager::ShaderCompiler compiler;
-			auto shader = compiler.compile(fp.string(), Alabaster::IO::shader(vertex_filename), Alabaster::IO::shader(fragment_filename));
-			(void)shader.descriptor_set_layouts();
-
-			info.shader = std::make_shared<Alabaster::Shader>(shader);
+			info.shader = std::make_shared<Alabaster::Shader>(
+				compiler.compile(fp.string(), Alabaster::FileSystem::shader(vertex_filename), Alabaster::FileSystem::shader(fragment_filename)));
 			try {
 				component.pipeline->invalidate();
 			} catch (const std::exception& e) {
@@ -353,7 +377,7 @@ namespace App {
 
 		if (opened) {
 			constexpr auto opened_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanAvailWidth;
-			const auto leaf_id = reinterpret_cast<const char*>(&entity.get_component<SceneSystem::Component::ID>().identifier);
+			const auto leaf_id = Alabaster::BitCast::reinterpret_as<const char*>(&entity.get_component<SceneSystem::Component::ID>().identifier);
 			if (ImGui::TreeNodeEx(leaf_id, opened_flags, "%s", tag.c_str()))
 				ImGui::TreePop();
 			ImGui::TreePop();
@@ -373,7 +397,7 @@ namespace App {
 		}
 	}
 
-	void SceneEntitiesPanel::ui(float ts)
+	void SceneEntitiesPanel::ui()
 	{
 		ImGui::Begin("Scene Hierarchy");
 

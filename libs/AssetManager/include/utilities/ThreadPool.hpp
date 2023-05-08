@@ -1,3 +1,5 @@
+#pragma once
+
 /*********************************************************
  *
  *  Copyright (C) 2014 by Vitaliy Vitsentiy

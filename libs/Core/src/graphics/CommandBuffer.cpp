@@ -54,7 +54,7 @@ namespace Alabaster {
 		init(count);
 	}
 
-	void CommandBuffer::destroy()
+	CommandBuffer::~CommandBuffer()
 	{
 		if (owned_by_swapchain)
 			return;
@@ -64,15 +64,6 @@ namespace Alabaster {
 
 		for (auto& fence : fences) {
 			vkDestroyFence(device, fence, nullptr);
-		}
-
-		destroyed = true;
-	}
-
-	CommandBuffer::~CommandBuffer()
-	{
-		if (!destroyed) {
-			destroy();
 		}
 	}
 
@@ -144,10 +135,19 @@ namespace Alabaster {
 
 	std::uint32_t CommandBuffer::get_buffer_index() { return Renderer::current_frame(); }
 
-	std::uint32_t ImmediateCommandBuffer::get_buffer_index()
-	{
-		assert_that(buffers.size() == 1, "Immediate mode buffer should NEVER have more than one entry.");
-		return 0;
-	}
+	std::uint32_t ImmediateCommandBuffer::get_buffer_index() { return 0; }
+
+	const VkCommandPool& CommandBuffer::get_command_pool() const { return pool; }
+
+	VkCommandPool& CommandBuffer::get_command_pool() { return pool; }
+
+	const VkCommandBuffer& CommandBuffer::get_buffer() const { return active; }
+	VkCommandBuffer& CommandBuffer::get_buffer() { return active; }
+	CommandBuffer::operator VkCommandBuffer() { return active; }
+	VkCommandBuffer CommandBuffer::operator*() { return active; }
+	const VkCommandBuffer& ImmediateCommandBuffer::get_buffer() const { return buffer->get_buffer(); }
+	VkCommandBuffer& ImmediateCommandBuffer::get_buffer() { return buffer->get_buffer(); }
+	ImmediateCommandBuffer::operator VkCommandBuffer() { return buffer->get_buffer(); }
+	VkCommandBuffer ImmediateCommandBuffer::operator*() { return buffer->get_buffer(); }
 
 } // namespace Alabaster

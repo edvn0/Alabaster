@@ -50,7 +50,7 @@ namespace AssetManager {
 			return get_asset<T>()(name);
 		} catch (const Alabaster::AlabasterException& exc) {
 			Alabaster::Log::info("Could not find asset with name {}. Exception: {}", name, exc.what());
-			throw Alabaster::AlabasterException(exc);
+			throw Alabaster::AlabasterException("{}", exc.what());
 		}
 	}
 
