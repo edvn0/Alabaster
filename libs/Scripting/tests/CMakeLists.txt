@@ -7,16 +7,15 @@ set(CMAKE_CXX_STANDARD 20)
 file(GLOB_RECURSE sources main.cpp interpreter_tests.cpp)
 
 add_executable(ScriptingTests ${sources})
-target_link_libraries(ScriptingTests
-	PRIVATE
-	Alabaster::Core
-	Alabaster::SceneSystem
-	Alabaster::Scripting
-	Alabaster::AssetManager
-	VulkanMemoryAllocator
-	gmock_main
-	GTest::gtest_main
-)
+target_link_libraries(
+  ScriptingTests
+  PRIVATE Alabaster::Core
+          Alabaster::SceneSystem
+          Alabaster::Scripting
+          Alabaster::AssetManager
+          VulkanMemoryAllocator
+          gmock_main
+          GTest::gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(ScriptingTests)

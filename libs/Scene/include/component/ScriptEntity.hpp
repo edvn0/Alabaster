@@ -14,6 +14,8 @@ namespace SceneSystem {
 	public:
 		virtual ~ScriptEntity() = default;
 		ScriptEntity() = default;
+		explicit ScriptEntity(SceneSystem::Entity entity)
+			: script_entity(entity) {};
 
 		template <Component::IsComponent T> T& get_component() { return script_entity.get_component<T>(); }
 		template <Component::IsComponent T> const T& get_component() const { return script_entity.get_component<T>(); }
