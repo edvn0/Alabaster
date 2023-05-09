@@ -185,13 +185,11 @@
             "**/.git/subtree-cache/**": true,
             "**/node_modules/*/**": true
         },
-        "cmake.buildDirectory": "${workspaceFolder}/build-Debug-Ninja-cl.exe",
+        "cmake.buildDirectory": "${workspaceFolder}/vscode-build",
         "cmake.generator": "Ninja",
         "cmake.skipConfigureIfCachePresent": true,
         "cmake.configureSettings": {
-            "VULKAN_SDK": "C:\\VulkanSDK\\1.3.243.0",
-            "Vulkan_LIBRARY": "C:\\VulkanSDK\\1.3.243.0\\Lib\\vulkan-1.lib",
-            "CMAKE_BUILD_TYPE": "Debug",
+            "CMAKE_BUILD_TYPE": "RelWithDebInfo",
             "GLFW_INSTALL": "OFF",
             "GLFW_BUILD_DOCS": "OFF",
             "GLFW_BUILD_TESTS": "OFF",
@@ -201,7 +199,7 @@
             "SPIRV_SKIP_EXECUTABLES": "ON",
             "ALABASTER_BUILD_TESTING": "ON",
             "ALABASTER_IS_BUILD_TOOL": "OFF",
-            "ALABASTER_SHOULD_FORMAT": "OFF",
+            "ALABASTER_SHOULD_FORMAT": "ON",
             "ENABLE_HLSL": "ON",
             "ENABLE_CTEST": "OFF",
             "ENTT_BUILD_TESTING": "OFF",
@@ -284,12 +282,12 @@
         "version": "0.2.0",
         "configurations": [
             {
-                "type": "cppvsdbg",
+                "type": "cppdbg",
                 "request": "launch",
                 "name": "Debug",
-                "program": "${workspaceFolder}/build-Debug-Ninja-cl.exe/app/AlabasterApp.exe",
+                "program": "${workspaceFolder}/vscode-build/app/AlabasterApp.exe",
                 "args": [],
-                "cwd": "${workspaceFolder}/app"
+                "cwd": "${workspaceFolder}/vscode-build/app"
             }
         ]
     },

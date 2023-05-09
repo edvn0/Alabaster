@@ -1,7 +1,7 @@
 set(THIRD_PARTY_DIR "${CMAKE_SOURCE_DIR}/third_party")
 
 function(register_for_project PROJECT HAS_TESTS)
-	if(CLANG_FORMAT AND ${ALABASTER_IS_BUILD_TOOL} STREQUAL "OFF" AND ${ALABASTER_SHOULD_FORMAT} STREQUAL "ON")
+	if(CLANG_FORMAT AND NOT ALABASTER_CI AND ALABASTER_FORMAT)
 		set(formattable_files ${sources})
 
 		add_custom_target(
@@ -16,8 +16,6 @@ function(register_for_project PROJECT HAS_TESTS)
 	elseif(${ALABASTER_OS} STREQUAL "Linux")
 		target_compile_definitions(${PROJECT} PRIVATE ALABASTER_LINUX)
 	endif()
-
-	message(STATUS "Alabaster: Chosen OS as compile definition is: ${ALABASTER_OS}")
 
 	target_compile_features(${PROJECT} PRIVATE cxx_std_20)
 

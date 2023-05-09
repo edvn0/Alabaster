@@ -31,7 +31,25 @@ else()
     set(ALABASTER_COMPILER "gnu")
 endif()
 
-message(STATUS "Alabaster: Chosen OS: ${ALABASTER_OS}, chosen compiler: ${ALABASTER_COMPILER}. \nTest config: BUILD_TESTING:${BUILD_TESTING}, ALABASTER_BUILD_TESTING: ${ALABASTER_BUILD_TESTING}.")
+if(${ALABASTER_IS_BUILD_TOOL} STREQUAL "OFF")
+    set(ALABASTER_CI OFF)
+else()
+    set(ALABASTER_CI ON)
+endif()
+
+if(${ALABASTER_SHOULD_FORMAT} STREQUAL "OFF")
+    set(ALABASTER_FORMAT OFF)
+else()
+    set(ALABASTER_FORMAT ON)
+endif()
+
+message(
+    STATUS 
+    "Alabaster: Chosen OS: ${ALABASTER_OS}, chosen compiler: ${ALABASTER_COMPILER}. 
+    Test config: BUILD_TESTING:${BUILD_TESTING},  ALABASTER_BUILD_TESTING: ${ALABASTER_BUILD_TESTING}. 
+    Is build tool: ${ALABASTER_CI}. 
+    Should format: ${ALABASTER_FORMAT}."
+)
 
 if(CMAKE_GENERATOR STREQUAL "Xcode")
 	set(XCODE_SCHEME_ENABLE_GPU_API_VALIDATION ON)

@@ -114,7 +114,7 @@ def generate_cmake(
         f"-D CMAKE_BUILD_TYPE={build_mode.value}",
         f"-D ALABASTER_BUILD_TESTING={'ON' if build_tests else 'OFF'}",
         "-D ALABASTER_IS_BUILD_TOOL=OFF",
-        "-D ALABASTER_SHOULD_FORMAT=OFF"
+        "-D ALABASTER_SHOULD_FORMAT=OFF",
         f"-D BUILD_TESTING={'ON' if build_tests else 'OFF'}",
         "-D ENABLE_HLSL=ON",
         "-D ENTT_BUILD_TESTING=OFF",
