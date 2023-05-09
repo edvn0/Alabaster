@@ -12,6 +12,7 @@
 #include <Alabaster.hpp>
 #include <GLFW/glfw3.h>
 #include <Scripting.hpp>
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <imgui/imgui.h>
 
@@ -35,9 +36,14 @@ namespace SceneSystem {
 		hovered_entity = std::make_unique<Entity>();
 	}
 
+	static std::uint32_t width { 0 };
+	static std::uint32_t height { 0 };
+
 	void Scene::initialise(AssetManager::FileWatcher& watcher)
 	{
 		const auto&& [w, h] = Alabaster::Application::the().get_window().size();
+		width = w;
+		height = h;
 
 		scene_camera = std::make_unique<Alabaster::EditorCamera>(45.0f, static_cast<float>(w), static_cast<float>(h), 0.1f, 1000.0f);
 		scene_renderer = std::make_unique<Alabaster::Renderer3D>(scene_camera.get());
@@ -56,7 +62,37 @@ namespace SceneSystem {
 		fbs.clear_colour = { 0.0f, 0.0f, 0.0f, 1.0f };
 		fbs.debug_name = "Geometry";
 		fbs.clear_depth_on_load = true;
-		framebuffer = std::make_unique<Alabaster::Framebuffer>(fbs);
+		framebuffer = Alabaster::Framebuffer::create(fbs);
+
+		Alabaster::ImageSpecification depth_image;
+		depth_image.format = Alabaster::ImageFormat::DEPTH32F;
+		depth_image.usage = Alabaster::ImageUsage::Attachment;
+		depth_image.width = 1024;
+		depth_image.height = 1024;
+		depth_image.layers = 1;
+		auto image = Alabaster::Image::create(depth_image);
+		image->invalidate();
+		image->create_per_layer_image_view();
+
+		Alabaster::FramebufferSpecification sps;
+		sps.width = 1024;
+		sps.height = 1024;
+		sps.existing_image_layers.emplace_back(0);
+		sps.attachments = { Alabaster::ImageFormat::DEPTH32F };
+		sps.samples = 1;
+		sps.clear_colour = { 0.0f, 0.0f, 0.0f, 0.0f };
+		sps.debug_name = "ShadowPass";
+		sps.clear_depth_on_load = true;
+		sps.existing_image = image;
+		shadow_pass = Alabaster::Framebuffer::create(sps);
+
+		Alabaster::PipelineSpecification mesh_shadow_pass { .shader = AssetManager::the().shader("mesh_shadow_pass"),
+			.debug_name = "Mesh Shadow Pass Pipeline",
+			.render_pass = shadow_pass->get_renderpass(),
+			.topology = Alabaster::Topology::TriangleList,
+			.vertex_layout = Alabaster::VertexBufferLayout { Alabaster::VertexBufferElement(Alabaster::ShaderDataType::Float3, "position") },
+			.ranges = Alabaster::PushConstantRanges { Alabaster::PushConstantRange(Alabaster::PushConstantKind::Both, std::size_t(128)) } };
+		shadow_pass_pipeline = Alabaster::Pipeline::create(mesh_shadow_pass);
 	}
 
 	void Scene::step()
@@ -182,10 +218,26 @@ namespace SceneSystem {
 	void Scene::render()
 	{
 		command_buffer->begin();
-		scene_renderer->begin_scene();
-		scene_renderer->reset_stats();
-		draw_entities_in_scene();
-		scene_renderer->end_scene(*command_buffer, *framebuffer);
+
+		{
+			// Shadow pass
+			const auto the_sun = get_first_with<Component::Light>();
+			const auto position = the_sun.get_component<Component::Transform>().position;
+			const auto projection = glm::perspectiveFov(45.0f, 1600.0f, 900.0f, 0.1f, 1000.0f);
+			const auto view = glm::lookAt(position, glm::vec3 { 0.0f }, glm::vec3 { 0.0f, 1.0f, 0.0f });
+			scene_renderer->begin_scene(projection, view);
+			scene_renderer->reset_stats();
+			shadow_pass_entities();
+			scene_renderer->end_scene(*command_buffer, *shadow_pass);
+		}
+
+		{
+			scene_renderer->begin_scene();
+			scene_renderer->reset_stats();
+			geometry_pass();
+			scene_renderer->end_scene(*command_buffer, *framebuffer);
+		}
+
 		command_buffer->end();
 		command_buffer->submit();
 	}
@@ -198,35 +250,42 @@ namespace SceneSystem {
 		});
 	}
 
-	void Scene::draw_entities_in_scene()
+	void Scene::geometry_pass() { draw_entities_in_scene(false); }
+
+	void Scene::shadow_pass_entities() { draw_entities_in_scene(true); }
+
+	void Scene::draw_entities_in_scene(bool is_shadow)
 	{
 		axes(scene_renderer, glm::vec3 { -2.5, -0.1, 2.5 }, 5.0f);
 
 		const auto mesh_view = registry.view<Component::Transform, const Component::Mesh, const Component::Texture, const Component::Pipeline>(
 			entt::exclude<Component::Light>);
-		mesh_view.each([&renderer = scene_renderer](const auto& transform, const auto& mesh, const auto& texture, const auto& pipeline) {
+		mesh_view.each([is_shadow, &sp_pipeline = shadow_pass_pipeline, &renderer = scene_renderer](
+						   const auto& transform, const auto& mesh, const auto& texture, const auto& pipeline) {
 			if (mesh.valid()) {
-				renderer->mesh(mesh.mesh, transform.to_matrix(), pipeline.pipeline, texture.colour);
+				renderer->mesh(mesh.mesh, transform.to_matrix(), is_shadow ? sp_pipeline : pipeline.pipeline, texture.colour);
 			}
 		});
 
 		const auto light_view = registry.view<const Component::Transform, const Component::Light, Component::Texture, const Component::Mesh>(
 			entt::exclude<Component::PointLight>);
-		light_view.each([&renderer = scene_renderer](const auto& transform, const auto& light, auto& texture, const auto& mesh) {
+		light_view.each([is_shadow, &sp_pipeline = shadow_pass_pipeline, &renderer = scene_renderer](
+							const auto& transform, const auto& light, auto& texture, const auto& mesh) {
 			texture.colour = light.ambience;
 			if (mesh.valid()) {
-				renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, texture.colour);
+				renderer->mesh(mesh.mesh, transform.to_matrix(), is_shadow ? sp_pipeline : nullptr, texture.colour);
 			}
 			renderer->set_light_data(transform.position, texture.colour, light.ambience);
 		});
 
 		const auto point_light_view = registry.view<const Component::Transform, const Component::PointLight, const Component::Mesh>();
-		point_light_view.each([&renderer = scene_renderer](const auto& transform, const auto& light, const auto& mesh) {
-			renderer->submit_point_light_data({ glm::vec4(transform.position, 1.0), light.ambience });
-			if (mesh.valid()) {
-				renderer->mesh(mesh.mesh, transform.to_matrix(), nullptr, light.ambience);
-			}
-		});
+		point_light_view.each(
+			[is_shadow, &sp_pipeline = shadow_pass_pipeline, &renderer = scene_renderer](const auto& transform, const auto& light, const auto& mesh) {
+				renderer->submit_point_light_data({ glm::vec4(transform.position, 1.0), light.ambience });
+				if (mesh.valid()) {
+					renderer->mesh(mesh.mesh, transform.to_matrix(), is_shadow ? sp_pipeline : nullptr, light.ambience);
+				}
+			});
 		scene_renderer->commit_point_light_data();
 
 		const auto basic_geometry_view = registry.view<const Component::Transform, const Component::BasicGeometry, const Component::Texture>();

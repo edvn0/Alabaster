@@ -7,40 +7,41 @@
 
 namespace SceneSystem {
 
-	Component::ID::ID()
+	using namespace Component;
+
+	ID::ID()
 		: identifier(Alabaster::UUID::random_uuid())
 	{
 	}
 
-	Component::ID::ID(uuids::uuid id)
+	ID::ID(uuids::uuid id)
 		: identifier(id)
 	{
 	}
 
-	std::string Component::ID::to_string() const { return uuids::to_string(identifier); }
+	std::string ID::to_string() const { return uuids::to_string(identifier); }
 
-	glm::mat4 Component::Transform::to_matrix() const
+	glm::mat4 Transform::to_matrix() const
 	{
 		return glm::translate(glm::mat4(1.0f), position) * glm::mat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
 	}
 
-	Component::Mesh::Mesh(const std::shared_ptr<Alabaster::Mesh>& in_mesh)
+	Mesh::Mesh(const std::shared_ptr<Alabaster::Mesh>& in_mesh)
 		: mesh(in_mesh)
 	{
 	}
 
-	Component::Pipeline::Pipeline(const std::shared_ptr<Alabaster::Pipeline>& in_pipeline)
+	Pipeline::Pipeline(const std::shared_ptr<Alabaster::Pipeline>& in_pipeline)
 		: pipeline(in_pipeline)
 	{
 	}
 
-	Component::Tag::Tag(const std::string& in_tag)
+	Tag::Tag(const std::string& in_tag)
 		: tag(in_tag)
 	{
 	}
 
-	bool Component::SphereIntersectible::intersects_with(
-		const glm::vec3& ray_direction_wor, const glm::vec3& ray_origin_wor, float& intersection_distance) const
+	bool SphereIntersectible::intersects_with(const glm::vec3& ray_direction_wor, const glm::vec3& ray_origin_wor, float& intersection_distance) const
 	{
 		const auto sphere_centre_wor = world_position;
 		const auto sphere_radius = radius;
@@ -76,7 +77,7 @@ namespace SceneSystem {
 		return false;
 	};
 
-	void Component::Behaviour::setup_entity_destruction()
+	void Behaviour::setup_entity_destruction()
 	{
 		destroy = [](Behaviour& behaviour) {
 			delete behaviour.entity;

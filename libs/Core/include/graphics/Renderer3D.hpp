@@ -5,6 +5,7 @@
 #include "graphics/UniformBuffer.hpp"
 
 #include <array>
+#include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <memory>
 #include <optional>
@@ -34,6 +35,7 @@ namespace Alabaster {
 		explicit Renderer3D(Camera* camera) noexcept;
 		~Renderer3D();
 
+		void begin_scene(const glm::mat4& projection, const glm::mat4& view);
 		void begin_scene();
 
 		void quad(const glm::vec3& pos = { 0, 0, 0 }, const glm::vec4& colour = { 1, 1, 1, 1 }, const glm::vec3& scale = { 1, 1, 1 },
@@ -74,7 +76,8 @@ namespace Alabaster {
 		void draw_meshes(const CommandBuffer& command_buffer);
 
 		void flush();
-		void update_uniform_buffers(const std::optional<glm::mat4>& model = {});
+		void update_uniform_buffers(const glm::mat4& projection, const glm::mat4& view);
+		void update_uniform_buffers();
 		void create_descriptor_set_layout();
 		void create_descriptor_pool();
 		void create_descriptor_sets();

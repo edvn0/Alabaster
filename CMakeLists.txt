@@ -1,60 +1,57 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(
-	Alabaster
-	VERSION 0.0.1
-	LANGUAGES CXX)
+  Alabaster
+  VERSION 0.0.1
+  LANGUAGES CXX)
 
 find_package(Vulkan REQUIRED)
 find_program(CLANG_FORMAT "clang-format")
 find_package(Python COMPONENTS Development Interpreter)
 
 if(WIN32)
-	set(FT_DISABLE_HARFBUZZ ON)
-	set(ALABASTER_OS "Windows")
+  set(FT_DISABLE_HARFBUZZ ON)
+  set(ALABASTER_OS "Windows")
 
-    if (MINGW)
-        set(ALABASTER_COMPILER "MinGW")
-    elseif(MSVC)
-        set(ALABASTER_COMPILER "MSVC")
-        set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT AlabasterApp)
-    elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        set(ALABASTER_COMPILER "Clang")
-    else()
-        message(FATAL_ERROR "Only MinGW (g++), MSVC and Clang are supported")
-    endif()
+  if(MINGW)
+    set(ALABASTER_COMPILER "MinGW")
+  elseif(MSVC)
+    set(ALABASTER_COMPILER "MSVC")
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                 PROPERTY VS_STARTUP_PROJECT AlabasterApp)
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(ALABASTER_COMPILER "Clang")
+  else()
+    message(FATAL_ERROR "Only MinGW (g++), MSVC and Clang are supported")
+  endif()
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-	set(ALABASTER_OS "MacOS")
-    set(ALABASTER_COMPILER "clang")
+  set(ALABASTER_OS "MacOS")
+  set(ALABASTER_COMPILER "Clang")
 else()
-  	set(ALABASTER_OS "Linux")
-    set(ALABASTER_COMPILER "gnu")
+  set(ALABASTER_OS "Linux")
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(ALABASTER_COMPILER "Clang")
+  else()
+    set(ALABASTER_COMPILER "GNU")
+  endif()
 endif()
 
-if(${ALABASTER_IS_BUILD_TOOL} STREQUAL "OFF")
-    set(ALABASTER_CI OFF)
-else()
-    set(ALABASTER_CI ON)
-endif()
-
-if(${ALABASTER_SHOULD_FORMAT} STREQUAL "OFF")
-    set(ALABASTER_FORMAT OFF)
-else()
-    set(ALABASTER_FORMAT ON)
-endif()
+set(THIRD_PARTY_BUILDS "${CMAKE_SOURCE_DIR}/third_party_builds")
+set(COMPILER_BUILD_TYPE
+    "${ALABASTER_OS}-${ALABASTER_COMPILER}-${CMAKE_BUILD_TYPE}")
+set(EXTRA_LIBRARY_DIR "${THIRD_PARTY_BUILDS}/${COMPILER_BUILD_TYPE}/lib")
 
 message(
-    STATUS 
-    "Alabaster: Chosen OS: ${ALABASTER_OS}, chosen compiler: ${ALABASTER_COMPILER}. 
-    Test config: BUILD_TESTING:${BUILD_TESTING},  ALABASTER_BUILD_TESTING: ${ALABASTER_BUILD_TESTING}. 
-    Is build tool: ${ALABASTER_CI}. 
-    Should format: ${ALABASTER_FORMAT}."
-)
+  STATUS
+    "Alabaster: Chosen OS: ${ALABASTER_OS}
+  Alabaster: Chosen compiler: ${ALABASTER_COMPILER}.
+  Alabaster: Test config: ${BUILD_TESTING}, ${ALABASTER_BUILD_TESTING}.
+  Alabaster: Prebuilt binary paths: ${EXTRA_LIBRARY_DIR}")
 
 if(CMAKE_GENERATOR STREQUAL "Xcode")
-	set(XCODE_SCHEME_ENABLE_GPU_API_VALIDATION ON)
-	set(XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
-	set(XCODE_SCHEME_ENABLE_GPU_SHADER_VALIDATION ON)
+  set(XCODE_SCHEME_ENABLE_GPU_API_VALIDATION ON)
+  set(XCODE_SCHEME_WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
+  set(XCODE_SCHEME_ENABLE_GPU_SHADER_VALIDATION ON)
 endif()
 
 set(CMAKE_SUPPRESS_REGENERATION ON)

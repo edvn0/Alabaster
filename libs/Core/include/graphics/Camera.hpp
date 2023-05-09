@@ -26,7 +26,7 @@ namespace Alabaster {
 		virtual void on_update(float) {};
 		virtual void on_event(Event&) {};
 
-		virtual glm::vec3 get_position() const = 0;
+		virtual glm::vec3 get_position() const { return { 0, 0, 0 }; };
 
 		virtual const glm::mat4& get_projection_matrix() const { return projection_matrix; }
 		virtual const glm::mat4& get_view_matrix() const { return view_matrix; }
@@ -61,7 +61,7 @@ namespace Alabaster {
 	class EditorCamera : public Camera {
 	public:
 		EditorCamera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane,
-			EditorCamera* previous_camera = nullptr);
+			EditorCamera* previous_camera = nullptr, glm::vec3 initial_position = { 5, 5, -5 });
 		void init(EditorCamera* previous_camera = nullptr);
 
 		void focus(const glm::vec3& focus_point) final;
@@ -148,8 +148,8 @@ namespace Alabaster {
 
 		float min_focus_distance { 100.0f };
 
-		std::uint32_t viewport_width { 1280 };
-		std::uint32_t viewport_height { 720 };
+		std::uint32_t viewport_width { 1600 };
+		std::uint32_t viewport_height { 900 };
 
 		constexpr static float min_speed { 0.002f };
 		constexpr static float max_speed { 0.02f };

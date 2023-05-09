@@ -46,8 +46,7 @@ jobs:
         shell: cmake -P {0}
         run: |
           if ("${{ runner.os }}" STREQUAL "Linux")
-            execute_process(COMMAND sudo apt-get install libxinerama-dev libxcursor-dev libxi-dev)
-            execute_process(COMMAND sudo apt-get install mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev)
+            execute_process(COMMAND sudo apt-get install libxinerama-dev libxcursor-dev libxi-dev mesa-utils libglu1-mesa-dev freeglut3-dev mesa-common-dev libglew-dev libglfw3-dev libglm-dev libao-dev libmpg123-dev)
             execute_process(COMMAND wget https://apt.llvm.org/llvm.sh)
             execute_process(COMMAND sudo chmod +x llvm.sh)
             execute_process(COMMAND sudo ./llvm.sh 16)
@@ -72,10 +71,10 @@ jobs:
               set(cmake_dir "cmake-${cmake_version}-macos-universal/CMake.app/Contents/bin")
           endif()
           set(ninja_url "https://github.com/ninja-build/ninja/releases/download/v${ninja_version}/ninja-${ninja_suffix}")
-          file(DOWNLOAD "${ninja_url}" ./ninja.zip SHOW_PROGRESS)
+          file(DOWNLOAD "${ninja_url}" ./ninja.zip)
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./ninja.zip)
           set(cmake_url "https://github.com/Kitware/CMake/releases/download/v${cmake_version}/cmake-${cmake_version}-${cmake_suffix}")
-          file(DOWNLOAD "${cmake_url}" ./cmake.zip SHOW_PROGRESS)
+          file(DOWNLOAD "${cmake_url}" ./cmake.zip)
           execute_process(COMMAND ${CMAKE_COMMAND} -E tar xvf ./cmake.zip)
           # Add to PATH environment variable
           file(TO_CMAKE_PATH "$ENV{GITHUB_WORKSPACE}/${cmake_dir}" cmake_dir)
@@ -104,10 +103,6 @@ jobs:
           path: ".ccache"
           key: "${{ matrix.config.name }}-ccache-${{ steps.ccache_cache_timestamp.outputs.timestamp }}"
           restore-keys: "${{ matrix.config.name }}-ccache-\n"
-      - name: Get dependencies for shaderc
-        shell: bash
-        run: |
-          python third_party/shaderc/utils/git-sync-deps
       - name: Prepare Vulkan SDK
         uses: edvn0/setup-vulkan-sdk@v1.3.0
         with:
@@ -153,11 +148,9 @@ jobs:
               -D GLFW_BUILD_EXAMPLES=OFF
               -D ALABASTER_BUILD_TESTING=ON
               -D BUILD_TESTING=ON
-              -D ENABLE_HLSL=ON
               -D ENTT_BUILD_TESTING=OFF
               -D INSTALL_GTEST=OFF
               -D Random_BuildTests=OFF
-              -D SPIRV_SKIP_EXECUTABLES=ON
               -D BUILD_SHARED_LIBS=OFF
               -D SPDLOG_BUILD_PIC=ON
               -D SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS=OFF
@@ -173,22 +166,6 @@ jobs:
               -D SPIRV_CROSS_ENABLE_C_API=OFF
               -D SPIRV_CROSS_ENABLE_UTIL=OFF
               -D SPIRV_CROSS_SKIP_INSTALL=ON
-              -D SPIRV_SKIP_TESTS=ON
-              -D SHADERC_SKIP_INSTALL=ON
-              -D ENABLE_CTEST=OFF
-              -D ENABLE_GLSLANG_BINARIES=OFF
-              -D ENABLE_SPVREMAPPER=OFF
-              -D SHADERC_SKIP_TESTS=ON
-              -D SHADERC_SKIP_EXAMPLES=ON
-              -D SHADERC_SKIP_COPYRIGHT_CHECK=ON
-              -D SHADERC_ENABLE_WERROR_COMPILE=OFF
-              -D SKIP_SPIRV_TOOLS_INSTALL=ON
-              -D SPIRV_BUILD_FUZZER=OFF
-              -D SPIRV_BUILD_LIBFUZZER_TARGETS=OFF
-              -D SPIRV_WERROR=OFF
-              -D SPIRV_WARN_EVERYTHING=OFF
-              -D SPIRV_COLOR_TERMINAL=OFF
-              -D SPIRV_TOOLS_LIBRARY_TYPE=STATIC
               -D SPDLOG_FMT_EXTERNAL=ON
               -D UUID_USING_CXX20_SPAN=ON
             RESULT_VARIABLE result

@@ -26,6 +26,7 @@ target_include_directories(
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
          $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
          ${THIRD_PARTY_DIR}
+         ${THIRD_PARTY_DIR}/shaderc/libshaderc/include
          ${THIRD_PARTY_DIR}/glm
          ${THIRD_PARTY_DIR}/debugbreak
          ${THIRD_PARTY_DIR}/magic_enum/include
@@ -33,15 +34,24 @@ target_include_directories(
   INTERFACE ${Vulkan_INCLUDE_DIRS}
   PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
+if(${ALABASTER_OS} STREQUAL "Windows")
+  set(SHADERC_LIBS "${EXTRA_LIBRARY_DIR}/shaderc.lib"
+                   "${EXTRA_LIBRARY_DIR}/shaderc_combined.lib")
+else()
+  set(SHADERC_LIBS "${EXTRA_LIBRARY_DIR}/shaderc.a"
+                   "${EXTRA_LIBRARY_DIR}/shaderc_combined.a")
+
+endif()
+
 target_link_libraries(
   ${PROJECT_NAME}
-  PRIVATE Vulkan::Vulkan
+  PRIVATE ${SHADERC_LIBS}
+          spirv-cross-core
+          spirv-cross-glsl
+          Vulkan::Vulkan
           magic_enum
           effolkronium_random
-          Alabaster::Core
-          shaderc
-          spirv-cross-core
-          spirv-cross-glsl)
+          Alabaster::Core)
 
 target_precompile_headers(${PROJECT_NAME} PUBLIC include/am_pch.hpp)
 default_register_project(${PROJECT_NAME})
