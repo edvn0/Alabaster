@@ -289,7 +289,7 @@
                 "name": "Debug",
                 "program": "${workspaceFolder}/build-Debug-Ninja-cl.exe/app/AlabasterApp.exe",
                 "args": [],
-                "cwd": "${workspaceFolder}/app"
+                "cwd": "${workspaceFolder}/build-Debug-Ninja-cl.exe"
             }
         ]
     },
