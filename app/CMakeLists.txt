@@ -16,18 +16,14 @@ file(
 
 find_program(CLANG_FORMAT "clang-format")
 
-if(CLANG_FORMAT
-   AND ${ALABASTER_IS_BUILD_TOOL} STREQUAL "OFF"
-   AND ${ALABASTER_SHOULD_FORMAT} STREQUAL "ON")
+if(CLANG_FORMAT AND NOT ALABASTER_CI AND ALABASTER_FORMAT)
   file(GLOB_RECURSE shaders resources/shaders/**.vert resources/shaders/**.frag)
 
-  set(FORMATTABLE_FILES ${sources})
-  list(APPEND FORMATTABLE_FILES ${shaders})
+  set(formattable_files ${sources})
+  list(APPEND formattable_files ${shaders})
 
-  add_custom_target(
-    clang-format-app
-    COMMAND ${CLANG_FORMAT} -i -style=file ${FORMATTABLE_FILES}
-    COMMENT "Clang-Format")
+  add_custom_target(clang-format-app COMMAND ${CLANG_FORMAT} -i -style=file
+                   ${formattable_files} COMMENT "Clang-Format")
 endif()
 
 add_executable(${PROJECT_NAME} ${sources})
@@ -57,16 +53,16 @@ if(MSVC)
   target_compile_options(${PROJECT_NAME} PRIVATE "/MP")
 endif()
 
-if(CLANG_FORMAT
-   AND ${ALABASTER_IS_BUILD_TOOL} STREQUAL "OFF"
-   AND ${ALABASTER_SHOULD_FORMAT} STREQUAL "ON")
+if(CLANG_FORMAT AND NOT ALABASTER_CI AND ALABASTER_FORMAT)
   add_dependencies(${PROJECT_NAME} clang-format-app)
 endif()
 
-add_custom_command(
-  TARGET ${PROJECT_NAME}
-  PRE_BUILD
-  COMMAND
-    ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/resources/
-    $<TARGET_FILE_DIR:AlabasterApp>/resources/
-  COMMENT "Copy files.")
+if(NOT ALABASTER_CI)
+  add_custom_command(
+    TARGET ${PROJECT_NAME}
+    POST_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/resources/
+      $<TARGET_FILE_DIR:AlabasterApp>/resources/
+    COMMENT "Copy files.")
+endif()

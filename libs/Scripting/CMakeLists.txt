@@ -44,18 +44,19 @@ target_link_libraries(
   alabaster_entity PRIVATE Alabaster::SceneSystem Alabaster::Core
                            pybind11::pybind11)
 
-add_custom_command(
-  TARGET alabaster_entity
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:alabaster_entity>
-          $<TARGET_FILE_DIR:AlabasterApp>/resources/scripts
-  COMMENT "Copy python binary.")
+if(NOT ALABASTER_CI)
+  add_custom_command(
+    TARGET alabaster_entity
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:alabaster_entity>
+            $<TARGET_FILE_DIR:AlabasterApp>/resources/scripts
+    COMMENT "Copy python binary.")
 
-add_custom_command(
-  TARGET alabaster_entity
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:alabaster_entity>
-          ${CMAKE_SOURCE_DIR}/app/resources/scripts
-  COMMENT "Copy python binary.")
-
+  add_custom_command(
+    TARGET alabaster_entity
+    POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:alabaster_entity>
+            ${CMAKE_SOURCE_DIR}/app/resources/scripts
+    COMMENT "Copy python binary.")
+endif()
 # ----------- PYBIND-MODULE ----------- #

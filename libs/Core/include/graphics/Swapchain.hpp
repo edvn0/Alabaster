@@ -1,7 +1,6 @@
 #pragma once
 
 #include "graphics/Allocator.hpp"
-#include "graphics/DepthImage.hpp"
 
 #include <vector>
 #include <vulkan/vulkan.h>
