@@ -23,7 +23,7 @@ if(CLANG_FORMAT AND NOT ALABASTER_CI AND ALABASTER_FORMAT)
   list(APPEND formattable_files ${shaders})
 
   add_custom_target(clang-format-app COMMAND ${CLANG_FORMAT} -i -style=file
-                                             ${formattable_files})
+                   ${formattable_files} COMMENT "Clang-Format")
 endif()
 
 add_executable(${PROJECT_NAME} ${sources})

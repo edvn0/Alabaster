@@ -1,14 +1,14 @@
 from alabaster_ecs import Entity
 
 class Behaviour(Entity):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, entity):
+        super().__init__(entity)
         self.acc = 0
 
     def on_create(self):
         print("Created!")
 
-    def on_update(self, ts):
+    def on_update(self, ts:float):
         self.acc += ts
         if self.acc >= 1:
             t = self.get_transform()
@@ -16,8 +16,6 @@ class Behaviour(Entity):
 
             print(t.position)
             t.position += float(2) * ts
-            print(t.position)
-            print(t.position)
 
     def on_delete(self):
         print("Deleted!")

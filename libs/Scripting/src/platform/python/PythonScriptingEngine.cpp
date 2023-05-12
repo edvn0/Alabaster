@@ -71,6 +71,7 @@ namespace Scripting {
 			.def("get_entity", &SceneSystem::Entity::get_entity);
 
 		py::class_<ScriptEntity, Python::EmbeddedPythonEntity>(m, "Entity")
+			.def(py::init<SceneSystem::Entity>())
 			.def(py::init<>())
 			.def_readwrite("entity", &ScriptEntity::script_entity)
 			.def("get_transform", &ScriptEntity::get_transform, py::return_value_policy::reference)
@@ -124,31 +125,29 @@ namespace Scripting {
 		if (!script_data->script_instances.contains(entity_id)) {
 			// This is hardcoded for now. The module must supply a behaviour class.
 			try {
-				script_data->instances[entity_id] = script.attr(py::str { "Behaviour" })();
+				script_data->instances[entity_id] = script.attr(py::str { "Behaviour" })(entity);
 			} catch (py::error_already_set& e) {
 				Alabaster::Log::info("[PythonScriptingEngine] Could not instantiate class. Reason: {}", e.what());
 				return;
 			}
 
-			script_data->script_instances[entity_id] = std::make_shared<Python::EmbeddedPythonEntity>();
-			script_data->script_instances[entity_id]->script_entity = entity;
-			script_data->instances[entity_id].attr("entity") = entity;
+			script_data->script_instances[entity_id] = std::make_shared<Python::EmbeddedPythonEntity>(entity);
 		}
 
 		try {
 			// Call method here
 			switch (method) {
 			case ScriptMethod::OnCreate: {
-				script_data->instances[entity_id].attr("on_create")();
+				script_data->instances[entity_id].attr(py::str { "on_create" })();
 				break;
 			}
 			case ScriptMethod::OnUpdate: {
 				auto* float_ts = Alabaster::BitCast::reinterpret_as<float*>(args);
-				script_data->instances[entity_id].attr("on_update")(*float_ts);
+				script_data->instances[entity_id].attr(py::str { "on_update" })(*float_ts);
 				break;
 			}
 			case ScriptMethod::OnDelete: {
-				script_data->instances[entity_id].attr("on_delete")();
+				script_data->instances[entity_id].attr(py::str { "on_delete" })();
 				script_data->instances.erase(entity_id);
 				break;
 			}

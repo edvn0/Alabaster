@@ -49,13 +49,14 @@ if(NOT ALABASTER_CI)
     TARGET alabaster_entity
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:alabaster_entity>
-            $<TARGET_FILE_DIR:AlabasterApp>/resources/scripts)
+            $<TARGET_FILE_DIR:AlabasterApp>/resources/scripts
+    COMMENT "Copy python binary.")
 
   add_custom_command(
     TARGET alabaster_entity
     POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:alabaster_entity>
-            ${CMAKE_SOURCE_DIR}/app/resources/scripts)
+            ${CMAKE_SOURCE_DIR}/app/resources/scripts
+    COMMENT "Copy python binary.")
 endif()
-
 # ----------- PYBIND-MODULE ----------- #
