@@ -38,9 +38,7 @@ if(${ALABASTER_OS} STREQUAL "Windows")
   set(SHADERC_LIBS "${EXTRA_LIBRARY_DIR}/shaderc.lib"
                    "${EXTRA_LIBRARY_DIR}/shaderc_combined.lib")
 else()
-  set(SHADERC_LIBS "${EXTRA_LIBRARY_DIR}/shaderc.a"
-                   "${EXTRA_LIBRARY_DIR}/shaderc_combined.a")
-
+  set(SHADERC_LIBS shaderc)
 endif()
 
 target_link_libraries(

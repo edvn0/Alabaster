@@ -21,4 +21,6 @@ add_subdirectory(gsl)
 add_subdirectory(imguizmo)
 add_subdirectory(spirv-cross)
 
-# add_subdirectory(shaderc)
+if(NOT ${ALABASTER_OS} STREQUAL "Windows")
+    add_subdirectory(shaderc)
+endif()
