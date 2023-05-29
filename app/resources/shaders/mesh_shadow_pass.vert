@@ -28,7 +28,4 @@ layout(push_constant) uniform Renderer3D
 }
 pc;
 
-void main()
-{
-	gl_Position = ubo.view_proj * pc.object_transform * vec4(locations, 1.0);
-}
+void main() { gl_Position = ubo.view_proj * pc.object_transform * vec4(locations, 1.0); }

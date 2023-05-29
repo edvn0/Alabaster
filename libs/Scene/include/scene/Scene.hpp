@@ -59,6 +59,7 @@ namespace SceneSystem {
 		template <Component::IsComponent... T> auto get_first_with()
 		{
 			auto view = registry.view<T...>();
+			Alabaster::assert_that(view.size() > 0);
 			return Entity { this, view[0] };
 		}
 		template <typename Func> void for_each_entity(Func&& func) { registry.each(std::forward<Func>(func)); }

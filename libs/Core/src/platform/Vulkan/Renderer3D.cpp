@@ -296,7 +296,6 @@ namespace Alabaster {
 		data->quad_index_buffer = IndexBuffer::create(quad_indices);
 
 		// END QUAD STUFF
-
 		PipelineSpecification mesh_spec {
 			.shader = AssetManager::the().shader("mesh_light"),
 			.debug_name = "Mesh Pipeline",

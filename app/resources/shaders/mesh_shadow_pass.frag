@@ -26,5 +26,4 @@ layout(push_constant) uniform Renderer3D
 }
 pc;
 
-
-void main() {}
+void main() { }

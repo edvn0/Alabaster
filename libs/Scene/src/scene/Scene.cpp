@@ -133,8 +133,6 @@ namespace SceneSystem {
 		}
 	}
 
-	template <class Vec = glm::vec3> static constexpr auto xy(const Vec& vec) { return vec.xy; }
-
 	void Scene::update_selected_entity() const { *selected_entity = *hovered_entity; }
 
 	void Scene::pick_mouse()
@@ -188,11 +186,11 @@ namespace SceneSystem {
 		script_update_accumulator += ts;
 		if (script_update_accumulator >= script_update_interval_ms) {
 			const auto scripts = registry.view<Component::Behaviour>();
-			scripts.each([this](const auto entity, Component::Behaviour& behaviour) {
+			scripts.each([scene = this](const auto entity, Component::Behaviour& behaviour) {
 				if (!behaviour.is_valid() || behaviour.entity)
 					return;
 				behaviour.create(behaviour);
-				behaviour.entity->set_entity(Entity { this, entity });
+				behaviour.entity->set_entity(Entity { scene, entity });
 				behaviour.entity->on_create();
 			});
 			scripts.each([ts](Component::Behaviour& behaviour) {
@@ -222,7 +220,7 @@ namespace SceneSystem {
 		{
 			// Shadow pass
 			const auto the_sun = get_first_with<Component::Light>();
-			const auto position = the_sun.get_component<Component::Transform>().position;
+			const auto position = the_sun.get_transform().position;
 			const auto projection = glm::perspectiveFov(45.0f, 1600.0f, 900.0f, 0.1f, 1000.0f);
 			const auto view = glm::lookAt(position, glm::vec3 { 0.0f }, glm::vec3 { 0.0f, 1.0f, 0.0f });
 			scene_renderer->begin_scene(projection, view);

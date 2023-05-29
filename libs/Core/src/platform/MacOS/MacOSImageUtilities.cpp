@@ -4,7 +4,8 @@
 #include "graphics/GraphicsContext.hpp"
 #include "graphics/Swapchain.hpp"
 #include "platform/Vulkan/ImageUtilities.hpp"
-#include "vulkan/vulkan_core.h"
+
+#include <vulkan/vulkan.h>
 
 namespace Alabaster::Utilities {
 
