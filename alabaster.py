@@ -92,7 +92,7 @@ def make_symlink(file_from: str, file_to: str):
 
 
 def generate_cmake(
-    generator: Generator, build_folder: str, build_mode: BuildMode, build_tests: bool
+    generator: Generator, compiler: str, build_folder: str, build_mode: BuildMode, build_tests: bool
 ):
     generator_string: str = (
         generator.value if generator != Generator.VS else "Visual Studio 17 2022"
@@ -116,11 +116,9 @@ def generate_cmake(
         "-D ALABASTER_IS_BUILD_TOOL=OFF",
         "-D ALABASTER_SHOULD_FORMAT=OFF",
         f"-D BUILD_TESTING={'ON' if build_tests else 'OFF'}",
-        "-D ENABLE_HLSL=ON",
         "-D ENTT_BUILD_TESTING=OFF",
         "-D INSTALL_GTEST=OFF",
         "-D Random_BuildTests=OFF",
-        "-D SPIRV_SKIP_EXECUTABLES=ON",
         "-D BUILD_SHARED_LIBS=OFF",
         "-D SPDLOG_BUILD_PIC=ON",
         "-D SPIRV_CROSS_EXCEPTIONS_TO_ASSERTIONS=OFF",
@@ -136,24 +134,19 @@ def generate_cmake(
         "-D SPIRV_CROSS_ENABLE_C_API=OFF",
         "-D SPIRV_CROSS_ENABLE_UTIL=OFF",
         "-D SPIRV_CROSS_SKIP_INSTALL=ON",
-        "-D SPIRV_SKIP_TESTS=ON",
-        "-D SHADERC_SKIP_INSTALL=ON",
-        "-D ENABLE_CTEST=OFF",
-        "-D ENABLE_GLSLANG_BINARIES=OFF",
-        "-D ENABLE_SPVREMAPPER=OFF",
-        "-D SHADERC_SKIP_TESTS=ON",
-        "-D SHADERC_SKIP_EXAMPLES=ON",
-        "-D SHADERC_SKIP_COPYRIGHT_CHECK=ON",
-        "-D SHADERC_ENABLE_WERROR_COMPILE=OFF",
-        "-D SKIP_SPIRV_TOOLS_INSTALL=ON",
-        "-D SPIRV_BUILD_FUZZER=OFF",
-        "-D SPIRV_BUILD_LIBFUZZER_TARGETS=OFF",
-        "-D SPIRV_WERROR=OFF",
-        "-D SPIRV_WARN_EVERYTHING=OFF",
-        "-D SPIRV_COLOR_TERMINAL=OFF",
-        "-D SPIRV_TOOLS_LIBRARY_TYPE=STATIC",
         "-D SPDLOG_FMT_EXTERNAL=ON",
         "-D UUID_USING_CXX20_SPAN=ON",
+    ]
+
+    compile_shaderc_args = [
+        "-D SHADERC_SKIP_TESTS=ON",
+        "-D SHADERC_SKIP_EXAMPLES=ON",
+        "-D SHADERC_SKIP_COPYRIGHT_CHECK=ON", 
+        "-D SPIRV_SKIP_EXECUTABLES=ON",
+        "-D BUILD_EXTERNAL=OFF",
+        "-D SKIP_GLSLANG_INSTALL=ON",
+        "-D ENABLE_GLSLANG_BINARIES=OFF",
+        "-D ENABLE_CTEST=OFF",
     ]
 
     builds_args = [f"-B {build_folder}", f"-S {current_source_dir}"]
@@ -161,6 +154,9 @@ def generate_cmake(
     cmake_args = (
         ["cmake"] + builds_args + extra_compile_definitions + compile_definitions
     )
+
+    if compiler.find("clang") != -1 or compiler.find("gcc") != -1:
+        cmake_args += compile_shaderc_args
 
     out = subprocess.run(args=cmake_args, shell=is_windows)
     if out.returncode != 0:
@@ -250,7 +246,7 @@ def main(args: Namespace):
 
     build_folder_exists = Path(build_folder).exists()
     if not build_folder_exists or args.force_configure:
-        generate_cmake(generator, build_folder, build_mode, args.build_tests)
+        generate_cmake(generator, compiler, build_folder, build_mode, args.build_tests)
 
     build_cmake(build_folder, target, args.parallel)
     should_run_tests = (build_mode == BuildMode.Debug or build_mode ==

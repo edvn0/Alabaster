@@ -16,13 +16,15 @@
 
 namespace SceneSystem {
 
+	using namespace Component;
+
 	SceneSerialiser::SceneSerialiser(Scene& input_scene) noexcept
 		: scene(input_scene)
 	{
 		serialise_to_json();
 	}
 
-	template <Component::IsComponent T> static constexpr auto handle_component_serialisation(auto& entity, auto& json)
+	template <IsComponent T> static constexpr auto handle_component_serialisation(auto& entity, auto& json)
 	{
 		if (entity.template has_component<T>()) {
 			serialise_component<T>()(entity, json);
@@ -32,20 +34,20 @@ namespace SceneSystem {
 	nlohmann::json serialise_entity(Entity& entity)
 	{
 		auto output_object = nlohmann::json::object();
-		handle_component_serialisation<Component::Mesh>(entity, output_object);
-		handle_component_serialisation<Component::Transform>(entity, output_object);
-		handle_component_serialisation<Component::ID>(entity, output_object);
-		handle_component_serialisation<Component::Tag>(entity, output_object);
-		handle_component_serialisation<Component::Texture>(entity, output_object);
-		handle_component_serialisation<Component::BasicGeometry>(entity, output_object);
-		handle_component_serialisation<Component::Pipeline>(entity, output_object);
-		handle_component_serialisation<Component::Camera>(entity, output_object);
-		handle_component_serialisation<Component::Light>(entity, output_object);
-		handle_component_serialisation<Component::PointLight>(entity, output_object);
-		handle_component_serialisation<Component::SphereIntersectible>(entity, output_object);
-		handle_component_serialisation<Component::QuadIntersectible>(entity, output_object);
-		handle_component_serialisation<Component::Behaviour>(entity, output_object);
-		handle_component_serialisation<Component::ScriptBehaviour>(entity, output_object);
+		handle_component_serialisation<Mesh>(entity, output_object);
+		handle_component_serialisation<Transform>(entity, output_object);
+		handle_component_serialisation<ID>(entity, output_object);
+		handle_component_serialisation<Tag>(entity, output_object);
+		handle_component_serialisation<Texture>(entity, output_object);
+		handle_component_serialisation<BasicGeometry>(entity, output_object);
+		handle_component_serialisation<Pipeline>(entity, output_object);
+		handle_component_serialisation<Camera>(entity, output_object);
+		handle_component_serialisation<Light>(entity, output_object);
+		handle_component_serialisation<PointLight>(entity, output_object);
+		handle_component_serialisation<SphereIntersectible>(entity, output_object);
+		handle_component_serialisation<QuadIntersectible>(entity, output_object);
+		handle_component_serialisation<Behaviour>(entity, output_object);
+		handle_component_serialisation<ScriptBehaviour>(entity, output_object);
 		return output_object;
 	}
 
@@ -61,9 +63,9 @@ namespace SceneSystem {
 		output_json["scene_name"] = name;
 
 		std::vector<Entity> entities;
-		auto view = registry.view<const Component::Tag>();
-		view.each([&scene = scene, &entities](
-					  entt::entity entity, const Component::Tag& tag) mutable { entities.push_back(scene.create_entity(entity, tag.tag)); });
+		auto view = registry.view<const Tag>();
+		view.each(
+			[&scene = scene, &entities](entt::entity entity, const Tag& tag) mutable { entities.push_back(scene.create_entity(entity, tag.tag)); });
 
 		if (registry.size() != entities.size()) {
 			Alabaster::Log::info("We could not create these entities..");

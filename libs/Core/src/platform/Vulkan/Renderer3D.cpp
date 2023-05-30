@@ -16,6 +16,7 @@
 #include "graphics/Vertex.hpp"
 #include "graphics/VertexBufferLayout.hpp"
 
+#include <glm/gtx/string_cast.hpp>
 #include <memory>
 #include <vulkan/vulkan.h>
 
@@ -295,7 +296,6 @@ namespace Alabaster {
 		data->quad_index_buffer = IndexBuffer::create(quad_indices);
 
 		// END QUAD STUFF
-
 		PipelineSpecification mesh_spec {
 			.shader = AssetManager::the().shader("mesh_light"),
 			.debug_name = "Mesh Pipeline",
@@ -335,14 +335,16 @@ namespace Alabaster {
 		}
 	}
 
-	void Renderer3D::begin_scene()
+	void Renderer3D::begin_scene(const glm::mat4& projection, const glm::mat4& view)
 	{
 		Alabaster::assert_that(!scene_has_begun);
 		scene_has_begun = true;
 		reset_data(*data);
-		update_uniform_buffers();
+		update_uniform_buffers(projection, view);
 		data->push_constant = PC();
 	}
+
+	void Renderer3D::begin_scene() { begin_scene(camera->get_projection_matrix(), camera->get_view_matrix()); }
 
 	void Renderer3D::reset_stats()
 	{
@@ -644,19 +646,21 @@ namespace Alabaster {
 		}
 	}
 
-	void Renderer3D::update_uniform_buffers(const std::optional<glm::mat4>& model)
+	void Renderer3D::update_uniform_buffers(const glm::mat4& projection, const glm::mat4& view)
 	{
 		const auto image_index = Application::the().swapchain().frame();
 
-		UBO ubo { .model = model.value_or(default_model),
-			.view = camera->get_view_matrix(),
-			.projection = camera->get_projection_matrix(),
-			.view_projection = ubo.projection * ubo.view,
+		UBO ubo { .model = default_model,
+			.view = view,
+			.projection = projection,
+			.view_projection = projection * view,
 			.num_lights = glm::vec4(10),
 			.point_lights = data->point_light_buffer };
 
 		data->uniforms[image_index]->set_data(&ubo, sizeof(UBO), 0);
 	}
+
+	void Renderer3D::update_uniform_buffers() { update_uniform_buffers(camera->get_projection_matrix(), camera->get_view_matrix()); }
 
 	Renderer3D::~Renderer3D()
 	{

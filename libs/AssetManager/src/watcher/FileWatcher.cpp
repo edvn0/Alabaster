@@ -73,55 +73,38 @@ namespace AssetManager {
 			}
 
 			for (auto& file : std::filesystem::recursive_directory_iterator(root)) {
-				auto current_file_last_write_time = std::filesystem::last_write_time(file);
-				const auto view = file.path().string();
-
-				if (!paths.contains(view)) {
-					const auto type_if_not_directory
-						= std::filesystem::is_directory(file) ? FileType::DIRECTORY : to_filetype(file.path().extension());
-
-					paths[file.path().string()] = FileInformation {
-						.type = type_if_not_directory, .path = view, .last_modified = current_file_last_write_time, .status = FileStatus::Created
-					};
-
-					const auto& current = paths[file.path().string()];
-					for_each(current, activations);
-				} else {
-					auto& current = paths[file.path().string()];
-
-					if (current.last_modified != current_file_last_write_time) {
-						current.last_modified = current_file_last_write_time;
-						current.status = FileStatus::Modified;
-						for_each(current, activations);
-					}
-				}
+				update_modified(file);
 			}
 
 			for (auto& additional : additional_paths) {
 				for (auto& file : std::filesystem::directory_iterator { root / additional }) {
-					auto current_file_last_write_time = std::filesystem::last_write_time(file);
-					const auto view = file.path().string();
-
-					if (!paths.contains(view)) {
-						const auto type_if_not_directory
-							= std::filesystem::is_directory(file) ? FileType::DIRECTORY : to_filetype(file.path().extension());
-
-						paths[file.path().string()] = FileInformation {
-							.type = type_if_not_directory, .path = view, .last_modified = current_file_last_write_time, .status = FileStatus::Created
-						};
-
-						const auto& current = paths[file.path().string()];
-						for_each(current, activations);
-					} else {
-						auto& current = paths[file.path().string()];
-
-						if (current.last_modified != current_file_last_write_time) {
-							current.last_modified = current_file_last_write_time;
-							current.status = FileStatus::Modified;
-							for_each(current, activations);
-						}
-					}
+					update_modified(file);
 				}
+			}
+		}
+	}
+
+	void FileWatcher::update_modified(const std::filesystem::directory_entry& file)
+	{
+		auto current_file_last_write_time = std::filesystem::last_write_time(file);
+		const auto view = file.path().string();
+
+		if (!paths.contains(view)) {
+			const auto type_if_not_directory = std::filesystem::is_directory(file) ? FileType::DIRECTORY : to_filetype(file.path().extension());
+
+			paths[file.path().string()] = FileInformation {
+				.type = type_if_not_directory, .path = view, .last_modified = current_file_last_write_time, .status = FileStatus::Created
+			};
+
+			const auto& current = paths[file.path().string()];
+			for_each(current, activations);
+		} else {
+			auto& current = paths[file.path().string()];
+
+			if (current.last_modified != current_file_last_write_time) {
+				current.last_modified = current_file_last_write_time;
+				current.status = FileStatus::Modified;
+				for_each(current, activations);
 			}
 		}
 	}

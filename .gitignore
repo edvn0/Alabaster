@@ -75,3 +75,5 @@ build*
 app/resources/scene/*.json
 
 !app/resources/editor/*.png
+
+!third_party_builds/**

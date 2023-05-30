@@ -65,6 +65,7 @@ namespace AssetManager {
 		/// @param activations all functions
 		static void for_each(const FileInformation& info, const std::vector<std::function<void(const FileInformation&)>>&);
 
+		void update_modified(const std::filesystem::directory_entry&);
 		void start(const std::function<void(const FileInformation&)>& activation_function);
 		void stop();
 		void loop_until();

@@ -18,7 +18,10 @@ namespace Scripting {
 	struct ALABASTER_VISIBILITY ScriptingEngine::ScriptEngineData {
 		std::unordered_map<std::string_view, pybind11::module_> classes {};
 		std::unordered_map<uuids::uuid, pybind11::object> instances {};
-		std::unordered_map<uuids::uuid, std::shared_ptr<SceneSystem::ScriptEntity>> script_instances {};
+		std::unordered_map<uuids::uuid, pybind11::function> on_create_methods {};
+		std::unordered_map<uuids::uuid, pybind11::function> on_update_methods {};
+		std::unordered_map<uuids::uuid, pybind11::function> on_delete_methods {};
+		std::unordered_set<uuids::uuid> script_instances {};
 	};
 
 	SceneSystem::Component::Transform& Python::EmbeddedPythonEntity::get_transform()
@@ -131,24 +134,40 @@ namespace Scripting {
 				return;
 			}
 
-			script_data->script_instances[entity_id] = std::make_shared<Python::EmbeddedPythonEntity>(entity);
+#define REQUIRE_METHOD(field, method)                                                                                                                \
+	try {                                                                                                                                            \
+		script_data->field[entity_id] = script_data->instances[entity_id].attr(py::str { method });                                                  \
+	} catch (py::error_already_set & e) {                                                                                                            \
+		Alabaster::Log::info("[PythonScriptingEngine] Could not find method {}. Reason: {}", method, e.what());                                      \
+		return;                                                                                                                                      \
+	}
+
+			REQUIRE_METHOD(on_create_methods, "on_create")
+			REQUIRE_METHOD(on_update_methods, "on_update")
+			REQUIRE_METHOD(on_delete_methods, "on_delete")
+
+			script_data->script_instances.insert(entity_id);
 		}
 
 		try {
 			// Call method here
 			switch (method) {
 			case ScriptMethod::OnCreate: {
-				script_data->instances[entity_id].attr(py::str { "on_create" })();
+				script_data->on_create_methods[entity_id]();
 				break;
 			}
 			case ScriptMethod::OnUpdate: {
 				auto* float_ts = Alabaster::BitCast::reinterpret_as<float*>(args);
-				script_data->instances[entity_id].attr(py::str { "on_update" })(*float_ts);
+				script_data->on_update_methods[entity_id](*float_ts);
 				break;
 			}
 			case ScriptMethod::OnDelete: {
-				script_data->instances[entity_id].attr(py::str { "on_delete" })();
+				script_data->on_delete_methods[entity_id]();
+
 				script_data->instances.erase(entity_id);
+				script_data->on_create_methods.erase(entity_id);
+				script_data->on_update_methods.erase(entity_id);
+				script_data->on_delete_methods.erase(entity_id);
 				break;
 			}
 			default:

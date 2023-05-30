@@ -14,7 +14,6 @@
 
 #include <memory>
 #include <vulkan/vulkan.h>
-#include <vulkan/vulkan_core.h>
 
 namespace Alabaster {
 
@@ -128,7 +127,7 @@ namespace Alabaster {
 			render_pass = sc.get_render_pass();
 
 			clear_values.clear();
-			clear_values.emplace_back().emplace<ColourValue>(std::array<float, 4> { 0, 0, 0, 1.0f });
+			clear_values.emplace_back() = std::array<float, 4> { 0, 0, 0, 1.0f };
 		}
 
 		for (const auto& callback : resize_callbacks)
@@ -177,7 +176,7 @@ namespace Alabaster {
 				attachment_description.format = Utilities::vulkan_image_format(attachment_specification.format);
 				attachment_description.samples = VK_SAMPLE_COUNT_1_BIT;
 				attachment_description.loadOp = spec.clear_depth_on_load ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
-				attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+				attachment_description.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
 				attachment_description.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
 				attachment_description.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 				attachment_description.initialLayout
@@ -243,8 +242,7 @@ namespace Alabaster {
 				attachment_description.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
 				const auto& clear_color = spec.clear_colour;
-				clear_values[attachment_index].emplace<ColourValue>(
-					std::array<float, 4> { clear_color.r, clear_color.g, clear_color.b, clear_color.a });
+				clear_values[attachment_index] = std::array<float, 4> { clear_color.r, clear_color.g, clear_color.b, clear_color.a };
 				color_attachment_references.emplace_back(VkAttachmentReference { attachment_index, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL });
 			}
 
@@ -259,45 +257,41 @@ namespace Alabaster {
 			subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
 
 		std::vector<VkSubpassDependency> dependencies;
-		if (attachment_images.size()) {
-			VkSubpassDependency& dependency = dependencies.emplace_back();
-			dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-			dependency.dstSubpass = 0;
-			dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+		VkSubpassDependency& a = dependencies.emplace_back();
+		a.srcSubpass = VK_SUBPASS_EXTERNAL;
+		a.dstSubpass = 0;
+		a.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		a.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		a.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		a.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		a.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-			VkSubpassDependency& subpass = dependencies.emplace_back();
-			subpass.srcSubpass = 0;
-			subpass.dstSubpass = VK_SUBPASS_EXTERNAL;
-			subpass.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			subpass.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-			subpass.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			subpass.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			subpass.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-		}
+		VkSubpassDependency& b = dependencies.emplace_back();
+		b.srcSubpass = 0;
+		b.dstSubpass = VK_SUBPASS_EXTERNAL;
+		b.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		b.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+		b.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		b.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		b.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-		if (depth_image) {
-			VkSubpassDependency& dependency = dependencies.emplace_back();
-			dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-			dependency.dstSubpass = 0;
-			dependency.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			dependency.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-			dependency.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			dependency.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+		VkSubpassDependency& c = dependencies.emplace_back();
+		c.srcSubpass = VK_SUBPASS_EXTERNAL;
+		c.dstSubpass = 0;
+		c.srcStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		c.dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+		c.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		c.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		c.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
-			VkSubpassDependency& subpass = dependencies.emplace_back();
-			subpass.srcSubpass = 0;
-			subpass.dstSubpass = VK_SUBPASS_EXTERNAL;
-			subpass.srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-			subpass.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-			subpass.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-			subpass.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			subpass.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
-		}
+		VkSubpassDependency& d = dependencies.emplace_back();
+		d.srcSubpass = 0;
+		d.dstSubpass = VK_SUBPASS_EXTERNAL;
+		d.srcStageMask = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+		d.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		d.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+		d.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+		d.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
 
 		VkRenderPassCreateInfo render_pass_info = {};
 		render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -324,6 +318,7 @@ namespace Alabaster {
 			const auto& image = depth_image;
 			if (spec.existing_image) {
 				assert_that(spec.existing_image_layers.size() == 1, "Depth attachments do not support deinterleaving");
+				attachments.emplace_back(image->get_layer_image_view(spec.existing_image_layers[0]));
 			} else {
 				attachments.emplace_back(image->get_view());
 			}

@@ -41,7 +41,8 @@ namespace SceneSystem {
 			viewport_offset = offset;
 		}
 
-		void draw_entities_in_scene();
+		void shadow_pass_entities();
+		void geometry_pass();
 		void update_intersectibles();
 
 		void delete_entity(const std::string& tag);
@@ -55,6 +56,12 @@ namespace SceneSystem {
 		[[nodiscard]] const auto& get_registry() const { return registry; }
 		auto& get_registry() { return registry; }
 		template <Component::IsComponent... T> auto all_with() { return registry.view<T...>(); }
+		template <Component::IsComponent... T> auto get_first_with()
+		{
+			auto view = registry.view<T...>();
+			Alabaster::assert_that(view.size() > 0);
+			return Entity { this, view[0] };
+		}
 		template <typename Func> void for_each_entity(Func&& func) { registry.each(std::forward<Func>(func)); }
 		[[nodiscard]] auto get_name() const { return to_string(Component::ID().identifier) + std::to_string(registry.alive()); }
 
@@ -79,7 +86,7 @@ namespace SceneSystem {
 	private:
 		void pick_entity(const glm::vec3& ray_world);
 		void pick_mouse();
-		void build_scene();
+		void draw_entities_in_scene(bool is_shadow);
 
 		entt::registry registry;
 
@@ -99,7 +106,9 @@ namespace SceneSystem {
 		std::unique_ptr<Alabaster::EditorCamera> scene_camera;
 
 		std::shared_ptr<Alabaster::CommandBuffer> command_buffer;
-		std::unique_ptr<Alabaster::Framebuffer> framebuffer;
+		std::shared_ptr<Alabaster::Framebuffer> framebuffer;
+		std::shared_ptr<Alabaster::Framebuffer> shadow_pass;
+		std::shared_ptr<Alabaster::Pipeline> shadow_pass_pipeline;
 		std::unique_ptr<Alabaster::Renderer3D> scene_renderer;
 
 		friend Entity;

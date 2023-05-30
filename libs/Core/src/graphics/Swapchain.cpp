@@ -7,7 +7,7 @@
 #include "platform/Vulkan/ImageUtilities.hpp"
 
 #include <GLFW/glfw3.h>
-#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.h>
 
 namespace Alabaster {
 

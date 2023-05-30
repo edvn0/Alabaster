@@ -28,8 +28,8 @@ namespace Alabaster {
 		unreversed_projection_matrix = glm::perspectiveFov(radians_fov, width, height, near_plane, far_plane);
 	}
 
-	EditorCamera::EditorCamera(
-		const float degree_fov, const float width, const float height, const float near_plane, const float far_plane, EditorCamera* previous_camera)
+	EditorCamera::EditorCamera(const float degree_fov, const float width, const float height, const float near_plane, const float far_plane,
+		EditorCamera* previous_camera, glm::vec3 initial)
 		: Camera(glm::perspectiveFov(glm::radians(degree_fov), width, height, near_plane, far_plane),
 			glm::perspectiveFov(glm::radians(degree_fov), width, height, far_plane, near_plane))
 		, focal_point(0.0f)
@@ -37,6 +37,8 @@ namespace Alabaster {
 		, near_clip(near_plane)
 		, far_clip(far_plane)
 	{
+		position = initial;
+
 		if (previous_camera) {
 			position = previous_camera->position;
 			position_delta = previous_camera->position_delta;

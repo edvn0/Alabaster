@@ -10,7 +10,6 @@
 #include "graphics/GraphicsContext.hpp"
 #include "platform/Vulkan/ImageUtilities.hpp"
 #include "utilities/FileInputOutput.hpp"
-#include "vulkan/vulkan_core.h"
 
 #include <stb_image.h>
 #include <vulkan/vulkan.h>
@@ -32,7 +31,7 @@ namespace Alabaster {
 
 		Allocator allocator("Image2D");
 
-		VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT; // TODO: this (probably) shouldn't be implied
+		VkImageUsageFlags usage = VK_IMAGE_USAGE_SAMPLED_BIT;
 		if (spec.usage == ImageUsage::Attachment) {
 			if (Utilities::is_depth_format(spec.format)) {
 				usage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;

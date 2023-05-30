@@ -23,11 +23,14 @@ namespace AssetManager {
 		for (const auto& batch : batches) {
 			for (const auto& entry : batch) {
 				const auto& image_name = entry.filename().string();
+				if (textures.contains(image_name))
+					continue;
+
 				Alabaster::TextureProperties spec;
 				spec.generate_mips = false;
 				spec.debug_name = image_name;
-
-				textures.try_emplace(image_name, Texture::from_full_path(entry));
+				auto reference = Texture::from_full_path(entry);
+				textures[image_name] = std::move(reference);
 			}
 		}
 	}
